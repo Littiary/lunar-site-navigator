@@ -14,8 +14,15 @@ namespace
 {
 	/** Display values of stage 1. They are not photometry. */
 	constexpr float SunLightLux = 10.0f;
-	constexpr float FillLightLux = 0.25f;
-	constexpr float SunDiscEmissive = 30.0f;
+	constexpr float FillLightLux = 0.12f;
+	constexpr float SunDiscEmissive = 120.0f;
+	/** The stars: emissive of the brightest star in a dark scene, and the share left while the Sun is wholly visible. */
+	constexpr float StarEmissive = 6.0f;
+	constexpr float StarShareInSunlight = 0.10f;
+	/** Radius of the star sphere: beyond the discs of the Sun and the Earth. */
+	constexpr double StarSphereRadiusCm = 2.5e11;
+	/** Emissive share of the scale objects' grey value while the Sun is wholly visible: sunlight reflected from the ground. */
+	constexpr float ObjectAmbient = 0.22f;
 	constexpr float HorizonLineEmissive = 3.0f;
 	constexpr float ObstacleEmissive = 6.0f;
 	/** Angular height of the highlight band above the horizon. A drawing choice. */
@@ -65,6 +72,9 @@ ALsnSiteScene::ALsnSiteScene()
 	}
 	ScaleObjects->SetVisibility(false);
 	Mast->SetVisibility(false);
+	Stars = MakeMeshComponent(this, TEXT("Stars"), false);
+	Stars->SetupAttachment(Root);
+	Stars->SetVisibility(false);
 	bScaleObjectsVisible = !FParse::Param(FCommandLine::Get(), TEXT("LsnNoScaleObjects"));
 	HorizonLine->SetVisibility(false);
 	SunObstacle->SetVisibility(false);
@@ -136,12 +146,49 @@ void ALsnSiteScene::UpdateObstacleHighlight(const TCHAR* Body, UProceduralMeshCo
 
 void ALsnSiteScene::SetFillLightVisible(bool bVisible)
 {
-	FillLight->SetVisibility(bVisible);
+	bFillLightWanted = bVisible;
+	UpdateLook();
 }
 
 bool ALsnSiteScene::IsFillLightVisible() const
 {
-	return FillLight->IsVisible();
+	return bFillLightWanted;
+}
+
+double ALsnSiteScene::GetSunVisibleFraction() const
+{
+	const FLsnBodySeries* Sun = (bHasPackage && Package.bHasTimeline) ? Package.FindSeries(TEXT("SUN")) : nullptr;
+	const int32 Flat = HeightIndex * Package.Time.Count + TimeIndex;
+	if (!Sun || !Sun->VisibleFraction.IsValidIndex(Flat) || FMath::IsNaN(Sun->VisibleFraction[Flat]))
+	{
+		return 0.0;
+	}
+	return FMath::Clamp(static_cast<double>(Sun->VisibleFraction[Flat]), 0.0, 1.0);
+}
+
+void ALsnSiteScene::UpdateLook()
+{
+	// How the scene is drawn follows one package value: the share of the Sun's disc that is
+	// visible at the selected sample. Nothing here changes a number or a position.
+	const double SunShare = GetSunVisibleFraction();
+	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
+	FillLight->SetVisibility(bFillLightWanted && bHasPackage && SunShare <= 0.0);
+	// The shaded sides of the scale objects: with the Sun up, light reflected from the sunlit
+	// ground reaches them; with the fill on, a little of it. Stand-ins chosen by eye.
+	const float Ambient = ObjectAmbient * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
+	if (ObjectMaterial)
+	{
+		ObjectMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
+	}
+	if (RockMaterial)
+	{
+		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), 0.8f * Ambient);
+	}
+	if (StarMaterial)
+	{
+		// Dimmed while sunlit ground is in view: the eye and a camera set for sunlit ground see few stars.
+		StarMaterial->SetScalarParameterValue(TEXT("Intensity"), StarEmissive * FMath::Lerp(1.0f, StarShareInSunlight, static_cast<float>(SunShare)));
+	}
 }
 
 FVector ALsnSiteScene::GetEyeUnreal() const
@@ -173,6 +220,14 @@ FString ALsnSiteScene::GetGroundNote() const
 	if (UnknownTerrainSamples > 0)
 	{
 		Note += FString::Printf(TEXT(" %d samples have no data."), UnknownTerrainSamples);
+	}
+	if (bHasRealTerrain && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoDetail")))
+	{
+		Note += TEXT(" Roughness and small craters finer than the elevation data are illustrative shading, not data.");
+	}
+	if (bHasSky)
+	{
+		Note += TEXT(" Stars: Yale Bright Star Catalogue, turned for the date; decoration.");
 	}
 	if (bHasScaleObjects && bScaleObjectsVisible)
 	{
@@ -234,6 +289,41 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
 	ObjectMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	ObjectMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
+	RockMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
+	// Detail finer than the data on real elevation data only; the placeholder surface is no data at all.
+	RegolithMaterial->SetScalarParameterValue(TEXT("DetailStrength"), (bHasRealTerrain && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoDetail"))) ? 1.0f : 0.0f);
+
+	// The star field, if the star list and the orientation exported for this very package are there.
+	FString SkyError;
+	static FLsnStarCatalogue Catalogue;
+	static bool bCatalogueTried = false, bCatalogueLoaded = false;
+	if (!bCatalogueTried)
+	{
+		bCatalogueTried = true;
+		bCatalogueLoaded = FLsnStarCatalogue::Load(Catalogue, SkyError);
+	}
+	bHasSky = bCatalogueLoaded && !Package.bSynthetic && Package.bHasTimeline && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoStars"))
+		&& FLsnSkyOrientation::LoadForSite(Package.SiteId, Sky, SkyError) && Sky.Matches(Package, SkyError);
+	if (bHasSky)
+	{
+		if (!StarBaseMaterial)
+		{
+			StarBaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Lsn/M_LsnStar.M_LsnStar"));
+		}
+		bHasSky = StarBaseMaterial != nullptr;
+	}
+	if (bHasSky)
+	{
+		FLsnMeshData StarMesh;
+		LsnSky::BuildStarMesh(Catalogue, StarSphereRadiusCm, StarMesh);
+		StarMaterial = UMaterialInstanceDynamic::Create(StarBaseMaterial, this);
+		ApplyMesh(Stars, StarMesh, StarMaterial);
+	}
+	else
+	{
+		UE_LOG(LogLsn, Display, TEXT("No star field for %s: %s"), *Package.SiteId, *SkyError);
+	}
+	Stars->SetVisibility(bHasSky);
 
 	RebuildGeometry();
 	SetTimeIndex(0);
@@ -376,11 +466,11 @@ void ALsnSiteScene::RebuildScaleObjects()
 		struct FPlaced { const TCHAR* Model; double AzimuthDeg; double DistanceM; double YawDeg; double Scale; };
 		static const FPlaced Placed[] = {
 			{ TEXT("lander"), 150.0, 38.0, 20.0, 1.0 },
-			{ TEXT("boulder_1"), 118.0, 9.0, 0.0, 1.0 }, { TEXT("boulder_2"), 131.0, 6.0, 70.0, 1.0 }, { TEXT("boulder_3"), 100.0, 16.0, 140.0, 1.0 },
-			{ TEXT("boulder_2"), 145.0, 12.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 11.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 22.0, 30.0, 1.0 },
-			{ TEXT("boulder_2"), 20.0, 7.0, 110.0, 1.0 }, { TEXT("boulder_1"), 70.0, 14.0, 300.0, 0.8 },
+			{ TEXT("boulder_1"), 118.0, 15.0, 0.0, 1.0 }, { TEXT("boulder_2"), 133.0, 10.0, 70.0, 1.0 }, { TEXT("boulder_3"), 100.0, 27.0, 140.0, 1.0 },
+			{ TEXT("boulder_2"), 147.0, 19.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 16.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 31.0, 30.0, 1.0 },
+			{ TEXT("boulder_2"), 20.0, 13.0, 110.0, 1.0 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
 		};
-		FLsnMeshData All;
+		FLsnMeshData All, Rocks;
 		TMap<FString, FLsnMeshData> Models;
 		FString Error;
 		for (const FPlaced& Item : Placed)
@@ -399,13 +489,19 @@ void ALsnSiteScene::RebuildScaleObjects()
 			FVector Ground;
 			if (GroundPointUnreal(Item.AzimuthDeg, Item.DistanceM, Ground))
 			{
-				LsnProps::Append(*Model, FVector(Item.Scale), Item.YawDeg, Ground, All);
+				// Boulders are of the ground's own material and are shaded like it; the lander is not.
+				LsnProps::Append(*Model, FVector(Item.Scale), Item.YawDeg, Ground, FString(Item.Model).StartsWith(TEXT("boulder")) ? Rocks : All);
 			}
 		}
 		if (All.Triangles.Num() > 0)
 		{
 			ScaleObjects->SetRelativeLocation(FVector::ZeroVector);
 			ApplyMesh(ScaleObjects, All, ObjectMaterial);
+			if (Rocks.Triangles.Num() > 0)
+			{
+				ScaleObjects->CreateMeshSection(1, Rocks.Positions, Rocks.Triangles, Rocks.Normals, Rocks.UV0, Rocks.Colors, TArray<FProcMeshTangent>(), false);
+				ScaleObjects->SetMaterial(1, RockMaterial);
+			}
 			bHasScaleObjects = true;
 		}
 		FLsnMeshData MastMesh;
@@ -526,6 +622,7 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 		{
 			// The regolith shading needs the direction of the Sun; it is the package's.
 			RegolithMaterial->SetVectorParameterValue(TEXT("SunDirection"), FLinearColor(ToSun.X, ToSun.Y, ToSun.Z, 0.0f));
+			if (RockMaterial) { RockMaterial->SetVectorParameterValue(TEXT("SunDirection"), FLinearColor(ToSun.X, ToSun.Y, ToSun.Z, 0.0f)); }
 		}
 		// A directional light shines along its forward axis: away from the Sun.
 		SunLight->SetWorldRotation((-ToSun).Rotation());
@@ -542,6 +639,18 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	}
 	PlaceDisc(SunDisc, Sun, SunProxyDistanceM);
 	PlaceDisc(EarthDisc, Earth, EarthProxyDistanceM);
+	if (bHasSky)
+	{
+		// The sky turns with the Moon: the orientation exported for this package, at this instant.
+		FQuat Turn;
+		const bool bInRange = Sky.MeshRotationAt(Package.EtOfPosition(TimePosition), Turn);
+		Stars->SetVisibility(bInRange);
+		if (bInRange)
+		{
+			Stars->SetWorldLocationAndRotation(GetEyeUnreal(), Turn);
+		}
+	}
+	UpdateLook();
 	UpdateObstacleHighlight(TEXT("SUN"), SunObstacle, ShownSunObstacleId, SunObstacleColor);
 	UpdateObstacleHighlight(TEXT("EARTH"), EarthObstacle, ShownEarthObstacleId, EarthObstacleColor);
 	return true;

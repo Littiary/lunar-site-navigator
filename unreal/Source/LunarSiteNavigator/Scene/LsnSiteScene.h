@@ -5,6 +5,7 @@
 #include "Frame/LsnSiteFrame.h"
 #include "Mesh/LsnMesh.h"
 #include "Package/LsnPackage.h"
+#include "Sky/LsnSky.h"
 #include "Terrain/LsnTerrainGrid.h"
 #include "LsnSiteScene.generated.h"
 
@@ -108,6 +109,12 @@ public:
 	/** A point of the drawn ground at an azimuth and distance from the site, relative to the actor; false without elevation data there. */
 	bool GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const;
 
+	/** True if the star field is drawn: the star list and the sky orientation exported for this package are there. */
+	bool HasStars() const { return bHasSky; }
+	UProceduralMeshComponent* GetStarsComponent() const { return Stars; }
+	/** Share of the Sun's disc the package gives as visible at the selected sample and height; 0 without a value. */
+	double GetSunVisibleFraction() const;
+
 	/** What the ground between the site and the horizon line is, for the read-out. */
 	FString GetGroundNote() const;
 
@@ -166,8 +173,22 @@ private:
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> ScaleObjects;
 
+	/** The star field: decoration, drawn where the catalogue and the Moon's orientation put it. */
+	UPROPERTY()
+	TObjectPtr<UProceduralMeshComponent> Stars;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> StarBaseMaterial;
+
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> StarMaterial;
+
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> Mast;
+
+	/** The boulders: shaded like the ground, without its fine detail. */
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> RockMaterial;
 
 	/** The plain cosine law for the scale objects. */
 	UPROPERTY()
@@ -177,9 +198,11 @@ private:
 	TObjectPtr<UDirectionalLightComponent> SunLight;
 
 	/**
-	 * A very weak light from the zenith without shadows, so that terrain the Sun does not
-	 * reach is still told apart from the sky. It is a display aid: it stands for no
-	 * computed quantity (no earthshine, no reflected light) and comes from no package field.
+	 * A very weak light from the zenith without shadows, so that the terrain stays readable
+	 * while the Sun is down. It is a display aid: it stands for no computed quantity (no
+	 * earthshine, no reflected light) and comes from no package field. It is on only while
+	 * the package gives the Sun as wholly hidden at the selected sample, and only if the
+	 * user has not switched it off: with the Sun up, shadows are black.
 	 */
 	UPROPERTY()
 	TObjectPtr<UDirectionalLightComponent> FillLight;
@@ -211,6 +234,10 @@ private:
 	bool bHasRealTerrain = false;
 	int32 SceneSlot = 0;
 	bool bObstacleViewEnabled = true;
+	bool bFillLightWanted = true;
+	bool bHasSky = false;
+	FLsnSkyOrientation Sky;
+	void UpdateLook();
 	bool bScaleObjectsVisible = true;
 	bool bMastVisible = false;
 	bool bHasScaleObjects = false;

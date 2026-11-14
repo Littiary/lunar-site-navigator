@@ -33,10 +33,15 @@ ALsnObserverPawn::ALsnObserverPawn()
 	Post.AutoExposureApplyPhysicalCameraExposure = false;
 	Post.bOverride_AutoExposureBias = true;
 	// Chosen for a Sun a few degrees above the horizon: level ground in grazing light is a
-	// mid grey, slopes facing the Sun are bright, and nothing is lifted out of the shadows.
-	Post.AutoExposureBias = -0.5f;
+	// light grey, slopes facing the Sun are bright, and nothing is lifted out of the shadows.
+	Post.AutoExposureBias = 0.2f;
+	// A restrained glare: only what is many times brighter than sunlit ground spreads, which is the Sun's disc.
 	Post.bOverride_BloomIntensity = true;
-	Post.BloomIntensity = 0.0f;
+	Post.BloomIntensity = 0.45f;
+	Post.bOverride_BloomThreshold = true;
+	Post.BloomThreshold = 6.0f;
+	Post.bOverride_BloomMethod = true;
+	Post.BloomMethod = BM_SOG;
 	Post.bOverride_LensFlareIntensity = true;
 	Post.LensFlareIntensity = 0.0f;
 	Post.bOverride_VignetteIntensity = true;
