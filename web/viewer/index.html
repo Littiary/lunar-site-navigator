@@ -7,7 +7,7 @@
 <title>Lunar Site Navigator viewer</title>
 <link rel="stylesheet" href="viewer.css">
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": { "three": "./vendor/three/three.module.js" } }
 </script>
 </head>
 <body>
@@ -72,7 +72,9 @@
 
   <section id="panel-3d" role="tabpanel" aria-labelledby="tab-3d" hidden>
     <div id="view3d" class="view3d"><p class="muted">Loading the 3-D view…</p></div>
-    <p class="muted small">Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. <span id="check3d"></span></p>
+    <p class="muted small">Ground view from the site. Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. The horizon ring is coloured by the distance of the terrain that sets the horizon (<code>horizon.distance_m</code>):
+      <span class="swatch d1"></span>&lt; 1 km (near field) <span class="swatch d2"></span>1–10 km <span class="swatch d3"></span>10–100 km <span class="swatch d4"></span>≥ 100 km. <span id="check3d"></span></p>
+    <p class="muted small" id="missing3d"></p>
     <div class="time-row"><button type="button" id="zoom-in">Zoom in</button><button type="button" id="zoom-out">Zoom out</button><button type="button" id="look-sun">Look at the Sun</button><button type="button" id="look-earth">Look at the Earth</button></div>
   </section>
 

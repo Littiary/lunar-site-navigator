@@ -67,10 +67,12 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - a path is solid where the package window `<body>_visible` contains the sample and faded elsewhere (a time comparison, no threshold);
   - drag to pan, use the wheel, a pinch or the buttons to zoom; pointing at a path shows that sample's package values, and clicking or tapping it selects that time;
   - angles map linearly to pixels, with no trigonometry; a built-in check reads the drawn horizon back and compares it with the package (it agrees to within floating-point rounding).
-- **3-D view (three.js 0.160.0 from jsDelivr):**
-  - the horizon profile is drawn on a sphere around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
-  - drag to look around, use the wheel or the buttons to zoom;
-  - a built-in check reads the drawn horizon line back and prints its largest difference from the package profile (about 2e-7° in elevation, which is float32 rounding).
+- **3-D ground view (Task 8 B, three.js 0.160.0 stored in `viewer/vendor/three/`, so it works offline):**
+  - the horizon profile is drawn as terrain around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
+  - the horizon ring is coloured by the distance of the terrain that sets the horizon (`horizon.distance_m`: < 1 km near field, 1–10 km, 10–100 km, ≥ 100 km; comparisons only);
+  - a built-in check reads the drawn horizon line back against the package (about 2e-7°, float32 rounding);
+  - without WebGL the tab says so and points to the 2-D views;
+  - the panel names the newer package fields the ground view would use but the package lacks (obstacles, blockers, lit fraction, uncertainty arrays); nothing is drawn in their place.
 
 **No science in the browser.**
 - `js/package.js` checks every array against the byte length and SHA-256 in its manifest; Web Crypto needs https or localhost, and otherwise the footer says that checksums were not verified.

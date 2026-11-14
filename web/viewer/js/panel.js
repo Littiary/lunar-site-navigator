@@ -74,6 +74,7 @@ export async function loadSiteData(site, h) {
   const m = site.manifest;
   const tl = site.timeline;
   const data = { horizon: (await site.array(m.horizon.elevation_deg)).row(h), series: {} };
+  if (m.horizon.distance_m) data.distance = (await site.array(m.horizon.distance_m)).row(h);
   if (tl) {
     for (const body of BODIES) {
       const s = tl.series[body];

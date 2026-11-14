@@ -59,7 +59,7 @@ function render() {
     $("events").innerHTML = eventsHtml(site, h, i);
   }
   $("footer").innerHTML = footerHtml(site);
-  if (state.view3d) state.view3d.update(viewInput());
+  if (state.view3d) { const v = viewInput(); state.view3d.update(v); showMissing(v.missing); }
   if (state.sky && !$("panel-sky").hidden) updateSky();
   const q = new URLSearchParams(location.search);
   q.set("site", site.manifest.site.site_id); q.set("h", String(h)); q.set("i", String(i));
@@ -71,7 +71,27 @@ function viewInput() {
     const s = state.data.series[body];
     return s ? { az: s.az[state.i], el: s.el[state.i] } : null;
   };
-  return { siteId: state.site.id, h: state.h, horizon: state.data.horizon, azimuth: state.site.manifest.horizon.azimuth, sun: pick("SUN"), earth: pick("EARTH") };
+  return { siteId: state.site.id, h: state.h, horizon: state.data.horizon, distance: state.data.distance, azimuth: state.site.manifest.horizon.azimuth,
+    sun: pick("SUN"), earth: pick("EARTH"), missing: missingForGroundView(state.site) };
+}
+
+function showMissing(missing) {
+  $("missing3d").innerHTML = missing.length
+    ? `Not shown, because this package (contract ${esc(state.site.manifest.contract.version)}) does not contain them: ${missing.map(esc).join("; ")}. A terrain surface around the site is not part of the package contract.`
+    : "";
+}
+
+// Package fields the ground view (Task 8 B) would use but this package does not have.
+function missingForGroundView(site) {
+  const m = site.manifest, hz = m.horizon, tl = m.timeline || {};
+  const series = Object.values(tl.series || {});
+  const checks = [
+    ["horizon.obstacles and horizon.obstacle_id (outlines and labels of obstacles, contract 0.2)", hz.obstacles && hz.obstacle_id],
+    ["timeline.blockers and series.<BODY>.blocker_azimuth_index (which obstacle hides the body, contract 0.2)", tl.blockers && series.some((s) => s.blocker_azimuth_index)],
+    ["series.<BODY>.lit_fraction (lit share of the Sun, contract 0.2)", series.some((s) => s.lit_fraction)],
+    ["horizon.elevation_lower_deg / elevation_upper_deg (uncertainty band of the profile, reserved)", hz.elevation_lower_deg && hz.elevation_upper_deg],
+  ];
+  return checks.filter(([, present]) => !present).map(([label]) => label);
 }
 
 function setSample(i) {
@@ -147,9 +167,11 @@ async function open3d() {
     const { createView } = await import("./view3d.js");
     state.view3d = createView($("view3d"), { onCheck: (text) => { $("check3d").textContent = text; } });
     ["zoom-in", "zoom-out", "look-sun", "look-earth"].forEach((id) => $(id).addEventListener("click", () => state.view3d.command(id)));
-    state.view3d.update(viewInput());
+    const v = viewInput();
+    state.view3d.update(v);
+    showMissing(v.missing);
   } catch (e) {
-    $("view3d").innerHTML = `<p class="banner">The 3-D view could not start: ${esc(e.message || e)}. It loads three.js from cdn.jsdelivr.net.</p>`;
+    $("view3d").innerHTML = `<p class="banner">The 3-D view could not start: ${esc(e.message || e)}. The views "Horizon and time" and "Sky panorama" show the same package data without WebGL.</p>`;
   }
 }
 

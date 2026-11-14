@@ -70,3 +70,5 @@ main.wide { max-width: 1600px; }
 .sky-tip { position: absolute; max-width: min(420px, 90%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; pointer-events: none; }
 .note-band { color: var(--muted); margin: 6px 0; }
 .pane .sky { margin-top: 4px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin: 0 2px 0 6px; }
+.swatch.d1 { background: #ff7b72; } .swatch.d2 { background: #f0a54a; } .swatch.d3 { background: #e6edf3; } .swatch.d4 { background: #6ea8fe; }
