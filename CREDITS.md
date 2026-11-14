@@ -40,6 +40,9 @@ Every third-party item used in this project gets one row here before it is merge
 |---|---|---|---|---|
 | Unreal Engine (with its ProceduralMeshComponent and Python editor plugins and engine default font) | 5.8.4 | Unreal Engine EULA (not an OSI licence; free to download and use) | https://www.unrealengine.com/eula/unreal | `unreal/` |
 | FFmpeg (tool; joins rendered frames into the clips under `docs/unreal/`, not shipped) | 8.1.2 | LGPL 2.1 or later / GPL 2 or later, depending on the build | https://ffmpeg.org/ | `unreal/Scripts/record.ps1` |
+| Unreal MCP plugin `ModelContextProtocol` with `EditorToolset` (development tool: lets a local assistant inspect and drive the editor at 127.0.0.1; editor only, optional in the project file, not in the packaged build) | 1.0, experimental, as shipped with Unreal Engine 5.8.4 | Unreal Engine EULA (part of the engine; marked not for redistribution) | https://www.unrealengine.com/eula/unreal | `unreal/Scripts/open_editor.ps1`, `unreal/Scripts/mcp_probe.py` |
+| Blender (development tool; no asset in the repository was made with it so far) | 5.2.3 LTS | GPL-3.0-or-later | https://www.blender.org/ | none yet |
+| Blender MCP add-on `mcp` and the Blender MCP server extension (development tools: let a local assistant drive a running Blender over a local socket) | add-on 1.0.0, server 1.0.1 | GPL-3.0-or-later (Blender Lab) | https://www.blender.org/lab/mcp-server/ | none yet |
 | NumPy | 2.5.4 | BSD-3-Clause (the wheel also bundles 0BSD, MIT, Zlib and CC0-1.0 parts) | https://numpy.org | `data/` (reader, pyramids), `core/` (array maths, binary array files) |
 | jsonschema (with its dependencies attrs, referencing, rpds-py, jsonschema-specifications) | 4.26.0 | MIT | https://github.com/python-jsonschema/jsonschema | `core/lsncore/contract/` (package validation) |
 | pytest | 9.2.0 | MIT | https://docs.pytest.org | `data/tests`, `core/tests/` (test runner, development only) |
