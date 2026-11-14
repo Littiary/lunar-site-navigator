@@ -104,3 +104,9 @@ frame and terrain product checksum. They are the project's own candidate sites, 
 Criterion `data/checkpoints/thresholds_supplementary.json` (committed before measuring), result `data/checkpoints/supplementary_report.json`.
 Best-fit translation of each IAU outline onto its rim crest: no common translation (mean 936 m, standard error 658 m); the rotation rule is flagged
 (-0.87 deg +- 0.35 deg), driven by Cabeus alone. Checkpoint 2 itself is unchanged: 2 of 6.
+
+### Crater-catalogue georeferencing check
+
+Criterion `data/checkpoints/thresholds_catalogue.json` (committed before measuring), result `data/checkpoints/catalogue_report.json`. 192 rim fits against the Robbins
+catalogue: translation (-21, +24) m, rotation -0.013 deg, radial scale -3.6e-4, all below the levels that matter for horizons (100 m). The catalogue
+was measured on LROC, LOLA and Kaguya TC products in a LOLA control net, so this tests our reading of the files against LOLA-controlled products, not the absolute frame.
