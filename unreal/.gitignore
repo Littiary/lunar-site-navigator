@@ -3,3 +3,4 @@ Content/Collections/
 *.slnx
 Content/LsnPackages/
 Content/LsnTerrain/
+Content/LsnSky/*/

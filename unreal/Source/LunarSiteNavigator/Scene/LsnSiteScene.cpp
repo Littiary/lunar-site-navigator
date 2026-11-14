@@ -6,6 +6,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Mesh/LsnProps.h"
+#include "Misc/Paths.h"
 #include "ProceduralMeshComponent.h"
 
 namespace
@@ -55,10 +57,15 @@ ALsnSiteScene::ALsnSiteScene()
 	EarthObstacle = MakeMeshComponent(this, TEXT("EarthObstacle"), false);
 	SunDisc = MakeMeshComponent(this, TEXT("SunDisc"), false);
 	EarthDisc = MakeMeshComponent(this, TEXT("EarthDisc"), false);
-	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get() })
+	ScaleObjects = MakeMeshComponent(this, TEXT("ScaleObjects"), true);
+	Mast = MakeMeshComponent(this, TEXT("Mast"), true);
+	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get(), ScaleObjects.Get(), Mast.Get() })
 	{
 		Component->SetupAttachment(Root);
 	}
+	ScaleObjects->SetVisibility(false);
+	Mast->SetVisibility(false);
+	bScaleObjectsVisible = !FParse::Param(FCommandLine::Get(), TEXT("LsnNoScaleObjects"));
 	HorizonLine->SetVisibility(false);
 	SunObstacle->SetVisibility(false);
 	EarthObstacle->SetVisibility(false);
@@ -149,7 +156,7 @@ void ALsnSiteScene::SetSceneSlot(int32 Slot)
 	const bool b0 = SceneSlot == 0, b1 = SceneSlot == 1, b2 = SceneSlot == 2;
 	SunLight->SetLightingChannels(b0, b1, b2);
 	FillLight->SetLightingChannels(b0, b1, b2);
-	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get() })
+	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get(), ScaleObjects.Get(), Mast.Get() })
 	{
 		Component->SetLightingChannels(b0, b1, b2);
 	}
@@ -166,6 +173,10 @@ FString ALsnSiteScene::GetGroundNote() const
 	if (UnknownTerrainSamples > 0)
 	{
 		Note += FString::Printf(TEXT(" %d samples have no data."), UnknownTerrainSamples);
+	}
+	if (bHasScaleObjects && bScaleObjectsVisible)
+	{
+		Note += TEXT(" Lander, mast and boulders are scale objects, not part of the package.");
 	}
 	return Note;
 }
@@ -221,6 +232,8 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	RegolithMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	EarthMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
+	ObjectMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
+	ObjectMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
 
 	RebuildGeometry();
 	SetTimeIndex(0);
@@ -313,6 +326,8 @@ void ALsnSiteScene::RebuildGeometry()
 	LineMaterial->SetScalarParameterValue(TEXT("Intensity"), HorizonLineEmissive);
 	ApplyMesh(HorizonLine, LineData, LineMaterial);
 
+	RebuildScaleObjects();
+
 	// Discs.
 	UMaterialInstanceDynamic* SunMaterial = UMaterialInstanceDynamic::Create(EmissiveMaterial, this);
 	SunMaterial->SetScalarParameterValue(TEXT("Intensity"), SunDiscEmissive);
@@ -321,6 +336,100 @@ void ALsnSiteScene::RebuildGeometry()
 	// that its phase follows from the two package directions. It carries no map: the
 	// package does not say which side of the Earth faces the Moon.
 	EnsureUnitSphere(EarthDisc, FColor(86, 118, 178, 255), EarthMaterial);
+}
+
+bool ALsnSiteScene::GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const
+{
+	const int32 NumRings = TerrainGrid.RingDistanceM.Num();
+	if (!bHasRealTerrain || NumRings < 2 || TerrainGrid.AzimuthCount <= 0 || DistanceM > TerrainGrid.RingDistanceM.Last())
+	{
+		return false;
+	}
+	// The nearest azimuth sample of the elevation samples; linear between its two rings.
+	const int32 Nearest = FMath::RoundToInt32((AzimuthDeg - TerrainGrid.AzimuthStartDeg) / TerrainGrid.AzimuthStepDeg);
+	const int32 A = ((Nearest % TerrainGrid.AzimuthCount) + TerrainGrid.AzimuthCount) % TerrainGrid.AzimuthCount;
+	int32 R = 0;
+	while (R + 2 < NumRings && TerrainGrid.RingDistanceM[R + 1] < DistanceM)
+	{
+		++R;
+	}
+	const double D0 = TerrainGrid.RingDistanceM[R], D1 = TerrainGrid.RingDistanceM[R + 1];
+	const double F = FMath::Clamp((DistanceM - D0) / (D1 - D0), 0.0, 1.0);
+	const float H0 = TerrainGrid.HeightsM[A * NumRings + R], H1 = TerrainGrid.HeightsM[A * NumRings + R + 1];
+	if (FMath::IsNaN(H0) || FMath::IsNaN(H1))
+	{
+		return false;
+	}
+	OutPoint = Frame.SurfacePointUnreal(AzimuthDeg, DistanceM, (1.0 - F) * H0 + F * H1);
+	return true;
+}
+
+void ALsnSiteScene::RebuildScaleObjects()
+{
+	bHasScaleObjects = false;
+	ScaleObjects->ClearAllMeshSections();
+	Mast->ClearAllMeshSections();
+	if (bHasRealTerrain)
+	{
+		// Where the objects stand: azimuth and distance from the site, turn about the vertical,
+		// size factor. Chosen for the look; the lander is far enough to stay small in the view.
+		struct FPlaced { const TCHAR* Model; double AzimuthDeg; double DistanceM; double YawDeg; double Scale; };
+		static const FPlaced Placed[] = {
+			{ TEXT("lander"), 150.0, 38.0, 20.0, 1.0 },
+			{ TEXT("boulder_1"), 118.0, 9.0, 0.0, 1.0 }, { TEXT("boulder_2"), 131.0, 6.0, 70.0, 1.0 }, { TEXT("boulder_3"), 100.0, 16.0, 140.0, 1.0 },
+			{ TEXT("boulder_2"), 145.0, 12.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 11.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 22.0, 30.0, 1.0 },
+			{ TEXT("boulder_2"), 20.0, 7.0, 110.0, 1.0 }, { TEXT("boulder_1"), 70.0, 14.0, 300.0, 0.8 },
+		};
+		FLsnMeshData All;
+		TMap<FString, FLsnMeshData> Models;
+		FString Error;
+		for (const FPlaced& Item : Placed)
+		{
+			FLsnMeshData* Model = Models.Find(Item.Model);
+			if (!Model)
+			{
+				FLsnMeshData Loaded;
+				if (!LsnProps::LoadObj(FPaths::Combine(LsnProps::ModelDirectory(), FString(Item.Model) + TEXT(".obj")), Loaded, Error))
+				{
+					UE_LOG(LogLsn, Warning, TEXT("Scale object not drawn: %s"), *Error);
+					continue;
+				}
+				Model = &Models.Add(Item.Model, MoveTemp(Loaded));
+			}
+			FVector Ground;
+			if (GroundPointUnreal(Item.AzimuthDeg, Item.DistanceM, Ground))
+			{
+				LsnProps::Append(*Model, FVector(Item.Scale), Item.YawDeg, Ground, All);
+			}
+		}
+		if (All.Triangles.Num() > 0)
+		{
+			ScaleObjects->SetRelativeLocation(FVector::ZeroVector);
+			ApplyMesh(ScaleObjects, All, ObjectMaterial);
+			bHasScaleObjects = true;
+		}
+		FLsnMeshData MastMesh;
+		if (LsnProps::BuildMast(Package.ObserverHeightsM[HeightIndex], MastMesh, Error))
+		{
+			Mast->SetRelativeLocation(FVector::ZeroVector);
+			ApplyMesh(Mast, MastMesh, ObjectMaterial);
+		}
+	}
+	ScaleObjects->SetVisibility(bHasScaleObjects && bScaleObjectsVisible);
+	Mast->SetVisibility(bHasScaleObjects && bScaleObjectsVisible && bMastVisible);
+}
+
+void ALsnSiteScene::SetScaleObjectsVisible(bool bVisible)
+{
+	bScaleObjectsVisible = bVisible;
+	ScaleObjects->SetVisibility(bHasScaleObjects && bScaleObjectsVisible);
+	Mast->SetVisibility(bHasScaleObjects && bScaleObjectsVisible && bMastVisible);
+}
+
+void ALsnSiteScene::SetMastVisible(bool bVisible)
+{
+	bMastVisible = bVisible;
+	Mast->SetVisibility(bHasScaleObjects && bScaleObjectsVisible && bMastVisible);
 }
 
 void ALsnSiteScene::EnsureUnitSphere(UProceduralMeshComponent* Component, const FColor& Color, UMaterialInterface* Material)

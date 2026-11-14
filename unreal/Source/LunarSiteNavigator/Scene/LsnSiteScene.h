@@ -96,6 +96,18 @@ public:
 	const FLsnTerrainGrid& GetTerrainGrid() const { return TerrainGrid; }
 	int32 GetUnknownTerrainSamples() const { return UnknownTerrainSamples; }
 
+	/**
+	 * Scale objects: a generic lander and boulders near the site, and the mast that carries
+	 * the observer. They are drawn for a sense of size only; they are in no package and are
+	 * not part of the terrain mesh. Shown only on real elevation data.
+	 */
+	void SetScaleObjectsVisible(bool bVisible);
+	bool AreScaleObjectsVisible() const { return bScaleObjectsVisible; }
+	/** The mast stands where the observer is: it is shown only to a camera that is not the observer. */
+	void SetMastVisible(bool bVisible);
+	/** A point of the drawn ground at an azimuth and distance from the site, relative to the actor; false without elevation data there. */
+	bool GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const;
+
 	/** What the ground between the site and the horizon line is, for the read-out. */
 	FString GetGroundNote() const;
 
@@ -152,6 +164,16 @@ private:
 	TObjectPtr<UProceduralMeshComponent> EarthDisc;
 
 	UPROPERTY()
+	TObjectPtr<UProceduralMeshComponent> ScaleObjects;
+
+	UPROPERTY()
+	TObjectPtr<UProceduralMeshComponent> Mast;
+
+	/** The plain cosine law for the scale objects. */
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> ObjectMaterial;
+
+	UPROPERTY()
 	TObjectPtr<UDirectionalLightComponent> SunLight;
 
 	/**
@@ -189,6 +211,10 @@ private:
 	bool bHasRealTerrain = false;
 	int32 SceneSlot = 0;
 	bool bObstacleViewEnabled = true;
+	bool bScaleObjectsVisible = true;
+	bool bMastVisible = false;
+	bool bHasScaleObjects = false;
+	void RebuildScaleObjects();
 	/** Obstacle whose band each highlight currently holds; -1 for none. */
 	int32 ShownSunObstacleId = -1;
 	int32 ShownEarthObstacleId = -1;

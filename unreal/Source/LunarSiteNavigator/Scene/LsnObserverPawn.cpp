@@ -52,7 +52,7 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
 		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
 		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("next_requirement"),
-		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("quality"), TEXT("help"), TEXT("quit"),
+		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
 }
@@ -197,6 +197,7 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("height_up")) { Scene->SetHeightIndex(Scene->GetHeightIndex() + 1); }
 	else if (Action == TEXT("height_down")) { Scene->SetHeightIndex(Scene->GetHeightIndex() - 1); }
 	else if (Action == TEXT("height_next")) { Scene->SetHeightIndex((Scene->GetHeightIndex() + 1) % FMath::Max(Package.NumHeights(), 1)); }
+	else if (Action == TEXT("scale_objects")) { Scene->SetScaleObjectsVisible(!Scene->AreScaleObjectsVisible()); }
 	else if (Action == TEXT("quality")) { if (GameMode) { GameMode->SetLowQuality(!GameMode->IsLowQuality()); } }
 	else if (Action == TEXT("help")) { bShowHelp = !bShowHelp; }
 	else if (Action == TEXT("quit"))
@@ -228,6 +229,8 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 	const bool bRightView = GameMode && GameMode->GetViewIndexOf(GetController()) == 1;
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
+	// The mast carries the observer: only a camera that stands elsewhere can see it.
+	Scene->SetMastVisible(IsOverview());
 	if (IsOverview() && Scene->GetMoonSphereComponent()->IsVisible())
 	{
 		// The reference sphere is drawn sunk so that the observer never sees it; where the real
@@ -430,7 +433,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
 		{ EKeys::O, TEXT("obstacle"), TEXT("obstacle") }, { EKeys::H, TEXT("horizon_line"), TEXT("horizon_line") }, { EKeys::L, TEXT("fill_light"), TEXT("fill_light") },
 		{ EKeys::F, TEXT("follow_sun"), TEXT("follow_sun") }, { EKeys::PageUp, TEXT("height_up"), TEXT("height_up") }, { EKeys::PageDown, TEXT("height_down"), TEXT("height_down") },
-		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
+		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
 	for (const FKeyAction& KeyAction : KeyActions)
 	{

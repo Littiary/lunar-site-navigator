@@ -7,6 +7,13 @@
 //    is where the package says within 0.001 deg, and the silhouette of its terrain equals
 //    the package horizon within 0.001 deg at every azimuth sample. The offset used in
 //    the test is the one the comparison uses.
+//    Amendment (2026-11-14). The comparison no longer places its second scene 20 000 km
+//    away: that distance was measured to break the shadows of both scenes in the
+//    side-by-side view (see LsnPlanner::SecondSceneOffsetCm). Both scenes now stand at the
+//    same place and are kept apart by the views and the lighting channels (criterion N).
+//    The property of this criterion is still tested 20 000 km from the origin, with the
+//    same tolerances; the statement "the offset keeps the two scenes far apart" is
+//    withdrawn, because the comparison does not rely on distance any more.
 //
 // N. Two scenes do not light each other: scene slot 0 has its Sun light, fill light and
 //    lit meshes on lighting channel 0 only, slot 1 on channel 1 only.
@@ -75,7 +82,7 @@ bool FLsnPlannerOffsetSceneTest::RunTest(const FString& Parameters)
 {
 	using namespace LsnPlannerTest;
 	FWorldFixture Fixture;
-	const FVector Offset = LsnPlanner::SecondSceneOffsetCm();
+	const FVector Offset(2.0e9, 0.0, 0.0);
 	ALsnSiteScene* Scene = Fixture.Spawn(Offset);
 	FString Error;
 	if (!TestTrue(FString::Printf(TEXT("the scene loads the sample package (%s)"), *Error), Scene->LoadPackageDirectory(LsnTest::FixturePackageDir(TEXT("site")), Error)))
@@ -86,7 +93,7 @@ bool FLsnPlannerOffsetSceneTest::RunTest(const FString& Parameters)
 	const FLsnSitePackage& P = Scene->GetPackage();
 	const int32 H = Scene->GetHeightIndex();
 
-	TestTrue(TEXT("the offset keeps the two scenes far apart"), Offset.Size() > 2.0 * P.MaxRangeM * FLsnSiteFrame::CmPerM);
+	TestTrue(TEXT("the test offset is far from the origin"), Offset.Size() > 2.0 * P.MaxRangeM * FLsnSiteFrame::CmPerM);
 	const FVector ExpectedEye = Offset + FVector(0.0, 0.0, P.ObserverHeightsM[H] * FLsnSiteFrame::CmPerM);
 	TestTrue(TEXT("M: the eye is the scene's origin plus the observer height"), FVector::Dist(Scene->GetEyeUnreal(), ExpectedEye) < 1e-6);
 

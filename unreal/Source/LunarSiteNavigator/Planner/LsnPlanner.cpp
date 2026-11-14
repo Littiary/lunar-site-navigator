@@ -1,4 +1,6 @@
 #include "Planner/LsnPlanner.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 #include "Frame/LsnSiteFrame.h"
 #include "Misc/Paths.h"
@@ -12,9 +14,14 @@ FVector2D FLsnPanorama::Point(double AzimuthDeg, double ElevationDeg) const
 
 FVector LsnPlanner::SecondSceneOffsetCm()
 {
-	// 20 000 km to the north: ten times the Moon's diameter. The shadow clipmaps of a view
-	// reach a few hundred kilometres, the terrain 300 km, the Moon sphere 3474 km.
-	return FVector(2.0e9, 0.0, 0.0);
+	// Both scenes stand at the same place. Each view hides the other scene, and each scene is
+	// lit and shadowed on its own lighting channel, so they never meet on screen.
+	// They used to stand 20 000 km apart. Measured on 2026-11-14: with the two scenes that far
+	// apart in one world, the shadows of both broke into dark horizontal stripes in the
+	// side-by-side view (not in the single view, not with shadows off, and the pattern changed
+	// with the distance and its direction); with the scenes at the same place the side-by-side
+	// view shows the same shadows as the single view.
+	return FVector::ZeroVector;
 }
 
 FString LsnPlanner::PublishedPackageRoot()

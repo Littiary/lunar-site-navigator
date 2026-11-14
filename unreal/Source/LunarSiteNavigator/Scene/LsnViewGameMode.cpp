@@ -373,6 +373,10 @@ void ALsnViewGameMode::SyncComparison()
 		{
 			Right->SetFillLightVisible(Left->IsFillLightVisible());
 		}
+		if (Right->AreScaleObjectsVisible() != Left->AreScaleObjectsVisible())
+		{
+			Right->SetScaleObjectsVisible(Left->AreScaleObjectsVisible());
+		}
 		if (Right->IsHorizonLineVisible() != Left->IsHorizonLineVisible())
 		{
 			Right->SetHorizonLineVisible(Left->IsHorizonLineVisible());

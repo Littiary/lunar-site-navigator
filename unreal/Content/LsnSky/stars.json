@@ -1,0 +1,20 @@
+{
+ "format": {
+  "name": "lsn-unreal-stars",
+  "version": "1"
+ },
+ "count": 8404,
+ "columns": [
+  "x_j2000",
+  "y_j2000",
+  "z_j2000",
+  "v_mag",
+  "b_minus_v"
+ ],
+ "file": "stars.f4",
+ "dtype": "<f4",
+ "faintest_mag": 6.5,
+ "source": "Yale Bright Star Catalogue, 5th revised edition (Hoffleit & Warren 1991), positions J2000",
+ "source_file": "catalog.gz",
+ "generated_utc": "2026-11-14T14:48:24Z"
+}

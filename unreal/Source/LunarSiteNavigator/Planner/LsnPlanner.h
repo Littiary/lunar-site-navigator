@@ -64,8 +64,8 @@ namespace LsnPlanner
 	LUNARSITENAVIGATOR_API void BuildPairLines(const FLsnSitePair& Pair, TArray<FString>& OutLines);
 
 	/**
-	 * Where the second scene of a comparison stands in the world, centimetres. Far enough
-	 * that neither terrain, shadows nor the Moon sphere of one scene reach the other.
+	 * Where the second scene of a comparison stands in the world, centimetres: at the same
+	 * place as the first. The views and the lighting channels keep the two apart.
 	 */
 	LUNARSITENAVIGATOR_API FVector SecondSceneOffsetCm();
 
