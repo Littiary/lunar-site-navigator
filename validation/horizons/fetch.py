@@ -8,7 +8,7 @@ SHA-256). Nobody edits the files in ``raw/``.
 
 Usage (from the repository root)::
 
-    python -m validation.horizons.fetch [--only CASE_ID_SUBSTRING] [--limit N]
+    python -m validation.horizons.fetch [--dir validation/horizons_rts] [--only CASE_ID_SUBSTRING] [--limit N]
 """
 
 from __future__ import annotations
@@ -31,8 +31,8 @@ USER_AGENT = "lunar-ephemeris-validation/0.1 (python-urllib; sequential, cached)
 PAUSE_SECONDS = 1.5
 
 
-def load_cases() -> dict:
-    return json.loads((HERE / "cases.json").read_text(encoding="utf-8"))
+def load_cases(base: Path = HERE) -> dict:
+    return json.loads((base / "cases.json").read_text(encoding="utf-8"))
 
 
 def iter_cases(cases: dict):
@@ -59,8 +59,9 @@ def build_url(api: str, params: dict) -> str:
     return api + "?" + urllib.parse.urlencode(quoted, quote_via=urllib.parse.quote)
 
 
-def fetch_one(case_id: str, url: str, params: dict) -> str:
-    body_path, meta_path = RAW / f"{case_id}.json", RAW / f"{case_id}.meta.json"
+def fetch_one(case_id: str, url: str, params: dict, base: Path = HERE) -> str:
+    raw = base / "raw"
+    body_path, meta_path = raw / f"{case_id}.json", raw / f"{case_id}.meta.json"
     if body_path.exists() and meta_path.exists():
         return "cached"
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -72,10 +73,10 @@ def fetch_one(case_id: str, url: str, params: dict) -> str:
     retrieved = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     document = json.loads(payload)
     if "error" in document or "$$SOE" not in document.get("result", ""):
-        problem = HERE / f"rejected__{case_id}.json"
+        problem = base / f"rejected__{case_id}.json"
         problem.write_bytes(payload)
         raise SystemExit(f"{case_id}: Horizons returned no ephemeris; response kept in {problem.name}")
-    RAW.mkdir(parents=True, exist_ok=True)
+    raw.mkdir(parents=True, exist_ok=True)
     body_path.write_bytes(payload)
     meta = {
         "case_id": case_id,
@@ -96,13 +97,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", default="", help="fetch only cases whose id contains this text")
     parser.add_argument("--limit", type=int, default=0, help="stop after this many new requests")
+    parser.add_argument("--dir", default=str(HERE), help="folder holding cases.json and raw/ (default: validation/horizons)")
     args = parser.parse_args()
-    cases = load_cases()
+    base = Path(args.dir).resolve()
+    cases = load_cases(base)
     done = 0
     for case_id, _site, _body, _span, params in iter_cases(cases):
         if args.only and args.only not in case_id:
             continue
-        outcome = fetch_one(case_id, build_url(cases["api"], params), params)
+        outcome = fetch_one(case_id, build_url(cases["api"], params), params, base)
         print(f"{case_id}: {outcome}", flush=True)
         if outcome == "fetched":
             done += 1

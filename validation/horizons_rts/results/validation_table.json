@@ -1,0 +1,225 @@
+{
+  "generated_utc": "2026-11-14T10:34:27Z",
+  "thresholds": {
+    "event_time_seconds_max": 120.0,
+    "unmatched_events_max": 0
+  },
+  "definition": "Sun, upper limb on the true visual horizon of the 1737.4 km sphere (dip included for a site above the sphere), no refraction.",
+  "core": {
+    "scan_step_s": 60.0,
+    "bisection_tolerance_s": 0.5,
+    "kernel_set_id": "bfe870fccfa5",
+    "frame": "MOON_ME_DE440_ME421"
+  },
+  "reference": "NASA/JPL Horizons, rise/transit/set search, 1-minute step, TVH mode; a row is the first search step at which the condition holds, so it lies 0 to 60 s after the true instant; stated accuracy: twice the search step.",
+  "cases": [
+    {
+      "case_id": "eq_near__sun__rts_60d",
+      "site": {
+        "id": "eq_near",
+        "lon_deg": 0.0,
+        "lat_deg": 0.0,
+        "height_km": 0.0,
+        "note": "mean sub-Earth point"
+      },
+      "span": {
+        "id": "rts_60d",
+        "start_utc": "2026-11-01 00:00",
+        "stop_utc": "2026-12-31 00:00",
+        "step": "1m TVH",
+        "note": "rise/transit/set rows only, 1-minute search step, true visual horizon"
+      },
+      "retrieved_utc": "2026-11-14T10:33:32Z",
+      "raw_sha256": "ac5cd5e318c2326184c8eaf1e5fa9b635bd74a0db764f5d7ee44aff78146d533",
+      "events": [
+        {
+          "type": "set",
+          "horizons_utc": "2026-11-02T06:22:00",
+          "core_utc": "2026-11-02T06:21:44.297",
+          "horizons_minus_core_s": 15.703141331672668,
+          "horizons_center_elevation_deg": -0.270763
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-11-16T23:38:00",
+          "core_utc": "2026-11-16T23:37:18.984",
+          "horizons_minus_core_s": 41.015881419181824,
+          "horizons_center_elevation_deg": -0.263739
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-12-01T20:24:00",
+          "core_utc": "2026-12-01T20:23:31.640",
+          "horizons_minus_core_s": 28.35995614528656,
+          "horizons_center_elevation_deg": -0.274277
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-12-16T13:58:00",
+          "core_utc": "2026-12-16T13:57:32.577",
+          "horizons_minus_core_s": 27.42283868789673,
+          "horizons_center_elevation_deg": -0.267003
+        }
+      ],
+      "unmatched": 0,
+      "max_abs_difference_s": 41.015881419181824,
+      "status": "PASS"
+    },
+    {
+      "case_id": "low_lat_east__sun__rts_60d",
+      "site": {
+        "id": "low_lat_east",
+        "lon_deg": 23.47,
+        "lat_deg": 0.67,
+        "height_km": 0.0,
+        "note": "near side, low latitude"
+      },
+      "span": {
+        "id": "rts_60d",
+        "start_utc": "2026-11-01 00:00",
+        "stop_utc": "2026-12-31 00:00",
+        "step": "1m TVH",
+        "note": "rise/transit/set rows only, 1-minute search step, true visual horizon"
+      },
+      "retrieved_utc": "2026-11-14T10:33:36Z",
+      "raw_sha256": "94b5c3ee0fb5ca153e4523c807f5d40996c736ad323ecc078804db2f53f875d0",
+      "events": [
+        {
+          "type": "rise",
+          "horizons_utc": "2026-11-15T01:24:00",
+          "core_utc": "2026-11-15T01:23:57.890",
+          "horizons_minus_core_s": 2.109594941139221,
+          "horizons_center_elevation_deg": -0.269392
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-11-29T22:02:00",
+          "core_utc": "2026-11-29T22:01:38.671",
+          "horizons_minus_core_s": 21.328659892082214,
+          "horizons_center_elevation_deg": -0.272963
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-12-14T15:42:00",
+          "core_utc": "2026-12-14T15:41:51.327",
+          "horizons_minus_core_s": 8.672786116600037,
+          "horizons_center_elevation_deg": -0.269842
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-12-29T12:35:00",
+          "core_utc": "2026-12-29T12:34:32.108",
+          "horizons_minus_core_s": 27.89195466041565,
+          "horizons_center_elevation_deg": -0.274676
+        }
+      ],
+      "unmatched": 0,
+      "max_abs_difference_s": 27.89195466041565,
+      "status": "PASS"
+    },
+    {
+      "case_id": "far_mid_north_1km__sun__rts_60d",
+      "site": {
+        "id": "far_mid_north_1km",
+        "lon_deg": -150.0,
+        "lat_deg": 45.0,
+        "height_km": 1.0,
+        "note": "far side, 1 km above the sphere: horizon dip 1.94 deg"
+      },
+      "span": {
+        "id": "rts_60d",
+        "start_utc": "2026-11-01 00:00",
+        "stop_utc": "2026-12-31 00:00",
+        "step": "1m TVH",
+        "note": "rise/transit/set rows only, 1-minute search step, true visual horizon"
+      },
+      "retrieved_utc": "2026-11-14T10:33:39Z",
+      "raw_sha256": "6b83acdc5d96ae22b75af0b48d819ecdbb4a7602a772a63759b1aebc08c293eb",
+      "events": [
+        {
+          "type": "set",
+          "horizons_utc": "2026-11-14T16:08:00",
+          "core_utc": "2026-11-14T16:07:38.672",
+          "horizons_minus_core_s": 21.328337788581848,
+          "horizons_center_elevation_deg": -2.215326
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-11-29T05:23:00",
+          "core_utc": "2026-11-29T05:22:35.859",
+          "horizons_minus_core_s": 24.141143679618835,
+          "horizons_center_elevation_deg": -2.210894
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-12-14T06:47:00",
+          "core_utc": "2026-12-14T06:46:27.421",
+          "horizons_minus_core_s": 32.579025983810425,
+          "horizons_center_elevation_deg": -2.217826
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-12-28T19:06:00",
+          "core_utc": "2026-12-28T19:05:57.421",
+          "horizons_minus_core_s": 2.5794336795806885,
+          "horizons_center_elevation_deg": -2.213914
+        }
+      ],
+      "unmatched": 0,
+      "max_abs_difference_s": 32.579025983810425,
+      "status": "PASS"
+    },
+    {
+      "case_id": "south_85__sun__rts_60d",
+      "site": {
+        "id": "south_85",
+        "lon_deg": 45.0,
+        "lat_deg": -85.0,
+        "height_km": 0.0,
+        "note": "south polar region, slow crossings"
+      },
+      "span": {
+        "id": "rts_60d",
+        "start_utc": "2026-11-01 00:00",
+        "stop_utc": "2026-12-31 00:00",
+        "step": "1m TVH",
+        "note": "rise/transit/set rows only, 1-minute search step, true visual horizon"
+      },
+      "retrieved_utc": "2026-11-14T10:33:43Z",
+      "raw_sha256": "943b0bde3f703a78c97779f580d74ced6778f3190440731120deef2cc609cb4a",
+      "events": [
+        {
+          "type": "rise",
+          "horizons_utc": "2026-11-11T13:32:00",
+          "core_utc": "2026-11-11T13:31:26.953",
+          "horizons_minus_core_s": 33.047032594680786,
+          "horizons_center_elevation_deg": -0.269398
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-11-29T19:21:00",
+          "core_utc": "2026-11-29T19:20:26.484",
+          "horizons_minus_core_s": 33.516157269477844,
+          "horizons_center_elevation_deg": -0.270305
+        },
+        {
+          "type": "rise",
+          "horizons_utc": "2026-12-11T06:58:00",
+          "core_utc": "2026-12-11T06:57:28.827",
+          "horizons_minus_core_s": 31.172695875167847,
+          "horizons_center_elevation_deg": -0.270897
+        },
+        {
+          "type": "set",
+          "horizons_utc": "2026-12-29T00:13:00",
+          "core_utc": "2026-12-29T00:12:03.514",
+          "horizons_minus_core_s": 56.485689759254456,
+          "horizons_center_elevation_deg": -0.271372
+        }
+      ],
+      "unmatched": 0,
+      "max_abs_difference_s": 56.485689759254456,
+      "status": "PASS"
+    }
+  ]
+}

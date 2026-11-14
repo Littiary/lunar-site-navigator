@@ -42,4 +42,12 @@ The exact path agrees with Horizons at the level of Horizons' printed resolution
 * The Earth's angular diameter is the equatorial width; the flattening of the disc (0.3 %) is not modelled.
 * The sites are test points, not catalogued landing sites.
 
+## `horizons_rts/` — rise and set times versus JPL Horizons
+
+**What is compared.** Sunrise and sunset times on a smooth sphere (no terrain) from four points, found by the event finder (`core/lsncore/events/`), against the rise/transit/set search of Horizons (1-minute search step, "true visual horizon" mode). The event is the Sun's upper limb crossing the horizon of the 1737.4 km sphere; one site is 1 km above the sphere, where the horizon dips by 1.94°.
+
+**Result** (`horizons_rts/results/validation_table.md`): 16 events over 60 days, none unmatched. Horizons minus core lies between +2 s and +57 s for every event. A Horizons row is the first one-minute search step at which the condition holds, so a difference between 0 and 60 s is what exact agreement looks like. Threshold, fixed before the data was fetched: 120 s (the accuracy Horizons states for this mode).
+
+**Limits.** Smooth sphere only; the Sun only (Horizons does not state which point of the Earth's disc its rise and set refer to); the reference resolves one minute, so this check cannot confirm the finder's own 0.25 s numerical accuracy, which is covered by the analytic tests in `core/tests/events/`.
+
 Reference: Giorgini, JD and JPL Solar System Dynamics Group, NASA/JPL Horizons On-Line Ephemeris System, https://ssd.jpl.nasa.gov/horizons/, data retrieved 2026-Nov-14.
