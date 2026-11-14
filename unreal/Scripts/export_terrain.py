@@ -17,6 +17,11 @@ control. Each grid records the package it was sampled for and the terrain files 
 Usage (in the Python environment that has the data stream's reader installed):
     python export_terrain.py <package root> [--out <folder>] [--rings 320]
 The default output folder is unreal/Content/LsnTerrain.
+
+Near the three project sites the data stream also serves NASA's 5 m site models
+(open_terrain(near_field=True)). They are sampled only for a package that was itself computed
+on them (its horizon.terrain_source says so), so that the drawn ground and the package
+horizon are the same data; --near-field yes forces them for a preview.
 """
 
 from __future__ import annotations
@@ -58,12 +63,28 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("package_root")
     parser.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "Content" / "LsnTerrain"))
-    parser.add_argument("--rings", type=int, default=320)
+    parser.add_argument("--rings", type=int, default=480)
+    parser.add_argument("--near-field", choices=("auto", "yes", "no"), default="auto",
+                        help="sample the 5 m site models near the site. auto (default): only for a package whose own "
+                             "terrain_source names a product of 5 m or finer, so that the drawn ground is the data the "
+                             "package was computed on; yes: always (a preview: the ground may then differ from the "
+                             "package horizon); no: never")
     args = parser.parse_args()
 
     import lsn_data  # the data stream's reader
 
-    terrain = lsn_data.open_terrain()
+    terrains = {}
+
+    def open_terrain(near_field: bool):
+        if near_field not in terrains:
+            terrains[near_field] = lsn_data.open_terrain(near_field=True) if near_field else lsn_data.open_terrain()
+        return terrains[near_field]
+
+    def package_rests_on_fine_data(manifest: dict) -> bool:
+        source = manifest["horizon"].get("terrain_source") or {}
+        pixels = [p.get("pixel_m", 1e9) for p in source.get("products", [])] + [source.get("at_site", {}).get("pixel_m", 1e9)]
+        return min(pixels) <= 5.0
+
     root = Path(args.package_root)
     out = Path(args.out)
     index = json.loads((root / "index.json").read_text(encoding="utf-8"))
@@ -76,6 +97,8 @@ def main() -> None:
             print(f"skip {entry['site_id']}: a synthetic package has no terrain")
             continue
         site, horizon = manifest["site"], manifest["horizon"]
+        near_field = args.near_field == "yes" or (args.near_field == "auto" and package_rests_on_fine_data(manifest))
+        terrain = open_terrain(near_field)
         radius_m = site["reference_radius_m"]["value"]
         if abs(radius_m - terrain.reference_radius_m) > 1e-6:
             raise SystemExit(f"{entry['site_id']}: package sphere {radius_m} m, terrain sphere {terrain.reference_radius_m} m")
@@ -102,13 +125,16 @@ def main() -> None:
                         "sha256": hashlib.sha256(data).hexdigest(), "nan_count": int(np.isnan(heights).sum())},
             "definition": "Height of the terrain above the reference sphere at the point reached from the site along the great circle of the azimuth after the ring distance (arc length on the reference sphere).",
             "sampling": "lsn_data.Terrain.height_m(lon, lat): finest data, bilinear, statistic 'mean'",
+            "near_field": bool(near_field),
+            "near_field_note": ("5 m site models sampled where they cover the place" + ("" if package_rests_on_fine_data(manifest) else
+                                "; PREVIEW: the package was computed on coarser data, so this ground may differ from its horizon")) if near_field else "not used",
             "dem": manifest["inputs"]["dem"],
             "created_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
         (folder / "terrain.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
         written.append(site["site_id"])
         print(f"{site['site_id']}: {heights.shape[0]} azimuths x {heights.shape[1]} rings, "
-              f"{meta['heights']['nan_count']} without data, heights {np.nanmin(heights):.0f} to {np.nanmax(heights):.0f} m -> {folder}")
+              f"{'5 m near field, ' if near_field else ''}{meta['heights']['nan_count']} without data, heights {np.nanmin(heights):.0f} to {np.nanmax(heights):.0f} m -> {folder}")
     (out / "index.json").write_text(json.dumps({"format": FORMAT, "sites": written}, indent=2) + "\n", encoding="utf-8")
 
 

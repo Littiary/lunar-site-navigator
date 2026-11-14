@@ -24,7 +24,6 @@ namespace
 	/** Radius of the star sphere: beyond the discs of the Sun and the Earth. */
 	constexpr double StarSphereRadiusCm = 2.5e11;
 	/** Emissive share of the scale objects' grey value while the Sun is wholly visible: sunlight reflected from the ground. */
-	constexpr float ObjectAmbient = 0.22f;
 	constexpr float HorizonLineEmissive = 3.0f;
 	constexpr float ObstacleEmissive = 6.0f;
 	/** Angular height of the highlight band above the horizon. A drawing choice. */
@@ -194,14 +193,14 @@ void ALsnSiteScene::UpdateLook()
 	}
 	// The shaded sides of the scale objects: with the Sun up, light reflected from the sunlit
 	// ground reaches them; with the fill on, a little of it. Stand-ins chosen by eye.
-	const float Ambient = ObjectAmbient * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
+	const float Ambient = LsnLook::ObjectAmbient.GetValueOnGameThread() * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
 	if (ObjectMaterial)
 	{
 		ObjectMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
 	}
 	if (RockMaterial)
 	{
-		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), 0.8f * Ambient);
+		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), 1.5f * Ambient);
 	}
 	if (StarMaterial)
 	{
@@ -389,7 +388,19 @@ bool ALsnSiteScene::SetHeightIndex(int32 NewHeightIndex)
 void ALsnSiteScene::ApplyMesh(UProceduralMeshComponent* Component, const FLsnMeshData& Mesh, UMaterialInterface* Material)
 {
 	Component->ClearAllMeshSections();
-	Component->CreateMeshSection(0, Mesh.Positions, Mesh.Triangles, Mesh.Normals, Mesh.UV0, Mesh.Colors, TArray<FProcMeshTangent>(), false);
+	// The engine stores a vertex normal in 8 bits per axis. Under a Sun a few degrees above the
+	// ground that shows as steps of brightness along the contours, so the normal travels a second
+	// time in two texture coordinates (16 bits each): x and y, then the sign of z and a mark that
+	// says the pair is filled. The surface material reads it from there.
+	TArray<FVector2D> NormalXY, NormalSign;
+	NormalXY.Reserve(Mesh.Normals.Num());
+	NormalSign.Reserve(Mesh.Normals.Num());
+	for (const FVector& Normal : Mesh.Normals)
+	{
+		NormalXY.Add(FVector2D(Normal.X, Normal.Y));
+		NormalSign.Add(FVector2D(Normal.Z < 0.0 ? -1.0 : 1.0, 1.0));
+	}
+	Component->CreateMeshSection(0, Mesh.Positions, Mesh.Triangles, Mesh.Normals, Mesh.UV0, NormalXY, NormalSign, TArray<FVector2D>(), Mesh.Colors, TArray<FProcMeshTangent>(), false);
 	Component->SetMaterial(0, Material);
 }
 

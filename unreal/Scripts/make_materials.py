@@ -79,7 +79,7 @@ struct FLsnDetail
                 float2 r = Hash2(cell);
                 if (Hash(cell + 17.0) > Share) { continue; }           // only some cells have a crater
                 float2 centre = cell + 0.12 + 0.76 * r;                // anywhere in the cell: no grid shows
-                float radius = 0.07 + 0.25 * pow(Hash(cell + 5.0), 2.0); // in cells; most are small, a few large
+                float radius = 0.05 + 0.30 * pow(Hash(cell + 5.0), 3.0); // in cells; most are small, a few large
                 float2 d = g - centre;
                 float rho = length(d) / radius;
                 if (rho >= 1.6 || rho < 1e-4) { continue; }
@@ -100,19 +100,26 @@ float fine = saturate(1.0 - metres / 45.0), medium = saturate(1.0 - metres / 260
 float small = saturate(1.0 - metres / 120.0), middle = saturate(1.0 - metres / 420.0), large = saturate(1.0 - metres / 1400.0);
 float2 slope = 0;
 // Roughness: supports the relief of the elevation data, does not cover it.
-slope += NS * 0.030 * fine * L.Noise(p * 4.1).xy;
-slope += NS * 0.035 * fine * L.Noise(p * 1.3 + 7.7).xy;
-slope += NS * 0.040 * medium * L.Noise(p * 0.37 + 3.1).xy;
-// Craters in three sizes: many small ones, fewer of the middle size, a few large. The grids are
-// turned against each other so that no direction repeats.
+// Each scale on its own turned grid and kept weak, so that the lattice of the noise does not show
+// as rows of bumps under grazing light.
 float2 q = float2(0.8829 * p.x - 0.4695 * p.y, 0.4695 * p.x + 0.8829 * p.y);
 float2 w = float2(0.5446 * p.x + 0.8387 * p.y, -0.8387 * p.x + 0.5446 * p.y);
-slope += CS * small * L.Craters(p + 11.3, 2.3, 0.22);
-slope += CS * middle * float2(0.8829, -0.4695) * 0.0 + CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 8.5, 0.15));
-slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 31.0, 0.10));
+slope += NS * 0.026 * fine * L.Noise(p * 4.1).xy;
+slope += NS * 0.022 * fine * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Noise(q * 1.3 + 7.7).xy);
+slope += NS * 0.012 * medium * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Noise(w * 0.37 + 3.1).xy);
+// Craters in three sizes, few of each: one cell in ten or fewer holds one, and within a size most
+// are small. The grids are turned against each other so that no direction repeats.
+slope += CS * small * L.Craters(p + 11.3, 2.9, 0.10);
+slope += CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 11.0, 0.08));
+slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 43.0, 0.07));
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
 float mottle = 1.0 + S * 0.10 * medium * (L.Noise(p * 0.11 + 19.0).z - 0.5);
 return float4(n, mottle);
+"""
+
+FINE_NORMAL_CODE = r"""
+float3 n = float3(A.x, A.y, sqrt(saturate(1.0 - dot(A.xy, A.xy))) * (B.x < 0.0 ? -1.0 : 1.0));
+return B.y > 0.5 ? normalize(n) : N;
 """
 
 EARTH_CODE = r"""
@@ -202,7 +209,17 @@ def make_surface():
     link(_scalar(material, "CraterStrength", 1.0, -2300, 800), detail, "CS")
     link(_scalar(material, "NoiseStrength", 1.0, -2300, 900), detail, "NS")
     link(position, detail, "P")
-    link(vertex_normal, detail, "N")
+    # The normal of the mesh at 16 bits where the scene supplies it in texture coordinates 1 and 2
+    # (x, y; sign of z, mark); the 8-bit vertex normal otherwise.
+    uv1 = node(unreal.MaterialExpressionTextureCoordinate, -2600, 300)
+    uv1.set_editor_property("coordinate_index", 1)
+    uv2 = node(unreal.MaterialExpressionTextureCoordinate, -2600, 400)
+    uv2.set_editor_property("coordinate_index", 2)
+    fine_normal = _custom(material, FINE_NORMAL_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT3, ["N", "A", "B"], -2450, 350)
+    link(vertex_normal, fine_normal, "N")
+    link(uv1, fine_normal, "A")
+    link(uv2, fine_normal, "B")
+    link(fine_normal, detail, "N")
     link(distance, detail, "D")
     link(strength, detail, "S")
     normal = node(unreal.MaterialExpressionComponentMask, -1650, 420)

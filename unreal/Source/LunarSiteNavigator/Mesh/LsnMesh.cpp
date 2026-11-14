@@ -209,17 +209,44 @@ namespace
 			}
 		}
 
-		/** Averaged height at a point east and north of the site, metres. */
+		/**
+		 * Averaged height at a point east and north of the site, metres. Read with a cubic B-spline:
+		 * its slope has no steps at the raster lines. Read linearly, each raster cell had its own
+		 * slope, which a Sun a few degrees above the ground showed as bands of brightness.
+		 */
 		double At(double EastM, double NorthM) const
 		{
-			const double X = FMath::Clamp((EastM + Extent) / Cell, 0.0, static_cast<double>(Size - 1) - 1e-9);
-			const double Y = FMath::Clamp((NorthM + Extent) / Cell, 0.0, static_cast<double>(Size - 1) - 1e-9);
-			const int32 I = static_cast<int32>(X), J = static_cast<int32>(Y);
-			const double U = X - I, V = Y - J;
-			return (1.0 - V) * ((1.0 - U) * Raster[J * Size + I] + U * Raster[J * Size + I + 1]) + V * ((1.0 - U) * Raster[(J + 1) * Size + I] + U * Raster[(J + 1) * Size + I + 1]);
+			const double X = FMath::Clamp((EastM + Extent) / Cell, 0.0, static_cast<double>(Size - 1));
+			const double Y = FMath::Clamp((NorthM + Extent) / Cell, 0.0, static_cast<double>(Size - 1));
+			const int32 I = FMath::FloorToInt32(X), J = FMath::FloorToInt32(Y);
+			double WeightX[4], WeightY[4];
+			SplineWeights(X - I, WeightX);
+			SplineWeights(Y - J, WeightY);
+			double Height = 0.0;
+			for (int32 B = 0; B < 4; ++B)
+			{
+				const int32 Row = FMath::Clamp(J + B - 1, 0, Size - 1) * Size;
+				double Line = 0.0;
+				for (int32 A = 0; A < 4; ++A)
+				{
+					Line += WeightX[A] * Raster[Row + FMath::Clamp(I + A - 1, 0, Size - 1)];
+				}
+				Height += WeightY[B] * Line;
+			}
+			return Height;
 		}
 
 	private:
+		/** Weights of the uniform cubic B-spline on four neighbours, for a position T in [0, 1) between the middle two. */
+		static void SplineWeights(double T, double Out[4])
+		{
+			const double T2 = T * T, T3 = T2 * T;
+			Out[0] = (1.0 - 3.0 * T + 3.0 * T2 - T3) / 6.0;
+			Out[1] = (4.0 - 6.0 * T2 + 3.0 * T3) / 6.0;
+			Out[2] = (1.0 + 3.0 * T + 3.0 * T2 - 3.0 * T3) / 6.0;
+			Out[3] = T3 / 6.0;
+		}
+
 		/** Height of the polar grid at a point, linear between its samples (and between the site and the first ring). */
 		double Polar(double EastM, double NorthM) const
 		{

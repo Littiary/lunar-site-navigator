@@ -8,12 +8,20 @@ of a package.
 
 The mouse pointer is visible. The header shows the site, the time and three chips: the Sun,
 the Earth (each with the time to its next set or rise) and whether a landing now meets the
-example requirement. Under it are the three main actions; the other controls are in
-labelled groups along the bottom.
+example requirement. Under it are the three main actions and, at the bottom, one time strip.
+That is the whole view at the start. **More** (key T) brings the other controls in labelled
+groups along the bottom, the panorama and the list of numbers; **Less** takes them away again.
+When the Sun or the Earth is up but outside the picture, an arrow at the edge points to it;
+click it to turn the view there.
 
 | What | How |
 | --- | --- |
 | Choose the time | drag on either time strip (upper: six days around the selected time; lower: the whole computed range) |
+| All other controls | **More** / **Less** |
+| Turn to the Sun when it is outside the picture | click the arrow at the edge of the picture |
+| Camera position | **Camera** goes round: the observer's own view, a camera near the lander looking towards the Sun, a wide view of the site |
+| Camera move from high above down to the site | **Arrival view** (a camera move only; no descent is simulated) |
+| The first lunar day after the planned landing, played fast | **First lunar day** |
 | Play the timeline | button **Play / pause**, **Slower**, **Faster** |
 | Step in time | **< Step**, **Step >** (one sample of the package), **< Day**, **Day >** |
 | Jump to the next sunset | main button **Jump to next sunset** |
@@ -62,6 +70,10 @@ A lit button is switched on.
 | G | lower drawing quality |
 | I | details: package, frame, contract version, test status |
 | S | site list, pinning two sites, custom coordinates |
+| T | all controls on and off |
+| V | camera position: observer, near the lander, wide |
+| A | camera move from high above down to the site |
+| D | play the first lunar day after the planned landing |
 | P | scale objects (lander, boulders) |
 | F1 | list of keys on screen |
 | Tab | hide the pointer and look with the mouse alone (Tab again brings it back) |
@@ -82,3 +94,5 @@ A first-time user will not find these without this list:
 `LunarSiteNavigator.exe -windowed -ResX=1920 -ResY=1080` runs in a window.
 `-LsnLowQuality` starts with the lower drawing quality.
 `-LsnSite=<site_id>` or `-LsnCompare=<site_id>,<site_id>` chooses the sites shown at the start.
+`-LsnControls` starts with all controls shown. `-LsnView=hero` or `-LsnView=wide` starts with
+that camera position.

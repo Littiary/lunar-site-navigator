@@ -1,4 +1,6 @@
 #include "Terrain/LsnTerrainGrid.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
@@ -82,7 +84,10 @@ bool FLsnTerrainGrid::Load(const FString& Directory, FLsnTerrainGrid& OutGrid, F
 
 bool FLsnTerrainGrid::LoadForSite(const FString& InSiteId, FLsnTerrainGrid& OutGrid, FString& OutError)
 {
-	return Load(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnTerrain"), InSiteId)), OutGrid, OutError);
+	// -LsnTerrainRoot=<folder>: another folder of terrain samples (for previews made with export_terrain.py --out).
+	FString Root = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnTerrain"));
+	FParse::Value(FCommandLine::Get(), TEXT("LsnTerrainRoot="), Root);
+	return Load(FPaths::ConvertRelativePathToFull(FPaths::Combine(Root, InSiteId)), OutGrid, OutError);
 }
 
 bool FLsnTerrainGrid::Matches(const FLsnSitePackage& Package, FString& OutError) const

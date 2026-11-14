@@ -138,8 +138,8 @@ void ALsnObserverPawn::SetCameraView(ELsnCameraView NewView)
 	bFollowSun = true;
 	switch (NewView)
 	{
-	case ELsnCameraView::Hero: FollowOffsetDeg = -7.0; ElevationDeg = -5.0; FovDeg = 52.0; break;
-	case ELsnCameraView::Wide: FollowOffsetDeg = 0.0; ElevationDeg = -10.0; FovDeg = 58.0; break;
+	case ELsnCameraView::Hero: FollowOffsetDeg = LsnLook::HeroYawDeg.GetValueOnGameThread(); ElevationDeg = LsnLook::HeroPitchDeg.GetValueOnGameThread(); FovDeg = LsnLook::HeroFovDeg.GetValueOnGameThread(); break;
+	case ELsnCameraView::Wide: FollowOffsetDeg = LsnLook::WideYawDeg.GetValueOnGameThread(); ElevationDeg = LsnLook::WidePitchDeg.GetValueOnGameThread(); FovDeg = LsnLook::WideFovDeg.GetValueOnGameThread(); break;
 	default: FollowOffsetDeg = 0.0; ElevationDeg = 0.5; FovDeg = 60.0; break;
 	}
 }
@@ -159,12 +159,13 @@ bool ALsnObserverPawn::ComposedLocation(const ALsnSiteScene& Scene, ELsnCameraVi
 			Lander = Scene.GetActorLocation();
 		}
 		// A little above and behind the lander, to its right, so that the lander stands left of the Sun.
-		OutLocation = Lander - TowardsSun * (12.0 * M) + Right * (3.5 * M) + Up * (4.4 * M);
+		OutLocation = Lander - TowardsSun * (LsnLook::HeroBackM.GetValueOnGameThread() * M) + Right * (LsnLook::HeroRightM.GetValueOnGameThread() * M) + Up * (LsnLook::HeroUpM.GetValueOnGameThread() * M);
 		return true;
 	}
 	if (View == ELsnCameraView::Wide)
 	{
-		OutLocation = Scene.GetActorLocation() - TowardsSun * (240.0 * M) + Up * (62.0 * M);
+		const FVector Forward = FLsnSiteFrame::AzElToUnrealDir(SunAzimuthDeg + LsnLook::WideYawDeg.GetValueOnGameThread(), 0.0);
+		OutLocation = Scene.GetActorLocation() - Forward * (LsnLook::WideBackM.GetValueOnGameThread() * M) + Up * (LsnLook::WideUpM.GetValueOnGameThread() * M);
 		return true;
 	}
 	return false;
@@ -182,7 +183,7 @@ FString ALsnObserverPawn::GetCameraNote() const
 	}
 	if (CameraView == ELsnCameraView::Wide)
 	{
-		return TEXT("Wide view from behind the site, not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
+		return TEXT("Wide view of the site; the Sun is outside the picture to the right. Not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
 	}
 	if (IsOverview())
 	{
