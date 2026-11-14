@@ -165,7 +165,7 @@ same package ids.
 | `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to |
 | `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg` and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
 | `mission_profile` | Reserved |
-| `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use |
+| `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use. `dem_set_id: "any"` accepts the installed elevation products; a run on another set than the one named still happens and writes a warning. The package always records what was used |
 
 ## 5. Site package
 

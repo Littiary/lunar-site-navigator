@@ -83,7 +83,7 @@ of the overview block that contains a point contains every finest pixel within o
 size of it. The map scale of the polar stereographic projection is taken into account
 when the neighbourhood size is chosen.
 
-On the LOLA products, 0.2 to 1.3 % of the lattice beyond the near zone has to be walked;
+On the LOLA products, 0.15 to 1.3 % of the lattice beyond the near zone has to be walked;
 the rest is excluded by the bound. All observer heights share the same terrain
 evaluations. The size of the cells changes the cost, not the result: a cell is either
 proven irrelevant or walked completely.
@@ -175,7 +175,7 @@ Where the code is above the reference, it found a crease or a peak between the
 reference's 1 m steps; the recomputation confirms these points are real.
 
 Self-convergence on LOLA data: repeating the six test points with a lattice four times
-finer, 16 refined maxima and six refinement rounds changes no value by more than 0.0005
+finer, 16 refined maxima and six refinement rounds changes no value by more than 0.0006
 deg (51 840 values: 6 points x 6 heights x 1440 azimuths).
 
 The 0.005 deg on the 100 m raster is the grid, not the algorithm: bilinear interpolation

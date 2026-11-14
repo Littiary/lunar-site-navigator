@@ -44,7 +44,7 @@ _EVIDENCE = [
     "core/tests/test_horizon.py::test_hill_appears_at_its_bearing_with_the_right_elevation: largest error 3.4e-8 deg against an independent 1-D solution (threshold 0.002 deg)",
     "core/tests/test_horizon.py::test_nothing_is_missed_on_a_rough_gridded_surface: never below an exhaustive 1 m reference scan on a spiked synthetic raster (threshold 0.002 deg, 144 comparisons)",
     "core/tests/test_horizon.py::test_nothing_is_missed_on_lola_data: never below an exhaustive 1 m reference scan on the LOLA 20 m and 60 m south-polar products (threshold 0.002 deg; 648 comparisons at 6 test points measured by script)",
-    "Self-convergence on LOLA data: a four times finer search changes no value by more than 0.0005 deg (51 840 values)",
+    "Self-convergence on LOLA data: a four times finer search changes no value by more than 0.0006 deg (51 840 values)",
     "No comparison with an independent horizon product has been made yet.",
 ]
 
@@ -427,7 +427,7 @@ def run_scenario(
 
     wanted = scenario["data"]["dem_set_id"]
     actual = terrain.describe()["dem_set_id"]
-    if wanted != actual:
+    if wanted not in ("any", actual):
         extra_warnings.append(f"data: the scenario asks for DEM set '{wanted}', the run used '{actual}'")
 
     # Direction table and timeline: provided by the ephemeris modules when present.
