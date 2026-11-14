@@ -24,6 +24,10 @@ given angle, when would the body be visible?*
   at 10 km. Near terrain gets a wide band, far terrain a narrow one; the same sign is
   assumed at every azimuth. This is the assumption that fits near-field obstacles.
   If both are stated they are added.
+- Since contract 0.10 the height can come from a stated model instead of one number:
+  the error map of the product where it has one, slope classes elsewhere. The model
+  shipped as default is measured by the data stream; the bands it gives, on the 20 m
+  product and with the 5 m near field, are in [near_field.md](near_field.md), section 4.
 - Result: three window sets per body and observer height. `certain` holds even with the
   horizon that much higher; `possible` needs it that much lower; `uncertain` is the
   difference. Raising a horizon can only hide and lowering it can only reveal, so
@@ -95,7 +99,10 @@ to one to fifteen hours once 0.05 deg of horizon error is allowed.
 With 1 m the horizon error per azimuth runs from 0.0003 deg to 0.75 deg at the
 Shackleton record (median 0.002 deg) and has a median of 0.18 deg at the Malapert record,
 where most of the horizon is near terrain. The heights 0.5, 1 and 2 m were chosen to
-show the dependence; the accuracy of the LOLA products was not looked up for this note.
+show the dependence and have no source. With the data stream's measured figures (5 m and
+7 m by slope for the 20 m product) the same bands are 85.9 h, 18.2 h and 217.6 h; with
+the 5 m near field and its error maps 13.9 h, 0 h and 94.9 h
+([near_field.md](near_field.md), section 4).
 
 **Circle of 100 m radius, 13 points**
 
@@ -165,10 +172,20 @@ gridded cannot be decided from the model itself. What can be said: on this model
 2 m observer height, the lighting within 100 m of the record ranges from none to
 continuous, and at 20 m every point examined has the Sun throughout.
 
+**Later the same day, on the 5 m site raster.** The hollow is there as well, 17.1 m
+below the record, with no Sun at 2 m and at 5 m, 370 h at 10 m and 720 h at 20 m
+([near_field.md](near_field.md), section 3). A raster gridded separately from the same
+laser returns shows the same feature, so it does not come from the gridding of the
+20 m product; whether the returns themselves are right there is not something these
+products can settle. The conclusion stands with one correction: this is small relief
+that the data resolve, about 100 m across, and the result at a point depends on where
+it is within 40 m; it is not a limit of the 20 m pixel as such.
+
 ## 5. Limits
 
 1. **The stated numbers are inputs.** 0.05 deg, 1 m and 100 m are not properties of the
-   LOLA products or of any lander. A defensible band needs the height and position
+   LOLA products or of any lander; the default height-error model (contract 0.10) is
+   measured, with the limits stated in [near_field.md](near_field.md), section 5. A defensible band needs the height and position
    accuracy of the elevation model from its documentation; with it, the terrain-height
    option gives each azimuth the error that fits the distance of its limiting terrain.
 2. **What a 20 m pixel bounds.** The surface is linear between posts 20 m apart.

@@ -112,3 +112,50 @@ def add_file_hashes(out_dir: str | Path) -> dict:
     meta["hashes_added_utc"] = mf.utc_now()
     meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     return meta
+
+
+def open_product(pid: str, root: Path):
+    """The product ``pid`` as stored under the data root: polar PDS3, cylindrical PDS3 tile, or 5 m site GeoTIFF."""
+    from . import catalog
+    from .cylindrical import CylDEM
+    from .dem import PolarDEM
+    from .paths import raw_dir
+    from .pdslabel import parse_label
+
+    if pid in catalog.SITE_DEM_PRODUCTS:
+        site = next(s for s in catalog.SITE_DEM_SITES if f"LOLA5MPP_{s.upper()}" == pid)
+        return PolarDEM.from_geotiff(Path(root) / "raw" / "lola_5mpp" / pid / f"{site}_final_adj_5mpp_surf.tif", product_id=pid)
+    lbl = raw_dir(root) / pid / f"{pid.lower()}.lbl"
+    kind = parse_label(lbl).get("MAP_PROJECTION_TYPE")
+    return CylDEM(lbl) if kind == "SIMPLE CYLINDRICAL" else PolarDEM(lbl)
+
+
+def build_product(pid: str, root: Path, levels: int = 6) -> dict:
+    from . import manifest as mf
+    from .paths import derived_dir, manifest_path
+
+    dem = open_product(pid, root)
+    m = mf.load(manifest_path())["files"]
+    sha = next((r["sha256"] for k, r in m.items() if r["role"] == "data" and k.split("/")[-2] == pid), None)
+    return build(dem, derived_dir(root) / pid, levels, source_sha256=sha)
+
+
+def write_record(root: Path) -> Path:
+    """Commit-able record of every pyramid under the data root: data/manifest/pyramids.json (sizes and SHA-256)."""
+    from .paths import derived_dir, repo_data_dir
+
+    out = {}
+    for meta_path in sorted(Path(derived_dir(root)).glob("*/pyramid.json")):
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        out[meta_path.parent.name] = {
+            "base_file": meta.get("base_file"),
+            "base_sha256": meta.get("base_sha256"),
+            "levels": meta.get("levels"),
+            "dtype": meta.get("dtype"),
+            "built_utc": meta.get("built_utc"),
+            "files": meta.get("files", {}),
+            "pyramid_json_sha256": mf.sha256_file(meta_path),
+        }
+    path = repo_data_dir() / "manifest" / "pyramids.json"
+    path.write_text(json.dumps({"schema_version": 1, "pyramids": out}, indent=1) + "\n", encoding="utf-8")
+    return path

@@ -163,7 +163,7 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     shape = [len(heights), az["count"]]
     for name in (
         "elevation_deg", "distance_m", "obstacle_height_m", "obstacle_lat_deg",
-        "obstacle_lon_deg", "obstacle_dem_layer", "elevation_sigma_deg",
+        "obstacle_lon_deg", "obstacle_dem_layer", "elevation_sigma_deg", "obstacle_height_error_m", "obstacle_constrained",
         "elevation_lower_deg", "elevation_upper_deg",
     ):
         _expect_shape(hz.get(name), shape, f"horizon/{name}", errors)

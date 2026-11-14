@@ -1,4 +1,4 @@
-# Package contract, version 0.9
+# Package contract, version 0.10
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.9"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.10"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -163,7 +163,7 @@ same package ids.
 | `bodies` | `SUN`, `EARTH` |
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
 | `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to. Three example requirements are in [`presets/requirements.json`](presets/README.md) |
-| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg`, `dem_height_error_m` (since 0.6) and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
+| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg`, `dem_height_error_m` (since 0.6) or `dem_height_error_model` (since 0.10) and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
 | `terrain_patches[]` | Since 0.7, optional. Terrain patches for drawing, each `{id, half_width_m, spacing_m}`; if absent the three default patches are written, an empty list writes none; see 5.9 |
 | `mission_profile` | Reserved |
 | `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use. `dem_set_id: "any"` accepts the installed elevation products; a run on another set than the one named still happens and writes a warning. The package always records what was used |
@@ -462,6 +462,28 @@ the band that contains it; equal to the event time if the band is empty there. A
 requirement (5.6) may name `sun_visible_certain` instead of `sun_visible` to get landing
 windows that hold under the stated error.
 
+**Height-error model** (since 0.10). Instead of one number, `uncertainty.dem_height_error_model`
+states the height error per elevation product: `id`, `label`, `source`, and either
+`constant_m` or `rules`, a map from product id (with `*` as wildcard; the most specific
+pattern applies) to `{"rms_map_factor", "flat_m"}` (that factor times the product's own
+error map at the pixel, `flat_m` where the map is empty) or `{"slope_classes": [{"up_to_deg",
+"error_m"}]}` (by the slope of the terrain at the limiting point). `dem_height_error_m` and
+the model exclude each other. The models shipped with the contract are in
+[`presets/terrain_height_error.json`](presets/README.md); its default is measured by the
+data stream and names its source, the constants are illustrative.
+
+With a model or a constant, the package says what fed the band:
+
+| Where | Field | Content |
+|---|---|---|
+| `horizon` | `obstacle_height_error_m` | `[H, A]` `<f4`: stated height error of the terrain point that sets the horizon; NaN where there is none |
+| `horizon` | `obstacle_constrained` | `[H, A]` `<i4`: 1 if the pixel of that point holds a laser return, 0 if it was filled by interpolation, -1 if unknown |
+| `timeline.uncertainty.horizon_error` | `dem_height_error_model` | `id`, `label`, `source` of the model; a viewer shows the label with the band |
+| | `applied_height_error_m`, `applied_error_deg` | Least, median and largest error at the default observer height, in metres and as an angle |
+| | `sources[]` | `source` (`rms_map`, `flat`, `slope_class`, `constant`) with its `azimuth_share` |
+| | `limiting_pixels` | Shares of the azimuths whose limiting pixel is `constrained`, `interpolated`, `unknown` |
+| every event | `terrain_quality` | `band_source`, `height_error_m`, `limiting_pixel` (`constrained`, `interpolated`, `unknown`) and `product_id` of the horizon sample at the azimuth of the body at the event. A viewer can say "this time rests on an interpolated pixel" |
+
 **Stated landing ellipse** (`uncertainty.landing_ellipse`). The site is the centre.
 Sample points fill the ellipse evenly in area; each has its own terrain horizon and its
 own local vertical. Computed for the default observer height only.
@@ -691,6 +713,15 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.10 (14 November 2026)
+
+Additive; nothing that existed in 0.9 changed its meaning, name, unit or layout. The version number is compared part by part: 0.10 is newer than 0.9.
+
+- Scenario and site request: `uncertainty.dem_height_error_model`.
+- Site package: `horizon.obstacle_height_error_m`, `horizon.obstacle_constrained`; `terrain_quality` in every event; `dem_height_error_model`, `applied_height_error_m`, `sources`, `limiting_pixels` in `timeline.uncertainty.horizon_error`.
+- Presets: `docs/contract/presets/terrain_height_error.json`.
+- `inputs.dem.layers[]` can name a 5 m site raster when the run used the near field ([method note](../method/near_field.md)).
 
 ### 0.9 (14 November 2026)
 

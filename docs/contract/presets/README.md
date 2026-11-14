@@ -1,4 +1,9 @@
-# Requirement presets
+# Presets
+
+Two files: example requirements on the landing time, and stated height errors of the
+terrain for the uncertainty band.
+
+## Requirement presets
 
 [`requirements.json`](requirements.json) holds three example requirements on the landing
 time. They exist so that the viewers have something to show for the landing windows and
@@ -29,3 +34,18 @@ How to use them:
 
 Each entry has the form the contract defines for a requirement (`id`, `label`,
 `mission_duration_s`, `conditions[]`); a test checks the file against the schema.
+
+## Terrain height error
+
+[`terrain_height_error.json`](terrain_height_error.json) holds the models a scenario can
+state in `uncertainty.dem_height_error_model` ([SPEC](../SPEC.md), section 5.7). `default`
+names the one to offer first.
+
+| Id | In words | Source |
+|---|---|---|
+| `lola-two-sigma-2026-11` (default) | On the 5 m site rasters twice the producers' RMS error map at the pixel, 1 m where the map is empty; on every other product 5 m up to 30 degrees of slope, 7 m above | Measured by the data stream on 14 November 2026; the file names the reports. Every product is LOLA: errors common to all of them are not covered |
+| `constant-0.5-m`, `constant-1-m`, `constant-2-m` | One number everywhere | None; illustrative |
+
+The core puts a model into a scenario with `python -m lsncore scenario … --height-error-preset default`
+(or an id); `--dem-height-error-m` states a single number instead. A viewer shows the
+`label` of the model wherever a band or an earliest and latest time is shown.

@@ -1,10 +1,10 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.9"
+    "version": "0.10"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T14:43:16.847Z",
+  "generated_utc": "2026-11-14T15:59:10.367Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
@@ -16,8 +16,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-312f85526ffc929e",
-      "path": "site/synthetic-sample-site/site-312f85526ffc929e",
+      "package_id": "site-cb9180b72dd61712",
+      "path": "site/synthetic-sample-site/site-cb9180b72dd61712",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",
@@ -28,8 +28,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-113228356624da80",
-      "path": "site/synthetic-sample-site-b/site-113228356624da80",
+      "package_id": "site-66c621d426a584f9",
+      "path": "site/synthetic-sample-site-b/site-66c621d426a584f9",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site-b",
@@ -40,8 +40,8 @@
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-70819cf38091245d",
-      "path": "site_pairs/pairs-70819cf38091245d",
+      "package_id": "pairs-e956253f0ac4fab1",
+      "path": "site_pairs/pairs-e956253f0ac4fab1",
       "synthetic": true,
       "status": "ok",
       "site_ids": [

@@ -1,0 +1,18 @@
+{
+  "notice": "Stated height errors of the terrain for the uncertainty band (SPEC 5.7). A scenario carries one of these models, or its own, in uncertainty.dem_height_error_model; the package repeats it with every band. The default is measured by the data stream; the constants are illustrative values kept selectable.",
+  "default": "lola-two-sigma-2026-11",
+  "models": {
+    "lola-two-sigma-2026-11": {
+      "id": "lola-two-sigma-2026-11",
+      "label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+      "source": "Data stream, 14 November 2026: data/checkpoints/near_field_report.json (20 m product minus 5 m site rasters, 0.64 to 1.1 million points per site, by slope class) and data/checkpoints/height_error_report.json; RMS maps *_toterr of the 5 m site rasters of Barker et al. (2021), read through lsn_data sample_quality. The RMS maps are the producers' model estimate, not a test against independent data. Every product is built from LOLA returns: errors common to all LOLA products are not covered.",
+      "rules": {
+        "LOLA5MPP_*": {"rms_map_factor": 2.0, "flat_m": 1.0},
+        "*": {"slope_classes": [{"up_to_deg": 30.0, "error_m": 5.0}, {"up_to_deg": 90.0, "error_m": 7.0}]}
+      }
+    },
+    "constant-0.5-m": {"id": "constant-0.5-m", "label": "Illustrative constant with no source: 0.5 m everywhere", "source": "none", "constant_m": 0.5},
+    "constant-1-m": {"id": "constant-1-m", "label": "Illustrative constant with no source: 1 m everywhere", "source": "none", "constant_m": 1.0},
+    "constant-2-m": {"id": "constant-2-m", "label": "Illustrative constant with no source: 2 m everywhere", "source": "none", "constant_m": 2.0}
+  }
+}

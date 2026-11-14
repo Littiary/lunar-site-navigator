@@ -26,7 +26,9 @@ from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
 from .terrain_patch import DEFAULT_PATCHES, canonical_patches, compute_patches, patch_warnings
 from .timeline import IntervalSet, TimeGrid
-from .uncertainty import add_uncertainty_to_timeline, band_from_windows, ellipse_points, horizon_error_profile, window_job
+from .uncertainty import (
+    add_uncertainty_to_timeline, band_from_windows, ellipse_points, height_error_for_points, horizon_error_profile, terrain_slope_deg, window_job,
+)
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -186,11 +188,13 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
         "core/tests/test_uncertainty.py::test_window_of_a_displaced_point_follows_from_its_own_local_frame: window edges of nine displaced points against a 1 s brute-force scan (threshold 2 s)",
         "core/tests/test_uncertainty.py::test_ellipse_points_fill_the_ellipse_evenly (threshold 0.5 m)",
         "core/tests/test_uncertainty.py::test_horizon_error_from_a_terrain_height_error: per-azimuth error against atan(error / distance)",
+        "core/tests/test_near_field.py::test_height_error_follows_the_stated_model and ::test_slope_of_a_tilted_plane (0.1 deg): the height error per limiting point after a stated model; ::test_package_says_what_fed_the_band_of_every_event",
         "core/tests/test_brute_force_lola.py::test_extreme_points_of_the_de_gerlache_ellipse_against_brute_force: the best and the worst point of one surveyed ellipse on LOLA terrain recomputed straight from the elevation data; horizon within 0.013 deg (tolerance -0.002 to +0.02 deg), Sun-visible time 721 of 721 and 0 of 721 hourly samples against 720.0 h and 0.0 h (tolerance 2 h).",
         "The stated error and the stated ellipse are inputs. Whether they describe the real elevation model or the real landing accuracy has not been checked.",
     ]
     cards = {}
-    if "horizon_error_deg" in stated or "dem_height_error_m" in stated:
+    model = stated.get("dem_height_error_model")
+    if "horizon_error_deg" in stated or "dem_height_error_m" in stated or model:
         cards[pk.M_HORIZON_ERROR] = pk.method_card(
             "Band for a stated horizon error",
             "visible_certain: the times at which the body is visible even if the terrain horizon is higher than computed by the stated angle. visible_possible: the times at which it is visible if the horizon is lower by that angle. visible_uncertain: possible and not certain. For every rise and set, earliest and latest give the interval of the uncertain set that contains the event.",
@@ -198,11 +202,14 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
             local,
             "TDB",
             data,
-            {key: stated[key] for key in ("horizon_error_deg", "dem_height_error_m") if key in stated},
+            {**{key: stated[key] for key in ("horizon_error_deg", "dem_height_error_m") if key in stated}, **({"dem_height_error_model": model.get("id", "unnamed")} if model else {})},
             "analytic-test-passed",
             evidence,
             [
                 "The same sign is assumed at every azimuth. Real errors differ from azimuth to azimuth; the band is the unfavourable case for one event and says little about how errors along the profile combine.",
+                *(([f"Stated height-error model: {model.get('label', '')}. Source: {model.get('source', 'not stated')}"]) if model else []),
+                "Where a product's own error map feeds the band, that map is the producers' model estimate, not a test against independent data. Every elevation product used here is built from LOLA returns: a finer product is independent of the gridding of a coarser one, not of LOLA, and errors common to all of them are not in the band.",
+                "terrain_quality of an event names the horizon sample at the azimuth of the body at the event; for a limb condition the sample that actually limits the disc can be one sample away.",
                 "The height error applies to the limiting terrain point as the elevation model has it. Terrain the model does not contain at all (relief smaller than its pixels) is outside any band.",
                 "The stated numbers are inputs, not estimates of the elevation model's accuracy.",
                 "Ephemeris, landing position and observer height are not in this band.",
@@ -231,6 +238,21 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
     return cards
 
 
+def limiting_quality(terrain, horizon, height_index: int, model: dict) -> dict:
+    """Stated height error of the terrain point that sets the horizon in every azimuth, with
+    its source, the product it lies on and whether its pixel holds a laser return."""
+    lat, lon = horizon.obstacle_lat_deg[height_index], horizon.obstacle_lon_deg[height_index]
+    n = lat.size
+    out = {"error_m": np.full(n, np.nan), "source": np.full(n, "", dtype=object), "constrained": np.full(n, -1, dtype=np.int64), "product_id": np.full(n, "", dtype=object)}
+    known = np.isfinite(lat) & np.isfinite(lon)
+    if known.any():
+        q = terrain.quality_at(lon[known], lat[known])
+        slope = terrain_slope_deg(terrain, lon[known], lat[known], np.where(np.isfinite(q["pixel_m"]), q["pixel_m"], terrain.finest_pixel_m))
+        out["error_m"][known], out["source"][known] = height_error_for_points(model, q["product_id"], q["height_rms_error_m"], slope)
+        out["constrained"][known], out["product_id"][known] = q["constrained"], q["product_id"]
+    return out
+
+
 def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings, workers: int = 1):
     """Bands for a stated horizon error and windows at the sample points of a stated ellipse.
 
@@ -244,11 +266,16 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
     tasks = []  # (what the window is for, arguments of window_job)
     errors = None
 
-    bands, applied = None, None
-    if stated.get("horizon_error_deg") or stated.get("dem_height_error_m"):
+    bands, applied, quality = None, None, None
+    model = stated.get("dem_height_error_model") or ({"constant_m": float(stated["dem_height_error_m"])} if stated.get("dem_height_error_m") else None)
+    if stated.get("horizon_error_deg") or model:
         bands = {}
+        if model:
+            quality = [limiting_quality(terrain, horizon, h, model) for h in range(len(heights))]
+            horizon.obstacle_height_error_m = np.stack([q["error_m"] for q in quality])
+            horizon.obstacle_constrained = np.stack([q["constrained"] for q in quality])
         errors = [
-            horizon_error_profile(horizon.distance_m[h], stated.get("horizon_error_deg"), stated.get("dem_height_error_m"))
+            horizon_error_profile(horizon.distance_m[h], stated.get("horizon_error_deg"), quality[h]["error_m"] if quality else None)
             for h in range(len(heights))
         ]
         applied = {"min": float(errors[hd].min()), "median": float(np.median(errors[hd])), "max": float(errors[hd].max())}
@@ -306,7 +333,7 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
             raised[(body, where)] = result
         else:
             bands[(body, where)] = band_from_windows(timeline.window(f"{body.lower()}_visible", where), raised[(body, where)], result, float(errors[where].max()))
-    return bands, ellipse, notes, applied
+    return bands, ellipse, notes, applied, quality
 
 
 RESOLUTION_CLASSES = "fine: pixel at the site up to 30 m; medium: up to 120 m; coarse: larger"
@@ -652,12 +679,12 @@ def run_scenario(
             if stated:
                 default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
                 hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
-                bands, ellipse, notes, applied = _uncertainty_inputs(
+                bands, ellipse, notes, applied, quality = _uncertainty_inputs(
                     csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings,
                     workers=max(1, int(jobs)),
                 )
                 warnings.extend(notes)
-                add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied)
+                add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied, quality, az_step, hd)
                 methods.update(uncertainty_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id, stated))
             landing = site.get("landing_utc")
             add_calendar_to_timeline(
