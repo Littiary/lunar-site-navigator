@@ -10,9 +10,14 @@ class UCameraComponent;
 /** Where the camera stands: at the observer, or at one of two composed positions that are not the observer's view. */
 enum class ELsnCameraView : uint8
 {
-	Observer,   // at the observer height of the package, at the site
-	Hero,       // a little above and behind the lander, looking towards the Sun
-	Wide,       // high and far behind the site: the site, the lander and the terrain round them
+	/** The observer's own view. */
+	Observer,
+	/** A camera behind the lander, looking towards the Sun. */
+	Hero,
+	/** A wide view of the site with the Sun outside the picture. */
+	Wide,
+	/** A camera on the lander's sunlit side, the Sun behind the camera's shoulder. */
+	HeroLit,
 };
 
 /**
@@ -131,6 +136,8 @@ private:
 	bool bArrival = false;
 	/** A camera position away from the observer was asked for at a site whose elevation data is not installed here. */
 	bool bCameraRefused = false;
+	/** The camera position the scale objects were last switched for (0 none yet, else the view + 1). */
+	int32 ObjectsSwitchedFor = 0;
 	double ArrivalElapsedS = 0.0;
 	double ArrivalSeconds = 8.0;
 	bool bFirstDay = false;

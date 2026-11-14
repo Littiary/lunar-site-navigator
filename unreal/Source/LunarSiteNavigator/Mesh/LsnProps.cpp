@@ -11,7 +11,7 @@ FString LsnProps::ModelDirectory()
 FColor LsnProps::MaterialColor(const FString& MaterialName)
 {
 	// Reflectances chosen by eye for the drawing; no measured values.
-	if (MaterialName.EndsWith(TEXT("foil"))) { return FLinearColor(0.50f, 0.40f, 0.20f).ToFColor(false); }
+	if (MaterialName.EndsWith(TEXT("foil"))) { return FLinearColor(0.42f, 0.30f, 0.10f).ToFColor(false); }
 	if (MaterialName.EndsWith(TEXT("metal"))) { return FLinearColor(0.55f, 0.55f, 0.57f).ToFColor(false); }
 	if (MaterialName.EndsWith(TEXT("dark"))) { return FLinearColor(0.06f, 0.06f, 0.06f).ToFColor(false); }
 	if (MaterialName.EndsWith(TEXT("panel"))) { return FLinearColor(0.03f, 0.05f, 0.12f).ToFColor(false); }

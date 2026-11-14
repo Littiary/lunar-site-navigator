@@ -666,7 +666,7 @@ float ALsnHud::TypeWidth(const FString& Text, float SizeAt1080, bool bMedium) co
 	return static_cast<float>(FLsnUi::Measure(Text, U(SizeAt1080), bMedium).X);
 }
 
-float ALsnHud::DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080)
+float ALsnHud::DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080, bool bDraw)
 {
 	// Runs of digits at the size; everything else (units, words) one size smaller, on the same baseline.
 	const float Smaller = SizeAt1080 >= FLsnUi::Display ? FLsnUi::Title : SizeAt1080 >= FLsnUi::Title ? FLsnUi::Body : FLsnUi::Footnote;
@@ -683,7 +683,10 @@ float ALsnHud::DrawDuration(const FString& Text, const FLinearColor& Color, floa
 			++End;
 		}
 		const FString Run = Text.Mid(Start, End - Start);
-		DrawType(Run, Color, Pen, bDigits ? Y : Y + Drop, bDigits ? SizeAt1080 : Smaller, bDigits);
+		if (bDraw)
+		{
+			DrawType(Run, Color, Pen, bDigits ? Y : Y + Drop, bDigits ? SizeAt1080 : Smaller, bDigits);
+		}
 		Pen += TypeWidth(Run, bDigits ? SizeAt1080 : Smaller, bDigits);
 		Start = End;
 	}
@@ -895,7 +898,9 @@ void ALsnHud::DrawChip(const FBox2D& Box, const FLinearColor& Accent, FName Icon
 	}
 	if (!Duration.IsEmpty())
 	{
-		DrawDuration(Duration, FLsnUi::Ink(), X, Y, FLsnUi::Display);
+		// A countdown too long for a narrow chip is set one size smaller, so that it does not touch the edge.
+		const bool bFits = DrawDuration(Duration, FLsnUi::Ink(), X, Y, FLsnUi::Display, false) <= Width;
+		DrawDuration(Duration, FLsnUi::Ink(), X, Y + (bFits ? 0.0f : U(8.0f)), bFits ? FLsnUi::Display : FLsnUi::Title);
 		Y += U(50.0f);
 	}
 	for (const FString& Line : Detail)
@@ -993,6 +998,7 @@ void ALsnHud::DrawHUD()
 		}
 		const FString Viewpoint = (Pawn && Pawn->IsOverview()) ? (Pawn->GetCameraUpM() >= 1000.0 ? FString::Printf(TEXT("overview from %.0f km above the site, not the observer's view"), Pawn->GetCameraUpM() / 1000.0)
 			: Pawn->IsArrivalRunning() ? FString(TEXT("camera move from high above down to the site; a camera move only, no descent is simulated"))
+			: Pawn->GetCameraView() == ELsnCameraView::HeroLit ? FString(TEXT("camera on the lander's sunlit side, not the observer's view"))
 			: Pawn->GetCameraView() == ELsnCameraView::Hero ? FString(TEXT("camera near the lander, not the observer's view")) : Pawn->GetCameraView() == ELsnCameraView::Wide ? FString(TEXT("wide view of the site, Sun outside the picture to the right; not the observer's view"))
 			: FString::Printf(TEXT("camera %.0f m above and behind the observer, not the observer's view"), Pawn->GetCameraUpM()))
 			: FString::Printf(TEXT("observer %.1f m"), P.ObserverHeightsM[H]);
@@ -1079,7 +1085,7 @@ void ALsnHud::DrawHUD()
 		FLsnBlocking Blocking;
 		const bool bBlocked = P.BlockingAt(Body, H, Sample, Blocking) && Blocking.bHiddenOrPartly;
 		const bool bPartly = bBlocked && Blocking.VisibleFraction > 0.0;
-		const FString State = bPartly ? FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction) : Countdown.bVisibleNow ? FString(TEXT("visible")) : FString(TEXT("hidden"));
+		const FString State = bPartly ? (100.0 * Blocking.VisibleFraction < 0.5 ? FString(TEXT("partly hidden, under 1 % visible")) : FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction)) : Countdown.bVisibleNow ? FString(TEXT("visible")) : FString(TEXT("hidden"));
 		const FString LeadIn = FString::Printf(TEXT("%s in%s"), Countdown.bVisibleNow ? TEXT("sets") : TEXT("rises"), Countdown.bLowerBound ? TEXT(" at least") : TEXT(""));
 		TArray<FString> Detail;
 		// With a stated error the event is a range, not an instant.
@@ -1199,29 +1205,6 @@ void ALsnHud::DrawHUD()
 		}
 	}
 	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(WindowX, SizeY, P, bComparing, !bPresentation);
-	if (P.bHasTimeline && !bOverview && Scene->IsObstacleViewEnabled())
-	{
-		// What hides a body now, and what that obstacle costs: the package's own blocker (SPEC 5.5).
-		TArray<FLsnHudLine> Card;
-		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
-		{
-			FLsnBlocking Blocking;
-			TArray<FString> Sentences;
-			if (P.BlockingAt(Body, H, Sample, Blocking))
-			{
-				LsnHudText::BlockerSentences(Body, P, Blocking, Sentences);
-				for (int32 I = 0; I < Sentences.Num(); ++I)
-				{
-					Card.Add({ Sentences[I], I == 2 ? Alert : I == 0 ? White : Dim, FLsnUi::Body });
-				}
-			}
-		}
-		if (Card.Num() > 0)
-		{
-			Y = DrawCard(Card, Margin, Y, ColumnWidth);
-		}
-	}
-
 	// --- the drawer, from the right: pages, sites, evidence, further controls ---------------
 	if (View == 0)
 	{
@@ -1282,6 +1265,20 @@ void ALsnHud::DrawHUD()
 				if (!Quality.IsEmpty())
 				{
 					Lines.Add({ FString::Printf(TEXT("the next %s event rests on a %s%s"), Body, *Quality, Event->QualityProductId.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Event->QualityProductId)), Dim, 1.0f });
+				}
+			}
+			// What hides a body now, and what that obstacle costs, in full: the package's own blocker (SPEC 5.5).
+			for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
+			{
+				FLsnBlocking Blocking;
+				TArray<FString> Sentences;
+				if (P.bHasTimeline && P.BlockingAt(Body, H, Sample, Blocking))
+				{
+					LsnHudText::BlockerSentences(Body, P, Blocking, Sentences);
+					for (int32 I = 0; I < Sentences.Num(); ++I)
+					{
+						Lines.Add({ Sentences[I], I == 2 ? Alert : White, 1.0f });
+					}
 				}
 			}
 			if (!P.BlockingMethod.IsEmpty())
@@ -1431,13 +1428,18 @@ void ALsnHud::DrawHUD()
 		const FString Detail = FString::Printf(TEXT("%s away, azimuth %.1f deg"), *Distance, Blocking.Obstacle->PeakAzimuthDeg);
 		const float CardWidth = FMath::Max3(TypeWidth(Head, FLsnUi::Body), TypeWidth(Detail, FLsnUi::Body), TypeWidth(Cost, FLsnUi::Display)) + U(28.0f);
 		const float CardHeight = U(Cost.IsEmpty() ? 68.0f : 116.0f);
-		const bool bCardLeft = Peak.X > 0.5f * SizeX;
-		// Clear of the drawer, and below the cards of the left column where it would lie on them.
+		// Above the ridge, centred over its peak, never on the outline (the peak is the highest point of
+		// it); clear of the drawer and of the cards of the left column.
 		const float RightLimit = (bDrawer && !bComparing ? static_cast<float>(FLsnToolbar::DrawerBox(WindowX, SizeY, bComparing).Min.X) - U(16.0f) : SizeX - Margin) - CardWidth;
-		const float CardX = FMath::Clamp(bCardLeft ? Peak.X - U(56.0f) - CardWidth : Peak.X + U(56.0f), Margin, FMath::Max(RightLimit, Margin));
+		const float CardX = FMath::Clamp(Peak.X - 0.5f * CardWidth, Margin, FMath::Max(RightLimit, Margin));
 		const float TopLimit = CardX < Margin + ColumnWidth + U(8.0f) ? FMath::Max(Y, Toolbar.HeaderBottom + U(16.0f)) : Toolbar.HeaderBottom + U(16.0f);
-		const float CardY = FMath::Clamp(Peak.Y - U(64.0f) - CardHeight, TopLimit, FMath::Max(Layout.Panel.Min.Y - U(60.0f) - CardHeight, TopLimit));
-		DrawLine(Peak.X, Peak.Y - U(4.0f), bCardLeft ? CardX + CardWidth : CardX, CardY + CardHeight - U(14.0f), FLinearColor(Outline.R, Outline.G, Outline.B, 0.85f), U(1.5f));
+		const float CardY = FMath::Max(Peak.Y - U(56.0f) - CardHeight, TopLimit);
+		if (CardY + CardHeight > Peak.Y - U(10.0f))
+		{
+			// No room above the ridge in this picture: no card rather than one on the outline.
+			continue;
+		}
+		DrawLine(Peak.X, Peak.Y - U(4.0f), FMath::Clamp(Peak.X, CardX + U(12.0f), CardX + CardWidth - U(12.0f)), CardY + CardHeight, FLinearColor(Outline.R, Outline.G, Outline.B, 0.85f), U(1.5f));
 		DrawDisc(FVector2D(Peak.X, Peak.Y - U(4.0f)), U(3.5f), Outline);
 		DrawPanel(FBox2D(FVector2D(CardX, CardY), FVector2D(CardX + CardWidth, CardY + CardHeight)));
 		DrawRounded(FBox2D(FVector2D(CardX + U(1.0f), CardY + U(8.0f)), FVector2D(CardX + U(5.0f), CardY + CardHeight - U(8.0f))), Outline, 2.0f);

@@ -28,6 +28,10 @@ param(
     [string]$HiddenUtc = "2027-07-29T06:00:00Z",
     [string]$BandUtc = "2027-07-28T17:00:00Z",
     [string]$WideUtc = "2027-09-19T13:00:00Z",
+    # The key moment: the Sun goes behind the ridge 673 m from SiteA (see below).
+    [string]$NearStillUtc = "2026-12-07T04:00:00Z",
+    [string]$NearFromUtc = "2026-12-06T18:00:00Z",
+    [string]$NearToUtc = "2026-12-07T03:30:00Z",
     [string]$PackageRoot = ""
 )
 $ErrorActionPreference = "Stop"
@@ -91,7 +95,7 @@ function Still([string]$file, [string]$text, [hashtable]$params) {
         $twinText = "The same picture with the interface of the tool."
     } else {
         $twin = "${stem}_clean.png"
-        $other.Extra = (($extra -replace '-LsnPresentation', '') -replace '-LsnCaption="[^"]*"', '' -replace '-LsnPage=\S+', '' -replace '-LsnControls', '').Trim() + " -LsnNoHud"
+        $other.Extra = (($extra -replace '-LsnPresentation', '') -replace '-LsnCaption="[^"]*"', '' -replace '-LsnPage=\S+', '' -replace '-LsnDo=page_\S+', '' -replace '-LsnControls', '').Trim() + " -LsnNoHud"
         $twinText = "The same picture without the interface: the view alone, with one line that says which site, time and package it shows."
     }
     & $capture -Out (Join-Path $Out $twin) -EngineRoot $EngineRoot -ResX 1920 -ResY 1080 @other | Out-Host
@@ -103,43 +107,67 @@ function Skip([string]$file, [string]$what) {
     Add-Note "$file  -  NOT PRODUCED" "$what is not in the published packages (contract $($a.Contract)). Run this script again once packages/ carries it."
 }
 $compare = "-LsnCompare=$SiteA,$SiteB$rootArgument"
+$inv = [System.Globalization.CultureInfo]::InvariantCulture
+function Later([string]$utc, [double]$hours) {
+    [datetime]::Parse($utc, $inv, [System.Globalization.DateTimeStyles]::AdjustToUniversal).AddHours($hours).ToString("yyyy-MM-ddTHH:mm:ssZ")
+}
+function Clip([string]$path, [hashtable]$params) {
+    if (Test-Path $path) { Remove-Item $path }
+    & $record -Out $path -EngineRoot $EngineRoot -Fps 60 -ResX 1920 -ResY 1080 @params | Out-Host
+    if (-not (Test-Path $path)) { throw "$path was not written" }
+}
+# What an earlier run of this script left behind.
+Get-ChildItem -Path $Out -File | Where-Object { $_.Extension -in ".png", ".mp4" } | Remove-Item
 
-if ($Only -ne "stills") {
-    $file = "pitch_two_sites_sunset_1080p60.mp4"
-    $story = if ($a.Obstacles) { "the blocking ridge lights up with the hours it costs" } else { "the ridge is NOT highlighted and no cost is shown, because the published packages (contract $($a.Contract)) carry no obstacles" }
-    & $record -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -FromUtc $ClipFromUtc -ToUtc $ClipToUtc -Seconds $ClipSeconds -Fps 60 -ResX 1920 -ResY 1080 -Pitch 0.5 -Fov 30 -Extra "$compare -LsnPresentation -LsnCaption=`"$ClipCaption`"" | Out-Host
-    if (-not (Test-Path (Join-Path $Out $file))) { throw "$file was not written" }
-    Add-Note $file "$($a.Name) (left) and $($b.Name) (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from $ClipFromUtc to $ClipToUtc in $ClipSeconds s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; $story. Shown without the controls of the tool; the caption across the picture is part of the clip, and its second text appears when the package gives the Sun of the left site as hidden."
-}
+# The key moment (item c): the Sun goes behind the nearest costly ridge of SiteA. Obstacle 100 of
+# the Shackleton rim package: 673 m away, azimuth 350.5 deg, 372.8 h of Sun lost in the window
+# of the package (14 November 2026 to 14 November 2028, observer 2 m). Its first interval begins
+# on 7 December 2026 at 02:03 UTC; the Sun's disc starts to be cut at about 20:30 the evening before.
+$nearCaption = "A ridge 670 m away is about to hide the Sun|The Sun is behind a ridge 670 m away: the package names it and what it costs"
+$nearExtra = "-LsnFollowSun -LsnPresentation -LsnCaption=`"$nearCaption`"$rootArgument"
+
 if ($Only -ne "clip") {
-    Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: state chips and time strip of each site, without the controls, with a caption; readable when shown small." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPresentation -LsnCaption=`"One instant, two sites: Sun, Earth and landing state of each, read from the computed packages`"" }
-    Still "still_1b_planner_with_controls.png" "The same view with the control bar and the drawer open on its tab of further controls. Meant for a close look, not for a small picture on a slide." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnControls" }
-    if ($a.Obstacles) {
-        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPresentation -LsnCaption=`"Which terrain hides the Sun, how far away it is, and how many hours of sunlight it costs`"$rootArgument" }
-    } else { Skip "still_2_obstacle_highlight.png" "The obstacle that hides the Sun and the hours it costs (contract 0.2, SPEC 5.5)" }
-    if ($a.Calendar) {
-        Still "still_3_calendar.png" "$($a.Name) and $($b.Name) at ${HiddenUtc}: lunar-day calendar of both sites on one time axis, landing windows of the example requirement and the slip of a landing at that time." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPage=calendar" }
-    } else { Skip "still_3_calendar.png" "The lunar-day calendar and the landing windows (contract 0.3, SPEC 5.6)" }
-    if ($a.Band) {
-        Still "still_4_uncertainty_band.png" "$($a.Name) at $BandUtc, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPage=uncertainty$rootArgument" }
-    } else { Skip "still_4_uncertainty_band.png" "The band for a stated horizon error and the landing-ellipse survey (contract 0.4, SPEC 5.7)" }
-    Still "still_5_south_pole_wide.png" "The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package. A weak fill light is on for this still only, as a viewing aid, so that the terrain in shadow can be told apart; without it shadows are black (the still says so)." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud -LsnViewingAidFill$rootArgument" }
-    Still "still_7_mast_and_lander.png" "$($a.Name) at ${WideUtc}: the camera stands 5 m above and 22 m behind the observer (not the observer's view) and shows the mast that carries the observer at 10 m and the lander beside it. Both are scale objects of the team's own design, not part of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 140; Pitch = -6; Fov = 50; Extra = "-LsnCameraUp=5 -LsnCameraBack=22 -LsnHeight=4 -LsnNoHud$rootArgument" }
-    Still "still_6_astronaut_height.png" "$($a.Name) at $WideUtc from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = 3; Fov = 62; Extra = "-LsnNoHud$rootArgument" }
-    Still "still_8_camera_near_lander.png" "$($a.Name) at ${WideUtc}: a camera 16 m behind the lander and 5.5 m up, looking towards the Sun (not the observer's view). The lander is a scale object of the team's own design; the ground, the light and the shadows are those of the package and the elevation data." @{ Site = $SiteA; Utc = $WideUtc; Extra = "-LsnView=hero -LsnNoHud$rootArgument" }
-    Still "still_9_wide_view.png" "$($a.Name) at ${WideUtc}: the wide view from 120 m away and 30 m up with the Sun 60 deg to the right, outside the picture (not the observer's view): lander, mast and boulders with their shadows, for scale." @{ Site = $SiteA; Utc = $WideUtc; Extra = "-LsnView=wide -LsnNoHud$rootArgument" }
-    # The recorder plays a stretch of the timeline: ten minutes of the package pass during the move.
-    $arrivalEndUtc = [datetime]::Parse($WideUtc, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AdjustToUniversal).AddMinutes(10).ToString("yyyy-MM-ddTHH:mm:ssZ")
-    Remove-Old "clip_arrival.mp4"
-    & $record -Out (Join-Path $Out "clip_arrival.mp4") -EngineRoot $EngineRoot -Site $SiteA -FromUtc $WideUtc -ToUtc $arrivalEndUtc -Seconds 10 -Fps 60 -ResX 1920 -ResY 1080 -Extra "-LsnView=hero -LsnDo=arrival -LsnNoHud$rootArgument" | Out-Host
-    if (-not (Test-Path (Join-Path $Out "clip_arrival.mp4"))) { throw "clip_arrival.mp4 was not written" }
-    Add-Note "clip_arrival.mp4" "$($a.Name) at ${WideUtc}: a camera move of 8 s from 9 km above and 26 km behind the site down to the camera near the lander, for the opening of the video. A camera move only: no descent, trajectory or engine is simulated, and ten minutes of the package pass during the move."
+    Still "a_opening_south_pole_wide.png" "Opening. The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg, the Sun low over the horizon on the left. LOLA elevation data sampled for drawing; a weak fill light is on as a viewing aid, the shadows are black without it." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud -LsnViewingAidFill$rootArgument" }
+    Still "b_product_two_sites.png" "Product. $($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m, each view on its own Sun: the default view, drawer closed, the obstacle view switched off (no outline, no card)." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnDo=obstacle" }
+    Still "c_key_moment_near_ridge.png" "Key moment. $($a.Name) at $NearStillUtc, observer 2 m, looking at the Sun's azimuth: the Sun is behind obstacle 100 of the package, a ridge 673 m away at azimuth 350.5 deg that costs 372.8 h of Sun in the window of the package (14 November 2026 to 14 November 2028). The package flags it as within 1 km: it depends on single pixels of the elevation model (here the 5 m site model)." @{ Site = $SiteA; Utc = $NearStillUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun$rootArgument" }
+    Still "d_calendar_drawer.png" "$($a.Name) at ${BandUtc}: the drawer open on the lunar-day calendar and the landing windows of the example requirement." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnDo=page_calendar$rootArgument" }
+    Still "d_uncertainty_drawer.png" "$($a.Name) at ${BandUtc}: the drawer open on the uncertainty page (the survey of the stated landing ellipse; the band of each event stands under its countdown)." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnDo=page_uncertainty$rootArgument" }
+    Still "e_lander_lit_side.png" "$($a.Name) at ${WideUtc}: a camera on the lander's sunlit side, the Sun 50 deg off the view axis behind it (not the observer's view), with the mast that carries the observer in the background. Lander, mast and boulders are scale objects of the team's own design, not part of the package." @{ Site = $SiteA; Utc = $WideUtc; Extra = "-LsnView=lit -LsnNoHud$rootArgument" }
 }
-$notes.Add("The ground is LOLA elevation data sampled on 320 rings per azimuth. Roughness and small craters finer than that data are")
+if ($Only -ne "stills") {
+    $clipFile = Join-Path $Out "c_key_moment_near_ridge.mp4"
+    Clip $clipFile @{ Site = $SiteA; FromUtc = $NearFromUtc; ToUtc = $NearToUtc; Seconds = 9; Pitch = 0.5; Fov = 30; Extra = $nearExtra }
+    Add-Note "c_key_moment_near_ridge.mp4" "Key moment, 9 s at 60 frames per second. $($a.Name), observer 2 m, the view on the Sun; time runs from $NearFromUtc to $NearToUtc. The Sun goes behind the ridge 673 m away (obstacle 100): when the package gives the Sun as partly hidden the outline of the ridge lights up and the card with its cost appears; the caption changes when the package gives the Sun as hidden."
+
+    # One video of at most 28 s (item f): five parts, each a real render, joined without any added text.
+    $parts = Join-Path $env:TEMP "lsn_pitch_parts"
+    New-Item -ItemType Directory -Force $parts | Out-Null
+    $list = @(
+        @{ File = "1_arrival.mp4"; P = @{ Site = $SiteA; FromUtc = $WideUtc; ToUtc = (Later $WideUtc 0.2); Seconds = 5.9; Extra = "-LsnView=hero -LsnDo=arrival -LsnArrivalSeconds=5.4 -LsnNoHud$rootArgument" } },
+        @{ File = "2_two_sites.mp4"; P = @{ FromUtc = $ClipFromUtc; ToUtc = $ClipToUtc; Seconds = 6; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPresentation -LsnCaption=`"$ClipCaption`"" } },
+        @{ File = "3_near_ridge.mp4"; P = @{ Site = $SiteA; FromUtc = $NearFromUtc; ToUtc = $NearToUtc; Seconds = 8; Pitch = 0.5; Fov = 30; Extra = $nearExtra } },
+        @{ File = "4_calendar.mp4"; P = @{ Site = $SiteA; FromUtc = $BandUtc; ToUtc = (Later $BandUtc 120); Seconds = 4; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnDo=page_calendar$rootArgument" } },
+        @{ File = "5_wide.mp4"; P = @{ Site = $SiteA; FromUtc = $WideUtc; ToUtc = (Later $WideUtc 36); Seconds = 4; Extra = "-LsnView=wide -LsnNoHud$rootArgument" } }
+    )
+    $inputs = @()
+    foreach ($part in $list) {
+        $path = Join-Path $parts $part.File
+        Clip $path $part.P
+        $inputs += @("-i", $path)
+    }
+    $video = Join-Path $Out "f_pitch_video_1080p60.mp4"
+    & ffmpeg -hide_banner -loglevel error -y @inputs -filter_complex "[0:v][1:v][2:v][3:v][4:v]concat=n=5:v=1:a=0,fps=60,format=yuv420p" -c:v libx264 -crf 18 -an -movflags +faststart $video
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $video)) { throw "the video was not written" }
+    $seconds = [double](& ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $video)
+    if ($seconds -gt 28.0) { throw ("the video is {0:N2} s long, more than 28 s" -f $seconds) }
+    Add-Note "f_pitch_video_1080p60.mp4" ("One video, {0} s, 1920 x 1080 at 60 frames per second, H.264, no audio. Five parts, each a real render of the running scene: (1) 5.9 s, a camera move from 9 km above down to the lander at $($a.Name), $WideUtc (a camera move only; no descent is simulated); (2) 6 s, $($a.Name) and $($b.Name) side by side from $ClipFromUtc to ${ClipToUtc}: the Sun sets behind a ridge on the left and stays up on the right; (3) 8 s, the key moment as in c_key_moment_near_ridge.mp4; (4) 4 s, the calendar drawer while five days pass from ${BandUtc}; (5) 4 s, the wide view with lander, mast and boulders while 36 h pass from $WideUtc. The only text is that of the interface and its caption line." -f $seconds.ToString("0.00", $inv))
+}
+
+$notes.Add("The ground is LOLA elevation data sampled on 480 rings per azimuth (the 5 m site models near the three project sites). Roughness and small craters finer than that data are")
 $notes.Add("illustrative shading computed in the surface shader: positions, shadows and the horizon are those of the data. Stars are the")
 $notes.Add("Yale Bright Star Catalogue, turned for the date. Lander, mast and boulders are scale objects of the team's own design, not part")
 $notes.Add("of any package. Surface shading, exposure, the glare of the Sun and the fill light while the Sun is down are display choices")
-$notes.Add("(see unreal/README.md). Not in any of these: image textures, an atmosphere or a map of the Earth.")
+$notes.Add("(see unreal/README.md). The Earth carries the Blue Marble map of NASA (see CREDITS.md). Not in any of these: an atmosphere, clouds or night lights.")
 $notesFile = Join-Path $Out "README.txt"
 if ($Only -ne "all" -and (Test-Path $notesFile)) { Add-Content -Path $notesFile -Encoding ascii -Value @("", "---- partial run (-Only $Only) ----") ; Add-Content -Path $notesFile -Encoding ascii -Value $notes }
 else { Set-Content -Path $notesFile -Encoding ascii -Value $notes }

@@ -97,7 +97,8 @@ FLsnDetail L;
 float2 p = P.xy * 0.01;                 // centimetres to metres
 float metres = D * 0.01;
 float fine = saturate(1.0 - metres / 45.0), medium = saturate(1.0 - metres / 260.0);
-float small = saturate(1.0 - metres / 120.0), middle = saturate(1.0 - metres / 420.0), large = saturate(1.0 - metres / 1400.0);
+// The craters end within a few hundred metres: on a far hillside seen from the side they were thin lines along the slope.
+float small = saturate(1.0 - metres / 120.0), middle = saturate(1.0 - metres / 300.0), large = saturate(1.0 - metres / 520.0);
 float2 slope = 0;
 // Roughness: supports the relief of the elevation data, does not cover it.
 // Each scale on its own turned grid and kept weak, so that the lattice of the noise does not show
@@ -115,7 +116,7 @@ slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
 // Grey variation on two large scales (about 9 m and 60 m), each on its own turned grid: the
 // ground is not one flat grey, and nothing repeats (no texture is tiled).
-float mottle = 1.0 + S * (0.09 * medium * (L.Noise(q * 0.11 + 19.0).z - 0.5) + 0.08 * (L.Noise(w * 0.017 + 5.0).z - 0.5));
+float mottle = 1.0 + S * (0.09 * medium * (L.Noise(q * 0.11 + 19.0).z - 0.5) + 0.08 * pow(saturate(normalize(N).z), 6.0) * (L.Noise(w * 0.017 + 5.0).z - 0.5));  // not on steep slopes, where a pattern laid out on the map is squeezed into stripes
 return float4(n, mottle);
 """
 

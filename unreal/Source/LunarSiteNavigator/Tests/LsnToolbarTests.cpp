@@ -263,6 +263,9 @@ bool FLsnNamedActionsTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("the observer's view at first"), Pawn->GetCameraView() == ELsnCameraView::Observer && !Pawn->IsOverview());
 		Pawn->DoAction(TEXT("camera"));
 		TestTrue(TEXT("camera: the view near the lander, not the observer's"), Pawn->GetCameraView() == ELsnCameraView::Hero && Pawn->IsOverview());
+		// (15 November 2026: a second camera near the lander, on its sunlit side, was added between the two.)
+		Pawn->DoAction(TEXT("camera"));
+		TestTrue(TEXT("camera: the view on the lander's sunlit side"), Pawn->GetCameraView() == ELsnCameraView::HeroLit && Pawn->IsOverview());
 		Pawn->DoAction(TEXT("camera"));
 		TestTrue(TEXT("camera: the wide view"), Pawn->GetCameraView() == ELsnCameraView::Wide && Pawn->IsOverview());
 		Pawn->DoAction(TEXT("camera"));

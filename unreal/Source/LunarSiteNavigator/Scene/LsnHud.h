@@ -209,7 +209,7 @@ private:
 	void DrawType(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080, bool bMedium = false);
 	float TypeWidth(const FString& Text, float SizeAt1080, bool bMedium = false) const;
 	/** "8 d 16 h 33 min": digits at the size, units one size smaller on the same baseline; returns the width. */
-	float DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080);
+	float DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080, bool bDraw = true);
 	/** Pixels in this window for a length given at a window height of 1080. */
 	float U(float At1080) const { return At1080 * UiHeight / 1080.0f; }
 	/** The size in window pixels for a text scale of the old drawing calls. */

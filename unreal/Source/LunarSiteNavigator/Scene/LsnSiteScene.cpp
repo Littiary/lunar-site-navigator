@@ -77,7 +77,9 @@ ALsnSiteScene::ALsnSiteScene()
 	Stars = MakeMeshComponent(this, TEXT("Stars"), false);
 	Stars->SetupAttachment(Root);
 	Stars->SetVisibility(false);
-	bScaleObjectsVisible = !FParse::Param(FCommandLine::Get(), TEXT("LsnNoScaleObjects"));
+	// Off at the start: in the observer's own view and side by side the scale objects are not drawn
+	// (the camera positions near the lander and the wide view switch them on). -LsnScaleObjects starts with them on.
+	bScaleObjectsVisible = FParse::Param(FCommandLine::Get(), TEXT("LsnScaleObjects")) && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoScaleObjects"));
 	HorizonLine->SetVisibility(false);
 	SunObstacle->SetVisibility(false);
 	EarthObstacle->SetVisibility(false);
@@ -659,6 +661,8 @@ void ALsnSiteScene::RebuildScaleObjects()
 			{ TEXT("boulder_4"), 20.0, 13.0, 110.0, 0.8 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
 		};
 		FLsnMeshData All, Rocks;
+		BoulderGround.Reset();
+		DrawnBoulders.Reset();
 		TMap<FString, FLsnMeshData> Models;
 		FString Error;
 		for (const FPlaced& Item : Placed)
@@ -681,6 +685,17 @@ void ALsnSiteScene::RebuildScaleObjects()
 				{
 					bHasLander = true;
 					LanderRelative = Ground;
+				}
+				const bool bBoulder = FString(Item.Model).StartsWith(TEXT("boulder"));
+				if (bBoulder)
+				{
+					BoulderGround.Add(Ground);
+					// Not within the clearance of the camera.
+					if (bHasBoulderCamera && FVector::Distance(Ground, BoulderCamera) < BoulderClearanceM * FLsnSiteFrame::CmPerM)
+					{
+						continue;
+					}
+					DrawnBoulders.Add(Ground);
 				}
 				// Boulders are of the ground's own material and are shaded like it; the lander is not.
 				LsnProps::Append(*Model, FVector(Item.Scale), Item.YawDeg, Ground, FString(Item.Model).StartsWith(TEXT("boulder")) ? Rocks : All);
@@ -706,6 +721,24 @@ void ALsnSiteScene::RebuildScaleObjects()
 	}
 	ScaleObjects->SetVisibility(bHasScaleObjects && bScaleObjectsVisible);
 	Mast->SetVisibility(bHasScaleObjects && bScaleObjectsVisible && bMastVisible);
+}
+
+void ALsnSiteScene::KeepBouldersClearOf(const FVector& CameraUnreal)
+{
+	// Built anew only when a boulder comes into the clearance or leaves it.
+	const FVector Relative = CameraUnreal - GetActorLocation();
+	const double Limit = BoulderClearanceM * FLsnSiteFrame::CmPerM;
+	bool bChanged = !bHasBoulderCamera;
+	for (const FVector& Ground : BoulderGround)
+	{
+		bChanged = bChanged || ((FVector::Distance(Ground, Relative) < Limit) != (bHasBoulderCamera && FVector::Distance(Ground, BoulderCamera) < Limit));
+	}
+	BoulderCamera = Relative;
+	bHasBoulderCamera = true;
+	if (bChanged && bHasPackage)
+	{
+		RebuildScaleObjects();
+	}
 }
 
 void ALsnSiteScene::SetScaleObjectsVisible(bool bVisible)
