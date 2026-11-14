@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Data that scripts download or generate
+data/raw/
+data/cache/
+data/kernels/
+*.tif
+*.tiff
+*.jp2
+*.img
+*.bsp
+*.bpc
+*.tpc
+*.tf
+*.tls
+
+# Web
+node_modules/
+web/dist/
+
+# Unreal Engine
+unreal/**/Binaries/
+unreal/**/Intermediate/
+unreal/**/Saved/
+unreal/**/DerivedDataCache/
+unreal/**/.vs/
+*.sln
+*.suo
+*.VC.db
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local assistant files
+.claude/
+CLAUDE.md
