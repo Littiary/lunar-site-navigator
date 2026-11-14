@@ -235,7 +235,7 @@ def test_patch_beyond_the_data_is_marked_not_invented(tmp_path):
         ("grid that does not match its array", lambda t: t["patches"][0].update(count_east=t["patches"][0]["count_east"] + 1), "count"),
         ("grid not centred on the site", lambda t: t["patches"][1].update(east_min_m=0.0), "east_min_m"),
         ("two patches with one id", lambda t: t["patches"][1].update(id=t["patches"][0]["id"]), "unique"),
-        ("patches not from fine to coarse", lambda t: t["patches"].reverse(), "finest first"),
+        ("a patch the request does not state", lambda t: t["patches"][2].update(id="other"), "differ from request"),
     ],
 )
 def test_validator_rejects_broken_patches(tmp_path, case, change, expected):
@@ -273,6 +273,36 @@ def test_sample_carries_invented_patches(tmp_path):
     broken["terrain_patches"][0]["spacing_m"] = 0.0
     with pytest.raises(ContractError):
         validate_document(broken)
+
+
+def test_patches_are_selected_by_id_and_their_order_is_not_part_of_the_contract(tmp_path):
+    """SPEC 5.9: a reader looks a patch up by its id. A package that lists its patches in
+    another order, or holds a patch finer than `near`, is as valid as the default one, and
+    `near` is the same surface in all of them."""
+    from lsncore.contract.io import compute_content_sha256
+    from lsncore.terrain_patch import DEFAULT_PATCHES
+
+    terrain = AnalyticTerrain(_rolling, R, ceiling_height_m=550.0)
+    pkg = package_of(terrain, -86.0, 20.0, tmp_path / "default")
+    by_id = lambda package: {p["id"]: package.array(p["up_m"]) for p in package.manifest["terrain"]["patches"]}  # noqa: E731
+    default = by_id(pkg)
+
+    # the same package with its list turned round
+    dst = tmp_path / "reversed" / pkg.path.name
+    shutil.copytree(pkg.path, dst)
+    manifest = json.loads((dst / "manifest.json").read_text())
+    manifest["terrain"]["patches"].reverse()
+    manifest["content_sha256"] = compute_content_sha256(manifest)
+    (dst / "manifest.json").write_text(json.dumps(manifest))
+    turned = validate_package(dst)
+    assert [p["id"] for p in turned["terrain"]["patches"]] == ["far", "mid", "near"]
+    assert all(np.array_equal(up, default[pid], equal_nan=True) for pid, up in by_id(read_package(dst)).items())
+
+    # a scenario that states a finer patch as well: `near` is no longer the first entry
+    finer = package_of(terrain, -86.0, 20.0, tmp_path / "finer", patches=[{"id": "site", "half_width_m": 500.0, "spacing_m": 5.0}, *DEFAULT_PATCHES])
+    ids = [p["id"] for p in finer.manifest["terrain"]["patches"]]
+    assert sorted(ids) == ["far", "mid", "near", "site"] and ids[0] != "near"
+    assert all(np.array_equal(by_id(finer)[pid], default[pid], equal_nan=True) for pid in DEFAULT_IDS)
 
 
 # ---------------------------------------------------------------- LOLA terrain

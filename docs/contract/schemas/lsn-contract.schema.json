@@ -3243,6 +3243,7 @@
           "$ref": "#/$defs/method_id"
         },
         "patches": {
+          "description": "Selected by id. The order of the list and the number of patches are not part of the contract.",
           "type": "array",
           "minItems": 1,
           "maxItems": 8,
