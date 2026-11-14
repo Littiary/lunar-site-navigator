@@ -67,7 +67,7 @@ Thresholds are constants next to the tests, written before the first measurement
 | Test group | What it shows | Threshold |
 |---|---|---|
 | `Frame.*` | Known directions and points land at hand-written Unreal coordinates; the Moon centre is straight below the origin | 1e-12 (unit vectors), 1e-5 cm |
-| `Package.LoadSample`, `RefusesBadPackages` | Reader follows the contract; wrong major version, wrong sizes and broken manifests are refused | exact |
+| `Package.LoadSample`, `RefusesBadPackages` | Reader follows the contract; another major version, a truncated array, the wrong package kind and a missing manifest are refused | exact |
 | `Package.FrameAgreesWithCore` | `site.enu` and `site.position_km` equal the frame derived here from latitude and longitude | see test |
 | `Package.BodyFrameAgreesWithSeries` | Direction-table positions mapped through the body-fixed frame give the series directions | 0.0002 deg |
 | `Package.ObstaclePointsReproduceHorizon` | Obstacle points (arc distance, obstacle height) placed through the site frame give `horizon.elevation_deg`; these fields are independent of the elevation | 0.05 deg |
