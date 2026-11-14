@@ -117,6 +117,7 @@ class LolaTerrain:
             for p in terrain.products
         )
         self.ceiling_height_m = self._ceiling()
+        self._described: dict | None = None  # asked for often; the reader may hash files to answer
 
     # -- overview levels --------------------------------------------------------------------
 
@@ -280,18 +281,23 @@ class LolaTerrain:
         )
 
     def describe(self) -> dict:
-        layers = []
-        for item in self._terrain.provenance():
-            layers.append(
-                {
-                    "layer_id": str(item["product_id"]),
-                    "product_id": str(item["product_id"]),
-                    "version": str(item.get("product_version")),
-                    "source_url": str(item.get("source_url", "")),
-                    "sha256": item.get("sha256"),
-                    "pixel_m": float(item["pixel_m"]),
-                    "projection": "polar stereographic on a sphere, true scale at the pole",
-                }
-            )
-        ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
-        return {"dem_set_id": f"lola:{ids}", "layers": layers}
+        """The elevation layers for the package record: product, version, and the checksum
+        and source address of the product's data file as the data reader reports them."""
+        if self._described is None:
+            layers = []
+            for item in self._terrain.provenance():
+                data_file = next((f for f in item.get("files", []) if f.get("role") == "data"), {})
+                layers.append(
+                    {
+                        "layer_id": str(item["product_id"]),
+                        "product_id": str(item["product_id"]),
+                        "version": str(item.get("product_version")),
+                        "source_url": str(data_file.get("source_url") or item.get("source_url") or ""),
+                        "sha256": data_file.get("sha256") or item.get("sha256"),
+                        "pixel_m": float(item["pixel_m"]),
+                        "projection": "polar stereographic on a sphere, true scale at the pole",
+                    }
+                )
+            ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
+            self._described = {"dem_set_id": f"lola:{ids}", "layers": layers}
+        return self._described
