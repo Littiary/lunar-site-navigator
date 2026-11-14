@@ -1,6 +1,6 @@
 {
-  "generated_utc": "2026-11-14T17:08:13Z",
-  "contract_version": "0.10",
+  "generated_utc": "2026-11-14T17:42:17Z",
+  "contract_version": "0.11",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2028-11-14T00:00:00.000Z",
@@ -44,8 +44,8 @@
     ]
   },
   "site_pairs": {
-    "package_id": "pairs-3458ca8a24b1d228",
-    "content_sha256": "0cdeacb43beaf2a3736a3214a6ce0b188505d841e56803771dafe75fc8b78a8d",
+    "package_id": "pairs-c6ab3aaa46a3aa80",
+    "content_sha256": "61380e731ae15632ccf22eea6d17620bc12a0ca3f729e2a73edeb0e4471745ed",
     "observer_heights_m": [
       2.0,
       2.0,
@@ -174,8 +174,8 @@
   "dem_set_id": "lola:LOLA5MPP_SITE04@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-fbc51d64e42ab803",
-  "run_time_s": 553.1826893000107,
-  "run_time_without_near_field_s": 149.6265722999815,
+  "run_time_s": 432.34864829998696,
+  "run_time_without_near_field_s": 147.6151591000089,
   "jobs": 8,
   "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
   "sites": [
@@ -185,8 +185,8 @@
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
       "surface_height_m": 1701.016555680504,
-      "package_id": "site-ecfd86c98a703c77",
-      "content_sha256": "fb9023fe39b98408b1ec05a550cd5d68cb83f6de113b508f9a12f456cc14b44a",
+      "package_id": "site-e3810b35dcfa4777",
+      "content_sha256": "4bc707d66d130c5d350bf3e6d11a11dd57df126417005602aecff8c2ed03ae18",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -220,9 +220,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 10.941649,
-        "timeline": 212.313591,
-        "terrain_patches": 0.096981
+        "horizon": 5.093166,
+        "timeline": 251.465111,
+        "terrain_patches": 0.311852
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -675,8 +675,8 @@
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
       "surface_height_m": 1815.33166308619,
-      "package_id": "site-57259df2efae3648",
-      "content_sha256": "5b0e08d7fe07794f0dab5450e57ab43c642e153329f400cc872d22aaff8d21bb",
+      "package_id": "site-66887386ea4fc6ea",
+      "content_sha256": "b3db93218a462d44e0f7e2a49564c8dc07fdef229254be8edce5d9fbc6ded556",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -710,9 +710,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 10.729611,
-        "timeline": 208.349269,
-        "terrain_patches": 0.137574
+        "horizon": 5.114175,
+        "timeline": 234.967562,
+        "terrain_patches": 0.475307
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -1140,8 +1140,8 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "surface_height_m": 5172.886839634902,
-      "package_id": "site-4ae92446e8a47b0f",
-      "content_sha256": "15a0a974199635abba24369158d30c761a1b39a9511509f9c4d1a5b0dc2a0ef4",
+      "package_id": "site-3c901dfc80efc5b8",
+      "content_sha256": "d11327ee9ca1953fb5bdefc135630f408eb1655bfdba6bd7a6144514478e1889",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -1175,9 +1175,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 11.821384,
-        "timeline": 207.755044,
-        "terrain_patches": 0.126416
+        "horizon": 5.450899,
+        "timeline": 238.462252,
+        "terrain_patches": 0.372609
       },
       "sun_centre_elevation_range_deg": [
         -5.556787014007568,
@@ -1901,9 +1901,11 @@
       "site_id": "shackleton-rim-crest",
       "name": "Shackleton crater rim crest",
       "category": "project_candidate",
+      "programme": "Project sites",
+      "label": "project site",
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
-      "package_id": "site-ecfd86c98a703c77",
+      "package_id": "site-e3810b35dcfa4777",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -1956,16 +1958,18 @@
         "count": 15,
         "feasible_fraction": 0.1957974599875076
       },
-      "size_bytes": 9561903,
-      "manifest_bytes": 5222491
+      "size_bytes": 9572528,
+      "manifest_bytes": 5233116
     },
     {
       "site_id": "de-gerlache-rim-crest",
       "name": "de Gerlache crater rim crest",
       "category": "project_candidate",
+      "programme": "Project sites",
+      "label": "project site",
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
-      "package_id": "site-57259df2efae3648",
+      "package_id": "site-66887386ea4fc6ea",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2018,16 +2022,18 @@
         "count": 21,
         "feasible_fraction": 0.3320507211332934
       },
-      "size_bytes": 8631833,
-      "manifest_bytes": 4292421
+      "size_bytes": 8641306,
+      "manifest_bytes": 4301894
     },
     {
       "site_id": "malapert-massif-summit",
       "name": "Mons Malapert (Malapert massif) summit",
       "category": "project_candidate",
+      "programme": "Project sites",
+      "label": "project site",
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
-      "package_id": "site-4ae92446e8a47b0f",
+      "package_id": "site-3c901dfc80efc5b8",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2080,16 +2086,18 @@
         "count": 27,
         "feasible_fraction": 0.28628143435790016
       },
-      "size_bytes": 9470731,
-      "manifest_bytes": 5131319
+      "size_bytes": 9480588,
+      "manifest_bytes": 5141176
     },
     {
       "site_id": "apollo-11",
       "name": "Apollo 11 (Lunar Module Eagle descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": 0.67416,
       "lon_deg": 23.47314,
-      "package_id": "site-4a8a8724cfef94c7",
+      "package_id": "site-ee13bd9a51f205fe",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2135,16 +2143,18 @@
         "count": 25,
         "feasible_fraction": 0.16280332218279753
       },
-      "size_bytes": 4769445,
-      "manifest_bytes": 2251533
+      "size_bytes": 4774635,
+      "manifest_bytes": 2256723
     },
     {
       "site_id": "apollo-12",
       "name": "Apollo 12 (Lunar Module Intrepid descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": -3.0128,
       "lon_deg": -23.4219,
-      "package_id": "site-e80f954863cc1baf",
+      "package_id": "site-98524d78724d1ecc",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2190,16 +2200,18 @@
         "count": 25,
         "feasible_fraction": 0.16502005523018315
       },
-      "size_bytes": 4840404,
-      "manifest_bytes": 2322492
+      "size_bytes": 4845593,
+      "manifest_bytes": 2327681
     },
     {
       "site_id": "apollo-14",
       "name": "Apollo 14 (Lunar Module Antares descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": -3.64589,
       "lon_deg": -17.47194,
-      "package_id": "site-48c3fbaa392cde6f",
+      "package_id": "site-5a075b21883e2a3d",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2245,16 +2257,18 @@
         "count": 25,
         "feasible_fraction": 0.15567439366735067
       },
-      "size_bytes": 4749551,
-      "manifest_bytes": 2231639
+      "size_bytes": 4754740,
+      "manifest_bytes": 2236828
     },
     {
       "site_id": "apollo-15",
       "name": "Apollo 15 (Lunar Module Falcon descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": 26.13239,
       "lon_deg": 3.6333,
-      "package_id": "site-db0394cd6dc1211a",
+      "package_id": "site-1ca5f3ed46d7a925",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2300,16 +2314,18 @@
         "count": 25,
         "feasible_fraction": 0.1386640152972526
       },
-      "size_bytes": 4744220,
-      "manifest_bytes": 2226308
+      "size_bytes": 4749408,
+      "manifest_bytes": 2231496
     },
     {
       "site_id": "apollo-16",
       "name": "Apollo 16 (Lunar Module Orion descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": -8.9734,
       "lon_deg": 15.5011,
-      "package_id": "site-7c68736c1e56dd2a",
+      "package_id": "site-3c929886e5c92305",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2355,16 +2371,18 @@
         "count": 25,
         "feasible_fraction": 0.16154576232140144
       },
-      "size_bytes": 4780325,
-      "manifest_bytes": 2262413
+      "size_bytes": 4785511,
+      "manifest_bytes": 2267599
     },
     {
       "site_id": "apollo-17",
       "name": "Apollo 17 (Lunar Module Challenger descent stage)",
       "category": "past_landing",
+      "programme": "Apollo",
+      "label": "past landing",
       "lat_deg": 20.1911,
       "lon_deg": 30.7723,
-      "package_id": "site-87e0956c5e5d2c2d",
+      "package_id": "site-1362b9e25682b1a6",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2410,16 +2428,18 @@
         "count": 25,
         "feasible_fraction": 0.14319307437728
       },
-      "size_bytes": 4750787,
-      "manifest_bytes": 2232875
+      "size_bytes": 4755976,
+      "manifest_bytes": 2238064
     },
     {
       "site_id": "surveyor-1",
       "name": "Surveyor 1 lander",
       "category": "past_landing",
+      "programme": "Surveyor",
+      "label": "past landing",
       "lat_deg": -2.4745,
       "lon_deg": -43.3398,
-      "package_id": "site-2ddeeefbb9c3ecaf",
+      "package_id": "site-fe9e55a467dbfa06",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2465,16 +2485,18 @@
         "count": 25,
         "feasible_fraction": 0.16330848064152986
       },
-      "size_bytes": 4836807,
-      "manifest_bytes": 2318895
+      "size_bytes": 4841997,
+      "manifest_bytes": 2324085
     },
     {
       "site_id": "change-3",
       "name": "Chang'e 3 lander",
       "category": "past_landing",
+      "programme": "Chang'e",
+      "label": "past landing",
       "lat_deg": 44.1214,
       "lon_deg": -19.5117,
-      "package_id": "site-51e1b1ac2bea1096",
+      "package_id": "site-43275b6ec92886f6",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2520,16 +2542,18 @@
         "count": 25,
         "feasible_fraction": 0.16585061577319882
       },
-      "size_bytes": 4882638,
-      "manifest_bytes": 2364726
+      "size_bytes": 4887827,
+      "manifest_bytes": 2369915
     },
     {
       "site_id": "change-4",
       "name": "Chang'e 4 lander",
       "category": "past_landing",
+      "programme": "Chang'e",
+      "label": "past landing",
       "lat_deg": -45.4562,
       "lon_deg": 177.5886,
-      "package_id": "site-e21c54b13b183746",
+      "package_id": "site-fefbc660d3c9e798",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2575,16 +2599,18 @@
         "count": 0,
         "feasible_fraction": 0.0
       },
-      "size_bytes": 2987401,
-      "manifest_bytes": 469489
+      "size_bytes": 2992592,
+      "manifest_bytes": 474680
     },
     {
       "site_id": "change-5",
       "name": "Chang'e 5 lander",
       "category": "past_landing",
+      "programme": "Chang'e",
+      "label": "past landing",
       "lat_deg": 43.0576,
       "lon_deg": -51.9161,
-      "package_id": "site-873d4a37caa4fd8e",
+      "package_id": "site-3702f5f79e1c6e96",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2630,16 +2656,18 @@
         "count": 25,
         "feasible_fraction": 0.16538379099217207
       },
-      "size_bytes": 4910912,
-      "manifest_bytes": 2393000
+      "size_bytes": 4916103,
+      "manifest_bytes": 2398191
     },
     {
       "site_id": "change-6",
       "name": "Chang'e 6 lander",
       "category": "past_landing",
+      "programme": "Chang'e",
+      "label": "past landing",
       "lat_deg": -41.6383,
       "lon_deg": -153.9857,
-      "package_id": "site-30a35951db8b717f",
+      "package_id": "site-1b8dbb0c74478182",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2685,16 +2713,18 @@
         "count": 0,
         "feasible_fraction": 0.0
       },
-      "size_bytes": 3046411,
-      "manifest_bytes": 528499
+      "size_bytes": 3051600,
+      "manifest_bytes": 533688
     },
     {
       "site_id": "chandrayaan-3",
       "name": "Chandrayaan-3 Vikram lander",
       "category": "past_landing",
+      "programme": "Chandrayaan",
+      "label": "past landing",
       "lat_deg": -69.374,
       "lon_deg": 32.3187,
-      "package_id": "site-daf8c7af42c57228",
+      "package_id": "site-85f12504d6b4c936",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2740,16 +2770,18 @@
         "count": 25,
         "feasible_fraction": 0.1458708431895045
       },
-      "size_bytes": 4796419,
-      "manifest_bytes": 2278507
+      "size_bytes": 4801613,
+      "manifest_bytes": 2283701
     },
     {
       "site_id": "slim",
       "name": "SLIM lander",
       "category": "past_landing",
+      "programme": "SLIM",
+      "label": "past landing",
       "lat_deg": -13.316,
       "lon_deg": 25.251,
-      "package_id": "site-552a0f91089c9ca8",
+      "package_id": "site-c8d49af58adc3c0b",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2795,16 +2827,18 @@
         "count": 25,
         "feasible_fraction": 0.14238959603948168
       },
-      "size_bytes": 4741050,
-      "manifest_bytes": 2223138
+      "size_bytes": 4746236,
+      "manifest_bytes": 2228324
     },
     {
       "site_id": "im-1-odysseus",
       "name": "IM-1 Odysseus lander (CLPS)",
       "category": "past_landing",
+      "programme": "CLPS",
+      "label": "past landing",
       "lat_deg": -80.1276,
       "lon_deg": 1.4367,
-      "package_id": "site-b1bac37673dfbedb",
+      "package_id": "site-7c0f5b780fac37ab",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2854,16 +2888,18 @@
         "count": 25,
         "feasible_fraction": 0.06298730157033744
       },
-      "size_bytes": 4809136,
-      "manifest_bytes": 2291224
+      "size_bytes": 4814322,
+      "manifest_bytes": 2296410
     },
     {
       "site_id": "blue-ghost-1",
       "name": "Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)",
       "category": "past_landing",
+      "programme": "CLPS",
+      "label": "past landing",
       "lat_deg": 18.5622,
       "lon_deg": 61.8102,
-      "package_id": "site-4cafdac291dfe765",
+      "package_id": "site-512a61554b1acc73",
       "status": "ok",
       "warnings": [
         "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
@@ -2909,16 +2945,18 @@
         "count": 25,
         "feasible_fraction": 0.15974765307346292
       },
-      "size_bytes": 4790801,
-      "manifest_bytes": 2272889
+      "size_bytes": 4795417,
+      "manifest_bytes": 2277505
     },
     {
       "site_id": "im-2-athena",
       "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
       "category": "past_landing",
+      "programme": "CLPS",
+      "label": "past landing",
       "lat_deg": -84.7906,
       "lon_deg": 29.19567,
-      "package_id": "site-3044153554de308b",
+      "package_id": "site-6ce63d6cbe2a89ea",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2962,16 +3000,18 @@
         "count": 23,
         "feasible_fraction": 0.107312447750418
       },
-      "size_bytes": 4906874,
-      "manifest_bytes": 2388962
+      "size_bytes": 4912060,
+      "manifest_bytes": 2394148
     },
     {
       "site_id": "artemis3-region-mons-mouton-representative",
       "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
       "category": "artemis_iii_candidate_region_representative",
+      "programme": "Artemis",
+      "label": "candidate",
       "lat_deg": -84.6,
       "lon_deg": 31.0,
-      "package_id": "site-e677cb96164c987a",
+      "package_id": "site-3bb0ec10083e4b7d",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -3015,15 +3055,15 @@
         "count": 12,
         "feasible_fraction": 0.028628547924741603
       },
-      "size_bytes": 4498023,
-      "manifest_bytes": 1980111
+      "size_bytes": 4503780,
+      "manifest_bytes": 1985868
     }
   ],
   "size": {
-    "total_bytes": 106660547,
+    "total_bytes": 106779990,
     "files": 479,
     "direction_table_bytes": 1065989,
-    "site_bytes": 105505671,
+    "site_bytes": 105623832,
     "pairs_bytes": 81115
   }
 }
