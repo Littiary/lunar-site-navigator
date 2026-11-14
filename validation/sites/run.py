@@ -198,7 +198,7 @@ def to_markdown(summary: dict) -> str:
         f"- Terrain: `{summary['dem_set_id']}`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `{summary['kernel_set_id']}`, direction table `{summary['direction_table_id']}`.",
         "- Sun visible = any part of the disc above the terrain horizon. Earth visible = centre of the disc above the terrain horizon.",
         "- The points are project candidates derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.",
-        "- **Status: unverified against an independent illumination product or mission record.** The ephemeris part is validated (see the validation card); the terrain horizon has passed analytic tests only.",
+        "- **Status.** The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution (`validation/pgda`), and the ephemeris is validated (see the validation card). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. The numbers of these three sites themselves have no independent counterpart: they use the finer 20 m terrain, a twelve-month window and several observer heights, and no source gives rise and set times for these points.",
         "",
     ]
     for site in summary["sites"]:
@@ -331,7 +331,7 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
         "## What these numbers are",
         "",
         "- The sites are project candidate points derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.",
-        "- **Unverified against an independent illumination product or mission record.** The ephemeris, the eclipse contacts and the ground-station geometry are validated (`validation/card/validation_card.md`); the terrain horizon has passed the core stream's own tests. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.",
+        "- The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution, and the ephemeris, the eclipse contacts and the ground-station geometry are validated against independent sources (`validation/card/validation_card.md`). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. **The numbers of these sites themselves have no independent counterpart**: they use the finer 20 m terrain, a twelve-month window and several observer heights, and no source gives rise and set times for these points. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.",
         "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid limits its accuracy; the event carries `obstacle_distance_m`.",
         "- A summary per site and observer height is in `validation/sites/results/site_summary.md`.",
         "",
@@ -378,7 +378,7 @@ def main() -> None:
         "kernel_set_id": kernels.kernel_set_id(),
         "direction_table_id": sites[0]["direction_table_id"],
         "run_time_s": elapsed,
-        "status": "unverified against an independent illumination product or mission record",
+        "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
         "sites": sites,
     }
     (HERE / "results").mkdir(exist_ok=True)
