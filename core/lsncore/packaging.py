@@ -11,6 +11,8 @@ from .contract import PackageWriter
 from .geometry import site_frame
 from .results import HorizonResult, TimelineResult
 from .scenario import canonical_heights, canonical_site
+from .terrain_patch import FRAME as PATCH_FRAME
+from .terrain_patch import NOTICE as PATCH_NOTICE
 
 # Method card ids used by the package builder. The computing modules supply the cards.
 M_SITE_GEOMETRY = "site.geometry"
@@ -33,6 +35,7 @@ M_OPPORTUNITY = "timeline.opportunity"
 M_OBSTACLES = "horizon.obstacles"
 M_SMOOTH_SPHERE = "timeline.smooth_sphere"
 M_BLOCKING = "timeline.blocking"
+M_TERRAIN_PATCH = "terrain.patch"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
@@ -101,9 +104,9 @@ def _used_methods(node, found: set[str]) -> set[str]:
     return found
 
 
-def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | None) -> dict:
+def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | None, terrain_patches: list | None = None) -> dict:
     """Canonical request of a site package (the part of the input that defines its id)."""
-    return {
+    request = {
         "site": canonical_site(site),
         "observer_heights_m": canonical_heights(horizon.observer_heights_m),
         "horizon": {
@@ -112,6 +115,9 @@ def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | No
         },
         "timeline": timeline_request,
     }
+    if terrain_patches:
+        request["terrain_patches"] = [{"id": p.id, "half_width_m": float(p.half_width_m), "spacing_m": float(p.spacing_m)} for p in terrain_patches]
+    return request
 
 
 def build_site_package(
@@ -131,9 +137,10 @@ def build_site_package(
     timings_s: dict | None = None,
     status: str = "ok",
     warnings: list[str] | None = None,
+    terrain_patches: list | None = None,
 ) -> Path:
     """Write one site package and return its directory."""
-    request = site_request(site, horizon, timeline_request)
+    request = site_request(site, horizon, timeline_request, terrain_patches)
     csite = request["site"]
     heights = request["observer_heights_m"]
     if heights != [float(h) for h in horizon.observer_heights_m]:
@@ -261,6 +268,27 @@ def build_site_package(
             sections["timeline"]["height_trade"] = timeline.height_trade
         if timeline.opportunities is not None:
             sections["timeline"]["opportunities"] = timeline.opportunities
+
+    if terrain_patches:
+        records = []
+        for patch in terrain_patches:
+            finite = patch.up_m[np.isfinite(patch.up_m)]
+            records.append(
+                {
+                    "id": patch.id,
+                    "spacing_m": float(patch.spacing_m),
+                    "half_width_m": float(patch.half_width_m),
+                    "count_east": patch.count,
+                    "count_north": patch.count,
+                    "east_min_m": -float(patch.half_width_m),
+                    "north_min_m": -float(patch.half_width_m),
+                    "up_m": writer.array(f"terrain_{patch.id}_up_m", patch.up_m, "<f4", "m", M_TERRAIN_PATCH),
+                    "up_min_m": float(finite.min()) if finite.size else None,
+                    "up_max_m": float(finite.max()) if finite.size else None,
+                    "sources": list(patch.sources),
+                }
+            )
+        sections["terrain"] = {"use": "drawing", "notice": PATCH_NOTICE, "frame": PATCH_FRAME, "method": M_TERRAIN_PATCH, "patches": records}
 
     used = _used_methods(sections, set())
     missing = used - methods.keys()

@@ -26,6 +26,7 @@ from .trade import add_height_trade_to_timeline
 from .geometry import DEG, destination, site_frame, topocentric_az_el
 from .results import BodySeries, HorizonResult, TimelineResult
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
+from .terrain_patch import DEFAULT_PATCHES, TerrainPatch, canonical_patches, patch_axis
 from .timeline import IntervalSet, TimeGrid
 
 SYNTHETIC_NOTICE = (
@@ -110,10 +111,39 @@ def synthetic_methods() -> dict:
         pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
         pk.M_SMOOTH_SPHERE: _card("visibility over a smooth sphere", "The visibility condition evaluated without terrain.", local, "TDB"),
         pk.M_BLOCKING: _card("time lost to terrain", "Time in which a smooth sphere would show the body and the terrain hides it, and the obstacle that hides it.", local, "TDB"),
+        pk.M_TERRAIN_PATCH: _card("terrain patch for drawing", "Up coordinate of an invented surface on regular grids in the site frame.", local, "none"),
         pk.M_DIRTAB_POSITIONS: _card("body positions", "Position of each body relative to the centre of the Moon.", SYNTHETIC_FRAME, "TDB"),
         pk.M_DIRTAB_RADII: _card("body radii", "Radius used for the disc of each body.", "none", "none"),
         pk.M_DIRTAB_INTERP: _card("table interpolation error", "Largest error of the recommended interpolation between table records.", SYNTHETIC_FRAME, "TDB"),
     }
+
+
+def _invented_profile(az, max_range_m: float):
+    """Invented horizon elevation (degrees) and distance of the limiting terrain (m) per azimuth."""
+    az = np.mod(az, 360.0)
+    base_deg = 3.0 * _tri(az / 360.0) + 1.5 * _tri(az / 45.0) - 1.0
+    dist_m = 5000.0 + 40000.0 * _tri(az / 120.0 + 0.25)
+    dist_m = np.where((az >= 40.0) & (az < 70.0), 150000.0, dist_m)
+    dist_m = np.where((az >= 200.0) & (az < 215.0), 300.0 + 2.0 * (az - 200.0), dist_m)
+    return base_deg, np.minimum(dist_m, max_range_m)
+
+
+def synthetic_patches(specs, max_range_m: float) -> list[TerrainPatch]:
+    """An invented surface in the site frame that goes with the invented horizon: along
+    every azimuth the ground touches the invented horizon line (observer height 0) at
+    the invented distance and stays below it elsewhere. It has cliffs where the
+    invented distance jumps. Not terrain."""
+    out = []
+    for spec in canonical_patches(specs):
+        axis = patch_axis(spec["half_width_m"], spec["spacing_m"])
+        east, north = np.meshgrid(axis, axis)
+        rho = np.hypot(east, north)
+        base_deg, dist_m = _invented_profile(np.degrees(np.arctan2(east, north)), max_range_m)
+        with np.errstate(divide="ignore"):
+            closeness = np.exp(-4.0 * np.log(np.where(rho > 0.0, rho / dist_m, 1.0)) ** 2)
+        up = rho * (base_deg * DEG - 0.06 * (1.0 - closeness))
+        out.append(TerrainPatch(spec["id"], spec["half_width_m"], spec["spacing_m"], up.astype(np.float32), []))
+    return out
 
 
 def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_m: float) -> HorizonResult:
@@ -124,11 +154,7 @@ def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_
     heights = np.asarray(canonical_heights(heights_m), dtype=np.float64)
     n_az = int(round(360.0 / azimuth_step_deg))
     az = np.arange(n_az) * azimuth_step_deg
-    base_deg = 3.0 * _tri(az / 360.0) + 1.5 * _tri(az / 45.0) - 1.0
-    dist_m = 5000.0 + 40000.0 * _tri(az / 120.0 + 0.25)
-    dist_m = np.where((az >= 40.0) & (az < 70.0), 150000.0, dist_m)
-    dist_m = np.where((az >= 200.0) & (az < 215.0), 300.0 + 2.0 * (az - 200.0), dist_m)
-    dist_m = np.minimum(dist_m, max_range_m)
+    base_deg, dist_m = _invented_profile(az, max_range_m)
     elevation = base_deg[None, :] - (heights[:, None] / dist_m[None, :]) / DEG
     obstacle_height = _SURFACE_HEIGHT_M + dist_m * base_deg * DEG + dist_m**2 / (2.0 * _RADIUS_M)
     lat, lon = destination(site["lat_deg"], site["lon_deg"], az, dist_m / _RADIUS_M)
@@ -431,11 +457,13 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
             )
             add_height_trade_to_timeline(timeline, horizon.observer_heights_m)
         t2 = _time.perf_counter()
+        patches = synthetic_patches(scenario.get("terrain_patches", DEFAULT_PATCHES), scenario["horizon"]["max_range_m"]) or None
         written.append(
             pk.build_site_package(
                 out_root,
                 site=site,
                 frame_name=SYNTHETIC_FRAME,
+                terrain_patches=patches,
                 dem_input=dem_input,
                 horizon=horizon,
                 methods=synthetic_methods(),

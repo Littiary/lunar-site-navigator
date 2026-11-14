@@ -24,6 +24,7 @@ from .pairs import build_pairs_package
 from .trade import add_height_trade_to_timeline
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
+from .terrain_patch import DEFAULT_PATCHES, canonical_patches, compute_patches, patch_warnings
 from .timeline import IntervalSet, TimeGrid
 from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, horizon_error_profile, visibility_window
 
@@ -291,6 +292,36 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
     return bands, ellipse, notes, applied
 
 
+def terrain_patch_methods(dem_set_id: str) -> dict:
+    """Method card of the terrain patches."""
+    return {
+        pk.M_TERRAIN_PATCH: pk.method_card(
+            "Terrain patch for drawing",
+            "up_m: the up coordinate, in the site's local East/North/Up frame and measured from the ground point of the site, of the surface point whose east and north coordinates are those of the grid node. The curvature of the sphere is in the values: on a smooth sphere they fall off as -(east^2 + north^2) / (2 r). NaN where the elevation data ends.",
+            "For every node the surface point is found whose position in the site frame has the node's east and north coordinates: its distance from the centre is the reference radius plus the terrain height at its latitude and longitude, settled by iteration to 0.1 mm. The terrain is read by bilinear interpolation from the block-average level of the elevation product whose pixel is the coarsest not larger than the grid spacing (sources lists product, level and checksum).",
+            "local East/North/Up at the site; up is the outward radial direction of the reference sphere; origin at the ground point of the site",
+            "none",
+            [dem_set_id],
+            {},
+            "analytic-test-passed",
+            [
+                "core/tests/test_terrain_patch.py::test_patch_of_a_smooth_sphere_is_the_spherical_cap (threshold 0.002 m)",
+                "core/tests/test_terrain_patch.py::test_patch_nodes_lie_on_the_surface: every node turned back into latitude, longitude and height with frame vectors written out in the test (threshold 0.05 m)",
+                "core/tests/test_terrain_patch.py::test_east_is_east_and_north_is_north: a hill at a known bearing and distance (threshold one grid spacing)",
+                "core/tests/test_terrain_patch.py::test_near_patch_reproduces_the_elevation_data and ::test_coarser_patches_reproduce_their_overview_level: on LOLA terrain at three site records against the data reader, 0.0002 m at the nodes (threshold 0.05 m)",
+                "core/tests/test_terrain_patch.py::test_horizon_drawn_from_the_patches_agrees_with_the_package_horizon: on LOLA terrain at three site records the horizon of the drawn surface is inside the tolerance (a height of 15 % of the grid spacing at the limiting terrain, plus 0.02 deg) at 99.9 to 100 % of the azimuths (required 95 %); in angle 0.03 to 0.04 deg in the median, 0.46 deg at most",
+                "NOT MET: core/tests/test_terrain_patch.py::test_near_patch_between_its_nodes_stays_within_half_a_metre asked for 0.5 m at 95 % of random places between the nodes of the near patch; measured 0.83, 0.55 and 0.49 m at the three site records (docs/method/terrain_patch.md, section 3)",
+            ],
+            [
+                "For drawing only. The horizon, the windows and the event times of the package are computed on the finest elevation data; a viewer must not derive visibility from this surface.",
+                "A coarse patch shows ground averaged over its grid cells: ridge crests are lower and narrow gaps are filled. Measured at three site records, the horizon of the drawn surface differs from the package horizon by up to 0.46 deg (terrain within 500 m of the site) and by up to 0.22 deg for terrain beyond 500 m; where they differ, the package horizon is right.",
+                "The grid is regular in the tangent plane of the site, not on the sphere: 32 km away a cell covers 0.02 % more ground than at the site. Overhangs cannot be represented.",
+                "Terrain beyond the largest patch is not in the package as a surface; its silhouette is in the horizon profile with the distance of the limiting terrain.",
+            ],
+        )
+    }
+
+
 def trade_methods(dem_set_id: str, direction_table_id: str) -> dict:
     """Method cards of the mast-height trade and of the site pairs."""
     local = "local East/North/Up at each site; up is the outward radial direction of the reference sphere"
@@ -432,6 +463,7 @@ def run_scenario(
     max_range = float(scenario["horizon"]["max_range_m"])
     window = scenario.get("time_window")
     bodies = list(scenario["bodies"])
+    patch_specs = canonical_patches(scenario.get("terrain_patches", DEFAULT_PATCHES))
     written: list[Path] = []
     extra_warnings: list[str] = []
 
@@ -512,6 +544,12 @@ def run_scenario(
             add_height_trade_to_timeline(timeline, heights)
             methods.update(trade_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
         t2 = _time.perf_counter()
+        patches = None
+        if patch_specs:
+            patches = compute_patches(terrain, csite["lat_deg"], csite["lon_deg"], horizon.surface_height_m, patch_specs)
+            methods.update(terrain_patch_methods(terrain.describe()["dem_set_id"]))
+            warnings.extend(patch_warnings(patches))
+        t3 = _time.perf_counter()
         if not horizon.coverage_complete:
             status = "partial"
         if synthetic:
@@ -530,9 +568,10 @@ def run_scenario(
                 timeline_request={**timeline_request, "landing_utc": site.get("landing_utc")} if timeline is not None else None,
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
-                timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
+                timings_s={"horizon": t1 - t0, "timeline": t2 - t1, "terrain_patches": t3 - t2},
                 status=status,
                 warnings=warnings,
+                terrain_patches=patches,
             )
         )
     pair_methods = trade_methods(terrain.describe()["dem_set_id"], "the direction table of the site packages")
