@@ -10,7 +10,7 @@ import pytest
 from lsn_data.paths import data_root, repo_data_dir
 
 PATH = repo_data_dir() / "sites" / "curated_sites.json"
-REQUIRED = ("site_id", "name", "category", "lon_deg_east", "lat_deg", "reference_frame", "coordinate_source",
+REQUIRED = ("site_id", "name", "category", "kind", "programme", "lon_deg_east", "lat_deg", "reference_frame", "coordinate_source",
             "ground_height_m_above_1737.4km_sphere", "ground_radius_m", "terrain", "status")
 
 
@@ -77,3 +77,13 @@ def test_lroc_coordinates_equal_the_source_table(doc):
             assert math.isclose(s["lon_deg_east"], float(r["LON_360"]), abs_tol=1e-12)
             n += 1
     assert n >= 15
+
+
+def test_display_fields(doc):
+    allowed = {"Apollo", "Surveyor", "Chang'e", "Chandrayaan", "SLIM", "CLPS", "Artemis", "Project sites"}
+    for s in doc["sites"]:
+        assert s["category"] in ("past landing", "candidate", "project site")
+        assert s["programme"] in allowed
+    by = {s["site_id"]: s for s in doc["sites"]}
+    assert by["im_2_athena"]["programme"] == "CLPS" and by["apollo_11"]["category"] == "past landing"
+    assert by["shackleton_rim_crest"]["programme"] == "Project sites" and by["shackleton_rim_crest"]["category"] == "project site"

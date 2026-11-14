@@ -1,6 +1,6 @@
 {
  "schema": "lunar-site-navigator site records v0 (curated list)",
- "generated_utc": "2026-11-14T16:07:36Z",
+ "generated_utc": "2026-11-14T16:49:23Z",
  "sites": [
   {
    "site_id": "shackleton_rim_crest",
@@ -39,13 +39,15 @@
    "unverified": [
     "relation to the NASA candidate regions"
    ],
-   "category": "project_candidate",
    "coordinate_source": {
     "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
     "url": "https://planetarynames.wr.usgs.gov/Feature/5450",
     "retrieved_utc": "2026-11-14T10:40:12Z",
     "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
    },
+   "kind": "project_candidate",
+   "category": "project site",
+   "programme": "Project sites",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -105,13 +107,15 @@
    "unverified": [
     "relation to the NASA candidate regions"
    ],
-   "category": "project_candidate",
    "coordinate_source": {
     "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
     "url": "https://planetarynames.wr.usgs.gov/Feature/1439",
     "retrieved_utc": "2026-11-14T10:40:12Z",
     "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
    },
+   "kind": "project_candidate",
+   "category": "project site",
+   "programme": "Project sites",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -171,13 +175,15 @@
    "unverified": [
     "relation to the NASA candidate regions"
    ],
-   "category": "project_candidate",
    "coordinate_source": {
     "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
     "url": "https://planetarynames.wr.usgs.gov/Feature/16338",
     "retrieved_utc": "2026-11-14T10:40:12Z",
     "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
    },
+   "kind": "project_candidate",
+   "category": "project site",
+   "programme": "Project sites",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -203,7 +209,6 @@
   {
    "site_id": "apollo_11",
    "name": "Apollo 11 (Lunar Module Eagle descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 11",
    "lon_deg_east": 23.47314,
    "lat_deg": 0.67416,
@@ -223,6 +228,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -242,7 +250,6 @@
   {
    "site_id": "apollo_12",
    "name": "Apollo 12 (Lunar Module Intrepid descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 12",
    "lon_deg_east": 336.5781,
    "lat_deg": -3.0128,
@@ -262,6 +269,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -281,7 +291,6 @@
   {
    "site_id": "apollo_14",
    "name": "Apollo 14 (Lunar Module Antares descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 14",
    "lon_deg_east": 342.52806,
    "lat_deg": -3.64589,
@@ -301,6 +310,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -320,7 +332,6 @@
   {
    "site_id": "apollo_15",
    "name": "Apollo 15 (Lunar Module Falcon descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 15",
    "lon_deg_east": 3.6333,
    "lat_deg": 26.13239,
@@ -340,6 +351,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -359,7 +373,6 @@
   {
    "site_id": "apollo_16",
    "name": "Apollo 16 (Lunar Module Orion descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 16",
    "lon_deg_east": 15.5011,
    "lat_deg": -8.9734,
@@ -379,6 +392,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -398,7 +414,6 @@
   {
    "site_id": "apollo_17",
    "name": "Apollo 17 (Lunar Module Challenger descent stage)",
-   "category": "past_landing",
    "mission": "Apollo 17",
    "lon_deg_east": 30.7723,
    "lat_deg": 20.1911,
@@ -418,6 +433,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Apollo",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -437,7 +455,6 @@
   {
    "site_id": "surveyor_1",
    "name": "Surveyor 1 lander",
-   "category": "past_landing",
    "mission": "Surveyor 1",
    "lon_deg_east": 316.6602,
    "lat_deg": -2.4745,
@@ -457,6 +474,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Surveyor",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -476,7 +496,6 @@
   {
    "site_id": "change_3",
    "name": "Chang'e 3 lander",
-   "category": "past_landing",
    "mission": "Chang'e 3",
    "lon_deg_east": 340.4883,
    "lat_deg": 44.1214,
@@ -496,6 +515,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Chang'e",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -515,7 +537,6 @@
   {
    "site_id": "change_4",
    "name": "Chang'e 4 lander",
-   "category": "past_landing",
    "mission": "Chang'e 4",
    "lon_deg_east": 177.5886,
    "lat_deg": -45.4562,
@@ -535,6 +556,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Chang'e",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -554,7 +578,6 @@
   {
    "site_id": "change_5",
    "name": "Chang'e 5 lander",
-   "category": "past_landing",
    "mission": "Chang'e 5",
    "lon_deg_east": 308.0839,
    "lat_deg": 43.0576,
@@ -574,6 +597,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Chang'e",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -593,7 +619,6 @@
   {
    "site_id": "change_6",
    "name": "Chang'e 6 lander",
-   "category": "past_landing",
    "mission": "Chang'e 6",
    "lon_deg_east": 206.0143,
    "lat_deg": -41.6383,
@@ -613,6 +638,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Chang'e",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -632,7 +660,6 @@
   {
    "site_id": "chandrayaan_3",
    "name": "Chandrayaan-3 Vikram lander",
-   "category": "past_landing",
    "mission": "Chandrayaan-3",
    "lon_deg_east": 32.3187,
    "lat_deg": -69.374,
@@ -652,6 +679,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "Chandrayaan",
    "terrain": {
     "default": {
      "product_id": "LDEM_60S_60M",
@@ -671,7 +701,6 @@
   {
    "site_id": "slim",
    "name": "SLIM lander",
-   "category": "past_landing",
    "mission": "SLIM",
    "lon_deg_east": 25.251,
    "lat_deg": -13.316,
@@ -691,6 +720,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "SLIM",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -710,7 +742,6 @@
   {
    "site_id": "im_1_odysseus",
    "name": "IM-1 Odysseus lander (CLPS)",
-   "category": "past_landing",
    "mission": "IM-1",
    "lon_deg_east": 1.4367,
    "lat_deg": -80.1276,
@@ -730,6 +761,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "CLPS",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -749,7 +783,6 @@
   {
    "site_id": "blue_ghost_1",
    "name": "Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)",
-   "category": "past_landing",
    "mission": "Blue Ghost Mission 1",
    "lon_deg_east": 61.8102,
    "lat_deg": 18.5622,
@@ -769,6 +802,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "CLPS",
    "terrain": {
     "default": {
      "product_id": "SLDEM2015_256",
@@ -788,7 +824,6 @@
   {
    "site_id": "im_2_athena",
    "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
-   "category": "past_landing",
    "mission": "IM-2",
    "lon_deg_east": 29.19567,
    "lat_deg": -84.7906,
@@ -808,6 +843,9 @@
    },
    "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
    "status": "past landing site (position of the lander as measured on LROC images)",
+   "kind": "past_landing",
+   "category": "past landing",
+   "programme": "CLPS",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -827,7 +865,6 @@
   {
    "site_id": "artemis3_region_mons_mouton_representative",
    "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
-   "category": "artemis_iii_candidate_region_representative",
    "lon_deg_east": 31.0,
    "lat_deg": -84.6,
    "reference_frame": "IAU Gazetteer: planetographic, +East (equal to planetocentric on the 1737.4 km sphere); frame of the Gazetteer's LOLA-based determination, taken as mean Earth/polar axis",
@@ -843,6 +880,9 @@
     "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
     "https://ntrs.nasa.gov/citations/20250011660"
    ],
+   "kind": "artemis_iii_candidate_region_representative",
+   "category": "candidate",
+   "programme": "Artemis",
    "terrain": {
     "default": {
      "product_id": "LDEM_80S_20M",
@@ -906,5 +946,6 @@
   "artemis_iii_candidate_region_representative": 1,
   "past_landing": 16,
   "project_candidate": 3
- }
+ },
+ "display_fields": "category ('past landing', 'candidate', 'project site') and programme are descriptive, for site pickers"
 }
