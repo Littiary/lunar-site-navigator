@@ -41,6 +41,9 @@ public:
 	ALsnSiteScene* GetScene() const { return Scene; }
 	const FString& GetLoadError() const { return LoadError; }
 
+	/** True while a recording waits for shaders and shadows before its first frame; the timeline must not play yet. */
+	bool IsWarmingUpForMovie() const { return !MovieDir.IsEmpty() && MovieWarmUpFrames > 0; }
+
 	/** Finds the package to show: command line first, then the sample of the contract. */
 	static FString ResolvePackageDirectory(FString& OutError);
 

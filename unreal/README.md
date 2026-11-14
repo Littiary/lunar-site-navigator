@@ -1,11 +1,13 @@
 # Unreal view scene
 
 Unreal Engine 5.8.4 C++ project that shows one site package: the terrain horizon around the
-site, the Sun as a directional light, and the Sun and Earth discs. It reads packages
-(`docs/contract/SPEC.md`) and computes no Sun or Earth position, rise or set time, margin
-or visible fraction of its own.
+site, the Sun as a directional light, the Sun and Earth discs, a time slider and the
+countdowns to the next sunset and the next loss of the Earth. It reads packages
+(`docs/contract/SPEC.md`, contract 0.x) and computes no Sun or Earth position, rise or set
+time, margin or visible fraction of its own.
 
-Only one machine compiles this project and writes its binary assets (`Content/`).
+Only one machine compiles this project and writes its binary assets (`Content/`, stored
+with Git LFS: run `git lfs install` once per machine).
 
 ## Frames and world origin
 
@@ -30,35 +32,58 @@ Only one machine compiles this project and writes its binary assets (`Content/`)
 - The Sun and Earth discs are drawn at a fixed distance in the direction and with the
   angular radius the package gives; their true distances are not used.
 
-## What the scene draws
+## What the scene draws, and where each part comes from
 
-- **Horizon line of the terrain mesh**: one vertex per azimuth sample at the point given
-  by `horizon.elevation_deg` and `horizon.distance_m`. This is package data.
-- **Ground between the site and that line**: a placeholder surface with procedural craters
-  that only lower it. It is not elevation data and the HUD says so. It will be replaced by
-  real tiles when the data stream provides an export.
-- **Reference sphere**, sunk near the site so that it stays out of sight from the observer.
-- **Sun light, Sun disc, Earth disc** from the `timeline` series. A package without a
-  timeline shows none of them.
-- A package with `synthetic: true` is marked on screen at all times.
+| Part | Source |
+|---|---|
+| Horizon line of the terrain (the crest vertex of every azimuth) | package: `horizon.elevation_deg`, `horizon.distance_m` |
+| Ground, real packages | LOLA heights sampled once per site through the data stream's reader on 320 rings per azimuth (`Scripts/export_terrain.py`). A cache for drawing: no number on screen comes from it |
+| Ground, synthetic packages or without a terrain export | a placeholder surface with procedural craters; the read-out says so |
+| Sun light direction and source angle, Sun and Earth discs | package: `timeline.series` at the selected time |
+| Countdowns "sets in" / "rises in" | package: interval boundaries of the windows `sun_visible`, `earth_visible`. "at least" means the package has no such event in its computed range |
+| Time strips (yellow Sun, blue Earth) | package: the same windows |
+| Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
+| Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
+
+Between two time samples the Sun and the Earth are drawn at the linear interpolation of
+the package series over that one step, for a smooth display; at a whole sample the
+package values are shown unchanged, and the numbers in the read-out are always those of a
+sample. A package with `synthetic: true` is marked "SYNTHETIC DATA" at all times; a real
+package never is (both directions are tested).
 
 ## Run
 
 ```
-Scripts\build.ps1                      # compile the editor target
-Scripts\run_tests.ps1                  # all automated tests, no window
-python Scripts\compare_horizon.py      # horizon comparison repeated in Python
-Scripts\capture.ps1 -Out <png> -Time 552 -Yaw 340 -Pitch 2 -HorizonLine
+Scripts\build.ps1                               # compile the editor target
+Scripts\run_tests.ps1                           # all automated tests, no window
+python Scripts\compare_horizon.py               # horizon comparison repeated in Python
+Scripts\import_packages.ps1 <package root>      # real packages -> Content\LsnPackages
+python Scripts\export_terrain.py Content\LsnPackages   # real ground (needs the data stream's reader and the LOLA files)
+Scripts\capture.ps1 -Out <png> -Time 2092 -Yaw 211 -Pitch -3 -Fov 40
+Scripts\record.ps1 -Out <mp4> -Site <site_id> -From 2088 -To 2100 -Seconds 25   # needs ffmpeg
+Scripts\package.ps1 -Out <folder>               # stand-alone Windows program
 ```
 
-Interactive: `UnrealEditor.exe LunarSiteNavigator.uproject -game`. Mouse or arrow keys
-look, `Q`/`E` step the time sample (Shift: 24 samples), `PageUp`/`PageDown` change the
-observer height, `Z`/`X` zoom, `H` toggles the package horizon line. Command line:
-`-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with index.json>`, `-LsnTime=`,
-`-LsnHeight=`, `-LsnYaw=`, `-LsnPitch=`, `-LsnFov=`, `-LsnHorizonLine`, `-LsnShot=<png>`.
+`Content\LsnPackages` and `Content\LsnTerrain` are not under version control. The real
+packages are produced by the science core (`python -m validation.sites.run <sites.json>
+--out <package root>` on the core branch, with the LOLA files of `python -m lsn_data
+fetch`); the same command gives the same package ids on every machine.
 
-Without a package argument the scene uses `docs/contract/sample/packages` when present and
-otherwise the pinned copy in `TestData/` (see `TestData/README.md`).
+The stand-alone program is the folder `<folder>\Windows`; start `LunarSiteNavigator.exe`.
+It needs neither the editor nor a network connection: packages and terrain are staged
+next to it as plain files. `-LsnSite=<site_id>` picks a site, `-windowed -ResX= -ResY=`
+a window.
+
+Keys: mouse or arrow keys look; `Q`/`E` step one sample (Shift: 24); `Space` plays and
+pauses; `[` `]` change the playing speed; `Tab` shows the cursor to drag the time strips;
+`PageUp`/`PageDown` observer height; `Z`/`X` zoom; `H` package horizon line; `L` fill
+light; `Esc` quits. Command line: `-LsnPackage=<site package dir>` or
+`-LsnPackageRoot=<root with index.json>`, `-LsnSite=`, `-LsnTime=`, `-LsnHeight=`,
+`-LsnYaw=`, `-LsnPitch=`, `-LsnFov=`, `-LsnHorizonLine`, `-LsnShot=<png>`,
+`-LsnPlayFrom= -LsnPlayTo= -LsnPlaySeconds= -LsnMovieDir=`.
+
+Without a package argument the scene uses `Content\LsnPackages`, then
+`docs/contract/sample/packages`, then the pinned copy in `TestData/`.
 
 ## Tests and thresholds
 
@@ -70,13 +95,31 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Package.LoadSample`, `RefusesBadPackages` | Reader follows the contract; another major version, a truncated array, the wrong package kind and a missing manifest are refused | exact |
 | `Package.FrameAgreesWithCore` | `site.enu` and `site.position_km` equal the frame derived here from latitude and longitude | see test |
 | `Package.BodyFrameAgreesWithSeries` | Direction-table positions mapped through the body-fixed frame give the series directions | 0.0002 deg |
-| `Package.ObstaclePointsReproduceHorizon` | Obstacle points (arc distance, obstacle height) placed through the site frame give `horizon.elevation_deg`; these fields are independent of the elevation | 0.05 deg |
-| `Mesh.*` | Winding matches the engine, sphere stays out of sight, craters only lower, silhouette measurement is exact on known shapes | see tests |
-| `Acceptance.SunAndEarthFromPackage`, `SunFollowsThePackage` | Light direction, light source angle, disc positions and disc sizes of the spawned scene equal the package at every sample | 0.001 deg |
-| `Acceptance.HorizonSilhouette` | Silhouette of the scene's terrain and sphere components, seen from the observer, equals `horizon.elevation_deg` for every height and azimuth | 0.001 deg |
-| `Acceptance.HorizonExportForPython` + `compare_horizon.py` | The same comparison with the package read by Python | 0.001 deg |
+| `Package.ObstaclePointsReproduceHorizon` | Obstacle points (arc distance, obstacle height) placed through the site frame give `horizon.elevation_deg` | 0.05 deg |
+| `Package.CountdownFromWindows`, `WindowsOfTheSample` | Countdowns are distances to interval boundaries of the package windows; windows and series agree at every sample | 1e-9 s; 0 disagreements |
+| `Mesh.*`, `Terrain.GridMesh` | Winding matches the engine, sphere stays out of sight, craters only lower, silhouette measurement is exact on known shapes, terrain-grid vertices lie at their ring, azimuth and height | see tests |
+| `Acceptance.SunAndEarthFromPackage`, `SunFollowsThePackage` | Light direction, source angle, disc positions and sizes of the spawned scene equal the package at every sample | 0.001 deg |
+| `Acceptance.SliderFollowsThePackage` | Whole positions equal the samples; between samples light and discs show the interpolated package series | 0.001 deg |
+| `Acceptance.HorizonSilhouette` (+ `HorizonExportForPython`, `compare_horizon.py`) | Silhouette of the scene's terrain and sphere, seen from the observer, equals `horizon.elevation_deg` for every height and azimuth; repeated with the package read by Python | 0.001 deg |
+| `Hud.TextAndSyntheticMarker` | Synthetic marker for synthetic packages only; countdown wording, "at least" for lower bounds; UTC labels | exact |
+| `Real.ImportedPackages` | On every imported real package: not synthetic, countdown at the start equals the package's own metric, obstacle points, scene silhouette, direction table against series | 1e-3 s; 0.05; 0.001; 0.0002 deg |
+| `Real.TerrainAgainstHorizon` | No LOLA sample (from the start of the package's horizon search outwards) stands above the package horizon of its azimuth; mesh silhouette with real ground | 0.001 deg |
 
-Limits: all of this has run against the synthetic contract sample only. The silhouette test
-compares mesh geometry, not rendered pixels; the rendered view is checked by eye with the
-horizon line overlay. The terrain horizon is by construction the package horizon, so it
-proves the frame, reader and mesh chain, not the science behind the package.
+The two `Real.*` tests report a warning ("NOT RUN") when no real packages or terrain are
+imported, as on a machine without the data.
+
+## Limits
+
+- The silhouette tests compare mesh geometry, not rendered pixels; the rendered view is
+  checked by eye (horizon line overlay, captures under `docs/unreal/`).
+- The crest of the terrain is by construction the package horizon. That proves the frame,
+  reader and mesh chain. The independent part is `Real.TerrainAgainstHorizon`: heights read
+  here through the data stream's reader never rise above the core's horizon.
+- The package horizon starts 20 m from the site (`first_point_m` of its method card). For
+  the 0 m observer the ground nearer than that rises up to 4.8 deg above the package
+  horizon at the de Gerlache site; from 1 m up it does not. The test reports this with
+  every run without a verdict.
+- The ground is sampled on rings 2.8 % apart and at the 0.25 deg azimuth step: relief
+  between samples is not drawn. Shadows on the ground are those of this sampled mesh, so
+  a shadow edge is not a computed quantity; the package's `visible_fraction` is.
+- Display values (light intensity, exposure, albedo, fill light) are not photometry.

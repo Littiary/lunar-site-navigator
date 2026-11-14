@@ -7,6 +7,7 @@
 #include "Misc/CommandLine.h"
 #include "Scene/LsnHud.h"
 #include "Scene/LsnSiteScene.h"
+#include "Scene/LsnViewGameMode.h"
 
 ALsnObserverPawn::ALsnObserverPawn()
 {
@@ -169,7 +170,8 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		if (PC->WasInputKeyJustPressed(EKeys::PageUp)) { Scene->SetHeightIndex(Scene->GetHeightIndex() + 1); }
 		if (PC->WasInputKeyJustPressed(EKeys::PageDown)) { Scene->SetHeightIndex(Scene->GetHeightIndex() - 1); }
 
-		if (bPlaying && Package.bHasTimeline)
+		const ALsnViewGameMode* GameMode = GetWorld()->GetAuthGameMode<ALsnViewGameMode>();
+		if (bPlaying && Package.bHasTimeline && !(GameMode && GameMode->IsWarmingUpForMovie()))
 		{
 			const double End = PlayTo >= 0.0 ? FMath::Min(PlayTo, LastPosition) : LastPosition;
 			const double Next = FMath::Min(Scene->GetTimePosition() + PlayRate * DeltaSeconds, End);

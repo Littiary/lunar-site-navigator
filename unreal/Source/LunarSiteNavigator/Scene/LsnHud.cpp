@@ -250,7 +250,7 @@ void ALsnHud::DrawHUD()
 	DrawText(Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc, White, PanelX, PanelY, Font, Scale * 2.0f);
 	if (Pawn && Pawn->IsPlaying())
 	{
-		DrawText(FString::Printf(TEXT("playing, %.0f h of site time per second"), Pawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0), Dim,
+		DrawText(FString::Printf(TEXT("playing, %.1f h of site time per second"), Pawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0), Dim,
 			PanelX + 330.0f * Scale, PanelY + 12.0f * Scale, Font, Scale);
 	}
 	PanelY += 38.0f * Scale;
