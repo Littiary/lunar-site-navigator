@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T11:31:32Z",
+  "generated_utc": "2026-11-14T12:11:39Z",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2027-11-14T00:00:00.000Z",
@@ -20,7 +20,7 @@
   "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-250a3fe71759fa79",
-  "run_time_s": 62.649321400007466,
+  "run_time_s": 419.6042324999871,
   "status": "unverified against an independent illumination product or mission record",
   "sites": [
     {
@@ -30,7 +30,7 @@
       "lon_deg": -154.23109,
       "surface_height_m": 1701.0723774096787,
       "package_id": "site-3d084d7f181d1b64",
-      "content_sha256": "695b5acdb302d7f6beb3cb3f59540c3033c9c70fa50dab5ace175ef29fdd79ab",
+      "content_sha256": "580cecab24ac6cb694e36559775ff0951b3039d7cf6611ad1a3d837c136a8b89",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -42,8 +42,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.694323,
-        "timeline": 24.56304
+        "horizon": 2.627517,
+        "timeline": 147.551678
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -86,7 +86,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.6328017711639404,
           "horizon_max_deg": 4.963151931762695,
-          "share_of_horizon_set_closer_than_1km": 0.4423611111111111
+          "share_of_horizon_set_closer_than_1km": 0.4423611111111111,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5022910052202245,
+            "network_receive_share": 0.5066014361562976,
+            "station_shares": {
+              "goldstone": 0.22974717881944445,
+              "canberra": 0.19589794698915525,
+              "madrid": 0.23083372722840564
+            },
+            "longest_outage_h": 322.878515625,
+            "longest_terrain_outage_h": 320.980859375
+          }
         },
         {
           "observer_height_m": 1.0,
@@ -106,7 +118,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.6334261894226074,
           "horizon_max_deg": 3.1613452434539795,
-          "share_of_horizon_set_closer_than_1km": 0.2520833333333333
+          "share_of_horizon_set_closer_than_1km": 0.2520833333333333,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5023124093298136,
+            "network_receive_share": 0.5066229294496766,
+            "station_shares": {
+              "goldstone": 0.22975404597127091,
+              "canberra": 0.19590732615106546,
+              "madrid": 0.2308421550965563
+            },
+            "longest_outage_h": 322.875390625,
+            "longest_terrain_outage_h": 320.97565104166665
+          }
         },
         {
           "observer_height_m": 2.0,
@@ -126,7 +150,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.6340508460998535,
           "horizon_max_deg": 3.066570281982422,
-          "share_of_horizon_set_closer_than_1km": 0.22083333333333333
+          "share_of_horizon_set_closer_than_1km": 0.22083333333333333,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5023337391195776,
+            "network_receive_share": 0.5066443484232306,
+            "station_shares": {
+              "goldstone": 0.22976089825913243,
+              "canberra": 0.19591667558504566,
+              "madrid": 0.230850582964707
+            },
+            "longest_outage_h": 322.8723958333333,
+            "longest_terrain_outage_h": 320.97044270833334
+          }
         },
         {
           "observer_height_m": 5.0,
@@ -146,7 +182,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.6359243392944336,
           "horizon_max_deg": 2.7821474075317383,
-          "share_of_horizon_set_closer_than_1km": 0.1840277777777778
+          "share_of_horizon_set_closer_than_1km": 0.1840277777777778,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5023977136249048,
+            "network_receive_share": 0.5067085904799277,
+            "station_shares": {
+              "goldstone": 0.22978139566685693,
+              "canberra": 0.1959447090230213,
+              "madrid": 0.23087589629708904
+            },
+            "longest_outage_h": 322.86315104166664,
+            "longest_terrain_outage_h": 320.95520833333336
+          }
         },
         {
           "observer_height_m": 10.0,
@@ -166,7 +214,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.639047145843506,
           "horizon_max_deg": 2.3097751140594482,
-          "share_of_horizon_set_closer_than_1km": 0.1284722222222222
+          "share_of_horizon_set_closer_than_1km": 0.1284722222222222,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5025042436620053,
+            "network_receive_share": 0.506815551572013,
+            "station_shares": {
+              "goldstone": 0.22981555305840945,
+              "canberra": 0.19599150078481736,
+              "madrid": 0.23091791672612252
+            },
+            "longest_outage_h": 322.84778645833336,
+            "longest_terrain_outage_h": 320.92955729166664
+          }
         },
         {
           "observer_height_m": 20.0,
@@ -186,7 +246,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.6452925205230713,
           "horizon_max_deg": 1.4148799180984497,
-          "share_of_horizon_set_closer_than_1km": 0.10277777777777777
+          "share_of_horizon_set_closer_than_1km": 0.10277777777777777,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5027219858851788,
+            "network_receive_share": 0.5070289535174086,
+            "station_shares": {
+              "goldstone": 0.22988371920186454,
+              "canberra": 0.19609034615201673,
+              "madrid": 0.23100151166523972
+            },
+            "longest_outage_h": 322.8170572916667,
+            "longest_terrain_outage_h": 320.8782552083333
+          }
         }
       ]
     },
@@ -197,7 +269,7 @@
       "lon_deg": -68.41044,
       "surface_height_m": 1815.1855746334436,
       "package_id": "site-08105a0f3060aee8",
-      "content_sha256": "96c1a6957821bad94986957e1e8accec97c300a8d8d6aa6e7e69504a9621fdc3",
+      "content_sha256": "3b53c94a6eee003467453c2d3433afcf221fd80bcaf76e6bddf8778d47cf51d7",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -209,8 +281,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.491791,
-        "timeline": 14.748106
+        "horizon": 9.505131,
+        "timeline": 125.135097
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -253,7 +325,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.702406883239746,
           "horizon_max_deg": -0.214203342795372,
-          "share_of_horizon_set_closer_than_1km": 0.24444444444444444
+          "share_of_horizon_set_closer_than_1km": 0.24444444444444444,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5518429755874239,
+            "network_receive_share": 0.5565042852811073,
+            "station_shares": {
+              "goldstone": 0.24935007313070776,
+              "canberra": 0.2188230563879376,
+              "madrid": 0.24960817845081812
+            },
+            "longest_outage_h": 296.97057291666664,
+            "longest_terrain_outage_h": 282.84375
+          }
         },
         {
           "observer_height_m": 1.0,
@@ -273,7 +357,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.7028234004974365,
           "horizon_max_deg": -0.21470336616039276,
-          "share_of_horizon_set_closer_than_1km": 0.17569444444444443
+          "share_of_horizon_set_closer_than_1km": 0.17569444444444443,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5518704144667999,
+            "network_receive_share": 0.556532303855118,
+            "station_shares": {
+              "goldstone": 0.24936434253710046,
+              "canberra": 0.21883325306792237,
+              "madrid": 0.24962087227692162
+            },
+            "longest_outage_h": 296.9662760416667,
+            "longest_terrain_outage_h": 282.82890625
+          }
         },
         {
           "observer_height_m": 2.0,
@@ -293,7 +389,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.703239917755127,
           "horizon_max_deg": -0.2152033895254135,
-          "share_of_horizon_set_closer_than_1km": 0.1486111111111111
+          "share_of_horizon_set_closer_than_1km": 0.1486111111111111,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5518978830741058,
+            "network_receive_share": 0.5565589400803843,
+            "station_shares": {
+              "goldstone": 0.24937865653538813,
+              "canberra": 0.21884349433980213,
+              "madrid": 0.24963353637509514
+            },
+            "longest_outage_h": 296.96197916666665,
+            "longest_terrain_outage_h": 282.8140625
+          }
         },
         {
           "observer_height_m": 5.0,
@@ -313,7 +421,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.7044894695281982,
           "horizon_max_deg": -0.21670344471931458,
-          "share_of_horizon_set_closer_than_1km": 0.08819444444444445
+          "share_of_horizon_set_closer_than_1km": 0.08819444444444445,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5519799172968988,
+            "network_receive_share": 0.5566443186953006,
+            "station_shares": {
+              "goldstone": 0.24942159853025114,
+              "canberra": 0.21887411410768645,
+              "madrid": 0.24967135030203577
+            },
+            "longest_outage_h": 296.94908854166664,
+            "longest_terrain_outage_h": 282.76979166666666
+          }
         },
         {
           "observer_height_m": 10.0,
@@ -333,7 +453,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.7065718173980713,
           "horizon_max_deg": -0.21920356154441833,
-          "share_of_horizon_set_closer_than_1km": 0.05416666666666667
+          "share_of_horizon_set_closer_than_1km": 0.05416666666666667,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5521161009441591,
+            "network_receive_share": 0.5568065588731925,
+            "station_shares": {
+              "goldstone": 0.24949370362442921,
+              "canberra": 0.21892527587519026,
+              "madrid": 0.24973367490724885
+            },
+            "longest_outage_h": 296.927734375,
+            "longest_terrain_outage_h": 282.6967447916667
+          }
         },
         {
           "observer_height_m": 20.0,
@@ -353,7 +485,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.7107369899749756,
           "horizon_max_deg": -0.22420379519462585,
-          "share_of_horizon_set_closer_than_1km": 0.0
+          "share_of_horizon_set_closer_than_1km": 0.0,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.5523907424253235,
+            "network_receive_share": 0.5571426628496005,
+            "station_shares": {
+              "goldstone": 0.24964388912671232,
+              "canberra": 0.2190277183219178,
+              "madrid": 0.24985634721033104
+            },
+            "longest_outage_h": 296.88489583333336,
+            "longest_terrain_outage_h": 282.55234375
+          }
         }
       ]
     },
@@ -364,7 +508,7 @@
       "lon_deg": 2.05767,
       "surface_height_m": 5173.498293993088,
       "package_id": "site-b425911bcc8e34f8",
-      "content_sha256": "00e7fa250f465da543b058bf0d3419a606a46a78d96183635a698b78ba877490",
+      "content_sha256": "478f0dbf0cf30c8b0d228d39f4de7c74a4b453cac1102270f5b645a5feaef1f0",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -376,8 +520,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.443404,
-        "timeline": 14.70952
+        "horizon": 8.350602,
+        "timeline": 124.72494
       },
       "sun_centre_elevation_range_deg": [
         -5.536576271057129,
@@ -420,7 +564,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.189234972000122,
           "horizon_max_deg": 0.004543060902506113,
-          "share_of_horizon_set_closer_than_1km": 0.9722222222222222
+          "share_of_horizon_set_closer_than_1km": 0.9722222222222222,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.766160147331621,
+            "network_receive_share": 0.7778653562595129,
+            "station_shares": {
+              "goldstone": 0.3242732635916096,
+              "canberra": 0.3290308620505137,
+              "madrid": 0.3217971202554224
+            },
+            "longest_outage_h": 144.12174479166666,
+            "longest_terrain_outage_h": 132.7234375
+          }
         },
         {
           "observer_height_m": 1.0,
@@ -440,7 +596,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.575415849685669,
           "horizon_max_deg": -0.07124921679496765,
-          "share_of_horizon_set_closer_than_1km": 0.78125
+          "share_of_horizon_set_closer_than_1km": 0.78125,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.7825519198297184,
+            "network_receive_share": 0.7950756724457763,
+            "station_shares": {
+              "goldstone": 0.3292554862894787,
+              "canberra": 0.33887880368864154,
+              "madrid": 0.32613941953243913
+            },
+            "longest_outage_h": 128.95794270833332,
+            "longest_terrain_outage_h": 111.89544270833333
+          }
         },
         {
           "observer_height_m": 2.0,
@@ -460,7 +628,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -2.7102231979370117,
           "horizon_max_deg": -0.07208012789487839,
-          "share_of_horizon_set_closer_than_1km": 0.7041666666666667
+          "share_of_horizon_set_closer_than_1km": 0.7041666666666667,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.7890467144691781,
+            "network_receive_share": 0.8016353928843227,
+            "station_shares": {
+              "goldstone": 0.33190535964849693,
+              "canberra": 0.34240514560740104,
+              "madrid": 0.32834558867246955
+            },
+            "longest_outage_h": 118.901171875,
+            "longest_terrain_outage_h": 109.23580729166666
+          }
         },
         {
           "observer_height_m": 5.0,
@@ -480,7 +660,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -3.517719268798828,
           "horizon_max_deg": -0.07457286864519119,
-          "share_of_horizon_set_closer_than_1km": 0.6541666666666667
+          "share_of_horizon_set_closer_than_1km": 0.6541666666666667,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.8174415697536149,
+            "network_receive_share": 0.8318237639126712,
+            "station_shares": {
+              "goldstone": 0.33984982192969937,
+              "canberra": 0.3608261466062595,
+              "madrid": 0.33555102947821536
+            },
+            "longest_outage_h": 96.50234375,
+            "longest_terrain_outage_h": 85.523828125
+          }
         },
         {
           "observer_height_m": 10.0,
@@ -500,7 +692,19 @@
           "earth_time_to_set_is_lower_bound": false,
           "horizon_min_deg": -4.494237899780273,
           "horizon_max_deg": -0.07872743159532547,
-          "share_of_horizon_set_closer_than_1km": 0.3958333333333333
+          "share_of_horizon_set_closer_than_1km": 0.3958333333333333,
+          "dte": {
+            "relay_need_level": 2,
+            "network_two_way_share": 0.8845474219939117,
+            "network_receive_share": 0.90232412956621,
+            "station_shares": {
+              "goldstone": 0.3539546396380327,
+              "canberra": 0.4075163875214041,
+              "madrid": 0.34829255404537673
+            },
+            "longest_outage_h": 22.482682291666666,
+            "longest_terrain_outage_h": 12.069270833333333
+          }
         },
         {
           "observer_height_m": 20.0,
@@ -520,7 +724,19 @@
           "earth_time_to_set_is_lower_bound": true,
           "horizon_min_deg": -5.069699764251709,
           "horizon_max_deg": -0.08703655749559402,
-          "share_of_horizon_set_closer_than_1km": 0.07569444444444444
+          "share_of_horizon_set_closer_than_1km": 0.07569444444444444,
+          "dte": {
+            "relay_need_level": 1,
+            "network_two_way_share": 0.938736384608067,
+            "network_receive_share": 0.9592234618769026,
+            "station_shares": {
+              "goldstone": 0.3808931533604452,
+              "canberra": 0.4246691504352169,
+              "madrid": 0.37175261754423516
+            },
+            "longest_outage_h": 12.563932291666667,
+            "longest_terrain_outage_h": 0.0
+          }
         }
       ]
     }

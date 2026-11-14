@@ -1,8 +1,8 @@
 # Validation card: ephemeris, time and event finding
 
-Generated 2026-11-14T11:31:56Z by `validation/card/build.py`; every measured value is recomputed from the stored reference data and the code. Do not edit by hand.
+Generated 2026-11-14T11:48:38Z by `validation/card/build.py`; every measured value is recomputed from the stored reference data and the code. Do not edit by hand.
 
-**20 of 20 checks pass.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
+**24 of 24 checks pass.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
 
 | What was compared | Against | Cases | Threshold | Measured | Result |
 |---|---|---|---|---|---|
@@ -13,6 +13,10 @@ Generated 2026-11-14T11:31:56Z by `validation/card/build.py`; every measured val
 | Time scales: TDB minus UTC | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 0.002 s | 3.8e-05 s | **PASS** |
 | Sunrise and sunset times on a smooth sphere (upper limb, with the dip of the horizon) | JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31 | < 120 s | 56.5 s | **PASS** |
 | Sunrise and sunset events without a counterpart on the other side | JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31 | ≤ 0 events | 0 events | **PASS** |
+| Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station) | JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min | < 1 arcsec | 0.424 arcsec | **PASS** |
+| Moon end of a direct link: direction of a ground station seen from a lunar site (observer at the site) | JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min | < 1 arcsec | 0.193 arcsec | **PASS** |
+| Elevation of the lunar site at the station through the fast path that the link windows use | JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min | < 0.012 deg | 8.8e-05 deg | **PASS** |
+| Direction of the station seen from the lunar site through the fast path that the link windows use | JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min | < 1 arcsec | 0.21 arcsec | **PASS** |
 | Sun and Earth altitude, azimuth and sub-points at the Apollo 11 and Apollo 16 landings, at the published landing times | Apollo Lunar Surface Journal table computed from the Nautical Almanac (https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt), retrieved 2026-11-14 | 16 published angles, 2 landings | < 0.05 deg | 0.0347 deg | **PASS** |
 | Sun elevation at the planned Apollo 16 landing time against the targeted angle of the launch window (the landing then slipped by 5 h 45 min, which raised the Sun by 2.88 deg) | NASA SP-2000-4029, Apollo by the Numbers, tables 'Launch Windows' and 'LM Lunar Landing', retrieved 2026-11-14 | 1 published angle and 2 published times | < 0.1 deg | 0.0171 deg | **PASS** |
 | Physical bounds from operational records that are violated: Blue Ghost Mission 1 (sunset day; recorded daylight must end before geometric last light) and Chandrayaan-3 (sunrise over the terrain horizon must precede the expected wake-up day) | Firefly Aerospace press release of 17 March 2025; ISRO Chandrayaan-3 mission updates; LROC landing coordinates; retrieved 2026-11-14 | 3 bounds; Blue Ghost on a smooth sphere, Chandrayaan-3 with the LOLA terrain horizon | ≤ 0 bounds violated | 0 bounds violated | **PASS** |
@@ -31,6 +35,7 @@ Generated 2026-11-14T11:31:56Z by `validation/card/build.py`; every measured val
 
 - validation/horizons/thresholds.json (commit f25145f): committed on its own before the reference data was fetched or compared.
 - validation/horizons_rts/thresholds.json (commit 48afcd5): committed on its own before the reference data was fetched or compared.
+- validation/stations/thresholds.json (commit 6f74153): committed on its own before the reference data was fetched or compared.
 - validation/landers/thresholds.json and cases.json (commit eaf5634): committed on its own before the core was run on these cases; not blind (earlier research had compared some of the published values with Horizons), so the thresholds follow fixed rules from the printed precision of each source.
 - validation/eclipse/thresholds.json and cases.json (commit a8bbc5a): committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source.
 - core/tests/ephem/test_directions.py (commit aa86a5a): written in the acceptance test before the implementation was run; committed together with it.
@@ -41,6 +46,7 @@ Generated 2026-11-14T11:31:56Z by `validation/card/build.py`; every measured val
 
 - **Event times and visibility shares on real terrain** (unverified). No independent illumination product or mission record has been compared yet. The terrain horizon has passed analytic tests of the core stream only (docs/method/horizon.md).
 - **Exact rise and set times at a real lander** (not available). No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side.
+- **Direct-to-Earth windows** (geometry validated, windows not). Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source.
 - **Earth rise and set against an independent source** (not done). Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated.
 - **Sunlight during an eclipse** (partly modelled). Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared.
 

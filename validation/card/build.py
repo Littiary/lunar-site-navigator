@@ -28,6 +28,7 @@ from validation.horizons import compare as horizons
 from validation.horizons_rts import compare as horizons_rts
 from validation.eclipse import compare as eclipse_check
 from validation.landers import compare as landers
+from validation.stations import compare as station_check
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
@@ -258,6 +259,14 @@ def build() -> dict:
     ecl_contacts = [ecl_rows[k] for k in ("eclipse_partial_start", "eclipse_totality_start", "eclipse_partial_end")]
     ecl_nesting = [ecl_rows[k] for k in ("eclipse_c1_after_p1", "eclipse_c2_between_u1_and_u2", "eclipse_c3_between_u3_and_u4", "eclipse_c4_before_p4")]
 
+    stn = station_check.run()
+    stn_limit, stn_sum = stn["thresholds"], stn["summary"]
+    stn_where = "validation/stations/thresholds.json (commit 6f74153)"
+    stn_evidence = "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py"
+    stn_cases = f"{stn_sum['cases'] // 2} queries, {stn_sum['rows'] // 2} rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min"
+    stn_source = f"JPL Horizons observer tables ({HORIZONS_URL}), retrieved 2026-11-14"
+    stn_limits = ["No terrain at either end.", "Both sides use JPL ephemerides and Earth orientation data of the same origin."]
+
     internal = _measure_internal_directions(t_dir)
     interpolation = _measure_interpolation()
     analytic = _measure_analytic_events(t_ev)
@@ -290,6 +299,15 @@ def build() -> dict:
         _check("sun_rise_set_unmatched", "Independent source", "Sunrise and sunset events without a counterpart on the other side", rts_source,
                rts["thresholds"]["unmatched_events_max"], "events", SEPARATE_COMMIT, rts_where,
                sum(case["unmatched"] for case in rts["cases"]), "validation/horizons_rts/results/validation_table.md", rts_cases_text, [], comparison="<="),
+        _check("station_earth_end", "Independent source", "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)", stn_source,
+               stn_limit["earth_end_direction_arcsec_max"], "arcsec", SEPARATE_COMMIT, stn_where, stn_sum["earth_end_exact_arcsec_max"], stn_evidence, stn_cases, stn_limits),
+        _check("station_moon_end", "Independent source", "Moon end of a direct link: direction of a ground station seen from a lunar site (observer at the site)", stn_source,
+               stn_limit["moon_end_direction_arcsec_max"], "arcsec", SEPARATE_COMMIT, stn_where, stn_sum["moon_end_exact_arcsec_max"], stn_evidence, stn_cases, stn_limits),
+        _check("station_fast_path_earth_end", "Independent source", "Elevation of the lunar site at the station through the fast path that the link windows use", stn_source,
+               stn_limit["fast_path_earth_end_deg_max"], "deg", SEPARATE_COMMIT, stn_where, stn_sum["earth_end_fast_elevation_deg_max"], stn_evidence, stn_cases,
+               stn_limits + ["The fast path evaluates both ends at one instant."]),
+        _check("station_fast_path_moon_end", "Independent source", "Direction of the station seen from the lunar site through the fast path that the link windows use", stn_source,
+               stn_limit["fast_path_moon_end_arcsec_max"], "arcsec", SEPARATE_COMMIT, stn_where, stn_sum["moon_end_fast_arcsec_max"], stn_evidence, stn_cases, stn_limits),
         _check("apollo_landing_angles", "Published mission record",
                "Sun and Earth altitude, azimuth and sub-points at the Apollo 11 and Apollo 16 landings, at the published landing times",
                "Apollo Lunar Surface Journal table computed from the Nautical Almanac (https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt), retrieved 2026-11-14",
@@ -367,6 +385,7 @@ def build() -> dict:
         "not_validated": [
             {"item": "Event times and visibility shares on real terrain", "state": "unverified", "reason": "No independent illumination product or mission record has been compared yet. The terrain horizon has passed analytic tests of the core stream only (docs/method/horizon.md)."},
             {"item": "Exact rise and set times at a real lander", "state": "not available", "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."},
+            {"item": "Direct-to-Earth windows", "state": "geometry validated, windows not", "reason": "Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source."},
             {"item": "Earth rise and set against an independent source", "state": "not done", "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."},
             {"item": "Sunlight during an eclipse", "state": "partly modelled", "reason": "Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared."},
         ],
