@@ -30,8 +30,8 @@ struct FLsnBodyAtTime
  * series at the selected sample. Nothing here computes an ephemeris, a rise or
  * set time, or a visibility.
  *
- * World layout: the site's ground point is the world origin; +X north,
- * +Y east, +Z up (see FLsnSiteFrame).
+ * World layout: the site's ground point is the actor's location (the world origin
+ * for a single scene); +X north, +Y east, +Z up (see FLsnSiteFrame).
  */
 UCLASS()
 class LUNARSITENAVIGATOR_API ALsnSiteScene : public AActor
@@ -106,6 +106,14 @@ public:
 	FVector GetSunDirectionFromLight() const;
 
 	UDirectionalLightComponent* GetSunLight() const { return SunLight; }
+	UDirectionalLightComponent* GetFillLight() const { return FillLight; }
+
+	/**
+	 * Which of two scenes shown side by side this is (0 or 1). Each slot lights and is
+	 * lit on its own lighting channel, so the Sun of one site never lights the other.
+	 */
+	void SetSceneSlot(int32 Slot);
+	int32 GetSceneSlot() const { return SceneSlot; }
 	UProceduralMeshComponent* GetSunDisc() const { return SunDisc; }
 	UProceduralMeshComponent* GetEarthDisc() const { return EarthDisc; }
 	UProceduralMeshComponent* GetTerrainComponent() const { return Terrain; }
@@ -171,6 +179,7 @@ private:
 	int32 SkippedHorizonSamples = 0;
 	FLsnTerrainGrid TerrainGrid;
 	bool bHasRealTerrain = false;
+	int32 SceneSlot = 0;
 	bool bObstacleViewEnabled = true;
 	/** Obstacle whose band each highlight currently holds; -1 for none. */
 	int32 ShownSunObstacleId = -1;

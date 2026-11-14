@@ -76,5 +76,6 @@ public:
 	virtual void DrawHUD() override;
 
 private:
+	void DrawPanorama(const struct FLsnPanorama& Panorama, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, float Scale);
 	void DrawStrip(const FBox2D& Box, const FLsnSitePackage& Package, int32 HeightIndex, double FromPosition, double ToPosition, double CurrentPosition, float Scale);
 };

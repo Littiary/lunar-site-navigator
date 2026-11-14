@@ -1,8 +1,9 @@
-# Unreal view scene
+# Unreal planner view
 
-Unreal Engine 5.8.4 C++ project that shows one site package: the terrain horizon around the
-site, the Sun as a directional light, the Sun and Earth discs, a time slider and the
-countdowns to the next sunset and the next loss of the Earth. It reads packages
+Unreal Engine 5.8.4 C++ project that shows site packages as a planner sees a site: the
+terrain horizon around it, the Sun as a directional light, the Sun and Earth discs, a time
+slider, the countdowns to the next sunset and the next loss of the Earth, the ridge that
+hides the Sun and the hours it costs, and two sites side by side at the same instant. It reads packages
 (`docs/contract/SPEC.md`, contract 0.x) and computes no Sun or Earth position, rise or set
 time, margin or visible fraction of its own.
 
@@ -44,6 +45,9 @@ with Git LFS: run `git lfs install` once per machine).
 | Time strips (yellow Sun, blue Earth) | package: the same windows |
 | Obstacle view: highlighted ridge, "hidden by terrain ... away", "this ridge costs N h" | package (contract 0.2, SPEC 5.5): `series.<BODY>.blocker_azimuth_index` at the sample, `horizon.obstacle_id` there, the run of `horizon.obstacles[k]`, `lost_s` of the matching `timeline.blockers` record. Hidden for packages without these fields |
 | Dashed outline "Sun (behind terrain)" | package: direction and angular radius of the series, drawn over the terrain while the body is hidden |
+| Panorama (top right): horizon all round, Sun and Earth marks, the highlighted obstacle | package: `horizon.elevation_deg`, the series at the selected time, the obstacle run |
+| Summary numbers under the panorama | package: metrics `sun_visible_fraction_of_time`, `sun_longest_outage_s`, `earth_visible_fraction_of_time`, `earth_longest_outage_s`, `sun_lost_to_terrain_s`, `sun_gained_from_terrain_s`, with units converted |
+| "Sun 121 deg to the right" at the lower right | package: direction of the body at the selected time, when it is outside the view |
 | Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
 | Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
 
@@ -76,12 +80,37 @@ It needs neither the editor nor a network connection: packages and terrain are s
 next to it as plain files. `-LsnSite=<site_id>` picks a site, `-windowed -ResX= -ResY=`
 a window.
 
-Keys: mouse or arrow keys look; `Q`/`E` step one sample (Shift: 24); `Space` plays and
-pauses; `[` `]` change the playing speed; `Tab` shows the cursor to drag the time strips;
-`PageUp`/`PageDown` observer height; `Z`/`X` zoom; `O` obstacle view; `H` package
-horizon line; `L` fill light; `Esc` quits. Command line: `-LsnPackage=<site package dir>` or
-`-LsnPackageRoot=<root with index.json>`, `-LsnSite=`, `-LsnTime=`, `-LsnHeight=`,
-`-LsnYaw=`, `-LsnPitch=`, `-LsnFov=`, `-LsnHorizonLine`, `-LsnShot=<png>`,
+## Planner interface
+
+One site fills the screen; with a second site the screen is split left and right. Both
+halves show the same instant (matched by the TDB time of the packages), the same observer
+height, zoom and elevation of the view. By default each half keeps its view on its own
+Sun's azimuth, so that the same instant can be compared although the Sun stands in
+another direction at each site; `F` switches to a common azimuth. If the instant lies
+outside the time range of the right package, that half says so and keeps its nearest
+sample.
+
+| Keys | |
+|---|---|
+| `1` .. `9` | show that site of the package root (`Shift`: in the right half, side by side) |
+| `C` | comparison of two sites on and off |
+| mouse, arrow keys | look (while following the Sun: turn away from it) |
+| `Q` / `E` | one sample back / forward (`Shift`: 24 samples) |
+| `,` / `.` | one day back / forward |
+| `B` / `N` | previous / next rise or set of the Sun in the package (`Shift`: of the Earth) |
+| `Home` / `End` | first / last sample |
+| `Space`, `[`, `]` | play and pause, halve and double the playing speed |
+| `Tab` | mouse cursor, to drag the two time strips |
+| `F` | keep the view on the Sun's azimuth |
+| `PageUp` / `PageDown` | observer height |
+| `Z` / `X` | zoom |
+| `O`, `H`, `L` | obstacle view, package horizon line, fill light |
+| `Esc` | quit |
+
+Command line: `-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with index.json>`,
+`-LsnSite=<site_id>`, `-LsnCompare=<site_id>,<site_id>`, `-LsnTime=`, `-LsnHeight=`,
+`-LsnYaw=` (while following the Sun: the offset from its azimuth), `-LsnPitch=`, `-LsnFov=`,
+`-LsnFollowSun`, `-LsnHorizonLine`, `-LsnNoFillLight`, `-LsnNoObstacle`, `-LsnShot=<png>`,
 `-LsnPlayFrom= -LsnPlayTo= -LsnPlaySeconds= -LsnMovieDir=`.
 
 Without a package argument the scene uses `Content\LsnPackages`, then
@@ -105,6 +134,8 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Acceptance.HorizonSilhouette` (+ `HorizonExportForPython`, `compare_horizon.py`) | Silhouette of the scene's terrain and sphere, seen from the observer, equals `horizon.elevation_deg` for every height and azimuth; repeated with the package read by Python | 0.001 deg |
 | `Package.BlockerRecipe`, `ObstaclesOfTheSample` | The viewer recipe of SPEC 5.5 on a hand-made package and on the sample: limiting azimuth, obstacle, cost; runs carry their obstacle id; blockers are sorted and name existing obstacles; wording of the sentences | exact; shares <= 1 + 1e-6 |
 | `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
+| `Acceptance.SecondSceneAwayFromOrigin` | The second scene of a comparison stands 20 000 km from the world origin and is the same scene: eye, Sun disc, light and silhouette as the package says; the two scenes are lit on separate lighting channels | 0.001 deg; 1e-6 cm |
+| `Planner.LinkedTimeEventsAndMetrics` | Both halves show the same TDB instant or say that they cannot; jumps go to package events only; the summary numbers are the package metrics with units converted; site list; panorama mapping | 1e-9 samples; exact |
 | `Hud.TextAndSyntheticMarker` | Synthetic marker for synthetic packages only; countdown wording, "at least" for lower bounds; UTC labels | exact |
 | `Real.ImportedPackages` | On every imported real package: not synthetic, countdown at the start equals the package's own metric, obstacle points, scene silhouette, direction table against series | 1e-3 s; 0.05; 0.001; 0.0002 deg |
 | `Real.TerrainAgainstHorizon` | No LOLA sample (from the start of the package's horizon search outwards) stands above the package horizon of its azimuth; mesh silhouette with real ground | 0.001 deg |
@@ -137,4 +168,7 @@ imported, as on a machine without the data.
   `docs/unreal/obstacle_shackleton_ridge_2027-07-28.mp4` (52 h, 10.4 km away) is not.
 - The obstacle view uses the values of the sample the time position belongs to; it does
   not interpolate which obstacle is the limiting one.
+- The split screen, the keys and the mouse are not covered by automated tests; they were
+  checked on real captures (`docs/unreal/planner_*.png`, `compare_*.mp4`). Sites are
+  selected with the number keys; there is no mouse menu.
 - Display values (light intensity, exposure, albedo, fill light) are not photometry.

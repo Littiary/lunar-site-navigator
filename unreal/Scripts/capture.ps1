@@ -6,6 +6,8 @@ param(
     [string]$EngineRoot = "C:\Program Files\Epic Games\UE_5.8",
     [string]$Package = "",
     [string]$Site = "",
+    # Further arguments passed to the scene as they are, for example "-LsnCompare=a,b".
+    [string[]]$Extra = @(),
     [int]$Time = 0,
     [int]$Height = -1,
     [double]$Yaw = [double]::NaN,
@@ -30,6 +32,7 @@ $args = @(
 )
 if ($Package -ne "") { $args += "-LsnPackage=`"$([System.IO.Path]::GetFullPath($Package))`"" }
 if ($Site -ne "") { $args += "-LsnSite=$Site" }
+$args += $Extra
 if ($Height -ge 0) { $args += "-LsnHeight=$Height" }
 if (-not [double]::IsNaN($Yaw)) { $args += "-LsnYaw=$($Yaw.ToString($inv))" }
 if (-not [double]::IsNaN($Pitch)) { $args += "-LsnPitch=$($Pitch.ToString($inv))" }

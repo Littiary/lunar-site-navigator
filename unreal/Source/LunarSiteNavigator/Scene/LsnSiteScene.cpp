@@ -117,7 +117,7 @@ void ALsnSiteScene::UpdateObstacleHighlight(const TCHAR* Body, UProceduralMeshCo
 		LsnMesh::BuildObstacleBand(Frame, Package, HeightIndex, Run, ObstacleBandDeg, Color, Band);
 		UMaterialInstanceDynamic* Material = UMaterialInstanceDynamic::Create(EmissiveMaterial, this);
 		Material->SetScalarParameterValue(TEXT("Intensity"), ObstacleEmissive);
-		Highlight->SetWorldLocation(FVector::ZeroVector);
+		Highlight->SetRelativeLocation(FVector::ZeroVector);
 		ApplyMesh(Highlight, Band, Material);
 		InOutShownObstacleId = Blocking.ObstacleId;
 	}
@@ -137,7 +137,19 @@ bool ALsnSiteScene::IsFillLightVisible() const
 FVector ALsnSiteScene::GetEyeUnreal() const
 {
 	const double EyeHeightM = bHasPackage ? Package.ObserverHeightsM[HeightIndex] : 0.0;
-	return FVector(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
+	return GetActorLocation() + FVector(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
+}
+
+void ALsnSiteScene::SetSceneSlot(int32 Slot)
+{
+	SceneSlot = FMath::Clamp(Slot, 0, 2);
+	const bool b0 = SceneSlot == 0, b1 = SceneSlot == 1, b2 = SceneSlot == 2;
+	SunLight->SetLightingChannels(b0, b1, b2);
+	FillLight->SetLightingChannels(b0, b1, b2);
+	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get() })
+	{
+		Component->SetLightingChannels(b0, b1, b2);
+	}
 }
 
 FString ALsnSiteScene::GetGroundNote() const
@@ -251,7 +263,7 @@ void ALsnSiteScene::RebuildGeometry()
 		LsnMesh::BuildHorizonTerrain(Frame, Package, HeightIndex, TerrainParams, TerrainData, SkippedHorizonSamples);
 	}
 	TerrainData.RoundPositionsToFloat();
-	Terrain->SetWorldLocation(FVector::ZeroVector);
+	Terrain->SetRelativeLocation(FVector::ZeroVector);
 	ApplyMesh(Terrain, TerrainData, SurfaceMaterial);
 	if (SkippedHorizonSamples > 0)
 	{
@@ -281,13 +293,13 @@ void ALsnSiteScene::RebuildGeometry()
 		},
 		RegolithAlbedo, MoonSphereData);
 	MoonSphereData.RoundPositionsToFloat();
-	MoonSphere->SetWorldLocation(Frame.MoonCentreUnreal());
+	MoonSphere->SetRelativeLocation(Frame.MoonCentreUnreal());
 	ApplyMesh(MoonSphere, MoonSphereData, SurfaceMaterial);
 
 	// Overlay: the package horizon as a line.
 	FLsnMeshData LineData;
 	LsnMesh::BuildHorizonLine(Frame, Package, HeightIndex, 0.04, FColor(255, 120, 20, 255), LineData);
-	HorizonLine->SetWorldLocation(FVector::ZeroVector);
+	HorizonLine->SetRelativeLocation(FVector::ZeroVector);
 	UMaterialInstanceDynamic* LineMaterial = UMaterialInstanceDynamic::Create(EmissiveMaterial, this);
 	LineMaterial->SetScalarParameterValue(TEXT("Intensity"), HorizonLineEmissive);
 	ApplyMesh(HorizonLine, LineData, LineMaterial);

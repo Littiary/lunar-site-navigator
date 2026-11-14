@@ -11,13 +11,21 @@ class UCameraComponent;
  * The observer: a camera at the eye height of the selected observer height of
  * the package, looking around from the site. Yaw is azimuth, pitch is elevation.
  *
- * Keys: mouse or arrow keys look; Q / E step the timeline one sample back or
- * forward (hold Shift for 24 samples); Space plays and pauses the timeline,
- * [ and ] halve and double the playing speed; Tab shows the mouse cursor, with
- * which the time strips can be dragged; H toggles the package horizon line;
- * O toggles the obstacle view (what hides the Sun or the Earth, and what it costs);
- * L toggles the weak fill light (a display aid); Z / X zoom; PageUp / PageDown change the observer height;
- * Esc quits.
+ * Keys (left or only view; the right view of a comparison follows it):
+ *   mouse or arrow keys   look
+ *   Q / E                 one sample back / forward (Shift: 24 samples)
+ *   , / .                 one day back / forward
+ *   B / N                 previous / next rise or set of the Sun in the package (Shift: of the Earth)
+ *   Home / End            first / last sample
+ *   Space, [ and ]        play and pause the timeline, halve and double the playing speed
+ *   Tab                   mouse cursor, to drag the time strips
+ *   1 .. 9                show that site of the list (Shift: in the right view, side by side)
+ *   C                     comparison of two sites on and off
+ *   F                     keep the view on the Sun's azimuth
+ *   PageUp / PageDown     observer height
+ *   Z / X                 zoom
+ *   O, H, L               obstacle view, package horizon line, weak fill light (a display aid)
+ *   Esc                   quit
  *
  * Command line: -LsnPlayFrom=<sample> -LsnPlayTo=<sample> -LsnPlaySeconds=<s>
  * plays that stretch of the timeline once, for recordings.
@@ -38,12 +46,16 @@ public:
 	double GetFovDeg() const { return FovDeg; }
 	bool IsPlaying() const { return bPlaying; }
 	double GetPlayRateSamplesPerSecond() const { return PlayRate; }
+	bool IsFollowingSun() const { return bFollowSun; }
+	double GetFollowOffsetDeg() const { return FollowOffsetDeg; }
 	/** True once a stretch given on the command line has been played to its end. */
 	bool HasFinishedCommandLinePlay() const { return bCommandLinePlayDone; }
 
 private:
 	ALsnSiteScene* FindScene() const;
 	void ApplyView();
+	void HandleInput(APlayerController* PC, ALsnSiteScene* Scene, float DeltaSeconds);
+	void FollowLeftView(const ALsnObserverPawn& Left);
 
 	UPROPERTY()
 	TObjectPtr<UCameraComponent> Camera;
@@ -52,6 +64,10 @@ private:
 	double ElevationDeg = 0.0;
 	double FovDeg = 60.0;
 	bool bInitialised = false;
+
+	/** Keep the view on the Sun's azimuth plus an offset the user turns. */
+	bool bFollowSun = false;
+	double FollowOffsetDeg = 0.0;
 
 	/** Timeline playing: samples of the package per second of real time. */
 	bool bPlaying = false;
