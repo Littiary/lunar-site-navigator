@@ -136,3 +136,20 @@ def test_catalogue_check_criteria_hold():
     # radial scale: whatever is detected must stay below the matter level
     assert abs(est["radial_scale"]) < lev["radial_scale"]
     assert "confirmed_and_matters" not in r["classification"].values()
+
+
+def test_candidate_mosaic_is_opened_only_when_asked():
+    """moon_check may evaluate a downloaded, unapproved mosaic; open_terrain never uses it without approval."""
+    from lsn_data import catalog, open_moon
+
+    root = data_root()
+    tiles = dict(catalog.MOON_CYLINDRICAL)["SLDEM2015_512"]
+    if not all((root / "raw" / "lola" / t / f"{t.lower()}.img").exists() for t in tiles):
+        pytest.skip("SLDEM2015_512 not complete under the data root")
+    approved = json.loads((repo_data_dir() / "manifest" / "approved_mosaics.json").read_text(encoding="utf-8"))["approved"]
+    default = open_moon(root)
+    asked = open_moon(root, candidates=("SLDEM2015_512",))
+    assert ("SLDEM2015_512" in [c.product_id for c in default.cylindrical]) == ("SLDEM2015_512" in approved)
+    c = next(c for c in asked.cylindrical if c.product_id == "SLDEM2015_512")
+    assert [t.product_id for t in c.tiles] == list(tiles)
+    assert asked.cylindrical[0].product_id == "SLDEM2015_512"  # finest first
