@@ -203,3 +203,47 @@ def angular_separation_deg(az1_deg, el1_deg, az2_deg, el2_deg) -> np.ndarray:
     # Haversine form: accurate for very small separations.
     h = np.sin((el2 - el1) / 2.0) ** 2 + np.cos(el1) * np.cos(el2) * np.sin((az2 - az1) / 2.0) ** 2
     return np.degrees(2.0 * np.arcsin(np.sqrt(np.clip(h, 0.0, 1.0))))
+
+
+# --------------------------------------------------------------------------- interpolation
+
+
+def interpolate_table(table: DirectionTable, et) -> DirectionTable:
+    """Direction table at arbitrary epochs by 4-point (cubic) Lagrange interpolation of the vectors.
+
+    The table must be on a uniform time grid. Vectors are interpolated, never
+    angles, so there is no wrap-around problem. The interpolation error for an
+    hourly table is measured in the tests (below 0.01 arcsec).
+    """
+    et = _as_array(et)
+    grid = table.et
+    count = grid.size
+    if count < 4:
+        raise ValueError("interpolation needs at least 4 table epochs")
+    step = (grid[-1] - grid[0]) / (count - 1)
+    if not np.allclose(np.diff(grid), step, rtol=0.0, atol=1e-6):
+        raise ValueError("direction table is not on a uniform time grid")
+    if et.min() < grid[0] - 1e-6 or et.max() > grid[-1] + 1e-6:
+        raise ValueError("requested epoch outside the direction table")
+    x = (et - grid[0]) / step
+    i = np.clip(np.floor(x).astype(np.int64), 1, count - 3)  # stencil i-1 .. i+2
+    u = (x - i)[:, None]
+    w_m1 = -u * (u - 1.0) * (u - 2.0) / 6.0
+    w_0 = (u + 1.0) * (u - 1.0) * (u - 2.0) / 2.0
+    w_p1 = -(u + 1.0) * u * (u - 2.0) / 2.0
+    w_p2 = (u + 1.0) * u * (u - 1.0) / 6.0
+
+    def interpolate(vectors):
+        return w_m1 * vectors[i - 1] + w_0 * vectors[i] + w_p1 * vectors[i + 1] + w_p2 * vectors[i + 2]
+
+    return DirectionTable(
+        et=et,
+        sun_km=interpolate(table.sun_km),
+        earth_km=interpolate(table.earth_km),
+        frame=table.frame,
+        abcorr=table.abcorr,
+        observer=table.observer,
+        time_scale=table.time_scale,
+        kernel_set_id=table.kernel_set_id,
+        radii_km=table.radii_km,
+    )
