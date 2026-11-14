@@ -231,17 +231,19 @@ def continuity(moon, crit: dict) -> dict:
 
 
 # -- all --------------------------------------------------------------------------------------------
-def run(root: Path | None = None) -> dict:
+def run(root: Path | None = None, candidates: tuple[str, ...] = ()) -> dict:
+    """All whole-Moon checkpoints. ``candidates``: unapproved mosaics to include (they are evaluated, not approved)."""
     root = root or data_root()
     th = thresholds()
-    moon = open_moon(root)
+    moon = open_moon(root, candidates=tuple(candidates))
     rdr = [Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat" for n in catalog.RDR_SAMPLE]
     # Deviation from thresholds_moon.json (criteria unchanged): the LRO_SM_06 files have no valid returns north of
     # 80.5 N and only ~3400 in 60.5-79.5 N, so the north-polar products are compared with the LRO_SM_06 files plus
     # 14 files of LRO_NO_08 (2010, near-circular orbit).
     rdr_north = rdr + [Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat" for n in catalog.RDR_NORTH
                        if (Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat").exists()]
-    rep = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_moon.json", "coverage": moon.coverage()}
+    rep = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_moon.json", "coverage": moon.coverage(),
+           "candidates_not_yet_approved": list(candidates)}
     north_ids = [p.product_id for t in moon.polar if t.pole > 0 for p in t.products]
     tile_ids = [t.product_id for c in moon.cylindrical for t in c.tiles]
     rep["checkpoint_1"] = checkpoint_1(root, north_ids + tile_ids + list(catalog.RDR_SAMPLE) + list(catalog.RDR_NORTH))
@@ -319,9 +321,16 @@ def run(root: Path | None = None) -> dict:
     return rep
 
 
-def main() -> None:
-    rep = run()
-    out = repo_data_dir() / "checkpoints" / "moon_report.json"
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="whole-Moon checkpoints (thresholds_moon.json)")
+    ap.add_argument("--candidate", action="append", default=[], help="also evaluate this unapproved mosaic id; "
+                    "the report then goes to moon_report_<id>.json and moon_report.json is left as it is")
+    a = ap.parse_args(argv)
+    rep = run(candidates=tuple(a.candidate))
+    name = "moon_report.json" if not a.candidate else f"moon_report_{'_'.join(a.candidate)}.json"
+    out = repo_data_dir() / "checkpoints" / name
     out.write_text(json.dumps(rep, indent=1, default=str) + "\n", encoding="utf-8")
     print(json.dumps(rep, indent=1, default=str)[:20000])
 
