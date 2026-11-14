@@ -1,6 +1,22 @@
 {
   "schema_version": 1,
   "files": {
+    "raw/catalogs/ROBBINS_2018/lunar_crater_database_robbins_2018.zip": {
+      "path": "raw/catalogs/ROBBINS_2018/lunar_crater_database_robbins_2018.zip",
+      "role": "data",
+      "product_id": "ROBBINS_2018",
+      "product_version": null,
+      "data_set_id": null,
+      "source_url": "https://astrogeology.usgs.gov/ckan/dataset/f89f5478-b69a-486c-b9b5-30d7b0c5ad2b/resource/c4f25cc2-4f8a-4207-a845-5e176da3ac5a/download/lunar_crater_database_robbins_2018",
+      "equivalent_urls": [],
+      "size_bytes": 96227201,
+      "sha256": "694137e141138892555d0f976446875331d3317ea506ddf055d91b917ca307ab",
+      "retrieved_utc": "2026-11-14T11:35:09Z",
+      "hashed_utc": "2026-11-14T11:35:09Z",
+      "http_last_modified": "Wed, 16 Aug 2023 17:53:37 GMT",
+      "http_etag": "\"1692208417.924577-96227201-1176704498\"",
+      "cross_checks": []
+    },
     "raw/lola/LDEM_16/ldem_16.img": {
       "path": "raw/lola/LDEM_16/ldem_16.img",
       "role": "data",
@@ -318,5 +334,5 @@
       "cross_checks": []
     }
   },
-  "generated_utc": "2026-11-14T11:23:53Z"
+  "generated_utc": "2026-11-14T11:35:09Z"
 }

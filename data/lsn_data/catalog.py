@@ -32,6 +32,7 @@ class Product:
     product_id: str
     description: str
     files: tuple[FileSpec, ...] = field(default_factory=tuple)
+    base: str = "raw/lola"  # folder under the data root that holds <product_id>/
 
 
 def _polar_dem(product_id: str, desc: str) -> Product:
@@ -80,6 +81,19 @@ DOCS = Product(
     ),
 )
 
+ROBBINS_URL = (
+    "https://astrogeology.usgs.gov/ckan/dataset/f89f5478-b69a-486c-b9b5-30d7b0c5ad2b/resource/"
+    "c4f25cc2-4f8a-4207-a845-5e176da3ac5a/download/lunar_crater_database_robbins_2018"
+)
+
+ROBBINS = Product(
+    "ROBBINS_2018",
+    "Robbins lunar crater database (USGS Astrogeology, 2018-08-15): hand-measured crater centres and diameters; "
+    "used only as an independent position reference for the georeferencing check",
+    (FileSpec("data", "lunar_crater_database_robbins_2018.zip", ROBBINS_URL, None),),
+    base="raw/catalogs",
+)
+
 PRODUCTS: dict[str, Product] = {
     p.product_id: p
     for p in (
@@ -96,6 +110,7 @@ PRODUCTS: dict[str, Product] = {
             "LOLA global DEM, 16 pixel/degree, simple cylindrical (independent check of the polar products)",
         ),
         DOCS,
+        ROBBINS,
     )
 }
 

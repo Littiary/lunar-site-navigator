@@ -30,7 +30,7 @@ def log(msg: str) -> None:
 
 
 def _urls(spec: catalog.FileSpec, prefer: str) -> list[str]:
-    pds = f"{catalog.PDS_ROOT}/{spec.pds_path}"
+    pds = spec.pds_path if spec.pds_path.startswith("http") else f"{catalog.PDS_ROOT}/{spec.pds_path}"
     mit = f"{catalog.MIT_ROOT}/{spec.mit_path}" if spec.mit_path else None
     if prefer == "mit" and mit:
         return [mit, pds]
@@ -105,7 +105,7 @@ def _label_info(label_path: Path) -> dict:
 
 
 def fetch_file(prod: catalog.Product, spec: catalog.FileSpec, root: Path, prefer: str, force: bool, mpath: Path) -> dict:
-    dest = raw_dir(root) / prod.product_id / spec.local_name
+    dest = root / prod.base / prod.product_id / spec.local_name
     urls = _urls(spec, prefer)
     meta = None
     used = None
@@ -206,7 +206,8 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
             prod = catalog.PRODUCTS[pid]
             lbl = next((s for s in prod.files if s.role == "label"), None)
             if lbl is None:
-                _fill_docs(m, root, prod)
+                if pid == "_docs":
+                    _fill_docs(m, root, prod)
                 continue
             info = _label_info(raw_dir(root) / pid / lbl.local_name)
             for spec in prod.files:
