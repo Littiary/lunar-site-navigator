@@ -49,7 +49,8 @@ $origin = New-Object LsnWin+POINT
 [LsnWin]::ClientToScreen($window, [ref]$origin) | Out-Null
 $w = $rect.R - $rect.L; $h = $rect.B - $rect.T
 Write-Host "Window client area: $w x $h at $($origin.X),$($origin.Y)"
-# Positions as fractions of the view, from the layout of the buttons (two rows of ten).
+# Positions as fractions of the window, from the layout of the buttons (FLsnToolbar::Make): the bar has
+# two rows of ten cells between 6 % and 94 % of the width; the main buttons are under the header.
 function Click([double]$fx, [double]$fy) {
     [LsnWin]::SetCursorPos($origin.X + [int]($fx * $w), $origin.Y + [int]($fy * $h)) | Out-Null
     Start-Sleep -Milliseconds 300
@@ -57,11 +58,12 @@ function Click([double]$fx, [double]$fy) {
     Start-Sleep -Milliseconds 1200
 }
 $column = { param($i) 0.06 + 0.088 * ($i + 0.5) }
-Click (& $column 6) 0.938      # Day >
-Click 0.70 0.87                # the whole-range strip, 70 % along
-Click (& $column 9) 0.976      # Help (F1)
-Click (& $column 9) 0.976      # Help (F1) again
-Click (& $column 1) 0.976      # Two sites
+Click (& $column 6) 0.913      # Day >  (bar, upper row)
+Click 0.70 0.836               # the whole-range strip, 70 % along
+Click (& $column 9) 0.974      # Help (F1)  (bar, lower row)
+Click (& $column 9) 0.974      # Help (F1) again
+Click 0.240 0.165              # main button: Jump to next sunset
+Click 0.087 0.165              # main button: Compare two sites
 Start-Sleep -Seconds 2
 Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith($Build, [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force -ErrorAction SilentlyContinue
 if (Test-Path $log) { Get-Content $log } else { Write-Host "The program received no click."; exit 1 }
