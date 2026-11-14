@@ -1,6 +1,6 @@
 # Validation card: ephemeris, time and event finding
 
-Generated 2026-11-14T13:04:20Z by `validation/card/build.py` from commit `50bb127` with uncommitted changes; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
+Generated 2026-11-14T13:10:07Z by `validation/card/build.py` from commit `c768268`; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
 
 **31 of 32 checks pass; 1 fails (row 14). A failed check is shown as it is: no threshold, rule or reference was changed after a result.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
 
@@ -91,7 +91,7 @@ Numbers as in the table above.
 
 ## Not validated
 
-- **Individual rise and set times on real terrain** (not validated). The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution, and two dated images were checked, but no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy.
+- **Individual rise and set times on real terrain** (not validated). The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution; of the two checks against dated images one agrees and one fails its criterion; and no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy.
 - **The elevation model itself** (not validated here). Every terrain check on this card uses LOLA elevation data on both sides. The data stream checks the georeferencing of the LOLA files separately.
 - **Exact rise and set times at a real lander** (not available). No source examined for Blue Ghost Mission 1, Chandrayaan-3, SLIM, IM-1 or IM-2 prints a sunrise or sunset clock time for the landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side.
 - **Direct-to-Earth windows** (geometry validated, windows not). Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source.
@@ -102,6 +102,7 @@ Numbers as in the table above.
 
 - Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes. The terrain checks on this card test long-term shares and two dated images, not event times.
 - The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.
-- Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; only the Horizons thresholds have a commit of their own that predates the data.
+- Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; the thresholds of the comparisons with external sources have commits of their own that predate the data or the computation, as listed above.
+- The lander and eclipse comparisons are not blind: earlier research had compared some of the published values with Horizons.
 
 Reference: Giorgini, JD and JPL Solar System Dynamics Group, NASA/JPL Horizons On-Line Ephemeris System, https://ssd.jpl.nasa.gov/horizons/, data retrieved 2026-Nov-14.

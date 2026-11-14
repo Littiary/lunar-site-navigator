@@ -1,9 +1,9 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-14T13:04:20Z",
+  "generated_utc": "2026-11-14T13:10:07Z",
   "generated_from": {
-    "commit": "50bb127",
-    "uncommitted_changes": true
+    "commit": "c768268",
+    "uncommitted_changes": false
   },
   "core": {
     "frame": "MOON_ME_DE440_ME421",
@@ -883,7 +883,7 @@
     {
       "item": "Individual rise and set times on real terrain",
       "state": "not validated",
-      "reason": "The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution, and two dated images were checked, but no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy."
+      "reason": "The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution; of the two checks against dated images one agrees and one fails its criterion; and no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy."
     },
     {
       "item": "The elevation model itself",
@@ -914,6 +914,7 @@
   "limits": [
     "Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes. The terrain checks on this card test long-term shares and two dated images, not event times.",
     "The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.",
-    "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; only the Horizons thresholds have a commit of their own that predates the data."
+    "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; the thresholds of the comparisons with external sources have commits of their own that predate the data or the computation, as listed above.",
+    "The lander and eclipse comparisons are not blind: earlier research had compared some of the published values with Horizons."
   ]
 }
