@@ -1,0 +1,36 @@
+{
+  "contract": {"name": "lsn-package", "version": "0.1"},
+  "kind": "scenario",
+  "scenario_id": "synthetic-sample",
+  "title": "SYNTHETIC SAMPLE - not a real site, not real dates",
+  "description": "Input of the contract sample. Every package produced from it holds invented numbers for building and testing readers.",
+  "synthetic": true,
+  "sites": [
+    {
+      "site_id": "synthetic-sample-site",
+      "name": "SYNTHETIC SAMPLE SITE (not a real place)",
+      "lat_deg": -88.0,
+      "lon_deg": 45.0,
+      "notes": "Coordinates chosen arbitrarily."
+    }
+  ],
+  "observer_heights_m": [0.0, 1.0, 2.0, 5.0, 10.0, 20.0],
+  "default_height_m": 2.0,
+  "horizon": {"azimuth_step_deg": 0.25, "max_range_m": 300000.0},
+  "time_window": {
+    "start_utc": "2026-11-14T00:00:00.000Z",
+    "end_utc": "2026-12-14T00:00:00.000Z",
+    "step_s": 3600.0
+  },
+  "bodies": ["SUN", "EARTH"],
+  "thresholds": {
+    "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
+    "EARTH": {"quantity": "margin_deg", "op": ">", "value": 0.0}
+  },
+  "mission_profile": null,
+  "data": {
+    "dem_set_id": "SYNTHETIC-no-terrain-data",
+    "kernel_set_id": "SYNTHETIC-no-kernels",
+    "direction_table_id": null
+  }
+}
