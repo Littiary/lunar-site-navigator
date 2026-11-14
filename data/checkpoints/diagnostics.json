@@ -1,0 +1,108 @@
+{
+ "generated_utc": "2026-11-14T10:39:36Z",
+ "note": "post-hoc diagnostics, not pass/fail rules",
+ "outline_best_rigid_shift": {
+  "Shackleton": {
+   "distance_of_outline_centroid_from_pole_km": 10.759042149848677,
+   "mean_height_at_outline_m": 1190.05536166276,
+   "best_rigid_shift_dx_m": -500.0,
+   "best_rigid_shift_dy_m": 200.0,
+   "mean_height_at_best_shift_m": 1224.6479670209308
+  },
+  "Shoemaker": {
+   "distance_of_outline_centroid_from_pole_km": 48.91992742092532,
+   "mean_height_at_outline_m": -653.9296023980414,
+   "best_rigid_shift_dx_m": 0.0,
+   "best_rigid_shift_dy_m": -1600.0,
+   "mean_height_at_best_shift_m": -624.0139284457966
+  },
+  "Faustini": {
+   "distance_of_outline_centroid_from_pole_km": 84.84538688538217,
+   "mean_height_at_outline_m": 118.57979036232685,
+   "best_rigid_shift_dx_m": -300.0,
+   "best_rigid_shift_dy_m": -800.0,
+   "mean_height_at_best_shift_m": 141.33396516961417
+  },
+  "Cabeus": {
+   "distance_of_outline_centroid_from_pole_km": 141.65489562026212,
+   "mean_height_at_outline_m": 172.82208708590542,
+   "best_rigid_shift_dx_m": -900.0,
+   "best_rigid_shift_dy_m": 0.0,
+   "mean_height_at_best_shift_m": 176.0515925940059
+  },
+  "de Gerlache": {
+   "distance_of_outline_centroid_from_pole_km": 42.311827348574354,
+   "mean_height_at_outline_m": 708.3457369968781,
+   "best_rigid_shift_dx_m": 300.0,
+   "best_rigid_shift_dy_m": -100.0,
+   "mean_height_at_best_shift_m": 714.4950293211909
+  },
+  "Haworth": {
+   "distance_of_outline_centroid_from_pole_km": 77.28257715903456,
+   "mean_height_at_outline_m": -145.57749694522525,
+   "best_rigid_shift_dx_m": -300.0,
+   "best_rigid_shift_dy_m": 1900.0,
+   "mean_height_at_best_shift_m": -107.55241851773008
+  }
+ },
+ "ldem16_comparison_sensitivity_to_artificial_errors": {
+  "shift_m": {
+   "0,0": {
+    "rmse_m": 31.34089887564443,
+    "median_abs_m": 13.682493932820066
+   },
+   "250,0": {
+    "rmse_m": 46.05743334368746,
+    "median_abs_m": 21.86445296087024
+   },
+   "500,0": {
+    "rmse_m": 74.39386706258173,
+    "median_abs_m": 35.8980098583736
+   },
+   "0,500": {
+    "rmse_m": 73.4469986950462,
+    "median_abs_m": 36.17281801508818
+   },
+   "1000,0": {
+    "rmse_m": 137.96547827841658,
+    "median_abs_m": 66.80561466289296
+   },
+   "2000,0": {
+    "rmse_m": 265.1930545023256,
+    "median_abs_m": 127.55332859666967
+   }
+  },
+  "rotation_deg": {
+   "0.05": {
+    "rmse_m": 34.09856973044612,
+    "median_abs_m": 15.632205103139086
+   },
+   "0.1": {
+    "rmse_m": 44.41122770455381,
+    "median_abs_m": 20.535261113381182
+   },
+   "0.25": {
+    "rmse_m": 89.65806987253958,
+    "median_abs_m": 36.857016114347545
+   },
+   "0.5": {
+    "rmse_m": 169.62169815694114,
+    "median_abs_m": 64.54927372520109
+   }
+  },
+  "scale": {
+   "0.999": {
+    "rmse_m": 37.066956345145215,
+    "median_abs_m": 16.77646044427621
+   },
+   "1.001": {
+    "rmse_m": 37.15566690269372,
+    "median_abs_m": 16.76067096028123
+   },
+   "1.003": {
+    "rmse_m": 67.24363854783991,
+    "median_abs_m": 27.954577587807307
+   }
+  }
+ }
+}

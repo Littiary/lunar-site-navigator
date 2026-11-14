@@ -1,0 +1,207 @@
+{
+ "generated_utc": "2026-11-14T11:33:00Z",
+ "criterion": "data/checkpoints/thresholds_supplementary.json",
+ "per_crater": {
+  "Shackleton": {
+   "outline_points": 274,
+   "contrast_distance_m": 418.40000000000003,
+   "dx_m": -400.0,
+   "dy_m": 300.0,
+   "bootstrap_sd_dx_m": 49.19095445302927,
+   "bootstrap_sd_dy_m": 122.43263453834521,
+   "objective_best": 61.23175048828125,
+   "objective_at_zero_shift": 37.761043548583984,
+   "centroid_x_m": 8381.17482472082,
+   "centroid_y_m": -6746.324669009515,
+   "centroid_distance_from_pole_km": 10.759042149848677
+  },
+  "Shoemaker": {
+   "outline_points": 1196,
+   "contrast_distance_m": 1036.4,
+   "dx_m": 400.0,
+   "dy_m": 1100.0,
+   "bootstrap_sd_dx_m": 1041.118509104511,
+   "bootstrap_sd_dy_m": 1213.9752880516144,
+   "objective_best": 50.83914566040039,
+   "objective_at_zero_shift": 37.46971130371094,
+   "centroid_x_m": 35136.59319494913,
+   "centroid_y_m": 34037.90706728684,
+   "centroid_distance_from_pole_km": 48.91992742092532
+  },
+  "Faustini": {
+   "outline_points": 720,
+   "contrast_distance_m": 849.5999999999999,
+   "dx_m": -1600.0,
+   "dy_m": -600.0,
+   "bootstrap_sd_dx_m": 594.4053751439333,
+   "bootstrap_sd_dy_m": 141.84410456554053,
+   "objective_best": 36.095008850097656,
+   "objective_at_zero_shift": 20.577903747558594,
+   "centroid_x_m": 84362.40486577681,
+   "centroid_y_m": 9040.150496144166,
+   "centroid_distance_from_pole_km": 84.84538688538217
+  },
+  "Cabeus": {
+   "outline_points": 1440,
+   "contrast_distance_m": 2011.6000000000001,
+   "dx_m": 1400.0,
+   "dy_m": 3300.0,
+   "bootstrap_sd_dx_m": 702.6804038821632,
+   "bootstrap_sd_dy_m": 1717.0316683159924,
+   "objective_best": 61.282936096191406,
+   "objective_at_zero_shift": 33.46111297607422,
+   "centroid_x_m": -93981.85260646316,
+   "centroid_y_m": 105988.30517488424,
+   "centroid_distance_from_pole_km": 141.65489562026212
+  },
+  "de Gerlache": {
+   "outline_points": 726,
+   "contrast_distance_m": 654.2,
+   "dx_m": 100.0,
+   "dy_m": -300.0,
+   "bootstrap_sd_dx_m": 104.28326807307106,
+   "bootstrap_sd_dy_m": 27.40437921208944,
+   "objective_best": 54.73412322998047,
+   "objective_at_zero_shift": 51.21376037597656,
+   "centroid_x_m": -42294.203671924486,
+   "centroid_y_m": 1221.0934990141122,
+   "centroid_distance_from_pole_km": 42.311827348574354
+  },
+  "Haworth": {
+   "outline_points": 722,
+   "contrast_distance_m": 1028.4,
+   "dx_m": -300.0,
+   "dy_m": 1800.0,
+   "bootstrap_sd_dx_m": 592.1308976907048,
+   "bootstrap_sd_dy_m": 1080.8959246847035,
+   "objective_best": 32.79012680053711,
+   "objective_at_zero_shift": 30.297426223754883,
+   "centroid_x_m": -6850.338519756286,
+   "centroid_y_m": 76978.37095254012,
+   "centroid_distance_from_pole_km": 77.28257715903456
+  }
+ },
+ "evaluation": {
+  "vectors_m": {
+   "Shackleton": [
+    -400.0,
+    300.0
+   ],
+   "Shoemaker": [
+    400.0,
+    1100.0
+   ],
+   "Faustini": [
+    -1600.0,
+    -600.0
+   ],
+   "Cabeus": [
+    1400.0,
+    3300.0
+   ],
+   "de Gerlache": [
+    100.0,
+    -300.0
+   ],
+   "Haworth": [
+    -300.0,
+    1800.0
+   ]
+  },
+  "mean_vector_m": [
+   -66.66666666666667,
+   933.3333333333334
+  ],
+  "mean_length_m": 935.71125650788,
+  "scatter_S_m": 1610.7279237799426,
+  "standard_error_m": 657.576921285569,
+  "vectors_with_positive_component_along_mean": 4,
+  "resultant_length_ratio": 0.6166125314841051,
+  "common_shift_flagged": false,
+  "rotation_deg": -0.8712726506625474,
+  "rotation_se_deg": 0.34798668139180206,
+  "rotation_effect_at_rmax_m": 2154.0859978737494,
+  "rotation_flagged": true,
+  "radial_scale_eps": 0.0018061599848095966,
+  "radial_scale_se": 0.006073513343375429,
+  "scale_effect_at_rmax_m": 255.85140412169764,
+  "scale_flagged": false,
+  "fit_translation_term_m": [
+   -620.9682591490217,
+   828.310609964186
+  ],
+  "any_flagged": true
+ },
+ "post_hoc_not_part_of_criterion": {
+  "components": {
+   "Shackleton": {
+    "distance_from_pole_km": 10.759042149848677,
+    "tangential_m_ccw_positive": -17.118384482781334,
+    "radial_m_outward_positive": -499.7068749904284
+   },
+   "Shoemaker": {
+    "distance_from_pole_km": 48.91992742092532,
+    "tangential_m_ccw_positive": 511.75647649919927,
+    "radial_m_outward_positive": 1052.665810578611
+   },
+   "Faustini": {
+    "distance_from_pole_km": 84.84538688538217,
+    "tangential_m_ccw_positive": -426.1068686559809,
+    "radial_m_outward_positive": -1654.8211191800142
+   },
+   "Cabeus": {
+    "distance_from_pole_km": 141.65489562026212,
+    "tangential_m_ccw_positive": -3236.9071244480147,
+    "radial_m_outward_positive": 1540.2701930822673
+   },
+   "de Gerlache": {
+    "distance_from_pole_km": 42.311827348574354,
+    "tangential_m_ccw_positive": 296.98910539015833,
+    "radial_m_outward_positive": -108.61616490906603
+   },
+   "Haworth": {
+    "distance_from_pole_km": 77.28257715903456,
+    "tangential_m_ccw_positive": 139.26686124936646,
+    "radial_m_outward_positive": 1819.506730231507
+   }
+  },
+  "leave_one_out_without": {
+   "Shackleton": {
+    "rotation_deg": -0.8946440462200621,
+    "rotation_se_deg": 0.411555550737847,
+    "rotation_flagged": true,
+    "common_shift_flagged": false
+   },
+   "Shoemaker": {
+    "rotation_deg": -0.9439159817837736,
+    "rotation_se_deg": 0.3906568470959501,
+    "rotation_flagged": true,
+    "common_shift_flagged": false
+   },
+   "Faustini": {
+    "rotation_deg": -0.6969015032664371,
+    "rotation_se_deg": 0.4008676969426742,
+    "rotation_flagged": false,
+    "common_shift_flagged": false
+   },
+   "Cabeus": {
+    "rotation_deg": -0.27547565789008066,
+    "rotation_se_deg": 0.4881885847478002,
+    "rotation_flagged": false,
+    "common_shift_flagged": false
+   },
+   "de Gerlache": {
+    "rotation_deg": -1.1310873263699255,
+    "rotation_se_deg": 0.27456349374216255,
+    "rotation_flagged": true,
+    "common_shift_flagged": false
+   },
+   "Haworth": {
+    "rotation_deg": -0.9478220566501881,
+    "rotation_se_deg": 0.37606884065222657,
+    "rotation_flagged": true,
+    "common_shift_flagged": false
+   }
+  }
+ }
+}

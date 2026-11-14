@@ -1,0 +1,67 @@
+{
+ "generated_utc": "2026-11-14T11:37:09Z",
+ "criterion": "data/checkpoints/thresholds_catalogue.json",
+ "catalogue_file_sha256": "694137e141138892555d0f976446875331d3317ea506ddf055d91b917ca307ab",
+ "craters_selected_by_catalogue_flags": 972,
+ "craters_with_a_complete_window": 972,
+ "craters_accepted_by_rim_fit": 200,
+ "craters_used_after_outlier_rejection": 192,
+ "estimates": {
+  "translation_x_m": -20.676246563556667,
+  "translation_y_m": 24.45928658145893,
+  "translation_length_m": 32.027548642238074,
+  "rotation_deg": -0.012766000662008416,
+  "radial_scale": -0.0003616928851286616
+ },
+ "bootstrap_se": {
+  "translation_x_m": 13.331414493375895,
+  "translation_y_m": 11.70299407348862,
+  "rotation_deg": 0.0032642759601125507,
+  "radial_scale": 6.0646971270666855e-05
+ },
+ "effect_at_150_km_m": {
+  "rotation": 33.4213115795734,
+  "radial_scale": 54.25393276929924
+ },
+ "subsets": {
+  "lon_lt_180": {
+   "translation_x_m": -20.960592529241588,
+   "translation_y_m": 22.305360863188806,
+   "rotation_deg": -0.01588758550316647,
+   "radial_scale": -0.0004267179591188608
+  },
+  "lon_ge_180": {
+   "translation_x_m": 18.322480743579717,
+   "translation_y_m": 72.8530712752162,
+   "rotation_deg": 9.438432144983353e-05,
+   "radial_scale": -0.00013987408715365746
+  },
+  "nearer_than_median": {
+   "translation_x_m": -18.418214224971834,
+   "translation_y_m": 20.364693438344293,
+   "rotation_deg": -0.006553681659362699,
+   "radial_scale": -0.0005281183134009382
+  },
+  "farther_than_median": {
+   "translation_x_m": -18.917540652647165,
+   "translation_y_m": 27.211859485392928,
+   "rotation_deg": -0.01527276311178828,
+   "radial_scale": -0.00029360350826834747
+  }
+ },
+ "leave_one_out_max_change": {
+  "translation_x_m": 2.7989000119848093,
+  "translation_y_m": 2.441019655800062,
+  "rotation_deg": 0.0007290168014781851,
+  "radial_scale": 1.2473523611333803e-05,
+  "craters_tested": 192
+ },
+ "classification": {
+  "translation_x": "ruled_out_to_matter_level",
+  "translation_y": "ruled_out_to_matter_level",
+  "rotation": "ruled_out_to_matter_level",
+  "radial_scale": "detected_but_small"
+ },
+ "median_abs_offset_m": 230.45186161243447,
+ "offsets": []
+}
