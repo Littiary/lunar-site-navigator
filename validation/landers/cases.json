@@ -1,0 +1,157 @@
+{
+  "description": "Published records of four real lunar landers and the checks the core must pass against them. Every published value was read from its source on 14 November 2026 and is given as printed, with the wording that shows its precision. Committed before the core was run on these cases.",
+  "sources": {
+    "sp4029_landing": {
+      "title": "NASA SP-2000-4029, Apollo by the Numbers: table 'LM Lunar Landing'",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_18-27_LM_Lunar_Landing.htm",
+      "retrieved_utc": "2026-11-14T11:07:54Z",
+      "page_sha256": "4739026a10caccffb3cba6d1db249b094f50ab7efeae3a8f9526439cfa7b3719",
+      "note": "Coordinates footnote: IAU Mean Earth Polar Axis coordinate system. The row 'Sun Angle (deg)' has no definition on the page."
+    },
+    "sp4029_windows": {
+      "title": "NASA SP-2000-4029, Apollo by the Numbers: table 'Launch Windows'",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_18-14_Launch_Windows.htm",
+      "retrieved_utc": "2026-11-14T11:07:55Z",
+      "page_sha256": "17624a30e972726ef9b4e712759e261906a85f6cc451a41efdc4c610ab0902e5",
+      "note": "Row 'Targeted Lunar Sun Elevation Angle (deg)': Apollo 11 10.8, Apollo 16 11.9. These are the same numbers as the 'Sun Angle' row of the landing table, so that row is read as the targeted angle."
+    },
+    "sp4029_apollo16": {
+      "title": "NASA SP-2000-4029, Apollo by the Numbers: Apollo 16 summary",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_16a_Summary.htm",
+      "retrieved_utc": "2026-11-14T11:07:56Z",
+      "page_sha256": "b67144f97809a13bf378d9375694e6d3c9ecdf7d32c478df4392dbe1c3c5a791",
+      "note": "Landing 'at 02:23:35 GMT on 21 April ... at 104:29:35'; the LM 'remained in lunar orbit six hours longer than planned'."
+    },
+    "alsj_altaz": {
+      "title": "Apollo Lunar Surface Journal: Sun and Earth altitude and azimuth table (Scotti_AltAz.txt)",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt",
+      "retrieved_utc": "2026-11-14T11:07:56Z",
+      "page_sha256": "fb2e6f347eb178c33b8bdbbdc4eeeb28308044c66c00ebdfa7578b5798a8e5d7",
+      "note": "Header: times in UT; sub-Earth and sub-solar points interpolated from the Nautical Almanac lunar ephemeris; altitude and azimuth derived from them; landing times from 'Apollo by the Numbers'. Values printed to 0.01 degree. The table states the site coordinates it used, which differ slightly from the actual landing coordinates."
+    },
+    "alsj_sunangles": {
+      "title": "Apollo Lunar Surface Journal: 'Sun Angles', compiled by Brian W. Lawrence, last revised 8 February 1999",
+      "url": "https://apollojournals.org/alsj/sunangles.html",
+      "retrieved_utc": "2026-11-14T11:07:57Z",
+      "page_sha256": "a457c7a0d03667d02138dd3ebb375c7fbf0b2041bc316a44fa77dd0c3e3fe58b",
+      "note": "Apollo 16 landing 104.50 GET; 'Apollo 16 (as planned)' landing 98.75 GET; 'delayed by a bit less than 6 hours'."
+    },
+    "firefly_release": {
+      "title": "Firefly Aerospace press release, 17 March 2025: completion of 14 days of surface operations",
+      "url": "https://fireflyspace.com/news/firefly-aerospace-successfully-completes-14-days-of-surface-operations-on-the-moon",
+      "retrieved_utc": "2026-11-14T11:07:58Z",
+      "page_sha256": "54a2fb7d7ba5c1bc3e3e13173bbdac88b4839b4c9d5cac51656f5c79336a33bc"
+    },
+    "firefly_live": {
+      "title": "Firefly Aerospace: Blue Ghost Mission 1 live updates",
+      "url": "https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/",
+      "retrieved_utc": "2026-11-14T11:07:59Z",
+      "page_sha256": "a8ac152d53d90bfd9f97bad6246136f00e32a1f674359f9b6d96002905cde349"
+    },
+    "lroc_blue_ghost": {
+      "title": "LROC: 'Blue Ghost Lunar Lander Seen From Above', 7 March 2025",
+      "url": "https://lroc.im-ldi.com/images/1407",
+      "retrieved_utc": "2026-11-14T11:08:00Z",
+      "page_sha256": "724e2388ed11493ff9f21fa016d4ec504568c888023fa80a65d7ed1afa5d6e23",
+      "note": "The page does not name the reference frame of the coordinates; LROC products use the mean-Earth/polar-axis frame (unverified for this page)."
+    },
+    "lroc_chandrayaan3": {
+      "title": "LROC: 'Chandrayaan-3 Landing Site', 5 September 2023",
+      "url": "https://lroc.im-ldi.com/images/1314",
+      "retrieved_utc": "2026-11-14T11:08:01Z",
+      "page_sha256": "a3d310e8bae6cd229271f8be406d0d5ef1cf4762b6549b83faf6fdaa309ec7c4",
+      "note": "The page does not name the reference frame of the coordinates (unverified, as above)."
+    },
+    "isro_updates": {
+      "title": "ISRO: Chandrayaan-3 mission updates",
+      "url": "https://www.isro.gov.in/Chandrayaan3.html",
+      "retrieved_utc": "2026-11-14T11:08:02Z",
+      "page_sha256": "95afeefc8daf8d5acc071d7148f23de2ede72ce1d3003eb29d249bdf18485613"
+    }
+  },
+  "cases": [
+    {
+      "id": "apollo11",
+      "mission": "Apollo 11 lunar module landing, 20 July 1969",
+      "terrain": "none (smooth sphere); the Sun is more than 10 degrees above the horizon, so terrain does not matter for these angles",
+      "published": [
+        {"id": "landing_time", "value": "1969-07-20T20:17:39", "as_printed": "20 Jul 1969, 20:17:39 (GMT)", "source": "sp4029_landing", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "landing_site_actual", "value": {"lat_deg": 0.67408, "lon_deg": 23.47297}, "as_printed": "0.67408 N, 23.47297 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": 0.6875, "lon_deg": 23.4333}, "as_printed": "(+23.4333, +0.6875) (Long, Lat)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": -7.13, "sub_earth_lat_deg": 1.69, "earth_alt_deg": 59.43, "earth_az_deg": 272.16, "sub_solar_lon_deg": 102.80, "sub_solar_lat_deg": 1.30, "sun_alt_deg": 10.65, "sun_az_deg": 88.81}, "as_printed": "Landing 1969 Jul 20 20:17:39  -7.13 +1.69  59.43 272.16  102.80 +1.30  10.65  88.81", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 10.8, "as_printed": "Sun Angle (deg) 10.8; Targeted Lunar Sun Elevation Angle (deg) 10.8", "source": "sp4029_landing, sp4029_windows", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ],
+      "checks": [
+        {"id": "apollo11_sun_altitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sun_alt_deg", "computed": "Sun altitude at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo11_sun_azimuth", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sun_az_deg", "computed": "Sun azimuth at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo11_sub_solar_longitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_solar_lon_deg", "computed": "east longitude of the sub-solar point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo11_sub_solar_latitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_solar_lat_deg", "computed": "latitude of the sub-solar point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo11_earth_altitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.earth_alt_deg", "computed": "Earth altitude (direction from the Moon's centre) at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo11_earth_azimuth", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.earth_az_deg", "computed": "Earth azimuth (direction from the Moon's centre) at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo11_sub_earth_longitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_earth_lon_deg", "computed": "east longitude of the sub-Earth point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo11_sub_earth_latitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_earth_lat_deg", "computed": "latitude of the sub-Earth point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo11_sun_at_actual_site", "published": "targeted_sun_angle", "computed": "Sun elevation seen from landing_site_actual at landing_time", "kind": "reported", "why_not_judged": "The published angle is a launch-window target; no planned landing time was read from a source for this mission."},
+        {"id": "apollo11_earth_topocentric", "published": "alsj_landing_row.earth_alt_deg", "computed": "Earth elevation seen from landing_site_actual (with parallax) at landing_time", "kind": "reported", "why_not_judged": "Different definition: the source ignores the parallax of the site, which lowers the Earth by up to 0.26 degree."}
+      ]
+    },
+    {
+      "id": "apollo16",
+      "mission": "Apollo 16 lunar module landing, 21 April 1972 (landing delayed by about six hours)",
+      "terrain": "none (smooth sphere)",
+      "published": [
+        {"id": "landing_time", "value": "1972-04-21T02:23:35", "as_printed": "21 Apr 1972, 02:23:35 (GMT); at 104:29:35 (GET)", "source": "sp4029_landing, sp4029_apollo16", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "planned_landing_get", "value": 98.75, "as_printed": "Apollo 16 (as planned) Landing: 98.75 GET", "source": "alsj_sunangles", "precision": "0.01 hour", "approximate": false, "nature": "planned value"},
+        {"id": "planned_landing_time", "value": "1972-04-20T20:39:00", "as_printed": "derived: actual landing minus (104:29:35 - 98:45:00) = 5 h 44 min 35 s", "source": "sp4029_apollo16, alsj_sunangles", "precision": "0.01 hour (36 s)", "approximate": false, "nature": "derived from two published values"},
+        {"id": "landing_site_actual", "value": {"lat_deg": -8.97301, "lon_deg": 15.50019}, "as_printed": "-8.97301 N, 15.50019 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": -8.9914, "lon_deg": 15.5144}, "as_printed": "(+15.5144, -8.9914)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": 7.25, "sub_earth_lat_deg": 0.86, "earth_alt_deg": 77.16, "earth_az_deg": 319.70, "sub_solar_lon_deg": 90.31, "sub_solar_lat_deg": 1.53, "sun_alt_deg": 14.76, "sun_az_deg": 86.01}, "as_printed": "Landing 1972 Apr 21 02:23:35  +7.25 +0.86  77.16 319.70   90.31 +1.53  14.76  86.01", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 11.9, "as_printed": "Sun Angle (deg) 11.9; Targeted Lunar Sun Elevation Angle (deg) 11.9; 'a sun elevation angle on the lunar surface of 11.9'", "source": "sp4029_landing, sp4029_windows, sp4029_apollo16", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ],
+      "checks": [
+        {"id": "apollo16_sun_altitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sun_alt_deg", "computed": "Sun altitude at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo16_sun_azimuth", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sun_az_deg", "computed": "Sun azimuth at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo16_sub_solar_longitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_solar_lon_deg", "computed": "east longitude of the sub-solar point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo16_sub_solar_latitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_solar_lat_deg", "computed": "latitude of the sub-solar point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo16_earth_altitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.earth_alt_deg", "computed": "Earth altitude (direction from the Moon's centre) at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo16_earth_azimuth", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.earth_az_deg", "computed": "Earth azimuth (direction from the Moon's centre) at landing_time and alsj_site", "kind": "pass_fail"},
+        {"id": "apollo16_sub_earth_longitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_earth_lon_deg", "computed": "east longitude of the sub-Earth point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo16_sub_earth_latitude", "rule": "R1_angle_same_inputs", "published": "alsj_landing_row.sub_earth_lat_deg", "computed": "latitude of the sub-Earth point at landing_time", "kind": "pass_fail"},
+        {"id": "apollo16_targeted_sun_at_planned_time", "rule": "R2_targeted_sun_angle", "published": "targeted_sun_angle", "computed": "Sun elevation seen from landing_site_actual at planned_landing_time", "kind": "pass_fail"},
+        {"id": "apollo16_slip_effect", "published": "alsj_landing_row.sun_alt_deg minus targeted_sun_angle (2.86 degrees)", "computed": "Sun elevation at landing_time minus Sun elevation at planned_landing_time, both at landing_site_actual", "kind": "reported", "why_not_judged": "Difference of two values from different sources and different site coordinates; shown as the effect of the schedule slip."}
+      ]
+    },
+    {
+      "id": "blue_ghost_m1",
+      "mission": "Firefly Blue Ghost Mission 1, Mare Crisium, landed 2 March 2025; end of the lunar day on 16 March 2025",
+      "terrain": "none: no elevation data for this latitude in the project's terrain set. Smooth local sphere through the landing point (1737.4 km minus 3.65 km), observer 2 m above it.",
+      "published": [
+        {"id": "landing_time", "value": "2025-03-02T08:34:00", "as_printed": "March 2, 2025, 2:34 am CST", "source": "firefly_live", "precision": "1 minute", "approximate": false, "nature": "recorded event", "note": "CST is UTC-6; US daylight saving time began on 9 March 2025."},
+        {"id": "landing_site", "value": {"lat_deg": 18.5623, "lon_deg": 61.8103, "height_m": -3650.0}, "as_printed": "18.5623 N, 61.8103 E, -3650 [m]", "source": "lroc_blue_ghost", "precision": "0.0001 degree, 10 m", "approximate": false, "nature": "measured position"},
+        {"id": "daylight_hours", "value": 346, "as_printed": "more than 14 days of surface operations (346 hours of daylight)", "source": "firefly_release", "precision": "1 hour", "approximate": false, "nature": "operational record"},
+        {"id": "sunset_date", "value": "2025-03-16", "as_printed": "imagery of the lunar sunset on March 16", "source": "firefly_release", "precision": "1 day; the release uses US Central Daylight Time (UTC-5)", "approximate": false, "nature": "observed event, dated"},
+        {"id": "final_data", "value": "2025-03-16T23:15:00", "as_printed": "final data received around 6:15 pm CDT on March 16", "source": "firefly_release", "precision": "about 15 minutes", "approximate": true, "nature": "operational record"},
+        {"id": "night_operation", "value": 5, "as_printed": "operating just over 5 hours into the lunar night", "source": "firefly_release", "precision": "1 hour", "approximate": true, "nature": "operational record"}
+      ],
+      "checks": [
+        {"id": "blue_ghost_sunset_day", "rule": "R3_calendar_day", "published": "sunset_date", "computed": "last light (upper limb of the Sun on the smooth local sphere, seen from 2 m) must fall between 2025-03-16T05:00:00 and 2025-03-17T05:00:00 UTC", "kind": "pass_fail"},
+        {"id": "blue_ghost_daylight_not_after_last_light", "rule": "R4_one_sided_physical_bound", "published": "landing_time plus daylight_hours = 2025-03-16T18:34 UTC, taken as early as rounding allows: 18:04 UTC", "computed": "last light as above must not be earlier than 2025-03-16T18:04:00 UTC", "kind": "pass_fail"},
+        {"id": "blue_ghost_end_of_daylight", "published": "landing_time plus daylight_hours (18:34 UTC); final_data minus night_operation (before 18:15 UTC)", "computed": "times at which the lower limb, the centre and the upper limb of the Sun reach the smooth local horizon; elevation of the Sun's upper limb at 18:34 UTC (the height of the local horizon that would explain the difference)", "kind": "reported", "why_not_judged": "The operational end of daylight depends on local terrain, which is not in the project's data for this site, and on the operator's definition of night."}
+      ]
+    },
+    {
+      "id": "chandrayaan3",
+      "mission": "ISRO Chandrayaan-3 lander and rover, 69.4 degrees south, landed 23 August 2023; lunar night and expected awakening",
+      "terrain": "LOLA elevation model of the project (60 m grid at this latitude), terrain horizon out to 300 km, observer 2 m above the surface",
+      "published": [
+        {"id": "landing_site", "value": {"lat_deg": -69.3741, "lon_deg": 32.32, "height_m": 532.0}, "as_printed": "69.3741 S, 32.32 E, 532 m elevation", "source": "lroc_chandrayaan3", "precision": "0.0001 degree in latitude, 0.01 degree in longitude", "approximate": false, "nature": "measured position"},
+        {"id": "landing_date", "value": "2023-08-23", "as_printed": "touched down on the Moon on 23 August 2023", "source": "lroc_chandrayaan3", "precision": "1 day", "approximate": false, "nature": "recorded event"},
+        {"id": "sleep_status", "value": "2023-09-04", "as_printed": "September 04, 2023: The lander and rover are in sleep mode.", "source": "isro_updates", "precision": "1 day; ISRO uses Indian Standard Time (UTC+5:30)", "approximate": false, "nature": "operational record"},
+        {"id": "expected_awakening", "value": "2023-09-22", "as_printed": "Awaiting their awakening around September 22, 2023.", "source": "isro_updates", "precision": "1 day", "approximate": true, "nature": "operator's expectation, not an astronomical event"}
+      ],
+      "checks": [
+        {"id": "chandrayaan3_sun_up_by_expected_awakening", "rule": "R4_one_sided_physical_bound", "published": "expected_awakening", "computed": "the first sunrise after the sleep date (first part of the Sun above the terrain horizon, seen from 2 m) must not be later than the end of 22 September 2023 in Indian Standard Time, 2023-09-22T18:30:00 UTC", "kind": "pass_fail"},
+        {"id": "chandrayaan3_night", "published": "sleep_status, expected_awakening", "computed": "sunset (last light) and sunrise (first light) over the terrain horizon and on a smooth sphere; elevation of the Sun's centre during 22 September 2023 (IST); days between computed sunrise and 22 September", "kind": "reported", "why_not_judged": "ISRO published the state of the spacecraft and an expected wake-up date, not sunset or sunrise times."}
+      ]
+    }
+  ]
+}

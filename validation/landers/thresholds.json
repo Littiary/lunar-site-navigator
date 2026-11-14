@@ -1,0 +1,31 @@
+{
+  "title": "Acceptance thresholds: science core versus published records of real lunar landers (first four cases)",
+  "written_utc": "2026-11-14T11:20:00Z",
+  "rule": "Written and committed together with cases.json before the core was run on any of these cases. Not edited afterwards. If a check fails, the cause is looked for and reported; the threshold stays.",
+  "disclosure": "Not a blind test. Research done before the hackathon had compared some of these published values with JPL Horizons, so the rough size of several differences was known when this file was written. For that reason the thresholds are not chosen case by case: they follow from the fixed rules below, which use only the printed precision, the wording and the stated method of each source.",
+  "rules": {
+    "R1_angle_same_inputs": {
+      "threshold_deg": 0.05,
+      "applies_to": "Angles that a source computed for a published time and place and printed to 0.01 degree (the ALSJ altitude and azimuth table, derived by its authors from sub-solar and sub-Earth points interpolated from the Nautical Almanac).",
+      "comparison": "The core is evaluated at the published UT time and at the site coordinates the source states it used, with the definition the source states: altitude and azimuth of the direction from the Moon's centre to the body, at the site (the source derives them from sub-points, so there is no parallax). Altitude and sub-point coordinates: absolute difference. Azimuth: absolute difference multiplied by the cosine of the altitude (difference on the sky).",
+      "why_this_value": "Five times the printing resolution of the source; it allows for interpolation of a printed almanac and for the lunar rotation model of the 1960s. 0.05 degree is 6 minutes of solar motion at these sites."
+    },
+    "R2_targeted_sun_angle": {
+      "threshold_deg": 0.1,
+      "applies_to": "The 'Targeted Lunar Sun Elevation Angle' of NASA SP-2000-4029, printed to 0.1 degree, when a published planned landing time exists.",
+      "comparison": "Sun elevation computed by the core at the planned landing time and the actual landing coordinates, against the targeted angle.",
+      "why_this_value": "One unit of the last printed digit: half of it is rounding of the published angle, the other half allows for the planned time being published to 0.01 hour and for the plan having used the targeted, not the actual, coordinates."
+    },
+    "R3_calendar_day": {
+      "applies_to": "An astronomical event that a source dates to a calendar day without a clock time.",
+      "comparison": "The computed event must fall inside that calendar day in the time zone the source uses. If the source says 'around', 'about', 'approximately' or 'expected', the window is widened by one day on each side."
+    },
+    "R4_one_sided_physical_bound": {
+      "rounding_allowance_hours": 0.5,
+      "applies_to": "Operational records (hours of daylight operations, a date by which an operator expected sunlight). They are not astronomical events and cannot be compared for equality.",
+      "comparison": "A physical inequality that must hold if the core is right: a lander cannot record daylight after the last part of the Sun has set on a smooth local sphere seen from 2 m, and an operator's expected wake-up date cannot precede sunrise over the terrain horizon. The published value is taken at the unfavourable end of its rounding interval.",
+      "note": "The amount by which the inequality is satisfied is reported, not judged: it is set by local terrain and by the operator's definition."
+    }
+  },
+  "reported_without_pass_or_fail": "Published values whose definition the source does not state, or which describe a different quantity than the core computes, are listed with the computed value and the difference, marked 'reported'. They do not count as passed."
+}

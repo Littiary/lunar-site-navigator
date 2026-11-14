@@ -1,0 +1,398 @@
+{
+  "generated_utc": "2026-11-14T11:12:44Z",
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "kernel_set_id": "bfe870fccfa5"
+  },
+  "summary": {
+    "pass_fail_checks": 20,
+    "passed": 20,
+    "failed": 0,
+    "reported_without_verdict": 5
+  },
+  "cases": [
+    {
+      "id": "apollo11",
+      "mission": "Apollo 11 lunar module landing, 20 July 1969",
+      "terrain": "none (smooth sphere); the Sun is more than 10 degrees above the horizon, so terrain does not matter for these angles",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo11_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 10.65,
+          "computed": 10.664466700665377,
+          "unit": "deg",
+          "difference": 0.01446670066537692,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 88.81,
+          "computed": 88.8076953132942,
+          "unit": "deg",
+          "difference": -0.0022648795877745027,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference -0.002 deg at altitude 10.7 deg"
+        },
+        {
+          "id": "apollo11_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 102.8,
+          "computed": 102.78114589686103,
+          "unit": "deg",
+          "difference": -0.018854103138949085,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": 1.3,
+          "computed": 1.298877011034115,
+          "unit": "deg",
+          "difference": -0.00112298896588503,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 59.43,
+          "computed": 59.395332150753724,
+          "unit": "deg",
+          "difference": -0.03466784924627575,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 272.16,
+          "computed": 272.1748287426861,
+          "unit": "deg",
+          "difference": 0.007549483997649128,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.015 deg at altitude 59.4 deg"
+        },
+        {
+          "id": "apollo11_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": -7.13,
+          "computed": -7.1618485701566845,
+          "unit": "deg",
+          "difference": -0.031848570156682854,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": 1.69,
+          "computed": 1.698851198167044,
+          "unit": "deg",
+          "difference": 0.00885119816704405,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo11_sun_at_actual_site",
+          "kind": "reported",
+          "quantity": "Sun elevation at the actual landing site and time, against the launch-window target",
+          "published": 10.8,
+          "computed": 10.703201558089493,
+          "unit": "deg",
+          "difference": -0.0967984419105079,
+          "threshold": null,
+          "status": null,
+          "note": "The published value is a planned angle; it is not judged."
+        },
+        {
+          "id": "apollo11_earth_topocentric",
+          "kind": "reported",
+          "quantity": "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)",
+          "published": 59.43,
+          "computed": 59.22440204419213,
+          "unit": "deg",
+          "difference": -0.20559795580786755,
+          "threshold": null,
+          "status": null,
+          "note": "Shows the size of the parallax the source leaves out."
+        }
+      ]
+    },
+    {
+      "id": "apollo16",
+      "mission": "Apollo 16 lunar module landing, 21 April 1972 (landing delayed by about six hours)",
+      "terrain": "none (smooth sphere)",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo16_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 14.76,
+          "computed": 14.77325375037094,
+          "unit": "deg",
+          "difference": 0.013253750370939343,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 86.01,
+          "computed": 85.99679862456281,
+          "unit": "deg",
+          "difference": -0.012764971337292734,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference -0.013 deg at altitude 14.8 deg"
+        },
+        {
+          "id": "apollo16_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 90.31,
+          "computed": 90.2956216908182,
+          "unit": "deg",
+          "difference": -0.014378309181807936,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": 1.53,
+          "computed": 1.5370164161771285,
+          "unit": "deg",
+          "difference": 0.007016416177128448,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 77.16,
+          "computed": 77.16250877546393,
+          "unit": "deg",
+          "difference": 0.0025087754639372406,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 319.7,
+          "computed": 319.6846726321057,
+          "unit": "deg",
+          "difference": -0.003405534756200058,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference -0.015 deg at altitude 77.2 deg"
+        },
+        {
+          "id": "apollo16_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": 7.25,
+          "computed": 7.248376610052175,
+          "unit": "deg",
+          "difference": -0.0016233899478379499,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": 0.86,
+          "computed": 0.8568705456860286,
+          "unit": "deg",
+          "difference": -0.0031294543139713804,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo16_targeted_sun_at_planned_time",
+          "kind": "pass_fail",
+          "quantity": "Sun elevation at the planned landing time against the targeted angle of the launch window",
+          "published": 11.9,
+          "computed": 11.88294029465194,
+          "unit": "deg",
+          "difference": -0.01705970534806056,
+          "threshold": 0.1,
+          "status": "PASS",
+          "note": "planned landing 1972-04-20 20:39:00 UTC, 5 h 44 min 35 s before the actual landing"
+        },
+        {
+          "id": "apollo16_slip_effect",
+          "kind": "reported",
+          "quantity": "Change of the Sun elevation caused by the landing delay",
+          "published": 2.86,
+          "computed": 2.876954328178197,
+          "unit": "deg",
+          "difference": 0.016954328178197642,
+          "threshold": null,
+          "status": null,
+          "note": "Sun elevation at the actual landing time and site: 14.76 deg; the table of SP-4029 still lists the targeted 11.9 deg."
+        }
+      ]
+    },
+    {
+      "id": "blue_ghost_m1",
+      "mission": "Firefly Blue Ghost Mission 1, Mare Crisium, landed 2 March 2025; end of the lunar day on 16 March 2025",
+      "terrain": "none: no elevation data for this latitude in the project's terrain set. Smooth local sphere through the landing point (1737.4 km minus 3.65 km), observer 2 m above it.",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "blue_ghost_sunset_day",
+          "kind": "pass_fail",
+          "quantity": "Day of the lunar sunset (last light on the smooth local sphere)",
+          "published": "2025-03-16 (US Central Daylight Time)",
+          "computed": "2025-03-16T20:54:54.609Z",
+          "unit": "UTC",
+          "difference": null,
+          "threshold": "inside 2025-03-16T05:00Z to 2025-03-17T05:00Z",
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "blue_ghost_daylight_not_after_last_light",
+          "kind": "pass_fail",
+          "quantity": "Recorded daylight must end before geometric last light",
+          "published": "2025-03-16T18:34:00.000Z (landing + 346 h)",
+          "computed": "2025-03-16T20:54:54.609Z",
+          "unit": "UTC",
+          "difference": 2.848502648141649,
+          "threshold": "last light not earlier than landing + 346 h - 0.5 h",
+          "status": "PASS",
+          "note": "difference: hours by which the inequality is satisfied"
+        },
+        {
+          "id": "blue_ghost_end_of_daylight",
+          "kind": "reported",
+          "quantity": "End of recorded daylight against smooth-sphere sunset",
+          "published": {
+            "landing_plus_346h": "2025-03-16T18:34:00.000Z",
+            "final_data_minus_5h": "2025-03-16T18:15:00.000Z or earlier ('just over 5 hours')"
+          },
+          "computed": {
+            "lower_limb_touches_horizon": "2025-03-16T19:48:05.391Z",
+            "centre_on_horizon": "2025-03-16T20:21:29.766Z",
+            "last_light": "2025-03-16T20:54:54.609Z",
+            "sun_upper_limb_elevation_at_landing_plus_346h_deg": 1.0397967366054828,
+            "sun_centre_elevation_at_landing_deg": 3.4253356111736677,
+            "sun_azimuth_at_landing_plus_346h_deg": 269.7240336606352
+          },
+          "unit": "UTC",
+          "difference": 2.348502648141649,
+          "threshold": null,
+          "status": null,
+          "note": "difference: hours from the end of recorded daylight to geometric last light; a local horizon as high as the Sun's upper limb at that moment, or the operator's definition of night, would account for it"
+        }
+      ]
+    },
+    {
+      "id": "chandrayaan3",
+      "mission": "ISRO Chandrayaan-3 lander and rover, 69.4 degrees south, landed 23 August 2023; lunar night and expected awakening",
+      "terrain": "LOLA elevation model of the project (60 m grid at this latitude), terrain horizon out to 300 km, observer 2 m above the surface",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "chandrayaan3_sun_up_by_expected_awakening",
+          "kind": "pass_fail",
+          "quantity": "Sunrise over the terrain horizon must precede the end of the expected wake-up day",
+          "published": "2023-09-22 (Indian Standard Time), 'around'",
+          "computed": "2023-09-20T00:05:04.453Z",
+          "unit": "UTC",
+          "difference": 66.41542958070835,
+          "threshold": "not later than 2023-09-22T18:30:00Z",
+          "status": "PASS",
+          "note": "difference: hours by which the inequality is satisfied"
+        },
+        {
+          "id": "chandrayaan3_night",
+          "kind": "reported",
+          "quantity": "Lunar night at the landing site",
+          "published": {
+            "sleep_status_date": "2023-09-04 (IST)",
+            "expected_awakening": "around 2023-09-22 (IST)"
+          },
+          "computed": {
+            "sunset_last_light_terrain": [
+              "2023-09-04T07:14:41.485Z",
+              "2023-10-03T23:25:14.297Z"
+            ],
+            "sunrise_first_light_terrain": "2023-09-20T00:05:04.453Z",
+            "sunrise_azimuth_deg": 85.47535865037723,
+            "sunrise_horizon_elevation_deg": 1.1178889484721777,
+            "sunrise_obstacle_distance_km": 0.5023828125,
+            "sunset_last_light_smooth_sphere": [
+              "2023-09-04T18:05:25.547Z",
+              "2023-10-04T10:02:04.454Z"
+            ],
+            "sunrise_first_light_smooth_sphere": "2023-09-19T17:23:30.703Z",
+            "terrain_delay_of_sunrise_h": 6.692708333333333,
+            "sun_centre_elevation_on_2023-09-22_IST_deg": [
+              8.21202700411991,
+              11.925351181563073
+            ],
+            "all_sun_events_terrain": [
+              [
+                "set",
+                "2023-09-04T07:14:41.485Z"
+              ],
+              [
+                "rise",
+                "2023-09-20T00:05:04.453Z"
+              ],
+              [
+                "set",
+                "2023-10-03T23:25:14.297Z"
+              ]
+            ],
+            "dem_surface_height_m": 529.1096303077741,
+            "lroc_elevation_m": 532.0,
+            "dem_set": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+            "horizon_coverage_complete": true
+          },
+          "unit": "UTC",
+          "difference": 1.7673095659387332,
+          "threshold": null,
+          "status": null,
+          "note": "difference: days from computed sunrise to the start of 22 September 2023 (IST)"
+        }
+      ]
+    }
+  ]
+}
