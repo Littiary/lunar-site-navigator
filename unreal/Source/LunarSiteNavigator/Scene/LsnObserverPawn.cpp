@@ -95,7 +95,7 @@ void ALsnObserverPawn::ApplyView()
 	if (CameraView != ELsnCameraView::Observer || bArrival)
 	{
 		const ALsnSiteScene* SceneForCamera = FindScene();
-		if (SceneForCamera && SceneForCamera->HasPackage() && !SceneForCamera->HasRealTerrain())
+		if (SceneForCamera && SceneForCamera->HasPackage() && !SceneForCamera->HasDrawnRelief())
 		{
 			SetCameraView(ELsnCameraView::Observer);
 			bArrival = false;
