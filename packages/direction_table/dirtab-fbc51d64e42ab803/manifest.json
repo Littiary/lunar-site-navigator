@@ -1,11 +1,11 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.9"
+    "version": "0.10"
   },
   "kind": "direction_table",
   "package_id": "dirtab-fbc51d64e42ab803",
-  "content_sha256": "b96ba0cbc22bc2be59ec868260ed570898f97ed8962935c4a8031b2d012d4b52",
+  "content_sha256": "9bdbbfb67a9fffcc097f66f4a05c218995afd43bbf45ee78cbcf29fa6e0fbc5c",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
@@ -286,15 +286,15 @@
     "method": "dirtab.earth_view"
   },
   "provenance": {
-    "created_utc": "2026-11-14T15:24:48.826Z",
-    "scenario_id": "south-polar-sites",
+    "created_utc": "2026-11-14T16:59:35.771Z",
+    "scenario_id": "curated-sites",
     "timings_s": {
-      "direction_table": 0.950282
+      "direction_table": 0.788343
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "1",
-      "git_commit": "31d1a5ca97506b22af0c35cfcd1ce5d79c32406a",
+      "git_commit": "f4453ace7393ae8d519fb969c3c663423b7b3170",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",

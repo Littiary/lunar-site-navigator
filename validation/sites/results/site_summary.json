@@ -1,14 +1,35 @@
 {
-  "generated_utc": "2026-11-14T15:36:34Z",
-  "contract_version": "0.9",
+  "generated_utc": "2026-11-14T17:08:13Z",
+  "contract_version": "0.10",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2028-11-14T00:00:00.000Z",
     "step_s": 3600.0
   },
   "stated": {
-    "horizon_error_deg": 0.05,
-    "dem_height_error_m": 1.0,
+    "dem_height_error_model": {
+      "id": "lola-two-sigma-2026-11",
+      "label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+      "source": "Data stream, 14 November 2026: data/checkpoints/near_field_report.json (20 m product minus 5 m site rasters, 0.64 to 1.1 million points per site, by slope class) and data/checkpoints/height_error_report.json; RMS maps *_toterr of the 5 m site rasters of Barker et al. (2021), read through lsn_data sample_quality. The RMS maps are the producers' model estimate, not a test against independent data. Every product is built from LOLA returns: errors common to all LOLA products are not covered.",
+      "rules": {
+        "LOLA5MPP_*": {
+          "rms_map_factor": 2.0,
+          "flat_m": 1.0
+        },
+        "*": {
+          "slope_classes": [
+            {
+              "up_to_deg": 30.0,
+              "error_m": 5.0
+            },
+            {
+              "up_to_deg": 90.0,
+              "error_m": 7.0
+            }
+          ]
+        }
+      }
+    },
     "landing_ellipse": {
       "semi_major_m": 100.0,
       "semi_minor_m": 100.0,
@@ -23,8 +44,8 @@
     ]
   },
   "site_pairs": {
-    "package_id": "pairs-fa4b9bc4663c9738",
-    "content_sha256": "7a4edf712d6aa36bdfcf9c3a9f40c8fae5afb5e3c08b3eb22d0ef63fecaba217",
+    "package_id": "pairs-3458ca8a24b1d228",
+    "content_sha256": "0cdeacb43beaf2a3736a3214a6ce0b188505d841e56803771dafe75fc8b78a8d",
     "observer_heights_m": [
       2.0,
       2.0,
@@ -41,28 +62,28 @@
         "distance_km": 40.50882564808807,
         "windows": {
           "sun_visible": {
-            "a_share": 0.7803102422836867,
-            "b_share": 0.8466806374924001,
-            "either_share": 0.9703244268577101,
-            "longest_neither_h": 43.423177083333336,
-            "gain_over_better_h": 2169.206640625,
-            "covered_share_of_better_outage": 0.8064460179266734
+            "a_share": 0.7692747000992742,
+            "b_share": 0.8465447217828508,
+            "either_share": 0.9676331429192316,
+            "longest_neither_h": 46.681640625,
+            "gain_over_better_h": 2124.3752604166666,
+            "covered_share_of_better_outage": 0.7890795451495182
           },
           "earth_visible": {
-            "a_share": 0.5244438907769988,
-            "b_share": 0.5731648744466294,
-            "either_share": 0.5731648744466294,
-            "longest_neither_h": 304.57994791666664,
+            "a_share": 0.5244427107083144,
+            "b_share": 0.5731699287030704,
+            "either_share": 0.5731699287030704,
+            "longest_neither_h": 304.57734375,
             "gain_over_better_h": 0.0,
             "covered_share_of_better_outage": 0.0
           },
           "sun_and_earth_visible": {
-            "a_share": 0.3953797936022762,
-            "b_share": 0.485839903124525,
-            "either_share": 0.5450739925330598,
-            "longest_neither_h": 311.1705729166667,
-            "gain_over_better_h": 1039.2028645833334,
-            "covered_share_of_better_outage": 0.11520553572417873
+            "a_share": 0.3906749933500532,
+            "b_share": 0.4857424027326531,
+            "either_share": 0.5427305171402379,
+            "longest_neither_h": 311.169140625,
+            "gain_over_better_h": 999.7994791666666,
+            "covered_share_of_better_outage": 0.11081628100470892
           }
         }
       },
@@ -76,28 +97,28 @@
         "distance_km": 127.08622624452244,
         "windows": {
           "sun_visible": {
-            "a_share": 0.7803102422836867,
-            "b_share": 0.7246139097293471,
-            "either_share": 0.8443099685671265,
-            "longest_neither_h": 188.29830729166667,
-            "gain_over_better_h": 1122.8111979166667,
-            "covered_share_of_better_outage": 0.2913186620474268
+            "a_share": 0.7692747000992742,
+            "b_share": 0.6865775202704628,
+            "either_share": 0.8223681499610503,
+            "longest_neither_h": 191.55989583333334,
+            "gain_over_better_h": 931.471484375,
+            "covered_share_of_better_outage": 0.2301154224726141
           },
           "earth_visible": {
-            "a_share": 0.5244438907769988,
-            "b_share": 0.8157823016712741,
-            "either_share": 0.8157823016712741,
-            "longest_neither_h": 141.584375,
+            "a_share": 0.5244427107083144,
+            "b_share": 0.8090531418326778,
+            "either_share": 0.8090531418326778,
+            "longest_neither_h": 145.97760416666668,
             "gain_over_better_h": 0.0,
             "covered_share_of_better_outage": 0.0
           },
           "sun_and_earth_visible": {
-            "a_share": 0.3953797936022762,
-            "b_share": 0.5573503249864626,
-            "either_share": 0.6197019480484781,
-            "longest_neither_h": 350.628125,
-            "gain_over_better_h": 1093.896875,
-            "covered_share_of_better_outage": 0.14085997704642758
+            "a_share": 0.3906749933500532,
+            "b_share": 0.5343142709936446,
+            "either_share": 0.5978765925731969,
+            "longest_neither_h": 394.4265625,
+            "gain_over_better_h": 1115.1373697916667,
+            "covered_share_of_better_outage": 0.13649188201488754
           }
         }
       },
@@ -111,28 +132,28 @@
         "distance_km": 114.64773782493883,
         "windows": {
           "sun_visible": {
-            "a_share": 0.8466806374924001,
-            "b_share": 0.7246139097293471,
-            "either_share": 0.9077299174575353,
-            "longest_neither_h": 162.54127604166666,
-            "gain_over_better_h": 1071.0485677083334,
-            "covered_share_of_better_outage": 0.39818375818063495
+            "a_share": 0.8465447217828508,
+            "b_share": 0.6865775202704628,
+            "either_share": 0.9065626217177762,
+            "longest_neither_h": 162.542578125,
+            "gain_over_better_h": 1052.9540364583333,
+            "covered_share_of_better_outage": 0.39111003956472756
           },
           "earth_visible": {
-            "a_share": 0.5731648744466294,
-            "b_share": 0.8157823016712741,
-            "either_share": 0.8157823016712741,
-            "longest_neither_h": 141.584375,
+            "a_share": 0.5731699287030704,
+            "b_share": 0.8090531418326778,
+            "either_share": 0.8090531418326778,
+            "longest_neither_h": 145.97760416666668,
             "gain_over_better_h": 0.0,
             "covered_share_of_better_outage": 0.0
           },
           "sun_and_earth_visible": {
-            "a_share": 0.485839903124525,
-            "b_share": 0.5573503249864626,
-            "either_share": 0.6827703626417864,
-            "longest_neither_h": 233.38216145833334,
-            "gain_over_better_h": 2200.369140625,
-            "covered_share_of_better_outage": 0.28333927422738553
+            "a_share": 0.4857424027326531,
+            "b_share": 0.5343142709936446,
+            "either_share": 0.6677896430344182,
+            "longest_neither_h": 234.96861979166667,
+            "gain_over_better_h": 2341.691927083333,
+            "covered_share_of_better_outage": 0.28662113465571126
           }
         }
       }
@@ -150,10 +171,12 @@
       "value": 0.0
     }
   },
-  "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+  "dem_set_id": "lola:LOLA5MPP_SITE04@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-fbc51d64e42ab803",
-  "run_time_s": 680.1164513000112,
+  "run_time_s": 553.1826893000107,
+  "run_time_without_near_field_s": 149.6265722999815,
+  "jobs": 8,
   "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
   "sites": [
     {
@@ -161,13 +184,13 @@
       "name": "Shackleton crater rim crest",
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
-      "surface_height_m": 1701.0723774096787,
-      "package_id": "site-a4d3f54375701349",
-      "content_sha256": "6c509aa9a8a6e5aa57117cc5b7e9af2a40eba87020ac75093830b356d298387a",
+      "surface_height_m": 1701.016555680504,
+      "package_id": "site-ecfd86c98a703c77",
+      "content_sha256": "fb9023fe39b98408b1ec05a550cd5d68cb83f6de113b508f9a12f456cc14b44a",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
-      "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+      "dem_set_id": "lola:LOLA5MPP_SITE04@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
         "far_field_max_deg": 0.0,
         "far_field_open_azimuth_fraction": 0.0,
@@ -176,8 +199,8 @@
       },
       "terrain_source": {
         "at_site": {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
+          "product_id": "LOLA5MPP_SITE04",
+          "pixel_m": 5.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         },
         "resolution_class": "fine",
@@ -186,14 +209,20 @@
             "product_id": "LDEM_80S_20M",
             "pixel_m": 20.0,
             "projection": "polar stereographic on a sphere, true scale at the pole",
-            "azimuth_share": 1.0
+            "azimuth_share": 0.78125
+          },
+          {
+            "product_id": "LOLA5MPP_SITE04",
+            "pixel_m": 5.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 0.21875
           }
         ]
       },
       "timings_s": {
-        "horizon": 2.75765,
-        "timeline": 672.443852,
-        "terrain_patches": 0.3843
+        "horizon": 10.941649,
+        "timeline": 212.313591,
+        "terrain_patches": 0.096981
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -233,194 +262,194 @@
       "per_height": [
         {
           "observer_height_m": 0.0,
-          "sun_visible_share": 0.6693776740801699,
-          "sun_longest_outage_h": 276.153125,
-          "sun_longest_visible_d": 23.67214626736111,
-          "sun_events": 141,
-          "sun_events_set_by_terrain_closer_than_1km": 41,
-          "sun_time_to_set_d": 22.84389375478995,
+          "sun_visible_share": 0.477319911128211,
+          "sun_longest_outage_h": 420.08098958333335,
+          "sun_longest_visible_d": 17.541634114583335,
+          "sun_events": 130,
+          "sun_events_set_by_terrain_closer_than_1km": 47,
+          "sun_time_to_set_d": 22.007788069026063,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-05T12:27:19.921Z",
-          "earth_visible_share": 0.5244020020496086,
-          "earth_longest_outage_h": 334.16979166666664,
+          "first_sun_set_utc": "2026-12-04T12:31:40.546Z",
+          "earth_visible_share": 0.5244008294027398,
+          "earth_longest_outage_h": 334.1703125,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.777232513470507,
+          "earth_time_to_set_d": 13.777221662776062,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.6328017711639404,
-          "horizon_max_deg": 4.963151931762695,
-          "share_of_horizon_set_closer_than_1km": 0.4423611111111111,
+          "horizon_min_deg": -2.6327667236328125,
+          "horizon_max_deg": 7.61091947555542,
+          "share_of_horizon_set_closer_than_1km": 0.5715277777777777,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5179416381075201,
-            "network_receive_share": 0.522571136618407,
+            "network_two_way_share": 0.5179406138969638,
+            "network_receive_share": 0.5225700381896945,
             "station_shares": {
-              "goldstone": 0.23469594899490803,
-              "canberra": 0.2055199085751064,
-              "madrid": 0.23406811534570224
+              "goldstone": 0.23469548884233926,
+              "canberra": 0.205519441000722,
+              "madrid": 0.23406775167673657
             },
-            "longest_outage_h": 322.878515625,
-            "longest_terrain_outage_h": 320.980859375
+            "longest_outage_h": 322.87864583333334,
+            "longest_terrain_outage_h": 320.9811197916667
           }
         },
         {
           "observer_height_m": 1.0,
-          "sun_visible_share": 0.7606136490751824,
-          "sun_longest_outage_h": 198.65260416666666,
-          "sun_longest_visible_d": 27.248111979166666,
+          "sun_visible_share": 0.7201488786527208,
+          "sun_longest_outage_h": 281.06627604166664,
+          "sun_longest_visible_d": 26.035796440972224,
           "sun_events": 164,
-          "sun_events_set_by_terrain_closer_than_1km": 38,
-          "sun_time_to_set_d": 22.845461680137173,
+          "sun_events_set_by_terrain_closer_than_1km": 49,
+          "sun_time_to_set_d": 22.845374874581616,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-07T01:29:50.390Z",
-          "earth_visible_share": 0.5244229464133037,
-          "earth_longest_outage_h": 334.15703125,
+          "first_sun_set_utc": "2026-12-06T14:01:40.078Z",
+          "earth_visible_share": 0.5244218034536974,
+          "earth_longest_outage_h": 334.1578125,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.777487504789951,
+          "earth_time_to_set_d": 13.777471228748285,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.6334261894226074,
-          "horizon_max_deg": 3.1613452434539795,
-          "share_of_horizon_set_closer_than_1km": 0.2520833333333333,
+          "horizon_min_deg": -2.6333913803100586,
+          "horizon_max_deg": 3.5613300800323486,
+          "share_of_horizon_set_closer_than_1km": 0.33402777777777776,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5179599180394057,
-            "network_receive_share": 0.5225906559935021,
+            "network_two_way_share": 0.5179588938288494,
+            "network_receive_share": 0.5225895649866051,
             "station_shares": {
-              "goldstone": 0.23470407588301795,
-              "canberra": 0.2055285624121257,
-              "madrid": 0.23407437935809014
+              "goldstone": 0.23470363057408042,
+              "canberra": 0.20552807999411005,
+              "madrid": 0.23407403053275574
             },
-            "longest_outage_h": 322.875390625,
-            "longest_terrain_outage_h": 320.97565104166665
+            "longest_outage_h": 322.8756510416667,
+            "longest_terrain_outage_h": 320.9759114583333
           }
         },
         {
           "observer_height_m": 2.0,
-          "sun_visible_share": 0.7803102422836867,
-          "sun_longest_outage_h": 188.29830729166667,
-          "sun_longest_visible_d": 27.377381727430556,
-          "sun_events": 174,
-          "sun_events_set_by_terrain_closer_than_1km": 44,
-          "sun_time_to_set_d": 22.847024180137172,
+          "sun_visible_share": 0.7692747000992742,
+          "sun_longest_outage_h": 191.55989583333334,
+          "sun_longest_visible_d": 27.381342230902778,
+          "sun_events": 178,
+          "sun_events_set_by_terrain_closer_than_1km": 49,
+          "sun_time_to_set_d": 22.846937374581618,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-07T02:46:56.953Z",
-          "earth_visible_share": 0.5244438907769988,
-          "earth_longest_outage_h": 334.14453125,
+          "first_sun_set_utc": "2026-12-07T02:03:08.203Z",
+          "earth_visible_share": 0.5244427107083144,
+          "earth_longest_outage_h": 334.1451822916667,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.777737070762173,
+          "earth_time_to_set_d": 13.777726220067729,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.6340508460998535,
-          "horizon_max_deg": 3.066570281982422,
-          "share_of_horizon_set_closer_than_1km": 0.22083333333333333,
+          "horizon_min_deg": -2.6340157985687256,
+          "horizon_max_deg": 3.172004461288452,
+          "share_of_horizon_set_closer_than_1km": 0.2152777777777778,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5179781757058444,
-            "network_receive_share": 0.5226101531031502,
+            "network_two_way_share": 0.5179771886043661,
+            "network_receive_share": 0.5226090992053314,
             "station_shares": {
-              "goldstone": 0.2347122473020216,
-              "canberra": 0.2055371791400669,
-              "madrid": 0.23408064337047804
+              "goldstone": 0.23471177972763718,
+              "canberra": 0.20553672640931372,
+              "madrid": 0.23408030196695925
             },
-            "longest_outage_h": 322.8723958333333,
-            "longest_terrain_outage_h": 320.97044270833334
+            "longest_outage_h": 322.8725260416667,
+            "longest_terrain_outage_h": 320.970703125
           }
         },
         {
           "observer_height_m": 5.0,
-          "sun_visible_share": 0.8060209850352447,
-          "sun_longest_outage_h": 167.790625,
-          "sun_longest_visible_d": 27.636051432291666,
-          "sun_events": 172,
-          "sun_events_set_by_terrain_closer_than_1km": 42,
-          "sun_time_to_set_d": 22.851722530831616,
+          "sun_visible_share": 0.801615350749069,
+          "sun_longest_outage_h": 177.26731770833334,
+          "sun_longest_visible_d": 27.64040798611111,
+          "sun_events": 176,
+          "sun_events_set_by_terrain_closer_than_1km": 46,
+          "sun_time_to_set_d": 22.85163572527606,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-07T06:23:52.734Z",
-          "earth_visible_share": 0.5245067535553466,
-          "earth_longest_outage_h": 334.106640625,
+          "first_sun_set_utc": "2026-12-07T05:34:42.421Z",
+          "earth_visible_share": 0.5245055437993996,
+          "earth_longest_outage_h": 334.10729166666664,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.778491194026062,
+          "earth_time_to_set_d": 13.778480343331617,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.6359243392944336,
-          "horizon_max_deg": 2.7821474075317383,
-          "share_of_horizon_set_closer_than_1km": 0.1840277777777778,
+          "horizon_min_deg": -2.6358895301818848,
+          "horizon_max_deg": 2.839728355407715,
+          "share_of_horizon_set_closer_than_1km": 0.2,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5180328893306354,
-            "network_receive_share": 0.5226686073230165,
+            "network_two_way_share": 0.518031865120079,
+            "network_receive_share": 0.5226675014724882,
             "station_shares": {
-              "goldstone": 0.2347367244499544,
-              "canberra": 0.20556301448025915,
-              "madrid": 0.23409944282945735
+              "goldstone": 0.23473626429738562,
+              "canberra": 0.20556250979679663,
+              "madrid": 0.23409909400412296
             },
-            "longest_outage_h": 322.86315104166664,
-            "longest_terrain_outage_h": 320.95520833333336
+            "longest_outage_h": 322.86328125,
+            "longest_terrain_outage_h": 320.95546875
           }
         },
         {
           "observer_height_m": 10.0,
-          "sun_visible_share": 0.8315065127916477,
-          "sun_longest_outage_h": 133.98046875,
-          "sun_longest_visible_d": 28.2279296875,
+          "sun_visible_share": 0.8313347571344429,
+          "sun_longest_outage_h": 136.42161458333334,
+          "sun_longest_visible_d": 28.229318576388888,
           "sun_events": 172,
           "sun_events_set_by_terrain_closer_than_1km": 42,
-          "sun_time_to_set_d": 22.85961641103995,
+          "sun_time_to_set_d": 22.85949705340106,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-07T15:13:11.953Z",
-          "earth_visible_share": 0.5246114531083751,
-          "earth_longest_outage_h": 334.0436197916667,
+          "first_sun_set_utc": "2026-12-07T14:07:39.609Z",
+          "earth_visible_share": 0.5246102581960594,
+          "earth_longest_outage_h": 334.0442708333333,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.779749874581617,
+          "earth_time_to_set_d": 13.779739023887172,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.639047145843506,
-          "horizon_max_deg": 2.3097751140594482,
-          "share_of_horizon_set_closer_than_1km": 0.1284722222222222,
+          "horizon_min_deg": -2.639012098312378,
+          "horizon_max_deg": 2.368530511856079,
+          "share_of_horizon_set_closer_than_1km": 0.13472222222222222,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5181271983417882,
-            "network_receive_share": 0.5227659518567601,
+            "network_two_way_share": 0.5181261667094164,
+            "network_receive_share": 0.5227648831153101,
             "station_shares": {
-              "goldstone": 0.23478105495468538,
-              "canberra": 0.20560590515275878,
-              "madrid": 0.23413070351687187
+              "goldstone": 0.23478055027122283,
+              "canberra": 0.20560543015655874,
+              "madrid": 0.23413036953516872
             },
-            "longest_outage_h": 322.84778645833336,
-            "longest_terrain_outage_h": 320.92955729166664
+            "longest_outage_h": 322.84791666666666,
+            "longest_terrain_outage_h": 320.92981770833336
           }
         },
         {
           "observer_height_m": 20.0,
-          "sun_visible_share": 0.8628759891795865,
-          "sun_longest_outage_h": 126.43893229166666,
-          "sun_longest_visible_d": 117.17354600694445,
-          "sun_events": 162,
-          "sun_events_set_by_terrain_closer_than_1km": 30,
-          "sun_time_to_set_d": 22.881051957914952,
+          "sun_visible_share": 0.8625657498646261,
+          "sun_longest_outage_h": 125.54544270833334,
+          "sun_longest_visible_d": 117.09512803819445,
+          "sun_events": 170,
+          "sun_events_set_by_terrain_closer_than_1km": 38,
+          "sun_time_to_set_d": 22.880943450970506,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-01-07T04:00:22.733Z",
-          "earth_visible_share": 0.5248208819016947,
-          "earth_longest_outage_h": 333.9173177083333,
+          "first_sun_set_utc": "2027-01-06T22:16:00.702Z",
+          "earth_visible_share": 0.5248196944111947,
+          "earth_longest_outage_h": 333.91809895833336,
           "earth_events": 54,
           "earth_visible_at_start": false,
-          "earth_time_to_set_d": 13.78227266103995,
+          "earth_time_to_set_d": 13.782256384998284,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.6452925205230713,
-          "horizon_max_deg": 1.4148799180984497,
+          "horizon_min_deg": -2.6452574729919434,
+          "horizon_max_deg": 1.4377046823501587,
           "share_of_horizon_set_closer_than_1km": 0.10277777777777777,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5183219690492477,
-            "network_receive_share": 0.5229607151424038,
+            "network_two_way_share": 0.5183208780423506,
+            "network_receive_share": 0.5229596686664006,
             "station_shares": {
-              "goldstone": 0.2348690257352941,
-              "canberra": 0.2056937794497644,
-              "madrid": 0.23419316551717587
+              "goldstone": 0.23486849878638472,
+              "canberra": 0.20569331929719561,
+              "madrid": 0.23419283895728835
             },
-            "longest_outage_h": 322.8170572916667,
-            "longest_terrain_outage_h": 320.8782552083333
+            "longest_outage_h": 322.8171875,
+            "longest_terrain_outage_h": 320.878515625
           }
         }
       ],
@@ -428,62 +457,62 @@
         "observer_height_m": 2.0,
         "terrain_against_smooth_sphere": {
           "sun": {
-            "visible_h": 13689.762890625,
+            "visible_h": 13496.155338541666,
             "visible_over_a_smooth_sphere_h": 10056.068619791668,
-            "lost_to_terrain_h": 1090.562890625,
-            "gained_from_terrain_h": 4724.257161458333
+            "lost_to_terrain_h": 1212.4932291666667,
+            "gained_from_terrain_h": 4652.579947916666
           },
           "earth": {
-            "visible_h": 9200.843619791667,
+            "visible_h": 9200.822916666666,
             "visible_over_a_smooth_sphere_h": 8625.285286458333,
             "lost_to_terrain_h": 0.0,
-            "gained_from_terrain_h": 575.5583333333333
+            "gained_from_terrain_h": 575.5376302083333
           }
         },
         "largest_obstacles_of_the_sun": [
           {
-            "lost_h": 383.725,
-            "share_of_lost": 0.351859579395818,
-            "peak_azimuth_deg": 349.5,
-            "peak_elevation_deg": 2.811374611193121,
-            "peak_distance_m": 677.3393726663649,
+            "lost_h": 372.76341145833334,
+            "share_of_lost": 0.3074354581876961,
+            "peak_azimuth_deg": 350.5,
+            "peak_elevation_deg": 2.842237806632276,
+            "peak_distance_m": 672.8731904635774,
             "near_field": true
           },
           {
-            "lost_h": 240.0,
-            "share_of_lost": 0.22006983922078657,
-            "peak_azimuth_deg": 344.0,
-            "peak_elevation_deg": 3.066570385328356,
-            "peak_distance_m": 602.1610950711191,
+            "lost_h": 164.843359375,
+            "share_of_lost": 0.13595404527602603,
+            "peak_azimuth_deg": 330.5,
+            "peak_elevation_deg": 1.8456547133669878,
+            "peak_distance_m": 61.060966466330086,
             "near_field": true
           },
           {
-            "lost_h": 214.16197916666667,
-            "share_of_lost": 0.1963774680100574,
-            "peak_azimuth_deg": 337.5,
-            "peak_elevation_deg": 3.021281849756594,
-            "peak_distance_m": 414.1042347094981,
+            "lost_h": 143.0,
+            "share_of_lost": 0.11793880292286855,
+            "peak_azimuth_deg": 344.75,
+            "peak_elevation_deg": 3.1222668497805657,
+            "peak_distance_m": 606.115769213006,
             "near_field": true
           }
         ],
-        "obstacle_count": 39,
+        "obstacle_count": 45,
         "lunar_days": {
           "periods": 25,
           "complete": 23,
           "sun_visible_h_least_median_most": [
-            357.17174479166664,
-            570.5502604166667,
-            657.0571614583333
+            353.1783854166667,
+            555.3684895833334,
+            657.1522135416667
           ],
           "sun_longest_outage_h_least_median_most": [
-            49.297822430630525,
-            66.46722136954466,
-            120.71791441751851
+            50.137275555630524,
+            67.754851577878,
+            120.71934670918517
           ],
           "earth_visible_h_least_median_most": [
-            321.45989583333335,
-            376.71283360173305,
-            412.8509858140349
+            321.45911458333336,
+            376.71205235173306,
+            412.8503347723683
           ]
         },
         "landing_windows": [
@@ -491,69 +520,89 @@
             "requirement_id": "example-standard",
             "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
             "window_count": 15,
-            "feasible_fraction": 0.19780680524087058,
-            "longest_window_d": 13.235991753472222,
-            "median_window_d": 10.860904947916667,
+            "feasible_fraction": 0.1957974599875076,
+            "longest_window_d": 13.235888671875,
+            "median_window_d": 10.643538411458334,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.3702392409010618
+              "wait_d": 0.37025551694272846
             }
           },
           {
             "requirement_id": "example-strict",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
             "window_count": 14,
-            "feasible_fraction": 0.1027741646629959,
-            "longest_window_d": 7.537150065104167,
-            "median_window_d": 6.016606987847222,
+            "feasible_fraction": 0.1007296562342612,
+            "longest_window_d": 7.5371337890625,
+            "median_window_d": 5.984724934895834,
             "latest_landing_utc": "2028-10-31T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.3702392409010618
+              "wait_d": 0.37025551694272846
             }
           },
           {
             "requirement_id": "example-loose",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
             "window_count": 22,
-            "feasible_fraction": 0.2794559170870383,
-            "longest_window_d": 15.622200520833333,
-            "median_window_d": 11.969357638888889,
+            "feasible_fraction": 0.27690553631820947,
+            "longest_window_d": 15.62216796875,
+            "median_window_d": 11.503838433159721,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.3702392409010618
+              "wait_d": 0.37025551694272846
             }
           }
         ],
         "uncertainty": {
-          "stated_horizon_error_deg": 0.05,
-          "stated_terrain_height_error_m": 1.0,
+          "height_error_model": "lola-two-sigma-2026-11",
+          "height_error_model_label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+          "applied_height_error_m_min_median_max": [
+            0.2290317416191101,
+            5.0,
+            5.0
+          ],
           "applied_horizon_error_deg_min_median_max": [
-            0.050290625657583174,
-            0.051727273718446286,
-            0.8045706147623702
+            0.001453128287616837,
+            0.008574503460549023,
+            1.316015978519517
+          ],
+          "limiting_pixels": {
+            "constrained": 0.7048611111111112,
+            "interpolated": 0.2951388888888889,
+            "unknown": 0.0
+          },
+          "band_sources": [
+            {
+              "source": "slope_class",
+              "azimuth_share": 0.78125
+            },
+            {
+              "source": "rms_map",
+              "azimuth_share": 0.21875
+            }
           ],
           "visible_h": {
             "sun": {
-              "certain": 13315.259114583334,
-              "possible": 14021.879557291666,
-              "uncertain": 706.6204427083334
+              "certain": 13321.906901041666,
+              "possible": 13689.854427083334,
+              "uncertain": 367.94752604166666
             },
             "earth": {
-              "certain": 9159.501171875,
-              "possible": 9242.134375,
-              "uncertain": 82.633203125
+              "certain": 9198.982161458332,
+              "possible": 9202.663671875,
+              "uncertain": 3.681510416666667
             }
           },
           "landing_ellipse": {
@@ -562,16 +611,16 @@
             "points": 13,
             "visible_h": {
               "sun": {
-                "centre": 13689.762890625,
-                "min": 8396.0216796875,
-                "median": 10049.580859375,
-                "max": 13943.799479166666
+                "centre": 13496.155338541666,
+                "min": 8630.863606770834,
+                "median": 10809.894986979167,
+                "max": 14059.394791666668
               },
               "earth": {
-                "centre": 9200.843619791667,
-                "min": 8981.075,
-                "median": 9199.332161458333,
-                "max": 9201.45546875
+                "centre": 9200.822916666666,
+                "min": 9193.679817708333,
+                "median": 9199.311067708333,
+                "max": 9201.725651041666
               }
             }
           }
@@ -586,36 +635,36 @@
             20.0
           ],
           "sun_visible_h": [
-            11743.5619140625,
-            13344.205859375,
-            13689.762890625,
-            14140.832161458333,
-            14587.950260416666,
-            15138.296354166667
+            8374.100520833334,
+            12634.291927083334,
+            13496.155338541666,
+            14063.539713541666,
+            14584.936979166667,
+            15132.853515625
           ],
           "sun_visible_change_h": [
             0.0,
-            1600.6439453125,
-            1946.2009765625,
-            2397.2702473958334,
-            2844.3883463541665,
-            3394.734440104167
+            4260.19140625,
+            5122.054817708334,
+            5689.439192708333,
+            6210.836458333333,
+            6758.752994791666
           ],
           "sun_longest_outage_h": [
-            276.153125,
-            198.65260416666666,
-            188.29830729166667,
-            167.790625,
-            133.98046875,
-            126.43893229166666
+            420.08098958333335,
+            281.06627604166664,
+            191.55989583333334,
+            177.26731770833334,
+            136.42161458333334,
+            125.54544270833334
           ],
           "sun_least_lunar_day_h": [
-            295.1782552083333,
-            346.6430989583333,
-            357.17174479166664,
-            377.9661458333333,
-            413.3333333333333,
-            424.1889322916667
+            173.18854166666668,
+            290.41510416666665,
+            353.1783854166667,
+            368.9752604166667,
+            412.99635416666666,
+            425.08606770833336
           ]
         }
       }
@@ -625,13 +674,13 @@
       "name": "de Gerlache crater rim crest",
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
-      "surface_height_m": 1815.1855746334436,
-      "package_id": "site-f5debe0fd2f3cdf7",
-      "content_sha256": "be4ea2c65744170a31be618c731e3520a1874657b8359b20fe7e6a435cb481cb",
+      "surface_height_m": 1815.33166308619,
+      "package_id": "site-57259df2efae3648",
+      "content_sha256": "5b0e08d7fe07794f0dab5450e57ab43c642e153329f400cc872d22aaff8d21bb",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
-      "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+      "dem_set_id": "lola:LOLA5MPP_SITE11@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
         "far_field_max_deg": 0.0,
         "far_field_open_azimuth_fraction": 0.0,
@@ -640,8 +689,8 @@
       },
       "terrain_source": {
         "at_site": {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
+          "product_id": "LOLA5MPP_SITE11",
+          "pixel_m": 5.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         },
         "resolution_class": "fine",
@@ -650,14 +699,20 @@
             "product_id": "LDEM_80S_20M",
             "pixel_m": 20.0,
             "projection": "polar stereographic on a sphere, true scale at the pole",
-            "azimuth_share": 1.0
+            "azimuth_share": 0.7909722222222222
+          },
+          {
+            "product_id": "LOLA5MPP_SITE11",
+            "pixel_m": 5.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 0.20902777777777778
           }
         ]
       },
       "timings_s": {
-        "horizon": 3.37421,
-        "timeline": 505.260304,
-        "terrain_patches": 0.431641
+        "horizon": 10.729611,
+        "timeline": 208.349269,
+        "terrain_patches": 0.137574
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -697,194 +752,194 @@
       "per_height": [
         {
           "observer_height_m": 0.0,
-          "sun_visible_share": 0.820856029245516,
-          "sun_longest_outage_h": 263.956640625,
-          "sun_longest_visible_d": 145.52568359375,
-          "sun_events": 70,
-          "sun_events_set_by_terrain_closer_than_1km": 16,
-          "sun_time_to_set_d": 30.394582773887173,
+          "sun_visible_share": 0.6294265044317146,
+          "sun_longest_outage_h": 340.344921875,
+          "sun_longest_visible_d": 21.600081380208334,
+          "sun_events": 82,
+          "sun_events_set_by_terrain_closer_than_1km": 53,
+          "sun_time_to_set_d": 3.4714056905538397,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T09:28:11.951Z",
-          "earth_visible_share": 0.5730956511722907,
-          "earth_longest_outage_h": 304.61536458333336,
+          "first_sun_set_utc": "2026-11-16T03:21:06.797Z",
+          "earth_visible_share": 0.47937591733641133,
+          "earth_longest_outage_h": 366.546875,
           "earth_events": 54,
-          "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.554060855484396,
+          "earth_visible_at_start": false,
+          "earth_time_to_set_d": 12.877232513470506,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.702406883239746,
-          "horizon_max_deg": -0.214203342795372,
-          "share_of_horizon_set_closer_than_1km": 0.24444444444444444,
+          "horizon_min_deg": -3.702467679977417,
+          "horizon_max_deg": 2.604220390319824,
+          "share_of_horizon_set_closer_than_1km": 0.4270833333333333,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5645162401200791,
-            "network_receive_share": 0.5696167493160055,
+            "network_two_way_share": 0.47276747332896335,
+            "network_receive_share": 0.47652021049456605,
             "station_shares": {
-              "goldstone": 0.2519195338624791,
-              "canberra": 0.22693303414510185,
-              "madrid": 0.2522871215467776
+              "goldstone": 0.21861237727285682,
+              "canberra": 0.18344046724188706,
+              "madrid": 0.21835367504559963
             },
-            "longest_outage_h": 296.97057291666664,
-            "longest_terrain_outage_h": 282.84375
+            "longest_outage_h": 364.4321614583333,
+            "longest_terrain_outage_h": 350.65911458333335
           }
         },
         {
           "observer_height_m": 1.0,
-          "sun_visible_share": 0.8373436371884025,
-          "sun_longest_outage_h": 256.87395833333335,
-          "sun_longest_visible_d": 172.6464789496528,
-          "sun_events": 68,
-          "sun_events_set_by_terrain_closer_than_1km": 7,
-          "sun_time_to_set_d": 30.39685056902606,
+          "sun_visible_share": 0.8377843520220588,
+          "sun_longest_outage_h": 256.87083333333334,
+          "sun_longest_visible_d": 172.97494032118055,
+          "sun_events": 70,
+          "sun_events_set_by_terrain_closer_than_1km": 9,
+          "sun_time_to_set_d": 30.39718151520662,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T09:31:27.888Z",
-          "earth_visible_share": 0.5731302590985522,
-          "earth_longest_outage_h": 304.59765625,
+          "first_sun_set_utc": "2027-02-09T09:31:56.482Z",
+          "earth_visible_share": 0.5728850348884709,
+          "earth_longest_outage_h": 304.5950520833333,
           "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.554522009998283,
+          "earth_time_to_set_d": 14.528328433609396,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.7028234004974365,
-          "horizon_max_deg": -0.21470336616039276,
-          "share_of_horizon_set_closer_than_1km": 0.17569444444444443,
+          "horizon_min_deg": -3.7028841972351074,
+          "horizon_max_deg": -0.214776411652565,
+          "share_of_horizon_set_closer_than_1km": 0.18541666666666667,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.564545192622834,
-            "network_receive_share": 0.5696470006364949,
+            "network_two_way_share": 0.5642005383488182,
+            "network_receive_share": 0.5693052631360199,
             "station_shares": {
-              "goldstone": 0.2519315794692392,
-              "canberra": 0.22694498326825885,
-              "madrid": 0.25229996870962534
+              "goldstone": 0.2517967399229556,
+              "canberra": 0.22683592710945813,
+              "madrid": 0.25218204348115214
             },
-            "longest_outage_h": 296.9662760416667,
-            "longest_terrain_outage_h": 282.82890625
+            "longest_outage_h": 296.965625,
+            "longest_terrain_outage_h": 282.8266927083333
           }
         },
         {
           "observer_height_m": 2.0,
-          "sun_visible_share": 0.8466806374924001,
-          "sun_longest_outage_h": 256.8520833333333,
-          "sun_longest_visible_d": 175.08651801215277,
+          "sun_visible_share": 0.8465447217828508,
+          "sun_longest_outage_h": 256.8489583333333,
+          "sun_longest_visible_d": 175.08685980902777,
           "sun_events": 74,
-          "sun_events_set_by_terrain_closer_than_1km": 9,
-          "sun_time_to_set_d": 30.399129214859396,
+          "sun_events_set_by_terrain_closer_than_1km": 10,
+          "sun_time_to_set_d": 30.39946016103995,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T09:34:44.763Z",
-          "earth_visible_share": 0.5731648744466294,
-          "earth_longest_outage_h": 304.57994791666664,
+          "first_sun_set_utc": "2027-02-09T09:35:13.357Z",
+          "earth_visible_share": 0.5731699287030704,
+          "earth_longest_outage_h": 304.57734375,
           "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.55497773916495,
+          "earth_time_to_set_d": 14.55504826867884,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.703239917755127,
-          "horizon_max_deg": -0.2152033895254135,
-          "share_of_horizon_set_closer_than_1km": 0.1486111111111111,
+          "horizon_min_deg": -3.703300714492798,
+          "horizon_max_deg": -0.21527643501758575,
+          "share_of_horizon_set_closer_than_1km": 0.1527777777777778,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5645731580241108,
-            "network_receive_share": 0.5696764800881593,
+            "network_two_way_share": 0.5645772029136267,
+            "network_receive_share": 0.5696807921630377,
             "station_shares": {
-              "goldstone": 0.2519436547632619,
-              "canberra": 0.22695692496960024,
-              "madrid": 0.2523118436146261
+              "goldstone": 0.2519454285771964,
+              "canberra": 0.22695865425264097,
+              "madrid": 0.25231354321040433
             },
-            "longest_outage_h": 296.96197916666665,
-            "longest_terrain_outage_h": 282.8140625
+            "longest_outage_h": 296.961328125,
+            "longest_terrain_outage_h": 282.8119791666667
           }
         },
         {
           "observer_height_m": 5.0,
-          "sun_visible_share": 0.8631229500945242,
-          "sun_longest_outage_h": 256.7864583333333,
-          "sun_longest_visible_d": 175.0935004340278,
+          "sun_visible_share": 0.8624078062063003,
+          "sun_longest_outage_h": 256.78307291666664,
+          "sun_longest_visible_d": 175.09384223090277,
           "sun_events": 80,
           "sun_events_set_by_terrain_closer_than_1km": 7,
-          "sun_time_to_set_d": 30.40597057770662,
+          "sun_time_to_set_d": 30.406301523887173,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T09:44:35.857Z",
-          "earth_visible_share": 0.5732686685381517,
-          "earth_longest_outage_h": 304.5268229166667,
+          "first_sun_set_utc": "2027-02-09T09:45:04.451Z",
+          "earth_visible_share": 0.5732737376382239,
+          "earth_longest_outage_h": 304.52421875,
           "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.556355777359395,
+          "earth_time_to_set_d": 14.556420881526062,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.7044894695281982,
-          "horizon_max_deg": -0.21670344471931458,
-          "share_of_horizon_set_closer_than_1km": 0.08819444444444445,
+          "horizon_min_deg": -3.704550266265869,
+          "horizon_max_deg": -0.216776505112648,
+          "share_of_horizon_set_closer_than_1km": 0.08888888888888889,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5646560819700942,
-            "network_receive_share": 0.5697679539657433,
+            "network_two_way_share": 0.5646601194377945,
+            "network_receive_share": 0.5697725035387217,
             "station_shares": {
-              "goldstone": 0.25197994744167046,
-              "canberra": 0.22699269069909941,
-              "madrid": 0.2523465257590439
+              "goldstone": 0.25198177320831433,
+              "canberra": 0.22699442740395576,
+              "madrid": 0.2523481808239284
             },
-            "longest_outage_h": 296.94908854166664,
-            "longest_terrain_outage_h": 282.76979166666666
+            "longest_outage_h": 296.9485677083333,
+            "longest_terrain_outage_h": 282.76783854166666
           }
         },
         {
           "observer_height_m": 10.0,
-          "sun_visible_share": 0.881756293996523,
-          "sun_longest_outage_h": 135.3890625,
-          "sun_longest_visible_d": 175.10511610243054,
+          "sun_visible_share": 0.8814619596324479,
+          "sun_longest_outage_h": 135.385546875,
+          "sun_longest_visible_d": 175.1054470486111,
           "sun_events": 94,
           "sun_events_set_by_terrain_closer_than_1km": 10,
-          "sun_time_to_set_d": 30.43716089888717,
+          "sun_time_to_set_d": 30.43802895444273,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T10:29:30.701Z",
-          "earth_visible_share": 0.5734416339513034,
-          "earth_longest_outage_h": 304.4381510416667,
+          "first_sun_set_utc": "2027-02-09T10:30:45.701Z",
+          "earth_visible_share": 0.5734467253168225,
+          "earth_longest_outage_h": 304.435546875,
           "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.558645273887173,
+          "earth_time_to_set_d": 14.55871037805384,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.7065718173980713,
-          "horizon_max_deg": -0.21920356154441833,
-          "share_of_horizon_set_closer_than_1km": 0.05416666666666667,
+          "horizon_min_deg": -3.7066328525543213,
+          "horizon_max_deg": -0.21927660703659058,
+          "share_of_horizon_set_closer_than_1km": 0.05347222222222222,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5647940832098344,
-            "network_receive_share": 0.569931011255035,
+            "network_two_way_share": 0.5647980835684564,
+            "network_receive_share": 0.5699359319187947,
             "station_shares": {
-              "goldstone": 0.2520409473442963,
-              "canberra": 0.2270522359258626,
-              "madrid": 0.25240394834653823
+              "goldstone": 0.25204272858004634,
+              "canberra": 0.22705397263071894,
+              "madrid": 0.2524055959896071
             },
-            "longest_outage_h": 296.927734375,
-            "longest_terrain_outage_h": 282.6967447916667
+            "longest_outage_h": 296.9270833333333,
+            "longest_terrain_outage_h": 282.69453125
           }
         },
         {
           "observer_height_m": 20.0,
-          "sun_visible_share": 0.8847884099739702,
-          "sun_longest_outage_h": 135.146875,
-          "sun_longest_visible_d": 175.1298773871528,
+          "sun_visible_share": 0.8848017395548335,
+          "sun_longest_outage_h": 135.143359375,
+          "sun_longest_visible_d": 175.13024088541667,
           "sun_events": 88,
           "sun_events_set_by_terrain_closer_than_1km": 0,
-          "sun_time_to_set_d": 30.47609319055384,
+          "sun_time_to_set_d": 30.47650551694273,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-09T11:25:34.451Z",
-          "earth_visible_share": 0.5737876241521318,
-          "earth_longest_outage_h": 304.2609375,
+          "first_sun_set_utc": "2027-02-09T11:26:10.076Z",
+          "earth_visible_share": 0.5737926784085727,
+          "earth_longest_outage_h": 304.2583333333333,
           "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 14.56322426694273,
+          "earth_time_to_set_d": 14.563294796456617,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.7107369899749756,
-          "horizon_max_deg": -0.22420379519462585,
+          "horizon_min_deg": -3.7107977867126465,
+          "horizon_max_deg": -0.2242768406867981,
           "share_of_horizon_set_closer_than_1km": 0.0,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.5650938429211316,
-            "network_receive_share": 0.5702630335988562,
+            "network_two_way_share": 0.565098355385032,
+            "network_receive_share": 0.5702681843389003,
             "station_shares": {
-              "goldstone": 0.2521670217263262,
-              "canberra": 0.22717010177981076,
-              "madrid": 0.25254070272125323
+              "goldstone": 0.2521691295219638,
+              "canberra": 0.22717176426651087,
+              "madrid": 0.2525426472369471
             },
-            "longest_outage_h": 296.88489583333336,
-            "longest_terrain_outage_h": 282.55234375
+            "longest_outage_h": 296.884375,
+            "longest_terrain_outage_h": 282.550390625
           }
         }
       ],
@@ -892,37 +947,37 @@
         "observer_height_m": 2.0,
         "terrain_against_smooth_sphere": {
           "sun": {
-            "visible_h": 14854.165104166666,
+            "visible_h": 14851.780598958334,
             "visible_over_a_smooth_sphere_h": 10929.011979166668,
             "lost_to_terrain_h": 0.0,
-            "gained_from_terrain_h": 3925.153125
+            "gained_from_terrain_h": 3922.768619791667
           },
           "earth": {
-            "visible_h": 10055.604557291666,
+            "visible_h": 10055.693229166667,
             "visible_over_a_smooth_sphere_h": 9182.52890625,
             "lost_to_terrain_h": 0.0,
-            "gained_from_terrain_h": 873.0756510416667
+            "gained_from_terrain_h": 873.1643229166667
           }
         },
         "largest_obstacles_of_the_sun": [],
-        "obstacle_count": 48,
+        "obstacle_count": 51,
         "lunar_days": {
           "periods": 25,
           "complete": 23,
           "sun_visible_h_least_median_most": [
-            417.99378240939643,
-            662.864577613771,
+            417.9979490760631,
+            662.8861921971043,
             710.616532375382
           ],
           "sun_longest_outage_h_least_median_most": [
             0.0,
-            28.175911458333335,
-            256.8520833333333
+            28.165885416666665,
+            256.8489583333333
           ],
           "earth_visible_h_least_median_most": [
-            346.935546875,
-            413.1580671971043,
-            443.4530691473683
+            346.9380208333333,
+            413.1617130304376,
+            443.4564545640349
           ]
         },
         "landing_windows": [
@@ -930,14 +985,14 @@
             "requirement_id": "example-standard",
             "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
             "window_count": 21,
-            "feasible_fraction": 0.33192879554619814,
-            "longest_window_d": 16.726725260416668,
-            "median_window_d": 14.478922526041666,
+            "feasible_fraction": 0.3320507211332934,
+            "longest_window_d": 16.72683376736111,
+            "median_window_d": 14.47903103298611,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": true,
-              "slip_tolerance_d": 14.55497773916495,
+              "slip_tolerance_d": 14.55504826867884,
               "slip_tolerance_is_lower_bound": false,
               "wait_d": 0.0
             }
@@ -946,14 +1001,14 @@
             "requirement_id": "example-strict",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
             "window_count": 17,
-            "feasible_fraction": 0.1698469000307512,
-            "longest_window_d": 9.726725260416666,
-            "median_window_d": 8.467594401041667,
+            "feasible_fraction": 0.1698511298342341,
+            "longest_window_d": 9.72683376736111,
+            "median_window_d": 8.467751736111111,
             "latest_landing_utc": "2028-10-31T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": true,
-              "slip_tolerance_d": 7.554977739164951,
+              "slip_tolerance_d": 7.555048268678839,
               "slip_tolerance_is_lower_bound": false,
               "wait_d": 0.0
             }
@@ -962,37 +1017,57 @@
             "requirement_id": "example-loose",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
             "window_count": 26,
-            "feasible_fraction": 0.39607834973257716,
-            "longest_window_d": 16.726725260416668,
-            "median_window_d": 14.128480360243056,
+            "feasible_fraction": 0.39620225694444444,
+            "longest_window_d": 16.72683376736111,
+            "median_window_d": 14.1286376953125,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": true,
-              "slip_tolerance_d": 14.55497773916495,
+              "slip_tolerance_d": 14.55504826867884,
               "slip_tolerance_is_lower_bound": false,
               "wait_d": 0.0
             }
           }
         ],
         "uncertainty": {
-          "stated_horizon_error_deg": 0.05,
-          "stated_terrain_height_error_m": 1.0,
+          "height_error_model": "lola-two-sigma-2026-11",
+          "height_error_model_label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+          "applied_height_error_m_min_median_max": [
+            0.2090369462966919,
+            5.0,
+            5.0
+          ],
           "applied_horizon_error_deg_min_median_max": [
-            0.050305246485626266,
-            0.05073329848358123,
-            0.47786701616830113
+            0.0015262324277836876,
+            0.003668524991765354,
+            0.30806583337578314
+          ],
+          "limiting_pixels": {
+            "constrained": 0.6333333333333333,
+            "interpolated": 0.36666666666666664,
+            "unknown": 0.0
+          },
+          "band_sources": [
+            {
+              "source": "slope_class",
+              "azimuth_share": 0.7909722222222222
+            },
+            {
+              "source": "rms_map",
+              "azimuth_share": 0.20902777777777778
+            }
           ],
           "visible_h": {
             "sun": {
-              "certain": 14634.897916666667,
-              "possible": 15092.133072916668,
-              "uncertain": 457.23515625
+              "certain": 14796.85703125,
+              "possible": 14936.58515625,
+              "uncertain": 139.728125
             },
             "earth": {
-              "certain": 10011.856119791666,
-              "possible": 10099.440625,
-              "uncertain": 87.58450520833334
+              "certain": 10052.654296875,
+              "possible": 10058.731901041667,
+              "uncertain": 6.077604166666666
             }
           },
           "landing_ellipse": {
@@ -1001,16 +1076,16 @@
             "points": 13,
             "visible_h": {
               "sun": {
-                "centre": 14854.165104166666,
+                "centre": 14851.780598958334,
                 "min": 0.0,
-                "median": 10325.594661458334,
-                "max": 14967.365104166667
+                "median": 10123.6140625,
+                "max": 14888.865234375
               },
               "earth": {
-                "centre": 10055.604557291666,
+                "centre": 10055.693229166667,
                 "min": 0.0,
-                "median": 8958.956510416667,
-                "max": 10056.420572916666
+                "median": 8536.244921875,
+                "max": 10056.318098958332
               }
             }
           }
@@ -1025,36 +1100,36 @@
             20.0
           ],
           "sun_visible_h": [
-            14401.098177083333,
-            14690.356770833334,
-            14854.165104166666,
-            15142.629036458333,
-            15469.532421875,
-            15522.727864583334
+            11042.65859375,
+            14698.088671875,
+            14851.780598958334,
+            15130.082552083333,
+            15464.368619791667,
+            15522.96171875
           ],
           "sun_visible_change_h": [
             0.0,
-            289.25859375,
-            453.0669270833333,
-            741.530859375,
-            1068.4342447916667,
-            1121.6296875
+            3655.430078125,
+            3809.122005208333,
+            4087.4239583333333,
+            4421.710026041666,
+            4480.303125
           ],
           "sun_longest_outage_h": [
-            263.956640625,
-            256.87395833333335,
-            256.8520833333333,
-            256.7864583333333,
-            135.3890625,
-            135.146875
+            340.344921875,
+            256.87083333333334,
+            256.8489583333333,
+            256.78307291666664,
+            135.385546875,
+            135.143359375
           ],
           "sun_least_lunar_day_h": [
-            410.87386053439644,
-            417.96422511772977,
-            417.99378240939643,
-            418.0823240760631,
-            455.6215167843964,
-            474.1612303260631
+            367.09078761772975,
+            417.9685219927298,
+            417.9979490760631,
+            418.08688136772975,
+            454.63948553439644,
+            474.1711261593964
           ]
         }
       }
@@ -1064,46 +1139,52 @@
       "name": "Mons Malapert (Malapert massif) summit",
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
-      "surface_height_m": 5173.498293993088,
-      "package_id": "site-29ad241e86f8307d",
-      "content_sha256": "113ba0670e2d855f4e2f114b5eebbf9717aa905d5169773ca3807f69938996c7",
+      "surface_height_m": 5172.886839634902,
+      "package_id": "site-4ae92446e8a47b0f",
+      "content_sha256": "15a0a974199635abba24369158d30c761a1b39a9511509f9c4d1a5b0dc2a0ef4",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
-      "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+      "dem_set_id": "lola:LOLA5MPP_SITE23@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
-        "far_field_max_deg": 0.471091031892759,
-        "far_field_open_azimuth_fraction": 0.05486111111111111,
+        "far_field_max_deg": 0.4710521060141559,
+        "far_field_open_azimuth_fraction": 0.05416666666666667,
         "ceiling_height_m": 7027.0,
         "shortest_reach_m": 300000.0
       },
       "terrain_source": {
         "at_site": {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
+          "product_id": "LOLA5MPP_SITE23",
+          "pixel_m": 5.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         },
         "resolution_class": "fine",
         "products": [
           {
+            "product_id": "LOLA5MPP_SITE23",
+            "pixel_m": 5.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 0.8451388888888889
+          },
+          {
             "product_id": "LDEM_80S_20M",
             "pixel_m": 20.0,
             "projection": "polar stereographic on a sphere, true scale at the pole",
-            "azimuth_share": 1.0
+            "azimuth_share": 0.15486111111111112
           }
         ]
       },
       "timings_s": {
-        "horizon": 2.94093,
-        "timeline": 427.503126,
-        "terrain_patches": 0.431575
+        "horizon": 11.821384,
+        "timeline": 207.755044,
+        "terrain_patches": 0.126416
       },
       "sun_centre_elevation_range_deg": [
         -5.556787014007568,
         5.586170673370361
       ],
       "earth_centre_elevation_range_deg": [
-        -3.1039981842041016,
+        -3.1039979457855225,
         10.594463348388672
       ],
       "default_height_index": 2,
@@ -1136,191 +1217,191 @@
       "per_height": [
         {
           "observer_height_m": 0.0,
-          "sun_visible_share": 0.6077214491659066,
-          "sun_longest_outage_h": 369.573046875,
-          "sun_longest_visible_d": 21.523670789930556,
+          "sun_visible_share": 0.49493110031682247,
+          "sun_longest_outage_h": 473.72252604166664,
+          "sun_longest_visible_d": 19.31301540798611,
           "sun_events": 50,
           "sun_events_set_by_terrain_closer_than_1km": 50,
-          "sun_time_to_set_d": 22.334941931873285,
+          "sun_time_to_set_d": 20.694734683609393,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-06T03:30:17.578Z",
-          "earth_visible_share": 0.7891489901283915,
-          "earth_longest_outage_h": 158.69270833333334,
-          "earth_events": 53,
+          "first_sun_set_utc": "2026-12-04T06:02:27.890Z",
+          "earth_visible_share": 0.6946811929410814,
+          "earth_longest_outage_h": 221.31979166666667,
+          "earth_events": 54,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 17.163240542984393,
+          "earth_time_to_set_d": 15.966398095067728,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.189234972000122,
-          "horizon_max_deg": 0.004543060902506113,
-          "share_of_horizon_set_closer_than_1km": 0.9722222222222222,
+          "horizon_min_deg": -0.4875808358192444,
+          "horizon_max_deg": 1.6235474348068237,
+          "share_of_horizon_set_closer_than_1km": 1.0,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.7729561618585177,
-            "network_receive_share": 0.7853670629619338,
+            "network_two_way_share": 0.6825819561412259,
+            "network_receive_share": 0.691047271621827,
             "station_shares": {
-              "goldstone": 0.3273777382046569,
-              "canberra": 0.33222022798036366,
-              "madrid": 0.32376055679054566
+              "goldstone": 0.29659432919849144,
+              "canberra": 0.28336043780399756,
+              "madrid": 0.2949617004626463
             },
-            "longest_outage_h": 144.12174479166666,
-            "longest_terrain_outage_h": 132.7234375
+            "longest_outage_h": 213.62486979166667,
+            "longest_terrain_outage_h": 202.769140625
           }
         },
         {
           "observer_height_m": 1.0,
-          "sun_visible_share": 0.6756208422988866,
-          "sun_longest_outage_h": 343.9427083333333,
-          "sun_longest_visible_d": 25.236235894097224,
-          "sun_events": 54,
-          "sun_events_set_by_terrain_closer_than_1km": 35,
-          "sun_time_to_set_d": 22.86186250478995,
+          "sun_visible_share": 0.6416105094987365,
+          "sun_longest_outage_h": 356.19036458333335,
+          "sun_longest_visible_d": 23.13132595486111,
+          "sun_events": 53,
+          "sun_events_set_by_terrain_closer_than_1km": 41,
+          "sun_time_to_set_d": 22.56691350305384,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-07T16:14:14.765Z",
-          "earth_visible_share": 0.8063782823721786,
-          "earth_longest_outage_h": 147.357421875,
+          "first_sun_set_utc": "2026-12-06T08:17:09.140Z",
+          "earth_visible_share": 0.7874920623681886,
+          "earth_longest_outage_h": 163.11875,
           "earth_events": 53,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 17.28525117666495,
+          "earth_time_to_set_d": 17.22682561242884,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.575415849685669,
-          "horizon_max_deg": -0.07124921679496765,
-          "share_of_horizon_set_closer_than_1km": 0.78125,
+          "horizon_min_deg": -2.2106316089630127,
+          "horizon_max_deg": -0.07074114680290222,
+          "share_of_horizon_set_closer_than_1km": 0.90625,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.7891952799924475,
-            "network_receive_share": 0.802195740441889,
+            "network_two_way_share": 0.7713469489509709,
+            "network_receive_share": 0.7837796182396166,
             "station_shares": {
-              "goldstone": 0.33253072705887105,
-              "canberra": 0.34141510051513335,
-              "madrid": 0.32889015950372397
+              "goldstone": 0.3262771386110161,
+              "canberra": 0.3313759964529659,
+              "madrid": 0.32301962209302326
             },
-            "longest_outage_h": 128.95794270833332,
-            "longest_terrain_outage_h": 111.89544270833333
+            "longest_outage_h": 143.621875,
+            "longest_terrain_outage_h": 133.823828125
           }
         },
         {
           "observer_height_m": 2.0,
-          "sun_visible_share": 0.7246139097293471,
-          "sun_longest_outage_h": 329.8177083333333,
-          "sun_longest_visible_d": 55.89682074652778,
-          "sun_events": 66,
+          "sun_visible_share": 0.6865775202704628,
+          "sun_longest_outage_h": 340.20091145833334,
+          "sun_longest_visible_d": 25.800797526041666,
+          "sun_events": 62,
           "sun_events_set_by_terrain_closer_than_1km": 43,
-          "sun_time_to_set_d": 23.14028589888717,
+          "sun_time_to_set_d": 23.060365108956617,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2026-12-08T16:39:47.578Z",
-          "earth_visible_share": 0.8157823016712741,
-          "earth_longest_outage_h": 141.584375,
+          "first_sun_set_utc": "2026-12-07T18:00:03.515Z",
+          "earth_visible_share": 0.8090531418326778,
+          "earth_longest_outage_h": 145.97760416666668,
           "earth_events": 53,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 17.40343694055384,
+          "earth_time_to_set_d": 17.337258555137172,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -2.7102231979370117,
-          "horizon_max_deg": -0.07208012789487839,
-          "share_of_horizon_set_closer_than_1km": 0.7041666666666667,
+          "horizon_min_deg": -2.6344051361083984,
+          "horizon_max_deg": -0.07157206535339355,
+          "share_of_horizon_set_closer_than_1km": 0.75625,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.7971164502168357,
-            "network_receive_share": 0.8104202031618122,
+            "network_two_way_share": 0.7919617840322902,
+            "network_receive_share": 0.8050259162379826,
             "station_shares": {
-              "goldstone": 0.33501128338629543,
-              "canberra": 0.34636237890565624,
-              "madrid": 0.33127614705644853
+              "goldstone": 0.33345878799375855,
+              "canberra": 0.34299461131654696,
+              "madrid": 0.32975589945280437
             },
-            "longest_outage_h": 118.901171875,
-            "longest_terrain_outage_h": 109.23580729166666
+            "longest_outage_h": 128.38580729166668,
+            "longest_terrain_outage_h": 111.22421875
           }
         },
         {
           "observer_height_m": 5.0,
-          "sun_visible_share": 0.797007375503496,
-          "sun_longest_outage_h": 306.5201822916667,
-          "sun_longest_visible_d": 142.68199869791667,
-          "sun_events": 44,
-          "sun_events_set_by_terrain_closer_than_1km": 22,
-          "sun_time_to_set_d": 25.23441567319273,
+          "sun_visible_share": 0.7844142465610275,
+          "sun_longest_outage_h": 312.1059895833333,
+          "sun_longest_visible_d": 116.05802408854167,
+          "sun_events": 62,
+          "sun_events_set_by_terrain_closer_than_1km": 38,
+          "sun_time_to_set_d": 24.603708207914952,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-04T05:37:33.513Z",
-          "earth_visible_share": 0.8453918354981285,
-          "earth_longest_outage_h": 122.82604166666667,
+          "first_sun_set_utc": "2027-02-03T14:29:20.388Z",
+          "earth_visible_share": 0.8375210965109154,
+          "earth_longest_outage_h": 128.209765625,
           "earth_events": 53,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 17.79028047353995,
+          "earth_time_to_set_d": 17.694040239164952,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -3.517719268798828,
-          "horizon_max_deg": -0.07457286864519119,
-          "share_of_horizon_set_closer_than_1km": 0.6541666666666667,
+          "horizon_min_deg": -3.2496094703674316,
+          "horizon_max_deg": -0.07406479865312576,
+          "share_of_horizon_set_closer_than_1km": 0.6659722222222222,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.8276865080001234,
-            "network_receive_share": 0.8427087229786536,
+            "network_two_way_share": 0.8194477360196744,
+            "network_receive_share": 0.8340651800176223,
             "station_shares": {
-              "goldstone": 0.3431861164251311,
-              "canberra": 0.36609697923197865,
-              "madrid": 0.33859501467738257
+              "goldstone": 0.34135883573087666,
+              "canberra": 0.36012916408387485,
+              "madrid": 0.3369908189171987
             },
-            "longest_outage_h": 96.50234375,
-            "longest_terrain_outage_h": 85.523828125
+            "longest_outage_h": 97.525,
+            "longest_terrain_outage_h": 87.44934895833333
           }
         },
         {
           "observer_height_m": 10.0,
-          "sun_visible_share": 0.8476216049646603,
-          "sun_longest_outage_h": 267.5807291666667,
-          "sun_longest_visible_d": 173.59090711805555,
-          "sun_events": 58,
-          "sun_events_set_by_terrain_closer_than_1km": 15,
-          "sun_time_to_set_d": 26.865155690553838,
+          "sun_visible_share": 0.8413030051228341,
+          "sun_longest_outage_h": 270.42421875,
+          "sun_longest_visible_d": 170.37937825520834,
+          "sun_events": 68,
+          "sun_events_set_by_terrain_closer_than_1km": 32,
+          "sun_time_to_set_d": 26.864938676664952,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-05T20:45:49.451Z",
-          "earth_visible_share": 0.912257325183586,
-          "earth_longest_outage_h": 83.825,
+          "first_sun_set_utc": "2027-02-05T20:45:30.701Z",
+          "earth_visible_share": 0.8952290676596463,
+          "earth_longest_outage_h": 92.388671875,
           "earth_events": 53,
           "earth_visible_at_start": true,
-          "earth_time_to_set_d": 18.579549136734396,
+          "earth_time_to_set_d": 18.403599700970506,
           "earth_time_to_set_is_lower_bound": false,
-          "horizon_min_deg": -4.494237899780273,
-          "horizon_max_deg": -0.07872743159532547,
-          "share_of_horizon_set_closer_than_1km": 0.3958333333333333,
+          "horizon_min_deg": -4.509751319885254,
+          "horizon_max_deg": -0.07821936905384064,
+          "share_of_horizon_set_closer_than_1km": 0.4791666666666667,
           "dte": {
             "relay_need_level": 2,
-            "network_two_way_share": 0.8910998477637179,
-            "network_receive_share": 0.9087898417906407,
+            "network_two_way_share": 0.8772967550634595,
+            "network_receive_share": 0.8946228055175559,
             "station_shares": {
-              "goldstone": 0.35833249095725983,
-              "canberra": 0.40833056499610504,
-              "madrid": 0.3523921699251406
+              "goldstone": 0.3553263290690549,
+              "canberra": 0.3988397846723476,
+              "madrid": 0.34961465933272534
             },
-            "longest_outage_h": 22.482682291666666,
-            "longest_terrain_outage_h": 12.069270833333333
+            "longest_outage_h": 23.741666666666667,
+            "longest_terrain_outage_h": 14.404817708333333
           }
         },
         {
           "observer_height_m": 20.0,
-          "sun_visible_share": 0.8619219073591161,
-          "sun_longest_outage_h": 260.573828125,
-          "sun_longest_visible_d": 175.45896809895834,
+          "sun_visible_share": 0.8607375265997872,
+          "sun_longest_outage_h": 260.5774739583333,
+          "sun_longest_visible_d": 175.45807291666668,
           "sun_events": 64,
-          "sun_events_set_by_terrain_closer_than_1km": 5,
-          "sun_time_to_set_d": 26.868687591595506,
+          "sun_events_set_by_terrain_closer_than_1km": 3,
+          "sun_time_to_set_d": 26.868470577706617,
           "sun_time_to_set_is_lower_bound": false,
-          "first_sun_set_utc": "2027-02-05T20:50:54.607Z",
+          "first_sun_set_utc": "2027-02-05T20:50:35.857Z",
           "earth_visible_share": 1.0,
           "earth_longest_outage_h": 0.0,
           "earth_events": 0,
           "earth_visible_at_start": true,
           "earth_time_to_set_d": 673.9999999830885,
           "earth_time_to_set_is_lower_bound": true,
-          "horizon_min_deg": -5.069699764251709,
-          "horizon_max_deg": -0.08703655749559402,
-          "share_of_horizon_set_closer_than_1km": 0.07569444444444444,
+          "horizon_min_deg": -5.069544792175293,
+          "horizon_max_deg": -0.08652849495410919,
+          "share_of_horizon_set_closer_than_1km": 0.08541666666666667,
           "dte": {
             "relay_need_level": 1,
-            "network_two_way_share": 0.9454322584169327,
-            "network_receive_share": 0.9650659962689049,
+            "network_two_way_share": 0.9454140675468347,
+            "network_receive_share": 0.9650472784498973,
             "station_shares": {
-              "goldstone": 0.38679245234006876,
+              "goldstone": 0.3867797239262711,
               "canberra": 0.42183596124981,
-              "madrid": 0.3781125536151961
+              "madrid": 0.37810101269189844
             },
             "longest_outage_h": 12.683854166666666,
             "longest_terrain_outage_h": 0.0
@@ -1331,16 +1412,16 @@
         "observer_height_m": 2.0,
         "terrain_against_smooth_sphere": {
           "sun": {
-            "visible_h": 12712.626432291667,
+            "visible_h": 12045.316015625,
             "visible_over_a_smooth_sphere_h": 9499.4140625,
             "lost_to_terrain_h": 0.0,
-            "gained_from_terrain_h": 3213.212369791667
+            "gained_from_terrain_h": 2545.901953125
           },
           "earth": {
-            "visible_h": 14312.084700520832,
+            "visible_h": 14194.0283203125,
             "visible_over_a_smooth_sphere_h": 12339.619140625,
             "lost_to_terrain_h": 0.0,
-            "gained_from_terrain_h": 1972.4655598958334
+            "gained_from_terrain_h": 1854.4091796875
           }
         },
         "largest_obstacles_of_the_sun": [],
@@ -1349,19 +1430,19 @@
           "periods": 25,
           "complete": 23,
           "sun_visible_h_least_median_most": [
-            378.61028645833335,
-            456.7669270833333,
-            685.8139631378982
+            368.22630208333334,
+            445.312890625,
+            624.68515625
           ],
           "sun_longest_outage_h_least_median_most": [
-            22.874869791666665,
-            121.66529372354348,
-            186.9302555646499
+            40.146796774069465,
+            136.08912764022747,
+            186.93312014798323
           ],
           "earth_visible_h_least_median_most": [
-            536.8815104166666,
-            581.3791412647234,
-            603.3202566473683
+            531.8177083333334,
+            576.7771881397234,
+            598.4078868557016
           ]
         },
         "landing_windows": [
@@ -1369,69 +1450,89 @@
             "requirement_id": "example-standard",
             "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
             "window_count": 27,
-            "feasible_fraction": 0.32043021741763567,
-            "longest_window_d": 22.37006293402778,
-            "median_window_d": 7.951947699652778,
+            "feasible_fraction": 0.28628143435790016,
+            "longest_window_d": 15.322998046875,
+            "median_window_d": 7.093782552083334,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.8478217061788396
+              "wait_d": 1.681670447498284
             }
           },
           {
             "requirement_id": "example-strict",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
-            "window_count": 24,
-            "feasible_fraction": 0.21202675384753217,
-            "longest_window_d": 22.37006293402778,
-            "median_window_d": 4.609033203125,
+            "window_count": 23,
+            "feasible_fraction": 0.17095088252314813,
+            "longest_window_d": 11.322998046875,
+            "median_window_d": 4.554703776041666,
             "latest_landing_utc": "2028-10-31T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.8478217061788396
+              "wait_d": 1.681670447498284
             }
           },
           {
             "requirement_id": "example-loose",
             "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
-            "window_count": 31,
-            "feasible_fraction": 0.4504017799888851,
-            "longest_window_d": 22.37006293402778,
-            "median_window_d": 9.172672526041667,
+            "window_count": 30,
+            "feasible_fraction": 0.4218235000213748,
+            "longest_window_d": 20.322998046875,
+            "median_window_d": 10.011287434895833,
             "latest_landing_utc": "2028-11-14T00:00:00.000Z",
             "planned_landing": {
               "utc": "2027-01-10T00:00:00.000Z",
               "feasible": false,
               "slip_tolerance_d": 0.0,
               "slip_tolerance_is_lower_bound": false,
-              "wait_d": 0.8478217061788396
+              "wait_d": 1.681670447498284
             }
           }
         ],
         "uncertainty": {
-          "stated_horizon_error_deg": 0.05,
-          "stated_terrain_height_error_m": 1.0,
+          "height_error_model": "lola-two-sigma-2026-11",
+          "height_error_model_label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+          "applied_height_error_m_min_median_max": [
+            0.1887270212173462,
+            0.6008181273937225,
+            5.0
+          ],
           "applied_horizon_error_deg_min_median_max": [
-            0.05044189009510317,
-            0.23487163600788746,
-            0.759236956547989
+            0.0011816517824650623,
+            0.11155591829845526,
+            0.7790672016604228
+          ],
+          "limiting_pixels": {
+            "constrained": 0.4111111111111111,
+            "interpolated": 0.5888888888888889,
+            "unknown": 0.0
+          },
+          "band_sources": [
+            {
+              "source": "rms_map",
+              "azimuth_share": 0.8451388888888889
+            },
+            {
+              "source": "slope_class",
+              "azimuth_share": 0.15486111111111112
+            }
           ],
           "visible_h": {
             "sun": {
-              "certain": 11809.521223958332,
-              "possible": 13536.980989583333,
-              "uncertain": 1727.459765625
+              "certain": 11602.3345703125,
+              "possible": 12728.436197916666,
+              "uncertain": 1126.1016276041667
             },
             "earth": {
-              "certain": 14087.846940104168,
-              "possible": 14552.353190104166,
-              "uncertain": 464.50625
+              "certain": 14102.1720703125,
+              "possible": 14290.453841145832,
+              "uncertain": 188.28177083333333
             }
           },
           "landing_ellipse": {
@@ -1440,16 +1541,16 @@
             "points": 13,
             "visible_h": {
               "sun": {
-                "centre": 12712.626432291667,
-                "min": 9596.074479166668,
-                "median": 11067.362109375,
-                "max": 13510.05234375
+                "centre": 12045.316015625,
+                "min": 7276.708072916666,
+                "median": 11353.9626953125,
+                "max": 13489.001432291667
               },
               "earth": {
-                "centre": 14312.084700520832,
-                "min": 12279.085677083332,
-                "median": 14028.421158854168,
-                "max": 14324.235611979168
+                "centre": 14194.0283203125,
+                "min": 11717.54921875,
+                "median": 13897.171419270833,
+                "max": 14494.075716145833
               }
             }
           }
@@ -1464,39 +1565,1465 @@
             20.0
           ],
           "sun_visible_h": [
-            10661.865104166667,
-            11853.092057291668,
-            12712.626432291667,
-            13982.697395833333,
-            14870.6734375,
-            15121.557942708334
+            8683.071223958334,
+            11256.414778645832,
+            12045.316015625,
+            13761.763541666667,
+            14759.819921875,
+            15100.779166666667
           ],
           "sun_visible_change_h": [
             0.0,
-            1191.226953125,
-            2050.761328125,
-            3320.8322916666666,
-            4208.808333333333,
-            4459.692838541667
+            2573.3435546875,
+            3362.2447916666665,
+            5078.692317708334,
+            6076.748697916667,
+            6417.707942708334
           ],
           "sun_longest_outage_h": [
-            369.573046875,
-            343.9427083333333,
-            329.8177083333333,
-            306.5201822916667,
-            267.5807291666667,
-            260.573828125
+            473.72252604166664,
+            356.19036458333335,
+            340.20091145833334,
+            312.1059895833333,
+            270.42421875,
+            260.5774739583333
           ],
           "sun_least_lunar_day_h": [
-            339.48059895833336,
-            364.483984375,
-            378.61028645833335,
-            401.91184895833334,
-            440.8580729166667,
-            447.508203125
+            235.17265625,
+            352.23541666666665,
+            368.22630208333334,
+            396.32526041666665,
+            438.01380208333336,
+            447.5044270833333
           ]
         }
       }
     }
-  ]
+  ],
+  "near_field_before_after": [
+    {
+      "site_id": "shackleton-rim-crest",
+      "name": "Shackleton crater rim crest",
+      "terrain_at_site": [
+        "LDEM_80S_20M",
+        "LOLA5MPP_SITE04"
+      ],
+      "surface_height_m": [
+        1701.0723774096787,
+        1701.016555680504
+      ],
+      "horizon_set_within_1km_share": [
+        0.22083333333333333,
+        0.2152777777777778
+      ],
+      "sun_visible_share_0m": [
+        0.6693776740801699,
+        0.477319911128211
+      ],
+      "sun_visible_share_2m": [
+        0.7803102422836867,
+        0.7692747000992742
+      ],
+      "sun_visible_share_10m": [
+        0.8315065127916477,
+        0.8313347571344429
+      ],
+      "sun_longest_outage_h_2m": [
+        188.29830729166667,
+        191.55989583333334
+      ],
+      "sun_visible_h_per_lunar_day_least_median_most_2m": [
+        [
+          357.17174479166664,
+          570.5502604166667,
+          657.0571614583333
+        ],
+        [
+          353.1783854166667,
+          555.3684895833334,
+          657.1522135416667
+        ]
+      ],
+      "earth_visible_share_2m": [
+        0.5244438907769988,
+        0.5244427107083144
+      ],
+      "earth_visible_share_10m": [
+        0.5246114531083751,
+        0.5246102581960594
+      ],
+      "sun_lost_to_terrain_h_2m": [
+        1090.562890625,
+        1212.4932291666667
+      ],
+      "sun_gained_from_terrain_h_2m": [
+        4724.257161458333,
+        4652.579947916666
+      ],
+      "landing_windows_example_standard": [
+        [
+          15,
+          0.19780680524087058
+        ],
+        [
+          15,
+          0.1957974599875076
+        ]
+      ],
+      "planned_landing_feasible": [
+        false,
+        false
+      ],
+      "band_sun_certain_possible_h_2m": [
+        [
+          12559.547005208333,
+          14417.961197916668
+        ],
+        [
+          13321.906901041666,
+          13689.854427083334
+        ]
+      ],
+      "applied_horizon_error_deg_median": [
+        0.008636368529440133,
+        0.008574503460549023
+      ],
+      "landing_circle_sun_least_median_h": [
+        [
+          8396.0216796875,
+          10049.580859375
+        ],
+        [
+          8630.863606770834,
+          10809.894986979167
+        ]
+      ]
+    },
+    {
+      "site_id": "de-gerlache-rim-crest",
+      "name": "de Gerlache crater rim crest",
+      "terrain_at_site": [
+        "LDEM_80S_20M",
+        "LOLA5MPP_SITE11"
+      ],
+      "surface_height_m": [
+        1815.1855746334436,
+        1815.33166308619
+      ],
+      "horizon_set_within_1km_share": [
+        0.1486111111111111,
+        0.1527777777777778
+      ],
+      "sun_visible_share_0m": [
+        0.820856029245516,
+        0.6294265044317146
+      ],
+      "sun_visible_share_2m": [
+        0.8466806374924001,
+        0.8465447217828508
+      ],
+      "sun_visible_share_10m": [
+        0.881756293996523,
+        0.8814619596324479
+      ],
+      "sun_longest_outage_h_2m": [
+        256.8520833333333,
+        256.8489583333333
+      ],
+      "sun_visible_h_per_lunar_day_least_median_most_2m": [
+        [
+          417.99378240939643,
+          662.864577613771,
+          710.616532375382
+        ],
+        [
+          417.9979490760631,
+          662.8861921971043,
+          710.616532375382
+        ]
+      ],
+      "earth_visible_share_2m": [
+        0.5731648744466294,
+        0.5731699287030704
+      ],
+      "earth_visible_share_10m": [
+        0.5734416339513034,
+        0.5734467253168225
+      ],
+      "sun_lost_to_terrain_h_2m": [
+        0.0,
+        0.0
+      ],
+      "sun_gained_from_terrain_h_2m": [
+        3925.153125,
+        3922.768619791667
+      ],
+      "landing_windows_example_standard": [
+        [
+          21,
+          0.33192879554619814
+        ],
+        [
+          21,
+          0.3320507211332934
+        ]
+      ],
+      "planned_landing_feasible": [
+        true,
+        true
+      ],
+      "band_sun_certain_possible_h_2m": [
+        [
+          14045.218098958334,
+          15785.828385416668
+        ],
+        [
+          14796.85703125,
+          14936.58515625
+        ]
+      ],
+      "applied_horizon_error_deg_median": [
+        0.0036664924131015134,
+        0.003668524991765354
+      ],
+      "landing_circle_sun_least_median_h": [
+        [
+          0.0,
+          10325.594661458334
+        ],
+        [
+          0.0,
+          10123.6140625
+        ]
+      ]
+    },
+    {
+      "site_id": "malapert-massif-summit",
+      "name": "Mons Malapert (Malapert massif) summit",
+      "terrain_at_site": [
+        "LDEM_80S_20M",
+        "LOLA5MPP_SITE23"
+      ],
+      "surface_height_m": [
+        5173.498293993088,
+        5172.886839634902
+      ],
+      "horizon_set_within_1km_share": [
+        0.7041666666666667,
+        0.75625
+      ],
+      "sun_visible_share_0m": [
+        0.6077214491659066,
+        0.49493110031682247
+      ],
+      "sun_visible_share_2m": [
+        0.7246139097293471,
+        0.6865775202704628
+      ],
+      "sun_visible_share_10m": [
+        0.8476216049646603,
+        0.8413030051228341
+      ],
+      "sun_longest_outage_h_2m": [
+        329.8177083333333,
+        340.20091145833334
+      ],
+      "sun_visible_h_per_lunar_day_least_median_most_2m": [
+        [
+          378.61028645833335,
+          456.7669270833333,
+          685.8139631378982
+        ],
+        [
+          368.22630208333334,
+          445.312890625,
+          624.68515625
+        ]
+      ],
+      "earth_visible_share_2m": [
+        0.8157823016712741,
+        0.8090531418326778
+      ],
+      "earth_visible_share_10m": [
+        0.912257325183586,
+        0.8952290676596463
+      ],
+      "sun_lost_to_terrain_h_2m": [
+        0.0,
+        0.0
+      ],
+      "sun_gained_from_terrain_h_2m": [
+        3213.212369791667,
+        2545.901953125
+      ],
+      "landing_windows_example_standard": [
+        [
+          27,
+          0.32043021741763567
+        ],
+        [
+          27,
+          0.28628143435790016
+        ]
+      ],
+      "planned_landing_feasible": [
+        false,
+        false
+      ],
+      "band_sun_certain_possible_h_2m": [
+        [
+          10627.0013671875,
+          15588.1875
+        ],
+        [
+          11602.3345703125,
+          12728.436197916666
+        ]
+      ],
+      "applied_horizon_error_deg_median": [
+        0.924281203268316,
+        0.11155591829845526
+      ],
+      "landing_circle_sun_least_median_h": [
+        [
+          9596.074479166668,
+          11067.362109375
+        ],
+        [
+          7276.708072916666,
+          11353.9626953125
+        ]
+      ]
+    }
+  ],
+  "all_sites": [
+    {
+      "site_id": "shackleton-rim-crest",
+      "name": "Shackleton crater rim crest",
+      "category": "project_candidate",
+      "lat_deg": -89.80531,
+      "lon_deg": -154.23109,
+      "package_id": "site-ecfd86c98a703c77",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LOLA5MPP_SITE04",
+        "pixel_m": 5.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.78125
+        },
+        {
+          "product_id": "LOLA5MPP_SITE04",
+          "pixel_m": 5.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.21875
+        }
+      ],
+      "near_field": true,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": true,
+      "planned_landing_utc": "2027-01-10T00:00:00.000Z",
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.7692747000992742,
+      "earth_visible_share": 0.5244427107083144,
+      "sun_longest_outage_h": 191.55989583333334,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        353.1783854166667,
+        555.3684895833334,
+        657.1522135416667
+      ],
+      "landing_windows_example_standard": {
+        "count": 15,
+        "feasible_fraction": 0.1957974599875076
+      },
+      "size_bytes": 9561903,
+      "manifest_bytes": 5222491
+    },
+    {
+      "site_id": "de-gerlache-rim-crest",
+      "name": "de Gerlache crater rim crest",
+      "category": "project_candidate",
+      "lat_deg": -88.6641,
+      "lon_deg": -68.41044,
+      "package_id": "site-57259df2efae3648",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LOLA5MPP_SITE11",
+        "pixel_m": 5.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.7909722222222222
+        },
+        {
+          "product_id": "LOLA5MPP_SITE11",
+          "pixel_m": 5.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.20902777777777778
+        }
+      ],
+      "near_field": true,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": true,
+      "planned_landing_utc": "2027-01-10T00:00:00.000Z",
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.8465447217828508,
+      "earth_visible_share": 0.5731699287030704,
+      "sun_longest_outage_h": 256.8489583333333,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        417.9979490760631,
+        662.8861921971043,
+        710.616532375382
+      ],
+      "landing_windows_example_standard": {
+        "count": 21,
+        "feasible_fraction": 0.3320507211332934
+      },
+      "size_bytes": 8631833,
+      "manifest_bytes": 4292421
+    },
+    {
+      "site_id": "malapert-massif-summit",
+      "name": "Mons Malapert (Malapert massif) summit",
+      "category": "project_candidate",
+      "lat_deg": -85.98795,
+      "lon_deg": 2.05767,
+      "package_id": "site-4ae92446e8a47b0f",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LOLA5MPP_SITE23",
+        "pixel_m": 5.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LOLA5MPP_SITE23",
+          "pixel_m": 5.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.8451388888888889
+        },
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.15486111111111112
+        }
+      ],
+      "near_field": true,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": true,
+      "planned_landing_utc": "2027-01-10T00:00:00.000Z",
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.6865775202704628,
+      "earth_visible_share": 0.8090531418326778,
+      "sun_longest_outage_h": 340.20091145833334,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        368.22630208333334,
+        445.312890625,
+        624.68515625
+      ],
+      "landing_windows_example_standard": {
+        "count": 27,
+        "feasible_fraction": 0.28628143435790016
+      },
+      "size_bytes": 9470731,
+      "manifest_bytes": 5131319
+    },
+    {
+      "site_id": "apollo-11",
+      "name": "Apollo 11 (Lunar Module Eagle descent stage)",
+      "category": "past_landing",
+      "lat_deg": 0.67416,
+      "lon_deg": 23.47314,
+      "package_id": "site-4a8a8724cfef94c7",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5048005862046854,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 355.3645833333333,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        353.20234375,
+        354.1028645833333,
+        355.26875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16280332218279753
+      },
+      "size_bytes": 4769445,
+      "manifest_bytes": 2251533
+    },
+    {
+      "site_id": "apollo-12",
+      "name": "Apollo 12 (Lunar Module Intrepid descent stage)",
+      "category": "past_landing",
+      "lat_deg": -3.0128,
+      "lon_deg": -23.4219,
+      "package_id": "site-e80f954863cc1baf",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5070173192520709,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 353.79088541666664,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        354.5328125,
+        355.6380208333333,
+        357.1040364583333
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16502005523018315
+      },
+      "size_bytes": 4840404,
+      "manifest_bytes": 2322492
+    },
+    {
+      "site_id": "apollo-14",
+      "name": "Apollo 14 (Lunar Module Antares descent stage)",
+      "category": "past_landing",
+      "lat_deg": -3.64589,
+      "lon_deg": -17.47194,
+      "package_id": "site-48c3fbaa392cde6f",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4976716576892385,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 360.41197916666664,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        347.95989583333335,
+        349.10143229166664,
+        350.5546875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.15567439366735067
+      },
+      "size_bytes": 4749551,
+      "manifest_bytes": 2231639
+    },
+    {
+      "site_id": "apollo-15",
+      "name": "Apollo 15 (Lunar Module Falcon descent stage)",
+      "category": "past_landing",
+      "lat_deg": 26.13239,
+      "lon_deg": 3.6333,
+      "package_id": "site-db0394cd6dc1211a",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.48066127931914043,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 375.1555989583333,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        334.09739583333334,
+        337.56927083333335,
+        340.50299479166665
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.1386640152972526
+      },
+      "size_bytes": 4744220,
+      "manifest_bytes": 2226308
+    },
+    {
+      "site_id": "apollo-16",
+      "name": "Apollo 16 (Lunar Module Orion descent stage)",
+      "category": "past_landing",
+      "lat_deg": -8.9734,
+      "lon_deg": 15.5011,
+      "package_id": "site-7c68736c1e56dd2a",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5035430263432893,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 356.7721354166667,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        351.35533854166664,
+        352.8274739583333,
+        355.28619791666665
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16154576232140144
+      },
+      "size_bytes": 4780325,
+      "manifest_bytes": 2262413
+    },
+    {
+      "site_id": "apollo-17",
+      "name": "Apollo 17 (Lunar Module Challenger descent stage)",
+      "category": "past_landing",
+      "lat_deg": 20.1911,
+      "lon_deg": 30.7723,
+      "package_id": "site-87e0956c5e5d2c2d",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4851903383991678,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 370.0109375,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        339.40208333333334,
+        340.62317708333336,
+        341.666796875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.14319307437728
+      },
+      "size_bytes": 4750787,
+      "manifest_bytes": 2232875
+    },
+    {
+      "site_id": "surveyor-1",
+      "name": "Surveyor 1 lander",
+      "category": "past_landing",
+      "lat_deg": -2.4745,
+      "lon_deg": -43.3398,
+      "package_id": "site-2ddeeefbb9c3ecaf",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5053057446634177,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 355.02369791666666,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        353.485546875,
+        354.4877604166667,
+        355.76770833333336
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16330848064152986
+      },
+      "size_bytes": 4836807,
+      "manifest_bytes": 2318895
+    },
+    {
+      "site_id": "change-3",
+      "name": "Chang'e 3 lander",
+      "category": "past_landing",
+      "lat_deg": 44.1214,
+      "lon_deg": -19.5117,
+      "package_id": "site-51e1b1ac2bea1096",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5078478797950866,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 358.26015625,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        350.9049479166667,
+        356.65455729166666,
+        362.303125
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16585061577319882
+      },
+      "size_bytes": 4882638,
+      "manifest_bytes": 2364726
+    },
+    {
+      "site_id": "change-4",
+      "name": "Chang'e 4 lander",
+      "category": "past_landing",
+      "lat_deg": -45.4562,
+      "lon_deg": 177.5886,
+      "package_id": "site-e21c54b13b183746",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.48983284735284616,
+      "earth_visible_share": 0.0,
+      "sun_longest_outage_h": 364.0727864583333,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        344.04235011772977,
+        349.8374942804376,
+        356.79441705177226
+      ],
+      "landing_windows_example_standard": {
+        "count": 0,
+        "feasible_fraction": 0.0
+      },
+      "size_bytes": 2987401,
+      "manifest_bytes": 469489
+    },
+    {
+      "site_id": "change-5",
+      "name": "Chang'e 5 lander",
+      "category": "past_landing",
+      "lat_deg": 43.0576,
+      "lon_deg": -51.9161,
+      "package_id": "site-873d4a37caa4fd8e",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5073810550140598,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 358.552734375,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        350.659765625,
+        356.63177083333335,
+        361.8229166666667
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.16538379099217207
+      },
+      "size_bytes": 4910912,
+      "manifest_bytes": 2393000
+    },
+    {
+      "site_id": "change-6",
+      "name": "Chang'e 6 lander",
+      "category": "past_landing",
+      "lat_deg": -41.6383,
+      "lon_deg": -153.9857,
+      "package_id": "site-30a35951db8b717f",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4948276402070033,
+      "earth_visible_share": 0.0,
+      "sun_longest_outage_h": 360.3177083333333,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        347.7397459510631,
+        353.47199948877096,
+        360.03647434343895
+      ],
+      "landing_windows_example_standard": {
+        "count": 0,
+        "feasible_fraction": 0.0
+      },
+      "size_bytes": 3046411,
+      "manifest_bytes": 528499
+    },
+    {
+      "site_id": "chandrayaan-3",
+      "name": "Chandrayaan-3 Vikram lander",
+      "category": "past_landing",
+      "lat_deg": -69.374,
+      "lon_deg": 32.3187,
+      "package_id": "site-daf8c7af42c57228",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_60S_60M",
+        "pixel_m": 60.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_60S_60M",
+          "pixel_m": 60.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4878681072113923,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 382.26940104166664,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        325.73450520833336,
+        339.787890625,
+        357.422265625
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.1458708431895045
+      },
+      "size_bytes": 4796419,
+      "manifest_bytes": 2278507
+    },
+    {
+      "site_id": "slim",
+      "name": "SLIM lander",
+      "category": "past_landing",
+      "lat_deg": -13.316,
+      "lon_deg": 25.251,
+      "package_id": "site-552a0f91089c9ca8",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4843868600613695,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 370.3111979166667,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        337.84609375,
+        339.40234375,
+        341.93046875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.14238959603948168
+      },
+      "size_bytes": 4741050,
+      "manifest_bytes": 2223138
+    },
+    {
+      "site_id": "im-1-odysseus",
+      "name": "IM-1 Odysseus lander (CLPS)",
+      "category": "past_landing",
+      "lat_deg": -80.1276,
+      "lon_deg": 1.4367,
+      "package_id": "site-b1bac37673dfbedb",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.9263888888888889
+        },
+        {
+          "product_id": "LDEM_60S_60M",
+          "pixel_m": 60.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.07361111111111111
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4049845655922253,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 450.19830729166665,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        258.143359375,
+        277.9796875,
+        309.041796875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.06298730157033744
+      },
+      "size_bytes": 4809136,
+      "manifest_bytes": 2291224
+    },
+    {
+      "site_id": "blue-ghost-1",
+      "name": "Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)",
+      "category": "past_landing",
+      "lat_deg": 18.5622,
+      "lon_deg": 61.8102,
+      "package_id": "site-4cafdac291dfe765",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "SLDEM2015_256",
+        "pixel_m": 118.45058759433391,
+        "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "SLDEM2015_256",
+          "pixel_m": 118.45058759433391,
+          "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.5017449170953507,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 357.3334635416667,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        352.04895833333336,
+        354.27721354166664,
+        356.12669270833334
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.15974765307346292
+      },
+      "size_bytes": 4790801,
+      "manifest_bytes": 2272889
+    },
+    {
+      "site_id": "im-2-athena",
+      "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
+      "category": "past_landing",
+      "lat_deg": -84.7906,
+      "lon_deg": 29.19567,
+      "package_id": "site-3044153554de308b",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.47676795812196004,
+      "earth_visible_share": 0.8208646719498119,
+      "sun_longest_outage_h": 411.52552083333336,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        272.00182291666664,
+        328.37408854166665,
+        380.32005208333334
+      ],
+      "landing_windows_example_standard": {
+        "count": 23,
+        "feasible_fraction": 0.107312447750418
+      },
+      "size_bytes": 4906874,
+      "manifest_bytes": 2388962
+    },
+    {
+      "site_id": "artemis3-region-mons-mouton-representative",
+      "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
+      "category": "artemis_iii_candidate_region_representative",
+      "lat_deg": -84.6,
+      "lon_deg": 31.0,
+      "package_id": "site-e677cb96164c987a",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": null,
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.34018893864474087,
+      "earth_visible_share": 0.5846092176575087,
+      "sun_longest_outage_h": 548.8098958333334,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        110.24283854166667,
+        257.32981770833334,
+        298.313671875
+      ],
+      "landing_windows_example_standard": {
+        "count": 12,
+        "feasible_fraction": 0.028628547924741603
+      },
+      "size_bytes": 4498023,
+      "manifest_bytes": 1980111
+    }
+  ],
+  "size": {
+    "total_bytes": 106660547,
+    "files": 479,
+    "direction_table_bytes": 1065989,
+    "site_bytes": 105505671,
+    "pairs_bytes": 81115
+  }
 }
