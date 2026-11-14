@@ -4,8 +4,8 @@ Reads ``cases.json`` (committed before any computation and before the image of c
 downloaded) and writes ``results/validation_table.json`` and ``.md``. Our states are
 computed first and stored in ``results/our_states.json``; the image is read afterwards.
 
-Usage (from the repository root; needs the LOLA data, and for case B the browse image in
-``data/cache/lro`` or ``LSN_LRO_DIR`` and the Pillow library to read it)::
+Usage (from the repository root; needs the LOLA data, and for case B the browse image,
+which ``fetch`` stores outside the repository, and the Pillow library to read it)::
 
     python -m validation.lro_images.fetch
     python -m validation.lro_images.compare [--reuse-states]
@@ -16,7 +16,6 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
-import os
 from pathlib import Path
 
 import numpy as np
@@ -27,7 +26,6 @@ from lsncore.ephem import kernels
 from validation.landers.compare import sub_point
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parent.parent
 RESULTS = HERE / "results"
 BROWSE_NAME = "M146846913LC_pyr.tif"
 REDUCED_PIXEL_M = 20.0
@@ -38,8 +36,9 @@ EDGE_M = 1000.0
 
 
 def cache_dir() -> Path:
-    override = os.environ.get("LSN_LRO_DIR")
-    return Path(override) if override else REPO / "data" / "cache" / "lro"
+    from validation.lro_images import fetch
+
+    return fetch.cache_dir()
 
 
 def load() -> dict:
