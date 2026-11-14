@@ -1,7 +1,7 @@
 # Test data
 
 `contract-sample/packages/` is a byte-for-byte copy of `docs/contract/sample/packages/`
-from the core stream (branch `claude/core-649481`, commit `d48b5cc`, contract 0.1). It is
+from the core stream (branch `core`, commit `d48b5cc`, contract 0.1; unchanged at `core` `dc3dc90`). It is
 pinned here so the Unreal tests run from this folder alone.
 
 - Every value in it is synthetic: invented by a formula for interface testing. It describes
