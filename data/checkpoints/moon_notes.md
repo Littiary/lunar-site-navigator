@@ -11,3 +11,6 @@
 * **LDEM_128 checkpoint 1: failed with the cause identified** (`ldem128_second_source_note.md`).
 * **North-polar products** were checked against 2010 laser returns with the format's documented validity rule
   (deviation recorded in the report).
+* **LRO_ES_100 laser-return files (2, unused):** the MIT copies are the 2021 processing (PRODUCT_CREATION_TIME
+  2021-07-23, SOFTWARE_VERSION_ID 5.7); PDS holds a 2022 reprocessing (2022-08-02, 5.12) of the same orbits, so the
+  second-source hashes differ. They contain no valid ranges and are used by no analysis.

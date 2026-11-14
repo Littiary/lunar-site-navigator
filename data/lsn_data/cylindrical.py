@@ -291,6 +291,13 @@ class CylMosaic:
             levels &= set(t.levels)
         self._level_set = sorted(levels)
         self._origins = {k: [self._origin(t, k) for t in tiles] for k in self._level_set}
+        # latitude bands covered over all 360 deg by the tiles that share them: covers() answers there from latitude alone
+        bands: dict[tuple[float, float], float] = {}
+        for t in tiles:
+            key = (t.grid0.south_lat, t.grid0.north_lat)
+            bands[key] = bands.get(key, 0.0) + (t.grid0.east_lon - t.grid0.west_lon)
+        self._full_bands = [b for b, span in bands.items() if abs(span - 360.0) < 1e-9]
+        self._partial_tiles = [t for t in tiles if (t.grid0.south_lat, t.grid0.north_lat) not in self._full_bands]
 
     @staticmethod
     def _origin(t: CylDEM, k: int):
@@ -313,8 +320,17 @@ class CylMosaic:
         lat = np.asarray(lat_deg, dtype=np.float64)
         shape = np.broadcast(lon, lat).shape
         out = np.zeros(shape, dtype=bool)
-        for t in self.tiles:
-            out |= t.grid0.covers(lon, lat)
+        latb = np.broadcast_to(lat, shape)
+        for south, north in self._full_bands:  # same edge tolerance as CylGrid.covers
+            out |= (latb <= north + 1e-12) & (latb >= south - 1e-12)
+        if self._partial_tiles:
+            todo = ~out
+            if todo.any():
+                lonb = np.broadcast_to(lon, shape)
+                part = np.zeros(int(todo.sum()), dtype=bool)
+                for t in self._partial_tiles:
+                    part |= t.grid0.covers(lonb[todo], latb[todo])
+                out[todo] = part
         return out
 
     def _gather(self, gr: np.ndarray, gc: np.ndarray, k: int, statistic: str) -> np.ndarray:
