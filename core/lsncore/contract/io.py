@@ -20,7 +20,7 @@ import numpy as np
 from .. import SCIENCE_VERSION, __version__
 
 CONTRACT_NAME = "lsn-package"
-CONTRACT_VERSION = "0.8"
+CONTRACT_VERSION = "0.9"
 CONTRACT_MAJOR = 0
 
 _ID_PREFIX = {"site": "site", "direction_table": "dirtab", "site_pairs": "pairs"}

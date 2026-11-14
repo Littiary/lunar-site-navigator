@@ -59,7 +59,7 @@ azimuth, 0.13 deg for an obstacle 42 m away in another). The search was therefor
 rebuilt so that nothing is skipped without proof:
 
 1. **Lattice.** Points half a pixel apart cover the whole ray, starting one pixel from
-   the site (10 m steps for the 20 m product; 2.5 m steps in the first 200 m, where the
+   the site and never farther than 20 m (section 9) (10 m steps for the 20 m product; 2.5 m steps in the first 200 m, where the
    elevation angle is most sensitive to small relief).
 2. **Near zone.** Every lattice point out to about 4.6 km is evaluated on the finest data.
 3. **Cells with a proof.** Beyond that the lattice is grouped into cells whose length
@@ -275,3 +275,62 @@ rebuilt.
 8. **Products without overviews.** The proof in section 3 needs block-maximum overview
    levels. Without them every cell is one lattice point and the whole ray is walked: the
    result is the same, the runtime is not.
+
+## 9. Sites away from the poles
+
+Code: `MoonTerrainAdapter` in `core/lsncore/dem.py`; tests `core/tests/test_moon_terrain.py`.
+Package field: `horizon.terrain_source`, contract 0.9.
+
+The data stream's whole-Moon reader serves any latitude and longitude: a polar product
+where its square covers the place, a latitude-longitude (simple-cylindrical) product
+elsewhere (LDEM_128 with 237 m pixels, finer mosaics where installed). The horizon core
+uses it through one adapter:
+
+- **Near a pole nothing changes.** If the whole search disc of a site lies inside one
+  pole's products, the site is handed to the adapter of those products as if no other
+  product existed. The package of the Shackleton record is identical, id and content,
+  with and without the whole-Moon terrain (test).
+- **Elsewhere** the same search runs on the latitude-longitude grid. Its cells are
+  `pixel` wide north-south and `pixel * cos(latitude)` east-west; the lattice follows the
+  smaller of the two down to latitude 75 degrees. Beyond that the columns get narrower
+  than a lattice step: the lattice keeps its width there and every column line a step
+  crosses is evaluated, so the search stays complete at a higher cost per ray.
+- **The proof for skipped stretches** needs an upper bound of the surface in a
+  neighbourhood. A disc of angular radius `rho` around a point at latitude `phi` spans
+  `rho` in latitude and `asin(sin rho / cos phi)` in longitude. The 3 x 3 blocks of an
+  overview level around the block of the point bound it if the block is at least the
+  wider span plus one pixel; where no level is wide enough (close to a pole, or very
+  wide discs) the highest terrain of the product stands in.
+- **The first sample.** The search used to start one pixel from the site. On a 20 m
+  grid that is 20 m; on a 237 m grid it skipped the ground next to the site, and the
+  first run of the completeness test on a coarse synthetic grid failed for that reason
+  (0.27 degrees in the uphill azimuths). The first sample is now one pixel away but
+  never farther than 20 m. Nothing changes for the 20 m products.
+
+**Checks** (thresholds of section 5: 0.002 degrees against an exhaustive scan in 1 m
+steps, 1e-5 degrees for the reported point, 5 s per site).
+
+| Case | Measured |
+|---|---|
+| Rough synthetic latitude-longitude grid (1.9 km pixels, single-pixel spikes), four sites: at the 0/360 meridian, 300 km search with skipped stretches, latitude 84 where a step crosses several columns; 16 azimuths, three heights each | nothing missed |
+| The neighbourhood bound against 4000 sampled points in each of 180 discs (100 m to 200 km; mid latitude, across the 0/360 meridian, next to and over the pole) | never below a sampled point |
+| South-polar site through the whole-Moon terrain against the polar adapter alone | same package id and content checksum |
+| LDEM_128, five sites (26.1 N; 0.5 N on the far side; 43.3 S; 62 S at the edge of the polar square; 85 N without a polar product), 8 azimuths at 2 m, 300 km | nothing missed |
+| Runtime on LDEM_128, six heights, 1440 azimuths, 300 km | 2.6 to 2.9 s at the three mid-latitude sites; 1.4 s at 62 S (60 m polar product); 8.7 s at 85 N on the latitude-longitude grid |
+
+The LDEM_128 rows were measured on 14 November 2026 with overview levels built in a
+scratch folder, because the data stream had not built them yet; the corresponding test
+is skipped until they exist under the data root. Between 0.4 and 5.5 % of the lattice
+points beyond the near zone had to be walked.
+
+**Limits.**
+
+1. A 237 m grid holds no obstacle narrower than about 0.5 km. At the three mid-latitude
+   test sites the median distance of the limiting terrain was 1.9 to 19 km; what is
+   nearer than a few pixels is a slope of the grid, not an obstacle. Packages say so
+   (`resolution_class`, warning).
+2. Near a pole without the polar products the latitude-longitude grid is slow (8.7 s)
+   and adds nothing; the package carries a warning.
+3. Where a polar square ends, the surface changes product. The two products differ by
+   metres there; no blending is done.
+4. LDEM_128 has not been compared with an independent horizon by this stream.

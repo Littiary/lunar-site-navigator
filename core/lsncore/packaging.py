@@ -36,6 +36,7 @@ M_OBSTACLES = "horizon.obstacles"
 M_SMOOTH_SPHERE = "timeline.smooth_sphere"
 M_BLOCKING = "timeline.blocking"
 M_TERRAIN_PATCH = "terrain.patch"
+M_TERRAIN_SOURCE = "horizon.terrain_source"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
@@ -214,6 +215,8 @@ def build_site_package(
             name: _quantity(value, unit, method)
             for name, (value, unit, method) in horizon.error_bounds.items()
         }
+    if horizon.terrain_source is not None:
+        horizon_block["terrain_source"] = {**horizon.terrain_source, "method": M_TERRAIN_SOURCE}
     horizon_block["flags"] = {
         "coverage_complete": bool(horizon.coverage_complete),
         "truncated_at_data_edge": bool(horizon.truncated_at_data_edge),
