@@ -25,7 +25,7 @@ $commit = (git -C $root rev-parse --short HEAD).Trim()
 Set-Content -Path (Join-Path $staging "COPIED_FROM.txt") -Encoding ascii -Value @("source=packages/ of the repository", "repository_commit=$commit")
 $outFull = [System.IO.Path]::GetFullPath($Out)
 & "$EngineRoot\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun "-project=$project" -noP4 -platform=Win64 "-clientconfig=$Configuration" `
-    -build -cook -stage -pak -archive "-archivedirectory=$outFull" -nodebuginfo -utf8output -unattended
+    -build -cook -stage -pak -prereqs -archive "-archivedirectory=$outFull" -nodebuginfo -utf8output -unattended
 $uat = $LASTEXITCODE
 Remove-Item -Recurse -Force $staging
 if ($uat -ne 0) { Write-Host "Packaging failed with exit code $uat"; exit $uat }
