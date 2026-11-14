@@ -1,4 +1,4 @@
-# Package contract, version 0.10
+# Package contract, version 0.11
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.10"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.11"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -155,7 +155,7 @@ same package ids.
 |---|---|
 | `scenario_id`, `title`, `description` | Identification |
 | `synthetic` | `true` for scenarios that run the synthetic generator |
-| `sites[]` | `site_id` (lower-case slug), `name`, `lat_deg`, `lon_deg`; optional `landing_utc`, `notes` |
+| `sites[]` | `site_id` (lower-case slug), `name`, `lat_deg`, `lon_deg`; optional `landing_utc`, `notes`; since 0.11 optional `programme` and `category`, descriptive labels for a site list (5.2) |
 | `observer_heights_m` | Heights computed in one pass (decision 2). Default set: 0, 1, 2, 5, 10, 20 m |
 | `default_height_m` | The height viewers show first |
 | `horizon` | `azimuth_step_deg`, `max_range_m` (search radius) |
@@ -195,7 +195,16 @@ and since 0.7 `terrain_patches` (the patches that were written, finest first; ab
 | `position_km` | Ground point in the body-fixed frame. The observer at height `h` is at `position_km + up * h / 1000` |
 | `enu` | Unit vectors `east`, `north`, `up` in the body-fixed frame |
 | `dem_pixel` | Optional: layer, row and column of the site in the elevation grid |
+| `programme` | Since 0.11, optional. Text: the programme the site belongs to, for grouping a site list (for example `Apollo`, `Chang'e`, `CLPS`, `Project sites`) |
+| `category` | Since 0.11, optional. Text: what kind of entry the site is (for example `past landing`, `candidate`, `project site`) |
 | `slope_deg` | Optional |
+
+`programme` and `category` are **descriptive only**. They are copied word for word from
+the site record through the scenario into the package and the index entry; the contract
+fixes no list of values, and a reader shows them as they are and must cope with a site
+that has neither. No number depends on them. They are not part of `request` and do not
+enter the package id: the same site with another label keeps its id and gets another
+`content_sha256`. A `category` says nothing about the status of a site with any agency.
 
 ### 5.3 `horizon` (decisions 1 and 2)
 
@@ -286,6 +295,15 @@ Present only when a time window was computed.
 | `calendar` | Since 0.3. Visible time per lunar day; see 5.6 |
 | `height_trade` | Since 0.5. Visible time and longest outage per observer height; see 5.8 |
 | `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
+
+**Countdown metrics** (`<body>_visible_at_reference`, `<body>_time_to_set_s`,
+`<body>_time_to_rise_s` and the two `_is_lower_bound` flags) are counted from one
+instant per site: the site's `landing_utc` if the scenario states one inside the time
+window, otherwise the start of the window. Since 0.10 each of them carries that instant
+as `reference`: `utc`, `et_s` (TDB seconds past J2000, `time_scale` says so) and `is`
+(`planned landing of the site`, `start of the time window` or `stated reference time`).
+A reader takes the instant from this field, not from the label. Packages before 0.10
+have it in the label only; there the rule above applies, with `request.timeline.landing_utc`.
 
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
@@ -687,7 +705,8 @@ data can be moved between the sites.
 ## 7. Index
 
 `packages[]`: `kind`, `package_id`, `path`, `synthetic`, `status`; for sites also
-`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline`; for site pairs `site_ids`.
+`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline` and, since 0.11 and only where
+the site states them, `programme` and `category` (5.2); for site pairs `site_ids`.
 
 ## 8. Versioning
 
@@ -714,6 +733,13 @@ recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
 
+### 0.11 (14 November 2026)
+
+Additive; nothing that existed in 0.10 changed its meaning, name, unit or layout.
+
+- Optional descriptive labels `programme` and `category` in `sites[]` of a scenario, in `site` of a site package and in the site entries of the index (5.2, 7). They are not part of `request`: package ids do not depend on them.
+- No change to any number. A reader written for 0.10 reads 0.11 packages unchanged and finds two fields it does not know.
+
 ### 0.10 (14 November 2026)
 
 Additive; nothing that existed in 0.9 changed its meaning, name, unit or layout. The version number is compared part by part: 0.10 is newer than 0.9.
@@ -721,6 +747,7 @@ Additive; nothing that existed in 0.9 changed its meaning, name, unit or layout.
 - Scenario and site request: `uncertainty.dem_height_error_model`.
 - Site package: `horizon.obstacle_height_error_m`, `horizon.obstacle_constrained`; `terrain_quality` in every event; `dem_height_error_model`, `applied_height_error_m`, `sources`, `limiting_pixels` in `timeline.uncertainty.horizon_error`.
 - Presets: `docs/contract/presets/terrain_height_error.json`.
+- Countdown metrics carry `reference` (the instant they are counted from); section 5.4. Their values and ids are unchanged.
 - `inputs.dem.layers[]` can name a 5 m site raster when the run used the near field ([method note](../method/near_field.md)).
 
 ### 0.9 (14 November 2026)

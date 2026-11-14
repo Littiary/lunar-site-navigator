@@ -585,6 +585,7 @@ class MoonTerrainAdapter:
         self._polar = [LolaTerrain(t) for t in moon.polar]
         self._cyl = list(moon.cylindrical)
         self._cyl_levels = {id(c): [k for k in c.levels if k == 0 or c.has_level(k, "max")] for c in self._cyl}
+        self._active = list(range(len(self._polar)))  # polar products that can serve a point (all, until a site narrows it)
         self._cyl_top: dict[int, float | None] = {}
         self.max_cover_radius_m = math.inf  # a neighbourhood too wide for the overviews gets the ceiling of the layer
         pixels = [a.finest_pixel_m for a in self._polar] + [c.pixel_m(0) * 0.5 for c in self._cyl]  # east-west pixel at 60 degrees
@@ -593,6 +594,11 @@ class MoonTerrainAdapter:
         self.ceiling_height_m = None if any(t is None for t in tops) else float(max(tops))
         self._described: dict | None = None
         self._records: dict | None = None
+
+    def _polar_reach_deg(self, polar) -> float:
+        """Lowest absolute latitude a polar terrain can cover: that of the corners of its widest raster."""
+        far = max(math.hypot(max(abs(p.grid0.x_ul_m), abs(p.grid0.x_lr_m)), max(abs(p.grid0.y_ul_m), abs(p.grid0.y_lr_m))) for p in polar.products)
+        return 90.0 - math.degrees(2.0 * math.atan(far / (2.0 * polar.products[0].grid0.radius_m)))
 
     # -- one site -----------------------------------------------------------------------------
 
@@ -640,6 +646,12 @@ class MoonTerrainAdapter:
         view = copy.copy(self)
         view.finest_pixel_m = float(min(pixels))
         view.site_notes = notes
+        # polar products whose rasters the search disc cannot touch are not asked again
+        span = math.degrees(1.002 * range_m / self.reference_radius_m)
+        view._active = [
+            i for i, polar in enumerate(self._moon.polar)
+            if (lat_deg - span <= -self._polar_reach_deg(polar) if polar.pole < 0 else lat_deg + span >= self._polar_reach_deg(polar))
+        ]
         return view
 
     # -- cylindrical layers ---------------------------------------------------------------------
@@ -701,7 +713,27 @@ class MoonTerrainAdapter:
     # -- the terrain interface --------------------------------------------------------------
 
     def height_m(self, lon_deg, lat_deg) -> np.ndarray:
-        return self._moon.height_m(lon_deg, lat_deg)
+        """The reader's surface: a polar product where one covers the point, the finest mosaic
+        that covers it elsewhere. Written out here to ask each product once."""
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        shape = np.broadcast(lon, lat).shape
+        lon, lat = np.broadcast_to(lon, shape).ravel(), np.broadcast_to(lat, shape).ravel()
+        out = np.full(lon.shape, np.nan)
+        todo = np.ones(lon.shape, dtype=bool)
+        for i in self._active:
+            sel = todo & self._moon.polar[i].covers(lon, lat)
+            if sel.any():
+                out[sel] = self._polar[i].height_m(lon[sel], lat[sel])
+                todo &= ~sel
+        for c in self._cyl:
+            if not todo.any():
+                break
+            sel = todo & c.covers(lon, lat)
+            if sel.any():
+                out[sel] = c.height_m(lon[sel], lat[sel])
+                todo &= ~sel
+        return out.reshape(shape)
 
     def cover_max_m(self, lon_deg, lat_deg, radius_m) -> np.ndarray:
         lon = np.asarray(lon_deg, dtype=np.float64)
@@ -711,14 +743,34 @@ class MoonTerrainAdapter:
         lon, lat, rad = (np.broadcast_to(a, shape).ravel() for a in (lon, lat, rad))
         out = np.full(lon.shape, np.nan)
         inside = np.zeros(lon.shape, dtype=bool)  # discs that lie wholly inside one pole's products
-        for adapter in self._polar:
+        for adapter in (self._polar[i] for i in self._active):
             out = np.fmax(out, adapter.cover_bound_m(lon, lat, rad))
             inside |= adapter.contains_disc(lon, lat, rad)
         rest = np.flatnonzero(~inside)
-        if rest.size:
-            for c in self._cyl:
-                out[rest] = np.fmax(out[rest], self._cyl_bound(c, lon[rest], lat[rest], rad[rest]))
+        for c in self._cyl:  # finest first, as the reader chooses them
+            if rest.size == 0:
+                break
+            out[rest] = np.fmax(out[rest], self._cyl_bound(c, lon[rest], lat[rest], rad[rest]))
+            # A disc that lies wholly inside one tile of this mosaic is read from it alone:
+            # the coarser mosaics need not be asked.
+            rest = rest[~self._inside_one_tile(c, lon[rest], lat[rest], rad[rest])]
         return out.reshape(shape)
+
+    def _inside_one_tile(self, c, lon: np.ndarray, lat: np.ndarray, rad: np.ndarray) -> np.ndarray:
+        rho = rad / self.reference_radius_m
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ratio = np.sin(rho) / np.cos(np.radians(lat))
+            span = np.where((np.abs(lat) + np.degrees(rho) < 90.0) & (ratio < 1.0), np.degrees(np.arcsin(np.clip(ratio, 0.0, 1.0))), np.inf)
+        south, north = lat - np.degrees(rho), lat + np.degrees(rho)
+        inside = np.zeros(lon.shape, dtype=bool)
+        for tile in c.tiles:
+            g = tile.grid0
+            ok = (south >= g.south_lat) & (north <= g.north_lat)
+            if not g.is_global_in_lon:
+                east_of_edge = np.mod(lon - g.west_lon, 360.0)
+                ok &= (east_of_edge - span >= 0.0) & (east_of_edge + span <= g.east_lon - g.west_lon)
+            inside |= ok
+        return inside
 
     def crease_fractions(self, lon_deg, lat_deg) -> np.ndarray:
         """Crossings of each segment with the lines through the pixel centres of the product
@@ -730,11 +782,16 @@ class MoonTerrainAdapter:
         if lon.size < 2:
             return parts[0]
         todo = np.ones(lon.size - 1, dtype=bool)
-        for adapter, polar in zip(self._polar, self._moon.polar):
+        for adapter, polar in ((self._polar[i], self._moon.polar[i]) for i in self._active):
             sel = todo & polar.covers(lon[:-1], lat[:-1])
             if sel.any():
                 parts[0][sel] = adapter.crease_fractions(lon, lat)[sel]
                 todo &= ~sel
+        # Consecutive points of the list that belong to different rays or cells are far apart;
+        # the caller discards them. Only steps of the lattice (half a pixel) are looked at.
+        reach = math.degrees(1.5 * self.finest_pixel_m / self.reference_radius_m)
+        step_lon = (lon[1:] - lon[:-1] + 180.0) % 360.0 - 180.0
+        todo &= (np.abs(lat[1:] - lat[:-1]) <= reach) & (np.abs(step_lon) * np.cos(np.radians(lat[:-1])) <= reach)
         for c in self._cyl:
             sel = todo & c.covers(lon[:-1], lat[:-1])
             if not sel.any():

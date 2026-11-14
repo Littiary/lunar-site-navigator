@@ -319,8 +319,27 @@ steps, 1e-5 degrees for the reported point, 5 s per site).
 | Runtime on LDEM_128, six heights, 1440 azimuths, 300 km | 2.6 to 2.9 s at the three mid-latitude sites; 1.4 s at 62 S (60 m polar product); 8.7 s at 85 N on the latitude-longitude grid |
 
 The LDEM_128 rows were measured on 14 November 2026 with overview levels built in a
-scratch folder, because the data stream had not built them yet; the corresponding test
-is skipped until they exist under the data root. Between 0.4 and 5.5 % of the lattice
+scratch folder, before the data stream had built its own. Since then every product has
+them, and between 60 degrees south and north the reader serves the finer SLDEM2015
+mosaic (118 m pixels) instead of LDEM_128. The test now runs on it, and at 26.1 N
+nothing is missed. Its first runs took 7.0 and 7.7 s and failed the 5 s limit. The cause
+was the finer product together with two wastes in the terrain adapter, not the load on
+the machine alone: the search for cell boundaries took consecutive points of different
+rays for one long step and looked through up to 64 columns for each, and every tile of
+a mosaic was asked about coverage more often than needed. Both were removed; the search
+step, the overview levels and the limit were not touched. The data stream then made the
+coverage query itself cheap, and the adapter's own shortcut for it was taken out again.
+
+| Core | SLDEM2015 256, 118 m (served at 26.1 N) | LDEM_128, 237 m, alone |
+|---|---|---|
+| before (commit 595c9a4) | 9.10, 6.17, 5.52 s: best 5.52 s | 2.36, 2.29, 2.27 s: best 2.27 s |
+| after (commit bc5a1e6) | 2.65, 2.43, 2.39 s: best 2.39 s | 1.31, 1.30, 1.41 s: best 1.30 s |
+| with the data stream's faster coverage query (its commit 05f0fcd) | 1.77, 1.78, 1.62 s: best 1.62 s | 1.16, 1.15, 1.16 s: best 1.15 s |
+
+Six heights, 1440 azimuths, 300 km, three runs each after one run to read the files,
+measured on 14 November 2026 with the processors at 26 % load from other work. The
+finer product has 8.7 million lattice points beyond the near zone instead of 4.2
+million and walks 79 thousand of them instead of 16 thousand. Between 0.4 and 5.5 % of the lattice
 points beyond the near zone had to be walked.
 
 **Limits.**

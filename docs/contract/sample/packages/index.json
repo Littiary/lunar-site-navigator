@@ -1,10 +1,10 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.10"
+    "version": "0.11"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T15:59:10.367Z",
+  "generated_utc": "2026-11-14T17:14:54.790Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
@@ -16,32 +16,36 @@
     },
     {
       "kind": "site",
-      "package_id": "site-cb9180b72dd61712",
-      "path": "site/synthetic-sample-site/site-cb9180b72dd61712",
+      "package_id": "site-f1c146c44ab38509",
+      "path": "site/synthetic-sample-site/site-f1c146c44ab38509",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",
       "name": "SYNTHETIC SAMPLE SITE (not a real place)",
       "lat_deg": -88.0,
       "lon_deg": 45.0,
-      "has_timeline": true
+      "has_timeline": true,
+      "programme": "SYNTHETIC SAMPLE (invented programme)",
+      "category": "project site"
     },
     {
       "kind": "site",
-      "package_id": "site-66c621d426a584f9",
-      "path": "site/synthetic-sample-site-b/site-66c621d426a584f9",
+      "package_id": "site-c9a0531a0b71cf1f",
+      "path": "site/synthetic-sample-site-b/site-c9a0531a0b71cf1f",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site-b",
       "name": "SYNTHETIC SAMPLE SITE B (not a real place)",
       "lat_deg": -87.5,
       "lon_deg": 60.0,
-      "has_timeline": true
+      "has_timeline": true,
+      "programme": "SYNTHETIC SAMPLE (invented programme)",
+      "category": "candidate"
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-e956253f0ac4fab1",
-      "path": "site_pairs/pairs-e956253f0ac4fab1",
+      "package_id": "pairs-e2847d97406565b8",
+      "path": "site_pairs/pairs-e2847d97406565b8",
       "synthetic": true,
       "status": "ok",
       "site_ids": [

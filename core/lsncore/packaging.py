@@ -10,7 +10,7 @@ from . import SCIENCE_VERSION
 from .contract import PackageWriter
 from .geometry import site_frame
 from .results import HorizonResult, TimelineResult
-from .scenario import canonical_heights, canonical_site
+from .scenario import canonical_heights, canonical_site, site_labels
 from .terrain_patch import FRAME as PATCH_FRAME
 from .terrain_patch import NOTICE as PATCH_NOTICE
 
@@ -186,6 +186,7 @@ def build_site_package(
     }
     if horizon.dem_pixel is not None:
         site_block["dem_pixel"] = horizon.dem_pixel
+    site_block.update(site_labels(site))  # descriptive only; not part of the request
 
     default_index = 0
     if default_height_m is not None:

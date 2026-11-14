@@ -549,6 +549,79 @@ def _mark_synthetic(methods: dict) -> dict:
     return out
 
 
+def find_direction_table(roots, start_utc: str, end_utc: str, bodies=("SUN", "EARTH")) -> Path | None:
+    """A direction table under one of the package roots that can serve the window, or None.
+
+    It must come from the kernel set installed here and from this science version, have
+    the step a new table would have, not be synthetic, reach one record beyond the window
+    on both sides (as a table written for the window does) and pass the contract
+    validator. If the kernels for the orientation of the Earth are installed, a table
+    without that orientation is passed over. Among several, the shortest is taken.
+    """
+    import json
+
+    from .contract import ContractError, validate_package
+    from .contract.io import CONTRACT_VERSION
+    from .ephem import directions as ephem_directions
+    from .ephem import kernels
+    from .ephem import table as ephem_table
+    from .packaging import SCIENCE_VERSION
+
+    kernels.load()
+    start, end = float(ephem_directions.utc_to_et(start_utc)), float(ephem_directions.utc_to_et(end_utc))
+    kernel_set, earth_wanted = kernels.kernel_set_id(), kernels.stations_available()
+    major = CONTRACT_VERSION.split(".")[0]
+    candidates = []
+    for root in roots:
+        for manifest_path in sorted(Path(root).glob("direction_table/*/manifest.json")):
+            try:
+                m = json.loads(manifest_path.read_text(encoding="utf-8"))
+                grid, inputs = m["time"], m["inputs"]
+                step = float(grid["step_s"])
+                first = float(grid["start_et_s"])
+                last = first + step * (int(grid["count"]) - 1)
+                usable = (
+                    m["kind"] == "direction_table"
+                    and not m["synthetic"]
+                    and m["status"] == "ok"
+                    and str(m["contract"]["version"]).split(".")[0] == major
+                    and inputs["kernel_set_id"] == kernel_set
+                    and inputs["science_version"] == SCIENCE_VERSION
+                    and step == ephem_table.DEFAULT_STEP_S
+                    and set(bodies) <= set(m["bodies"])
+                    and first + step <= start + 1e-6
+                    and last - step >= end - 1e-6
+                    and ("earth_view" in m or not earth_wanted)
+                )
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+            if usable:
+                candidates.append((int(grid["count"]), manifest_path.parent))
+    for _, path in sorted(candidates, key=lambda item: (item[0], item[1].as_posix())):
+        try:
+            validate_package(path)
+        except ContractError:
+            continue
+        return path
+    return None
+
+
+def _adopt_table(table: Path, out_root: Path) -> Path:
+    """The table inside the package root: as it is if it lies there, otherwise a copy."""
+    import shutil
+
+    home = Path(out_root) / "direction_table" / table.name
+    if home.resolve() == table.resolve() or (home / "manifest.json").exists():
+        return home
+    home.parent.mkdir(parents=True, exist_ok=True)
+    tmp = home.parent / f".tmp-{table.name}-copy"
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    shutil.copytree(table, tmp)
+    tmp.rename(home)
+    return home
+
+
 def _site_job(scenario: dict, index: int, out_root: str, table_dir: str | None, terrain_factory, synthetic: bool, settings, inner: int = 1) -> str:
     """One site of a scenario in a worker process: its own terrain, the shared direction table."""
     one = {**scenario, "sites": [scenario["sites"][index]]}
@@ -565,10 +638,20 @@ def run_scenario(
     *,
     jobs: int = 1,
     terrain_factory=None,
+    direction_table: Path | str | None = None,
+    progress=None,
     _table_dir: str | None = None,
     _finish: bool = True,
 ) -> list[Path]:
     """Compute every site of a scenario and write the packages. Returns their directories.
+
+    direction_table: a direction-table package that covers the time window (see
+    find_direction_table). It is used instead of computing one, and copied into the
+    package root if it lies elsewhere, so that the root stays complete.
+
+    progress: called with the name of a stage when it begins ("horizon", "timeline",
+    "uncertainty", "package"), for a caller that shows what is going on. Sites computed
+    in other processes do not report.
 
     jobs: processes the run may use. Sites are computed side by side, each in its own
     process; that needs terrain_factory, a picklable callable without arguments that
@@ -610,6 +693,9 @@ def run_scenario(
             thresholds = {**DEFAULT_THRESHOLDS, **scenario.get("thresholds", {})}
             if _table_dir:  # a worker: the table was written by the process that started it
                 table_dir = Path(_table_dir)
+            elif direction_table is not None:
+                table_dir = _adopt_table(Path(direction_table), out_root)
+                written.append(table_dir)
             else:
                 table_dir = ephem_table.write_direction_table(
                     out_root, window["start_utc"], window["end_utc"], scenario_id=scenario_id
@@ -644,9 +730,11 @@ def run_scenario(
             written.extend(Path(future.result()) for future in futures)
         sites = []
 
+    tell = progress or (lambda stage: None)
     for site in sites:
         csite = canonical_site(site)
         terrain = whole_terrain.for_site(csite["lat_deg"], csite["lon_deg"], max_range) if hasattr(whole_terrain, "for_site") else whole_terrain
+        tell("horizon")
         t0 = _time.perf_counter()
         horizon = compute_horizon(terrain, csite["lat_deg"], csite["lon_deg"], heights, az_step, max_range, settings)
         t1 = _time.perf_counter()
@@ -668,6 +756,7 @@ def run_scenario(
         if table_dir is not None:
             from .ephem import directions as ephem_directions
 
+            tell("timeline")
             timeline = timeline_mod.compute_timeline(site, horizon, table_dir, window, bodies, thresholds)
             methods.update(timeline_mod.timeline_methods(table_dir, horizon_is_terrain=True))
             smooth = _smooth_sphere_windows(csite, horizon, table_dir, timeline, thresholds)
@@ -677,6 +766,7 @@ def run_scenario(
             )
             stated = scenario.get("uncertainty") or {}
             if stated:
+                tell("uncertainty")
                 default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
                 hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
                 bands, ellipse, notes, applied, quality = _uncertainty_inputs(
@@ -695,6 +785,7 @@ def run_scenario(
             add_height_trade_to_timeline(timeline, heights)
             methods.update(trade_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
         t2 = _time.perf_counter()
+        tell("package")
         patches = None
         if patch_specs:
             patches = compute_patches(terrain, csite["lat_deg"], csite["lon_deg"], horizon.surface_height_m, patch_specs)
