@@ -593,6 +593,8 @@ void ALsnHud::DrawHUD()
 		return;
 	}
 
+	// For the pitch clip: the view without its controls, with a caption that says what is shown.
+	const bool bPresentation = FParse::Param(FCommandLine::Get(), TEXT("LsnPresentation"));
 	const FLsnToolbar Toolbar = FLsnToolbar::Make(WindowX, SizeY, bComparing);
 	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
 	const bool bOverview = Pawn && Pawn->IsOverview();
@@ -734,7 +736,10 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- buttons ----------------------------------------------------------------------------
-	DrawToolbar(Toolbar, ViewX0, *Scene, LeftPawn, GameMode, Scale);
+	if (!bPresentation)
+	{
+		DrawToolbar(Toolbar, ViewX0, *Scene, LeftPawn, GameMode, Scale);
+	}
 
 	// --- below the header: horizon all round and the numbers of the whole window ------------
 	const float ContentTop = Toolbar.HeaderBottom + 0.086f * SizeY;   // below the main buttons
@@ -748,7 +753,10 @@ void ALsnHud::DrawHUD()
 	{
 		Pano.Box = FBox2D(FVector2D(0.70f * SizeX, Toolbar.HeaderBottom + 0.012f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom + 0.012f * SizeY + 0.115f * SizeY));
 	}
-	DrawPanorama(Pano, *Scene, Pawn, Scale);
+	if (!bPresentation)
+	{
+		DrawPanorama(Pano, *Scene, Pawn, Scale);
+	}
 	float RightY = Pano.Box.Max.Y + 22.0f * Scale;
 	if (P.bHasTimeline && Page == ELsnPlannerPage::Summary && !bComparing)
 	{
@@ -764,8 +772,9 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- left column: notices, what blocks the Sun or the Earth, details --------------------
-	const float ColumnWidth = (bComparing ? 0.50f : 0.66f) * SizeX - Margin;
-	float Y = ContentTop;
+	const float ColumnWidth = (bPresentation ? 0.95f : bComparing ? 0.50f : 0.66f) * SizeX - Margin;
+	// Without the main buttons the column starts right under the header.
+	float Y = bPresentation ? Toolbar.HeaderBottom + 0.014f * SizeY : ContentTop;
 	auto Notice = [&](const FString& Text)
 	{
 		Y = DrawWrapped(Text, Alert, Margin, Y, ColumnWidth, TypeM) + 4.0f * Scale;
@@ -786,7 +795,7 @@ void ALsnHud::DrawHUD()
 	{
 		Notice(FString::Printf(TEXT("warning of the package: %s"), *Warning));
 	}
-	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && Page == ELsnPlannerPage::Summary)
+	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
 	{
 		// The scene must not seem to contradict the package where the user looks: say what the dark ground is.
 		FLsnBodyAtTime SunNow;
@@ -945,7 +954,7 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- where the Sun and the Earth are when they are outside the view -----------------
-	if (Pawn && !bOverview && Page == ELsnPlannerPage::Summary)
+	if (Pawn && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
 	{
 		float IndicatorY = Layout.Zoom.Min.Y - 36.0f * Scale;
 		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
@@ -1021,6 +1030,30 @@ void ALsnHud::DrawHUD()
 
 	// --- time strips ------------------------------------------------------------------------
 	DrawStrip(Layout.Zoom, P, H, Position - Layout.ZoomHalfWidthSamples, Position + Layout.ZoomHalfWidthSamples, Position, Scale);
+	if (bPresentation)
+	{
+		// The strip of six days and one line under it; a caption across the window says what is shown.
+		DrawText(TEXT("six days around this instant   yellow: Sun visible   blue: Earth visible"), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeM);
+		FString Caption;
+		if (FParse::Value(FCommandLine::Get(), TEXT("LsnCaption="), Caption, false) && GameMode)
+		{
+			// "first|second": the second text from the moment the package gives the Sun of the left site as hidden.
+			FString First = Caption, Second;
+			Caption.Split(TEXT("|"), &First, &Second);
+			const ALsnSiteScene* LeftScene = GameMode->GetSceneOfView(0);
+			const bool bLeftSunDown = LeftScene && LeftScene->HasPackage() && LeftScene->GetSunVisibleFraction() <= 0.0;
+			const FString Text = (bLeftSunDown && !Second.IsEmpty()) ? Second : First;
+			const float CaptionScale = 1.75f * FLsnToolbar::TextScale(WindowX, SizeY);
+			float TextWidth = 0.0f, TextHeight = 0.0f;
+			GetTextSize(Text, TextWidth, TextHeight, Font, CaptionScale);
+			const float Fit = FMath::Min(1.0f, (WindowX - 60.0f) / FMath::Max(TextWidth, 1.0f));
+			const float BandTop = Layout.Zoom.Max.Y + 0.045f * SizeY, BandHeight = 0.075f * SizeY;
+			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.85f), 0.0f, BandTop, SizeX, BandHeight);
+			// Centred in the window; each view draws its part.
+			DrawText(Text, White, 0.5f * (WindowX - TextWidth * Fit) - ViewX0, BandTop + 0.5f * (BandHeight - TextHeight * Fit), Font, CaptionScale * Fit);
+		}
+		return;
+	}
 	DrawStrip(Layout.WholeRange, P, H, 0.0, P.Time.Count - 1, Position, Scale);
 	DrawText(FString::Printf(TEXT("%.0f days around the selected time   yellow: Sun visible   blue: Earth visible%s"), 2.0 * Layout.ZoomHalfWidthSamples * P.Time.StepS / 86400.0,
 		P.Uncertainty.bHasHorizonError ? TEXT("   pale: only if the horizon is lower than computed") : TEXT("")), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeS);

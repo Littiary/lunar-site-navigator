@@ -19,8 +19,11 @@ param(
     # The story: the Sun sets behind a ridge at SiteA while SiteB stays in sunlight.
     [string]$SiteA = "shackleton-rim-crest",
     [string]$SiteB = "de-gerlache-rim-crest",
-    [string]$ClipFromUtc = "2027-07-28T11:00:00Z",
-    [string]$ClipToUtc = "2027-07-29T01:00:00Z",
+    # The clip starts shortly before the Sun touches the ridge at SiteA and ends after it has set,
+    # so that a first-time viewer sees what happens within the first seconds.
+    [string]$ClipFromUtc = "2027-07-28T16:30:00Z",
+    [string]$ClipToUtc = "2027-07-28T20:00:00Z",
+    [string]$ClipCaption = "The same hour at two landing sites near the Moon's south pole: on the left the Sun is setting behind a ridge|Left: the Sun has set behind the highlighted ridge. Right: 40 km away, the Sun is still up",
     [double]$ClipSeconds = 26,
     [string]$HiddenUtc = "2027-07-29T06:00:00Z",
     [string]$BandUtc = "2027-07-28T17:00:00Z",
@@ -87,14 +90,15 @@ $compare = "-LsnCompare=$SiteA,$SiteB$rootArgument"
 if ($Only -ne "stills") {
     $file = "pitch_two_sites_sunset_1080p60.mp4"
     $story = if ($a.Obstacles) { "the blocking ridge lights up with the hours it costs" } else { "the ridge is NOT highlighted and no cost is shown, because the published packages (contract $($a.Contract)) carry no obstacles" }
-    & $record -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -FromUtc $ClipFromUtc -ToUtc $ClipToUtc -Seconds $ClipSeconds -Fps 60 -ResX 1920 -ResY 1080 -Pitch 0.5 -Fov 30 -Extra $compare | Out-Host
+    & $record -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -FromUtc $ClipFromUtc -ToUtc $ClipToUtc -Seconds $ClipSeconds -Fps 60 -ResX 1920 -ResY 1080 -Pitch 0.5 -Fov 30 -Extra "$compare -LsnPresentation -LsnCaption=`"$ClipCaption`"" | Out-Host
     if (-not (Test-Path (Join-Path $Out $file))) { throw "$file was not written" }
-    Add-Note $file "$($a.Name) (left) and $($b.Name) (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from $ClipFromUtc to $ClipToUtc in $ClipSeconds s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; $story."
+    Add-Note $file "$($a.Name) (left) and $($b.Name) (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from $ClipFromUtc to $ClipToUtc in $ClipSeconds s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; $story. Shown without the controls of the tool; the caption across the picture is part of the clip, and its second text appears when the package gives the Sun of the left site as hidden."
 }
 if ($Only -ne "clip") {
-    Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: countdowns, time strips, horizon panorama and the summary numbers of the whole window." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = $compare }
+    Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: state chips and time strip of each site, without the controls, with a caption; readable when shown small." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPresentation -LsnCaption=`"One instant, two sites: Sun, Earth and landing state of each, read from the computed packages`"" }
+    Still "still_1b_planner_with_controls.png" "The same view with the controls of the tool: the three main actions, the horizon all round and the grouped bar. Dense; meant for a close look, not for a small picture on a slide." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = $compare }
     if ($a.Obstacles) {
-        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun$rootArgument" }
+        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPresentation -LsnCaption=`"Which terrain hides the Sun, how far away it is, and how many hours of sunlight it costs`"$rootArgument" }
     } else { Skip "still_2_obstacle_highlight.png" "The obstacle that hides the Sun and the hours it costs (contract 0.2, SPEC 5.5)" }
     if ($a.Calendar) {
         Still "still_3_calendar.png" "$($a.Name) and $($b.Name) at ${HiddenUtc}: lunar-day calendar of both sites on one time axis, landing windows of the example requirement and the slip of a landing at that time." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPage=calendar" }

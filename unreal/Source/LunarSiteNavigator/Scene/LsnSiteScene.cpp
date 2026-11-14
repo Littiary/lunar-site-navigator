@@ -179,7 +179,8 @@ void ALsnSiteScene::UpdateLook()
 	// Ground close to the site that the drawing puts in its own shadow while the package gives the Sun as visible.
 	NearGroundShadeShare = 0.0;
 	FLsnBodyAtTime SunNow;
-	if (bHasRealTerrain && SunShare > 0.0 && SampleBody(TEXT("SUN"), TimePosition, SunNow))
+	// Only while the whole disc is up and clear of the horizon: at sunset the dark ground needs no explanation.
+	if (bHasRealTerrain && SunShare >= 0.999 && SampleBody(TEXT("SUN"), TimePosition, SunNow) && SunNow.ElevationDeg > 0.3)
 	{
 		NearGroundShadeShare = LsnMesh::NearGroundFacingAwayShare(TerrainGrid, Package.SurfaceHeightM, SunNow.AzimuthDeg, SunNow.ElevationDeg, FMath::Max(Package.HorizonSearchStartM(), 5.0));
 	}
