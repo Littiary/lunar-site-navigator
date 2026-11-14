@@ -7,6 +7,7 @@
 #include "Misc/Parse.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Mesh/LsnProps.h"
+#include "Sky/LsnEarthView.h"
 #include "Misc/Paths.h"
 #include "ProceduralMeshComponent.h"
 
@@ -334,6 +335,28 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	}
 	Stars->SetVisibility(bHasSky);
 
+	// The Earth's map, if the direction table of this package says how the Earth is turned.
+	bHasEarthMap = false;
+	FString TableError;
+	const FString TableDirectory = FPaths::Combine(PackageDirectory, TEXT("../../../direction_table"), Package.DirectionTableId);
+	if (Package.bHasTimeline && !Package.DirectionTableId.IsEmpty() && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoEarthMap"))
+		&& (DirectionTable.PackageId == Package.DirectionTableId || LsnPackageIO::LoadDirectionTable(TableDirectory, DirectionTable, TableError)) && DirectionTable.bHasEarthView)
+	{
+		if (!EarthMapBaseMaterial)
+		{
+			EarthMapBaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Lsn/M_LsnEarth.M_LsnEarth"));
+		}
+		if (EarthMapBaseMaterial)
+		{
+			EarthMapMaterial = UMaterialInstanceDynamic::Create(EarthMapBaseMaterial, this);
+			bHasEarthMap = true;
+		}
+	}
+	if (!bHasEarthMap)
+	{
+		UE_LOG(LogLsn, Display, TEXT("The Earth is drawn without its map for %s: %s"), *Package.SiteId, TableError.IsEmpty() ? TEXT("the direction table carries no earth_view") : *TableError);
+	}
+
 	RebuildGeometry();
 	SetTimeIndex(0);
 
@@ -434,7 +457,7 @@ void ALsnSiteScene::RebuildGeometry()
 	// A plain sphere in the Earth's direction and angular size, lit by the scene's Sun, so
 	// that its phase follows from the two package directions. It carries no map: the
 	// package does not say which side of the Earth faces the Moon.
-	EnsureUnitSphere(EarthDisc, FColor(86, 118, 178, 255), EarthMaterial);
+	EnsureUnitSphere(EarthDisc, bHasEarthMap ? FColor::White : FColor(86, 118, 178, 255), bHasEarthMap ? EarthMapMaterial.Get() : EarthMaterial.Get());
 }
 
 bool ALsnSiteScene::GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const
@@ -653,6 +676,15 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	}
 	PlaceDisc(SunDisc, Sun, SunProxyDistanceM);
 	PlaceDisc(EarthDisc, Earth, EarthProxyDistanceM);
+	FLsnEarthAxes EarthAxes;
+	if (bHasEarthMap && EarthMapMaterial && LsnEarth::AxesAt(DirectionTable, Package.EtOfPosition(TimePosition), EarthAxes))
+	{
+		// The Earth's axes in the axes of the scene; the material finds latitude and longitude from them.
+		const FVector Pole = Frame.BodyDirToUnreal(EarthAxes.Pole), X = Frame.BodyDirToUnreal(EarthAxes.X), Y = Frame.BodyDirToUnreal(EarthAxes.Y);
+		EarthMapMaterial->SetVectorParameterValue(TEXT("EarthPole"), FLinearColor(Pole.X, Pole.Y, Pole.Z, 0.0f));
+		EarthMapMaterial->SetVectorParameterValue(TEXT("EarthX"), FLinearColor(X.X, X.Y, X.Z, 0.0f));
+		EarthMapMaterial->SetVectorParameterValue(TEXT("EarthY"), FLinearColor(Y.X, Y.Y, Y.Z, 0.0f));
+	}
 	if (bHasSky)
 	{
 		// The sky turns with the Moon: the orientation exported for this package, at this instant.

@@ -118,6 +118,9 @@ public:
 	/** The fill light on whatever the Sun does: for overview stills, labelled as a viewing aid. */
 	bool IsFillForced() const { return bForceFill; }
 
+	/** True if the Earth is drawn with its map, turned as the direction table says. */
+	bool HasEarthMap() const { return bHasEarthMap; }
+
 	/** True if the star field is drawn: the star list and the sky orientation exported for this package are there. */
 	bool HasStars() const { return bHasSky; }
 	UProceduralMeshComponent* GetStarsComponent() const { return Stars; }
@@ -223,6 +226,17 @@ private:
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> RegolithMaterial;
 
+	/**
+	 * The Earth with its map (since contract 0.8): NASA Blue Marble, turned by the earth_view
+	 * of the direction table. Used only when the table of the package carries earth_view;
+	 * otherwise the plain sphere below is drawn.
+	 */
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> EarthMapBaseMaterial;
+
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> EarthMapMaterial;
+
 	/** The Earth's disc: the same material with the plain cosine law. */
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> EarthMaterial;
@@ -247,6 +261,9 @@ private:
 	bool bForceFill = false;
 	double NearGroundShadeShare = 0.0;
 	bool bHasSky = false;
+	/** The direction table of the package, kept for the orientation of the Earth. */
+	FLsnDirectionTable DirectionTable;
+	bool bHasEarthMap = false;
 	FLsnSkyOrientation Sky;
 	void UpdateLook();
 	bool bScaleObjectsVisible = true;

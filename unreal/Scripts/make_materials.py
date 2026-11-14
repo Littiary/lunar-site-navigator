@@ -31,6 +31,14 @@ M_LsnSurface   lit, fully rough, no specular, two-sided (the terrain is an open 
                sides; 0 for the ground).
 M_LsnEmissive  unlit, emissive = vertex colour x scalar parameter "Intensity".
                Used for the Sun disc and the highlight overlays.
+M_LsnEarth     lit, fully rough, no specular: the Earth with its map. Base colour = the NASA
+               Blue Marble image (Assets/earth, imported here as T_LsnEarth), looked up at
+               the latitude and longitude of each point of the sphere. The three vector
+               parameters "EarthPole", "EarthX", "EarthY" are the Earth's axes in the axes of
+               the scene; the scene sets them from the earth_view of the direction table
+               (SPEC 6.1). The sphere is lit by the scene's Sun, so the phase is that of the
+               two package directions; the night side is black (no city lights, no clouds,
+               no atmosphere).
 M_LsnStar      unlit; one small square per star with UV 0..1: emissive = vertex colour x
                vertex alpha (the display brightness of the star) x "Intensity", falling
                off from the centre of the square to nothing at its edge.
@@ -98,6 +106,18 @@ slope += large * L.Craters(p + 41.9, 14.0);
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
 float mottle = 1.0 + S * 0.10 * medium * (L.Noise(p * 0.11 + 19.0).z - 0.5);
 return float4(n, mottle);
+"""
+
+EARTH_CODE = r"""
+float3 n = normalize(N);
+float lat = asin(clamp(dot(n, P.xyz), -1.0, 1.0));
+float lon = atan2(dot(n, Y.xyz), dot(n, X.xyz));
+float2 uv = float2(lon / 6.2831853 + 0.5, 0.5 - lat / 3.14159265);
+// The longitude jumps at 180 degrees: take the derivatives from the copy that does not jump there.
+float2 uw = float2(frac(uv.x + 0.5), uv.y);
+float2 dx = ddx(uv), dy = ddy(uv), dxw = ddx(uw), dyw = ddy(uw);
+if (dot(dxw, dxw) + dot(dyw, dyw) < dot(dx, dx) + dot(dy, dy)) { dx = dxw; dy = dyw; }
+return Tex.SampleGrad(TexSampler, uv, dx, dy).rgb;
 """
 
 STAR_CODE = r"""
@@ -269,5 +289,49 @@ def make_star():
     return path
 
 
-for made in (make_surface(), make_emissive(), make_star()):
+def make_earth():
+    import os
+    source = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Assets", "earth", "world.topo.bathy.200412.3x5400x2700.jpg"))
+    texture_path = f"{FOLDER}/T_LsnEarth"
+    if unreal.EditorAssetLibrary.does_asset_exist(texture_path):
+        unreal.EditorAssetLibrary.delete_asset(texture_path)
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", source)
+    task.set_editor_property("destination_path", FOLDER)
+    task.set_editor_property("destination_name", "T_LsnEarth")
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    texture = unreal.EditorAssetLibrary.load_asset(texture_path)
+    if texture is None:
+        raise RuntimeError(f"could not import {source}")
+    unreal.EditorAssetLibrary.save_asset(texture_path, only_if_is_dirty=False)
+
+    material, path = _new_material("M_LsnEarth")
+    normal = mel.create_material_expression(material, unreal.MaterialExpressionVertexNormalWS, -900, 0)
+    tex = mel.create_material_expression(material, unreal.MaterialExpressionTextureObject, -900, 150)
+    tex.set_editor_property("texture", texture)
+    params = {}
+    for i, (name, default) in enumerate((("EarthPole", (0.0, 0.0, 1.0)), ("EarthX", (1.0, 0.0, 0.0)), ("EarthY", (0.0, 1.0, 0.0)))):
+        node = mel.create_material_expression(material, unreal.MaterialExpressionVectorParameter, -900, 300 + 180 * i)
+        node.set_editor_property("parameter_name", name)
+        node.set_editor_property("default_value", unreal.LinearColor(default[0], default[1], default[2], 0.0))
+        params[name] = node
+    earth = _custom(material, EARTH_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT3, ["N", "Tex", "P", "X", "Y"], -450, 150)
+    _link(normal, "", earth, "N")
+    _link(tex, "", earth, "Tex")
+    _link(params["EarthPole"], "", earth, "P")
+    _link(params["EarthX"], "", earth, "X")
+    _link(params["EarthY"], "", earth, "Y")
+    mel.connect_material_property(earth, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(_constant(material, 1.0, 700), "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.connect_material_property(_constant(material, 0.0, 800), "", unreal.MaterialProperty.MP_SPECULAR)
+    mel.connect_material_property(_constant(material, 0.0, 900), "", unreal.MaterialProperty.MP_METALLIC)
+    mel.recompile_material(material)
+    unreal.EditorAssetLibrary.save_asset(path, only_if_is_dirty=False)
+    return path
+
+
+for made in (make_surface(), make_emissive(), make_star(), make_earth()):
     unreal.log(f"LSN material written: {made}")

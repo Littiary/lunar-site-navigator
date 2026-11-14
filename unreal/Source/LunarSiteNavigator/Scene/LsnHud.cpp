@@ -281,10 +281,13 @@ FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bCompar
 			}
 		}
 	}
+	const float RowsTop = Picker.Sheet.Min.Y + Pad + TitleHeight, RowsBottom = Picker.Sheet.Max.Y - Pad - FooterHeight;
+	// A short list fills the first column before the next one is begun.
+	const int32 FullColumn = FMath::Max(FMath::FloorToInt32((RowsBottom - RowsTop) / (0.032f * H)), 1);
 	// Columns: two in one view; side by side two in each half, so that nothing lies across the middle.
 	TArray<TPair<float, float>> Columns;
 	const float Gap = 0.006f * W;
-	if (bComparing)
+	if (bComparing && Items.Num() > 2 * FullColumn)
 	{
 		const float HalfLeft0 = Picker.Sheet.Min.X + Pad, HalfLeft1 = 0.5f * W - Gap, HalfRight0 = 0.5f * W + Gap, HalfRight1 = Picker.Sheet.Max.X - Pad;
 		Columns.Add({ HalfLeft0, 0.5f * (HalfLeft0 + HalfLeft1) - 0.5f * Gap });
@@ -292,15 +295,18 @@ FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bCompar
 		Columns.Add({ HalfRight0, 0.5f * (HalfRight0 + HalfRight1) - 0.5f * Gap });
 		Columns.Add({ 0.5f * (HalfRight0 + HalfRight1) + 0.5f * Gap, HalfRight1 });
 	}
+	else if (bComparing)
+	{
+		// A short list: one wide column in each half.
+		Columns.Add({ Picker.Sheet.Min.X + Pad, 0.5f * W - Gap });
+		Columns.Add({ 0.5f * W + Gap, Picker.Sheet.Max.X - Pad });
+	}
 	else
 	{
 		const float X0 = Picker.Sheet.Min.X + Pad, X1 = Picker.Sheet.Max.X - Pad;
 		Columns.Add({ X0, 0.5f * (X0 + X1) - 0.5f * Gap });
 		Columns.Add({ 0.5f * (X0 + X1) + 0.5f * Gap, X1 });
 	}
-	const float RowsTop = Picker.Sheet.Min.Y + Pad + TitleHeight, RowsBottom = Picker.Sheet.Max.Y - Pad - FooterHeight;
-	// A short list fills the first column before the next one is begun.
-	const int32 FullColumn = FMath::Max(FMath::FloorToInt32((RowsBottom - RowsTop) / (0.032f * H)), 1);
 	const int32 PerColumn = FMath::Max(FMath::DivideAndRoundUp(Items.Num(), Columns.Num()), FMath::Min(Items.Num(), FullColumn));
 	const float RowHeight = FMath::Min(0.032f * H, (RowsBottom - RowsTop) / PerColumn);
 	for (int32 I = 0; I < Items.Num(); ++I)

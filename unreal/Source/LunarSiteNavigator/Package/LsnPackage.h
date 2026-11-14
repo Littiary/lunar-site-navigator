@@ -329,6 +329,14 @@ struct LUNARSITENAVIGATOR_API FLsnDirectionTable
 	/** [N, B, 3] */
 	TArray<double> PositionsKm;
 
+	/**
+	 * Since 0.8, optional (SPEC 6.1): the orientation of the Earth per record, for drawing it.
+	 * Absent when the table was made without the Earth-orientation kernels.
+	 */
+	bool bHasEarthView = false;
+	TArray<float> EarthSubLunarLatDeg, EarthSubLunarLonDeg, EarthNorthPoleAngleDeg;
+	double EarthFlattening = 0.0;
+
 	/** Position of a body at a record. Returns false if the body or the record is not in the table. */
 	bool PositionKm(const FString& Body, int32 RecordIndex, FVector& OutPositionKm) const;
 };

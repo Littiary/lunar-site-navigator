@@ -823,6 +823,18 @@ bool LsnPackageIO::LoadDirectionTable(const FString& PackageDirectory, FLsnDirec
 	const TArray<int32> Shape = { OutTable.Time.Count, OutTable.Bodies.Num(), 3 };
 	ReadArray<double>(Ctx, Root, TEXT("positions_km"), Shape, TEXT("km"), OutTable.PositionsKm);
 
+	// Orientation of the Earth (since 0.8): optional, for drawing only.
+	const TSharedPtr<FJsonObject>* EarthView = nullptr;
+	if (!Ctx.Failed() && Root->TryGetObjectField(TEXT("earth_view"), EarthView) && EarthView && EarthView->IsValid())
+	{
+		const TArray<int32> PerRecord = { OutTable.Time.Count };
+		ReadArray<float>(Ctx, *EarthView, TEXT("sub_lunar_lat_deg"), PerRecord, TEXT("deg"), OutTable.EarthSubLunarLatDeg);
+		ReadArray<float>(Ctx, *EarthView, TEXT("sub_lunar_lon_deg"), PerRecord, TEXT("deg"), OutTable.EarthSubLunarLonDeg);
+		ReadArray<float>(Ctx, *EarthView, TEXT("north_pole_angle_deg"), PerRecord, TEXT("deg"), OutTable.EarthNorthPoleAngleDeg);
+		(*EarthView)->TryGetNumberField(TEXT("flattening"), OutTable.EarthFlattening);
+		OutTable.bHasEarthView = !Ctx.Failed();
+	}
+
 	if (Ctx.Failed())
 	{
 		OutError = FString::Printf(TEXT("%s: %s"), *PackageDirectory, *Ctx.Error);

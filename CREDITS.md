@@ -71,6 +71,7 @@ Every third-party item used in this project gets one row here before it is merge
 
 | Name | Author or provider | Licence | Source URL | Used in |
 |---|---|---|---|---|
+| Blue Marble Next Generation with topography and bathymetry, December 2004, 5400 x 2700 pixels (`world.topo.bathy.200412.3x5400x2700.jpg`, sha256 a9f0088972de…): the map of the Earth's disc in the Unreal view | NASA Earth Observatory (Reto Stöckli), NASA Visible Earth | NASA imagery, free to use with credit (NASA media usage guidelines; no NASA logo or insignia used) | https://visibleearth.nasa.gov/images/73909 ; file retrieved on 2026-11-14 from NASA's asset server https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/december/world.topo.bathy.200412.3x5400x2700.jpg (the Earth Observatory image server named on that page could not be reached from the build machine) | `unreal/Assets/earth/` (source file), `unreal/Content/Lsn/T_LsnEarth.uasset` (imported by `unreal/Scripts/make_materials.py`) |
 
 ## Use of AI tools
 
