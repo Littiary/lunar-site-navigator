@@ -46,11 +46,11 @@ def body_radius_km(body: str) -> float:
 
 
 def utc_to_et(utc):
-    """UTC calendar string(s) (ISO 8601) -> TDB seconds past J2000 (float or float64 array)."""
+    """UTC calendar string(s) (ISO 8601, with or without a trailing Z) -> TDB seconds past J2000."""
     kernels.load()
     if isinstance(utc, str):
-        return float(spice.str2et(utc))
-    return np.array([spice.str2et(item) for item in utc], dtype=np.float64)
+        return float(spice.str2et(utc.rstrip("Zz")))
+    return np.array([spice.str2et(item.rstrip("Zz")) for item in utc], dtype=np.float64)
 
 
 def et_to_utc(et, precision: int = 3):
@@ -59,6 +59,22 @@ def et_to_utc(et, precision: int = 3):
     if np.ndim(et) == 0:
         return spice.et2utc(float(et), "ISOC", precision)
     return [spice.et2utc(float(item), "ISOC", precision) for item in np.asarray(et)]
+
+
+def et_to_utc_z(et: float) -> str:
+    """TDB seconds past J2000 -> the contract's display form, 2026-11-14T09:00:00.000Z.
+
+    SPICE rounds to the millisecond. A grid that is uniform in TDB is uniform in UTC only
+    to about a millisecond, because TDB - UTC has a periodic term of up to 1.7 ms: a
+    sample that is nominally on a whole UTC second can print as ...59.999 or ...00.001.
+    """
+    return et_to_utc(float(et), 3) + "Z"
+
+
+def leap_seconds_between(et_start: float, et_end: float) -> int:
+    """Number of leap seconds inserted between two epochs (0 for any range after 2017 with naif0012)."""
+    kernels.load()
+    return int(round(spice.deltet(float(et_end), "ET") - spice.deltet(float(et_start), "ET")))
 
 
 # --------------------------------------------------------------------------- site

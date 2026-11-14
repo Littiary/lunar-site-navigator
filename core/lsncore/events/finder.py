@@ -173,6 +173,55 @@ def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = D
     )
 
 
+# --------------------------------------------------------------------------- thresholds
+
+
+@dataclass(frozen=True)
+class ThresholdSignal:
+    """A visibility condition expressed as "signal > 0".
+
+    ``limb`` names the margin that governs the condition ("upper_limb", "center" or
+    "lower_limb"); it decides which azimuth is reported for an event and which margin
+    is used for the closing rate. ``offset`` is subtracted from the governing quantity.
+    """
+
+    label: str
+    limb: str
+    fraction: float | None = None  # if set, the signal is visible_fraction - fraction
+    offset_deg: float = 0.0
+
+    def value(self, signals: DiscSignals) -> np.ndarray:
+        if self.fraction is not None:
+            return signals.visible_fraction - self.fraction
+        return signals.signal(self.limb) - self.offset_deg
+
+    def margin(self, signals: DiscSignals) -> np.ndarray:
+        return signals.signal(self.limb)
+
+
+def threshold_from_contract(spec: dict, label: str = "visible") -> ThresholdSignal:
+    """Translate a contract threshold ``{"quantity", "op", "value"}`` into a signal.
+
+    * ``visible_fraction > 0``: any part of the disc is visible; located on the upper-limb
+      margin, because the fraction itself is flat (zero) while the disc is hidden.
+    * ``visible_fraction >= 1``: the whole disc is visible; located on the lower-limb margin.
+    * ``visible_fraction > v`` with 0 < v < 1: located on the fraction itself.
+    * ``margin_deg > m``: the disc centre is more than m degrees above the horizon.
+
+    ``>`` and ``>=`` differ only at single instants and give the same events.
+    """
+    quantity, value = spec["quantity"], float(spec["value"])
+    if quantity == "margin_deg":
+        return ThresholdSignal(label, "center", offset_deg=value)
+    if quantity == "visible_fraction":
+        if value <= 0.0:
+            return ThresholdSignal(label, "upper_limb")
+        if value >= 1.0:
+            return ThresholdSignal(label, "lower_limb")
+        return ThresholdSignal(label, "center", fraction=value)
+    raise ValueError(f"unknown threshold quantity {quantity!r}")
+
+
 # --------------------------------------------------------------------------- events
 
 
@@ -223,15 +272,19 @@ def find_events(
     if grid[-1] < stop_et_s:
         grid = np.append(grid, stop_et_s)
 
+    # thresholds: names from THRESHOLDS, or a mapping label -> ThresholdSignal
+    if not isinstance(thresholds, dict):
+        thresholds = {name: ThresholdSignal(name, name) for name in thresholds}
+
     sampled = {name: [] for name in thresholds}
     for begin in range(0, grid.size, chunk):
         signals = _signals(direction, horizon, grid[begin : begin + chunk], n_strips)
-        for name in thresholds:
-            sampled[name].append(signals.signal(name) > 0.0)
+        for name, rule in thresholds.items():
+            sampled[name].append(rule.value(signals) > 0.0)
     visible = {name: np.concatenate(parts) for name, parts in sampled.items()}
 
     events: list[Event] = []
-    for name in thresholds:
+    for name, rule in thresholds.items():
         state = visible[name]
         index = np.nonzero(state[1:] != state[:-1])[0]
         if index.size == 0:
@@ -240,14 +293,14 @@ def find_events(
         rising = state[index + 1]  # visible after the crossing
         while np.max(high - low) > tol_s:
             middle = 0.5 * (low + high)
-            mid_visible = _signals(direction, horizon, middle, n_strips).signal(name) > 0.0
+            mid_visible = rule.value(_signals(direction, horizon, middle, n_strips)) > 0.0
             same_as_high = mid_visible == rising
             high = np.where(same_as_high, middle, high)
             low = np.where(same_as_high, low, middle)
         times = 0.5 * (low + high)
         az, el, radius = direction(times)
         at_event = disc_signals(az, el, radius, horizon, n_strips)
-        where = {"upper_limb": at_event.upper_azimuth_deg, "lower_limb": at_event.lower_azimuth_deg}.get(name, np.asarray(az) % 360.0)
+        where = {"upper_limb": at_event.upper_azimuth_deg, "lower_limb": at_event.lower_azimuth_deg}.get(rule.limb, np.asarray(az) % 360.0)
         distance = horizon.distance_at(where)
         for k in range(times.size):
             events.append(
