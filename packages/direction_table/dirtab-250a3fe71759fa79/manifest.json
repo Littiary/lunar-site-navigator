@@ -203,15 +203,15 @@
     }
   },
   "provenance": {
-    "created_utc": "2026-11-14T12:04:32.222Z",
+    "created_utc": "2026-11-14T12:22:11.621Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {
-      "direction_table": 0.301396
+      "direction_table": 0.291439
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "0",
-      "git_commit": "d1af9e601e9c171fded70188e25fb4e1429ebe23",
+      "git_commit": "c68ae199899429f69221c61b2f07297d0fdba1a4",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",

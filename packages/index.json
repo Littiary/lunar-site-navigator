@@ -4,7 +4,7 @@
     "version": "0.1"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T12:11:31.276Z",
+  "generated_utc": "2026-11-14T12:24:19.722Z",
   "scenario_id": "south-polar-sites",
   "packages": [
     {
@@ -16,8 +16,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-08105a0f3060aee8",
-      "path": "site/de-gerlache-rim-crest/site-08105a0f3060aee8",
+      "package_id": "site-886457e9968ec44d",
+      "path": "site/de-gerlache-rim-crest/site-886457e9968ec44d",
       "synthetic": false,
       "status": "ok",
       "site_id": "de-gerlache-rim-crest",
@@ -28,8 +28,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-b425911bcc8e34f8",
-      "path": "site/malapert-massif-summit/site-b425911bcc8e34f8",
+      "package_id": "site-1e8bb8bfac94b02e",
+      "path": "site/malapert-massif-summit/site-1e8bb8bfac94b02e",
       "synthetic": false,
       "status": "ok",
       "site_id": "malapert-massif-summit",
@@ -40,8 +40,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-3d084d7f181d1b64",
-      "path": "site/shackleton-rim-crest/site-3d084d7f181d1b64",
+      "package_id": "site-1bb3ba58499d4530",
+      "path": "site/shackleton-rim-crest/site-1bb3ba58499d4530",
       "synthetic": false,
       "status": "ok",
       "site_id": "shackleton-rim-crest",

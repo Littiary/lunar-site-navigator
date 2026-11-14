@@ -43,6 +43,12 @@ def test_every_published_package_passes_the_contract_validator():
         if manifest["kind"] == "site":
             assert manifest["timeline"]["direction_table_id"] in table_ids
             assert manifest["site"]["frame"] == "MOON_ME_DE440_ME421"
+            # Every terrain layer names the elevation file it came from.
+            layers = manifest["inputs"]["dem"]["layers"]
+            assert len(layers) >= 1
+            for layer in layers:
+                assert isinstance(layer["sha256"], str) and len(layer["sha256"]) == 64, layer["layer_id"]
+                assert layer["source_url"].startswith("https://"), layer["layer_id"]
 
 
 def test_nothing_but_packages_index_and_readme_is_published():

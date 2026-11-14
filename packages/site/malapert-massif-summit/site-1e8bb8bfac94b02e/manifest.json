@@ -4,8 +4,8 @@
     "version": "0.1"
   },
   "kind": "site",
-  "package_id": "site-b425911bcc8e34f8",
-  "content_sha256": "478f0dbf0cf30c8b0d228d39f4de7c74a4b453cac1102270f5b645a5feaef1f0",
+  "package_id": "site-1e8bb8bfac94b02e",
+  "content_sha256": "5d2d776194b099a1f90be95bae971ed57fb3db7fb57ee708a6875cd6a2bd6f77",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
@@ -59,8 +59,8 @@
           "layer_id": "LDEM_80S_20M",
           "product_id": "LDEM_80S_20M",
           "version": "V2.0",
-          "source_url": "",
-          "sha256": null,
+          "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG",
+          "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
           "pixel_m": 20.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         },
@@ -68,8 +68,8 @@
           "layer_id": "LDEM_60S_60M",
           "product_id": "LDEM_60S_60M",
           "version": "V2.0",
-          "source_url": "",
-          "sha256": null,
+          "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+          "sha256": "e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c",
           "pixel_m": 60.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         }
@@ -82663,16 +82663,16 @@
     ]
   },
   "provenance": {
-    "created_utc": "2026-11-14T12:11:31.080Z",
+    "created_utc": "2026-11-14T12:24:19.663Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {
-      "horizon": 8.350602,
-      "timeline": 124.72494
+      "horizon": 2.36043,
+      "timeline": 35.166201
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "0",
-      "git_commit": "d1af9e601e9c171fded70188e25fb4e1429ebe23",
+      "git_commit": "c68ae199899429f69221c61b2f07297d0fdba1a4",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",
