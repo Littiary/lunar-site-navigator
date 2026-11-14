@@ -13,9 +13,9 @@ What it does, in this order (each command is printed before it runs):
 4. downloads the SPICE kernels (79 MB) and checks them against the committed checksums;
 5. downloads the inputs of the validation scripts (published illumination maps, 154 MB,
    and one LROC browse image, 8 MB) and checks them against the committed checksums;
-6. downloads the LOLA elevation products (3.7 GB), checks them against the committed
-   manifest and builds their overview levels (2.4 GB, computed locally) unless levels
-   built from the same files are already there;
+6. checks the LOLA elevation products of the default set against the committed manifest,
+   downloads them first if they are not there (3.7 GB), and builds their overview levels
+   (2.4 GB, computed locally) unless levels built from the same files are already there;
 7. says whether the setup left the working tree unchanged, and how to run the tests.
 
 Nothing is downloaded into the checkout. Everything goes to the data root: ``--data-root``
@@ -43,9 +43,26 @@ PYTHON = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 MINIMUM = (3, 11)
 POLAR_PRODUCTS = ("LDEM_80S_20M", "LDEM_60S_60M")
 
+# Runs inside the environment. The committed manifest of the data scripts lists every
+# product the team has downloaded, including whole-Moon products that the default
+# download does not fetch; `python -m lsn_data verify` reports those as missing. Here only
+# the files of the default products are compared, with the manifest as it is committed.
+VERIFY_DEFAULT_PRODUCTS = """
+import json, subprocess, sys
+from lsn_data import catalog, manifest as mf
+from lsn_data.paths import data_root
+committed = json.loads(subprocess.run(["git", "show", "HEAD:data/manifest/manifest.json"], capture_output=True, text=True, check=True).stdout)
+wanted = {rel: rec for rel, rec in committed["files"].items() if rel.split("/")[2] in catalog.DEFAULT_SET}
+problems = mf.verify({"files": wanted}, data_root())
+for problem in problems:
+    print("FAIL", problem)
+print(("OK" if not problems else "FAILED") + f": {len(wanted)} files of the default products ({', '.join(catalog.DEFAULT_SET)}) compared with the committed manifest, in {data_root()}")
+sys.exit(1 if problems else 0)
+"""
 
-def run(command: list, env: dict, check: bool = True) -> int:
-    print(f"\n$ {' '.join(str(part) for part in command)}", flush=True)
+
+def run(command: list, env: dict, check: bool = True, show: str | None = None) -> int:
+    print(f"\n$ {show or ' '.join(str(part) for part in command)}", flush=True)
     code = subprocess.run([str(part) for part in command], cwd=ROOT, env=env).returncode
     if check and code != 0:
         sys.exit(f"\nSetup stopped: the command above ended with exit code {code}.")
@@ -117,8 +134,10 @@ def main() -> None:
 
     # 6. LOLA elevation products
     if not args.no_terrain:
-        run([PYTHON, "-m", "lsn_data", "fetch"], env)
-        run([PYTHON, "-m", "lsn_data", "verify"], env)
+        print("\nChecking the elevation products of the default set against the committed manifest (size and SHA-256 of every file):", flush=True)
+        if run([PYTHON, "-c", VERIFY_DEFAULT_PRODUCTS], env, check=False, show="python -c <compare the default products with data/manifest/manifest.json at HEAD>") != 0:
+            run([PYTHON, "-m", "lsn_data", "fetch"], env)
+            run([PYTHON, "-c", VERIFY_DEFAULT_PRODUCTS], env, show="python -c <compare the default products with data/manifest/manifest.json at HEAD>")
         root = Path(output([PYTHON, "-c", "from lsn_data.paths import data_root; print(data_root())"], env))
         for product in POLAR_PRODUCTS:
             if overview_levels_present(root, product):
@@ -133,7 +152,14 @@ def main() -> None:
     print(f"  Data root: {data_root}")
     if args.data_root:
         print(f"  This run used --data-root. Set LSN_DATA_ROOT={env['LSN_DATA_ROOT']} in your shell before running the tests or the tools.")
-    print("  Working tree: " + ("unchanged by the setup." if after == before else "CHANGED by the setup; `git status` shows the files. A download did not match its committed record."))
+    changed = sorted(set(after.splitlines()) - set(before.splitlines()))
+    if not changed:
+        print("  Working tree: unchanged by the setup.")
+    else:
+        print("  Working tree: CHANGED by the setup: " + "; ".join(line.strip() for line in changed))
+        if all(line.split()[-1] == "data/manifest/manifest.json" for line in changed):
+            print("    The data scripts write the time of each download into their committed manifest. The files were compared with the committed")
+            print("    checksums above; if `git diff data/manifest/manifest.json` shows only times, restore it with `git checkout data/manifest/manifest.json`.")
     tests = [PYTHON.relative_to(ROOT).as_posix(), "-m", "pytest", "core", "validation", "data"]
     print(f"  Run the tests from the repository root: {' '.join(tests)}")
     if args.test:

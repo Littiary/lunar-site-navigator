@@ -39,12 +39,17 @@ python -m venv .venv
 .venv/Scripts/python -m validation.pgda.fetch
 .venv/Scripts/python -m validation.lro_images.fetch
 .venv/Scripts/python -m lsn_data fetch
-.venv/Scripts/python -m lsn_data verify
+.venv/Scripts/python -m lsn_data verify              # see the note on verify below
 .venv/Scripts/python -m lsn_data pyramid            # rebuilds the levels each time; the script skips this when they are present
 .venv/Scripts/python -m pytest core validation data
 ```
 
 `scripts/constraints.txt` pins the third-party versions with which the committed results were computed. The extras: `core[test]` is what the tests under `core/tests` need (pytest, SpiceyPy), `core[validation]` adds what `validation/` needs (Pillow), `data[test]` is pytest for `data/tests`.
+
+Two notes on the elevation products, which the data scripts (`data/`) handle:
+
+* `python -m lsn_data verify` compares every file of the committed manifest, which also lists whole-Moon products that the default download does not fetch; on a fresh data root it reports those as missing. The setup script compares only the files of the default products, with the manifest as committed, and downloads only if they are absent or differ.
+* `python -m lsn_data fetch` writes the time of each download into the committed manifest, so after a first download `git status` shows `data/manifest/manifest.json` as changed. If `git diff` shows only times and no checksum, restore the file with `git checkout data/manifest/manifest.json`; the setup script says so at the end.
 
 ## Where the downloads go
 
@@ -58,7 +63,7 @@ Nothing is downloaded into the checkout. Everything goes to the **data root**, a
 | `kernels/` | NAIF SPICE kernels (9 files) | 79 MB | `python -m lsncore.ephem.fetch_kernels` | `core/lsncore/ephem/kernel_manifest.json` |
 | `validation/pgda/` | LOLA illumination maps of the south pole (PGDA product 69) | 154 MB | `python -m validation.pgda.fetch` | `validation/pgda/files.json` |
 | `validation/lro/` | one LROC NAC browse image | 8 MB | `python -m validation.lro_images.fetch` | `validation/lro_images/files.json` |
-| `raw/lola/` | LOLA elevation products | 3.7 GB | `python -m lsn_data fetch` | `data/manifest/manifest.json` (`python -m lsn_data verify`) |
+| `raw/lola/` | LOLA elevation products of the default set | 3.7 GB | `python -m lsn_data fetch` | `data/manifest/manifest.json` |
 | `derived/` | overview levels of the elevation products, computed locally | 2.4 GB | `python -m lsn_data pyramid` | `pyramid.json` in each folder |
 
 One variable moves everything. A single group can also be moved on its own with `LSN_KERNEL_DIR`, `LSN_PGDA_DIR` or `LSN_LRO_DIR`.

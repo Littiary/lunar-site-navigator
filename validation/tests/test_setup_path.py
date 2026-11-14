@@ -34,7 +34,7 @@ def test_the_extras_the_setup_installs_exist():
 def test_every_module_the_setup_script_runs_is_in_the_guide_and_exists():
     modules = re.findall(r'\[PYTHON, "-m", "([a-z_.]+)"((?:, "[a-z]+")*)', SCRIPT)
     names = [name for name, _ in modules if name not in ("pip", "pytest")]
-    assert names == ["lsncore.ephem.fetch_kernels", "validation.pgda.fetch", "validation.lro_images.fetch", "lsn_data", "lsn_data", "lsn_data"]
+    assert names == ["lsncore.ephem.fetch_kernels", "validation.pgda.fetch", "validation.lro_images.fetch", "lsn_data", "lsn_data"]
     for name, arguments in modules:
         command = " ".join([f"-m {name}"] + re.findall(r'"([a-z]+)"', arguments))
         assert command in GUIDE, command
