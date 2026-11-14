@@ -439,7 +439,7 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
             )
         )
-    pairs = build_pairs_package(out_root, [p for p in written if p.parent.parent.name == "site"], synthetic_methods(), scenario_id=scenario_id)
+    pairs = build_pairs_package(out_root, written, synthetic_methods(), scenario_id=scenario_id)  # it picks the site packages
     if pairs is not None:
         written.append(pairs)
     write_index(out_root, scenario_id)

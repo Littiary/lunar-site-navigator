@@ -144,9 +144,8 @@ def landing_windows(requirement: dict, windows: dict, domain) -> tuple[IntervalS
             part = window.intervals
         elif kind == "continuous_from_landing":
             need = float(condition["min_s"])
-            part = [(s, e - need) for s, e in window.intervals if e - s >= need]
-            # an instant counts: a window exactly as long as required admits one landing time
-            part = [(s, e if e > s else s + _EPS) for s, e in part]
+            # a stretch exactly as long as required admits a single instant, which has no length
+            part = [(s, e - need) for s, e in window.intervals if e - s > need]
         elif kind == "total_in_mission":
             latest = min(latest, end - duration)
             part = _total_in_mission(window, duration, float(condition["min_s"]), start, end - duration)

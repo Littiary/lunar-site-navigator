@@ -528,7 +528,7 @@ def run_scenario(
     pair_methods = trade_methods(terrain.describe()["dem_set_id"], "the direction table of the site packages")
     pairs = build_pairs_package(
         out_root,
-        [p for p in written if p.parent.parent.name == "site"],
+        written,  # it picks the site packages with a timeline
         _mark_synthetic(pair_methods) if synthetic else pair_methods,
         scenario_id=scenario_id,
     )
