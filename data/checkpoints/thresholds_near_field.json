@@ -1,0 +1,31 @@
+{
+ "note": "Near-field 5 m layer (Barker et al. 2021 site DEMs, PGDA product 78: Site04, Site11, Site23) against our 20 m product. Written and committed BEFORE either product was compared with the other; not to be edited afterwards. The commit time is the authoritative time of writing.",
+ "source": {
+  "page": "https://pgda.gsfc.nasa.gov/products/78",
+  "readme": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/README",
+  "citation": "M. K. Barker, E. Mazarico, G. A. Neumann et al. (2021), Improved LOLA elevation maps for south pole landing sites: error estimates and their impact on illumination conditions, Planet. Space Sci. 203, 105119, doi:10.1016/j.pss.2020.105119",
+  "published_error": "median RMS Z error ~0.30-0.50 m and median RMS slope error ~1.5-2.5 deg within the regions of interest (page text); per-pixel RMS error maps *_toterr.tif",
+  "retrieved_utc": "2026-11-14T14:15Z"
+ },
+ "checkpoint_1_checksums": "size and SHA-256 recorded in data/manifest/manifest.json and re-verified from disk. There is no second source for these files; the HTTP ETag and Last-Modified are recorded instead. This is weaker than the cross-check of the LOLA PDS files and is stated as such.",
+ "checkpoint_2_georeferencing": {
+  "method": "d_i = h20(x_i, y_i) - h5(x_i, y_i) at the centres of every 4th 5 m pixel in both directions (20 m spacing) inside each site DEM, with h20 the bilinear height of LDEM_80S_20M and h5 the 5 m value; displacement fit d = c + g.(T + delta z x r + eps r) with g the gradient of the 5 m product averaged to 20 m (central differences of +-20 m), over |d| <= 30 m and 0.02 <= |g| <= 0.7; block bootstrap over 1 km blocks",
+  "pass_if": {"abs_translation_component_m": 10.0, "abs_rotation_deg": 0.01},
+  "why": "10 m is half a 20 m pixel; the 5 m products were made with re-adjusted LOLA tracks (orbit errors reduced by a factor of more than 10, page text), so a translation of a few metres between the two products is possible and is reported, not corrected",
+  "mirror_rms_ratio_at_least": 3.0
+ },
+ "checkpoint_3_values": {
+  "reference": "every file: sphere 1737400 m, polar stereographic true at the pole, south pole origin, MOON_ME DE421 (from the GeoKeys)",
+  "pass_if": {"abs_mean_d_m": 1.0, "median_abs_d_m": 3.0}
+ },
+ "seam": {
+  "method": "MoonTerrain/Terrain with near_field=True: 2000 points on the edge of each 5 m extent, heights 0.5 m inside and outside (5 m -> 20 m switch)",
+  "pass_if": {"median_abs_jump_m": 3.0, "p95_abs_jump_m": 15.0}
+ },
+ "interpolated_pixels_of_the_20m_product": {
+  "method": "the same d, split by the count of LOLA returns of the 20 m pixel that contains the point (LDEC_80S_20M, read by byte ranges over each site extent) and by whether the 5 m count map (*_ldec.tif) has at least one return within that 20 m pixel. The class '20 m pixel count 0, 5 m returns present' is where the 20 m value is interpolated and the 5 m value is constrained by data: its distribution of d is reported as the measured interpolation error of the 20 m product there (it still includes the 5 m product's own error, median RMS 0.3-0.5 m).",
+  "statistics": "median, 68.27 % and 95.45 % half-widths of |d - median|, by slope class as in height_error_method.json",
+  "independence": "both products are made from LOLA returns; the 5 m product re-adjusts the tracks and grids at 5 m, so it is not independent of LOLA. It is independent of the 20 m product's gridding and interpolation, which is what this measures."
+ },
+ "uncertainty_band": "near each site the band's terrain height error becomes the 95.45 % half-width of the 5 m product's own RMS error map (2 x the median of *_toterr.tif within 1 km of the site) inside the 5 m extent; outside it the 20 m figures of height_error_report.json stand"
+}

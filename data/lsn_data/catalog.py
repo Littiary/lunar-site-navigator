@@ -210,3 +210,30 @@ MOON_CYLINDRICAL: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("SLDEM2015_256", SLDEM_256_TILES),
     ("LDEM_128", ("LDEM_128",)),
 )
+
+
+# 5 m/pixel LOLA site DEMs of Barker, Mazarico, Neumann (2021), PGDA product 78 (single source, no mirror).
+PGDA_5MPP_ROOT = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
+SITE_DEM_SITES = {"Site04": "Shackleton rim", "Site11": "de Gerlache rim", "Site23": "Malapert massif"}
+
+
+def _site_dem(site: str) -> Product:
+    files = [
+        FileSpec("data", f"{site}_final_adj_5mpp_surf.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_surf.tif", None),
+        FileSpec("count", f"{site}_final_adj_5mpp_ldec.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_ldec.tif", None),
+        FileSpec("uncertainty", f"{site}_final_adj_5mpp_toterr.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_toterr.tif", None),
+    ]
+    return Product(
+        f"LOLA5MPP_{site.upper()}",
+        f"LOLA 5 m/pixel site DEM {site} ({SITE_DEM_SITES[site]}), Barker et al. 2021, polar stereographic GeoTIFF",
+        tuple(files),
+        base="raw/lola_5mpp",
+    )
+
+
+PGDA_DOCS = Product("_pgda_docs", "README of the PGDA 5 m/pixel site DEMs",
+                    (FileSpec("doc", "README", f"{PGDA_5MPP_ROOT}/README", None),), base="raw/lola_5mpp")
+PRODUCTS[PGDA_DOCS.product_id] = PGDA_DOCS
+for _s in SITE_DEM_SITES:
+    PRODUCTS[f"LOLA5MPP_{_s.upper()}"] = _site_dem(_s)
+SITE_DEM_PRODUCTS = tuple(f"LOLA5MPP_{_s.upper()}" for _s in SITE_DEM_SITES)

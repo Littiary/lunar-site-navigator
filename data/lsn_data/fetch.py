@@ -258,7 +258,7 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
         for spec in prod.files:
             jobs.append((prod, spec))
     # Labels first so that every record can take its version from them.
-    order = {"label": 0, "label_xml": 1, "doc": 1, "reference": 1, "data": 2}
+    order = {"label": 0, "label_xml": 1, "doc": 1, "reference": 1, "data": 2, "count": 2, "uncertainty": 2}
     jobs.sort(key=lambda j: order[j[1].role])
 
     def work(job):
