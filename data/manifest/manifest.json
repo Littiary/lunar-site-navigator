@@ -3,7 +3,7 @@
   "files": {
     "raw/catalogs/ROBBINS_2018/lunar_crater_database_robbins_2018.zip": {
       "path": "raw/catalogs/ROBBINS_2018/lunar_crater_database_robbins_2018.zip",
-      "role": "data",
+      "role": "reference",
       "product_id": "ROBBINS_2018",
       "product_version": null,
       "data_set_id": null,
@@ -12,7 +12,7 @@
       "size_bytes": 96227201,
       "sha256": "694137e141138892555d0f976446875331d3317ea506ddf055d91b917ca307ab",
       "retrieved_utc": "2026-11-14T11:35:09Z",
-      "hashed_utc": "2026-11-14T11:35:09Z",
+      "hashed_utc": "2026-11-14T11:42:27Z",
       "http_last_modified": "Wed, 16 Aug 2023 17:53:37 GMT",
       "http_etag": "\"1692208417.924577-96227201-1176704498\"",
       "cross_checks": []
@@ -334,5 +334,5 @@
       "cross_checks": []
     }
   },
-  "generated_utc": "2026-11-14T11:35:09Z"
+  "generated_utc": "2026-11-14T11:42:27Z"
 }

@@ -1,9 +1,9 @@
 {
- "generated_utc": "2026-11-14T11:24:19Z",
+ "generated_utc": "2026-11-14T11:44:50Z",
  "data_root": "C:\\lsn-data",
  "checkpoint_1_checksums": {
-  "files_in_manifest": 16,
-  "total_bytes": 3809475925,
+  "files_in_manifest": 17,
+  "total_bytes": 3905703126,
   "problems": [],
   "cross_check_failed": [],
   "data_files_without_matching_cross_check": [],

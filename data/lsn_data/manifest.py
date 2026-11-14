@@ -3,7 +3,7 @@
 Record fields
 -------------
 path             file path relative to the data root (forward slashes)
-role             data | label | label_xml | doc
+role             data | label | label_xml | doc | reference (analysis reference, not terrain)
 product_id       e.g. LDEM_80S_20M (read from the label's FILE_NAME), or ``_docs``
 product_version  PRODUCT_VERSION_ID from the label (data and label files), else null
 data_set_id      DATA_SET_ID from the label, else null
