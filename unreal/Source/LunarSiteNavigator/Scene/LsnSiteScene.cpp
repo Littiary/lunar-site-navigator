@@ -27,7 +27,8 @@ namespace
 	constexpr float HorizonLineEmissive = 3.0f;
 	constexpr float ObstacleEmissive = 6.0f;
 	/** Angular height of the highlight band above the horizon. A drawing choice. */
-	constexpr double ObstacleBandDeg = 0.10;
+	// A thin line along the ridge; the glare of the view gives it a soft glow.
+	constexpr double ObstacleBandDeg = 0.05;
 	const FColor SunObstacleColor(255, 70, 10, 255);
 	const FColor EarthObstacleColor(20, 200, 255, 255);
 	constexpr float RegolithAlbedo = 0.13f;
@@ -200,16 +201,33 @@ void ALsnSiteScene::UpdateLook()
 	{
 		NearGroundShadeShare = LsnMesh::NearGroundFacingAwayShare(TerrainGrid, Package.SurfaceHeightM, SunNow.AzimuthDeg, SunNow.ElevationDeg, FMath::Max(Package.HorizonSearchStartM(), 5.0));
 	}
-	// The shaded sides of the scale objects: with the Sun up, light reflected from the sunlit
-	// ground reaches them; with the fill on, a little of it. Stand-ins chosen by eye.
-	const float Ambient = LsnLook::ObjectAmbient.GetValueOnGameThread() * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
+	// The shaded sides of the scale objects are lit by the sunlit ground around them. The engine's
+	// own bounce (Lumen) does not see the terrain, which is a procedural mesh without a surface
+	// cache (tried on 14 November 2026: no light from the ground reached the lander), so the bounce
+	// is the textbook case of a wide lit plane under the object:
+	//   irradiance on a face = radiance of the ground x pi x (1 - n.z) / 2.
+	// The radiance of the ground is that of the ground as it is drawn here: albedo x the Sun's
+	// irradiance on it (sine of the package's Sun elevation) x the regolith factor 2 / (mu0 + mu)
+	// for a view 60 degrees from the normal, / pi; less where the package says part of the Sun is
+	// hidden and where the ground near the site lies in its own shadow. Not a fill light: it is
+	// zero when the ground is dark, and a face that looks up gets none.
+	float Ambient = 0.0f;
+	FLsnBodyAtTime SunForBounce;
+	if (SunShare > 0.0 && SampleBody(TEXT("SUN"), TimePosition, SunForBounce))
+	{
+		const float Mu0 = FMath::Max(FMath::Sin(FMath::DegreesToRadians(static_cast<float>(SunForBounce.ElevationDeg))), 0.0f);
+		const float Ground = RegolithAlbedo * Mu0 * FMath::Min(2.0f / (Mu0 + 0.5f), 4.0f) * SunLight->Intensity / UE_PI;
+		Ambient = Ground * static_cast<float>(SunShare) * static_cast<float>(1.0 - NearGroundShadeShare) * LsnLook::BounceScale.GetValueOnGameThread();
+	}
+	// With the fill on (a viewing aid while the Sun is down), a little of it from below as well.
+	Ambient += FillLight->IsVisible() ? 0.01f : 0.0f;
 	if (ObjectMaterial)
 	{
 		ObjectMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
 	}
 	if (RockMaterial)
 	{
-		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), 1.5f * Ambient);
+		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
 	}
 	if (StarMaterial)
 	{
@@ -238,6 +256,22 @@ void ALsnSiteScene::SetSceneSlot(int32 Slot)
 
 FString ALsnSiteScene::GetGroundNote() const
 {
+	if (bHasPatchTerrain)
+	{
+		// What the patches are, in the package's own words: ids, spacing and extent.
+		FString List;
+		double Largest = 0.0;
+		for (const FLsnTerrainPatch& Patch : TerrainPatches)
+		{
+			List += FString::Printf(TEXT("%s%s %.0f m"), List.IsEmpty() ? TEXT("") : TEXT(", "), *Patch.Id, Patch.SpacingM);
+			Largest = FMath::Max(Largest, Patch.HalfWidthM);
+		}
+		return FString::Printf(TEXT("Ground: the terrain patches of the package (%s; drawing only), out to %.0f km from the site; beyond that only the horizon line of the package. Roughness and small craters finer than the patches are illustrative shading, not data. Lander, mast and boulders are scale objects, not part of the package."), *List, Largest / 1000.0);
+	}
+	if (!bHasRealTerrain && TerrainPatches.Num() > 0)
+	{
+		return FString::Printf(TEXT("The terrain patches of this package stand %.3f deg above its horizon for this observer height, more than the 0.05 deg the view allows: the ground between the site and the horizon line is a plain surface that ends at the package horizon, not elevation data."), PatchExcessDeg);
+	}
 	if (!bHasRealTerrain)
 	{
 		return TEXT("Ground between the site and the horizon line is a placeholder surface, not elevation data.");
@@ -288,7 +322,20 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	if (!bHasRealTerrain)
 	{
 		TerrainGrid = FLsnTerrainGrid();
-		UE_LOG(LogLsn, Display, TEXT("No real terrain for %s: %s. The placeholder surface is drawn."), *Package.SiteId, *GridError);
+		UE_LOG(LogLsn, Display, TEXT("No terrain cache for %s: %s."), *Package.SiteId, *GridError);
+	}
+	// Without a cache the ground is drawn from the terrain patches the package itself carries (since 0.7).
+	TerrainPatches.Reset();
+	bHasPatchTerrain = false;
+	if (!bHasRealTerrain && !Package.bSynthetic && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoPatches")))
+	{
+		FString PatchError;
+		const bool bRead = LsnPackageIO::LoadTerrainPatches(PackageDirectory, TerrainPatches, PatchError);
+		UE_LOG(LogLsn, Display, TEXT("Terrain patches of %s: %s"), *Package.SiteId, bRead ? *FString::Printf(TEXT("%d read"), TerrainPatches.Num()) : *PatchError);
+		if (!bRead)
+		{
+			TerrainPatches.Reset();
+		}
 	}
 	TimePosition = 0.0;
 
@@ -316,9 +363,12 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
 	ObjectMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	ObjectMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
+	// Foil, metal and glass have a sheen; the Sun picks out their bevelled edges.
+	ObjectMaterial->SetScalarParameterValue(TEXT("Roughness"), 0.45f);
+	ObjectMaterial->SetScalarParameterValue(TEXT("Specular"), 0.5f);
 	RockMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	// Detail finer than the data on real elevation data only; the placeholder surface is no data at all.
-	RegolithMaterial->SetScalarParameterValue(TEXT("DetailStrength"), (bHasRealTerrain && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoDetail"))) ? 1.0f : 0.0f);
+	RegolithMaterial->SetScalarParameterValue(TEXT("DetailStrength"), ((bHasRealTerrain || TerrainPatches.Num() > 0) && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoDetail"))) ? 1.0f : 0.0f);
 
 	// The star field, if the star list and the orientation exported for this very package are there.
 	FString SkyError;
@@ -431,6 +481,59 @@ void ALsnSiteScene::RebuildGeometry()
 		const double Smoothing = FParse::Param(FCommandLine::Get(), TEXT("LsnRawNormals")) ? 0.0 : LsnMesh::DefaultNormalSmoothingM;
 		LsnMesh::BuildGridTerrain(Frame, Package, HeightIndex, TerrainGrid, RegolithAlbedo, Smoothing, TerrainData, SkippedHorizonSamples, UnknownTerrainSamples);
 	}
+	bHasPatchTerrain = false;
+	PatchExcessDeg = 0.0;
+	if (!bHasRealTerrain && TerrainPatches.Num() > 0)
+	{
+		// The patches are for drawing only (SPEC 5.9) and the package horizon decides visibility. They
+		// are drawn only if they do not stand above that horizon by more than 0.05 deg (a tenth of the
+		// Sun's disc) for the observer height in use, beyond the start of the horizon search: ground
+		// that would hide a body the package gives as visible is not drawn. Otherwise the plain surface
+		// that ends at the package horizon is drawn, as for a package without patches.
+		FLsnMeshData Candidate, Beyond;
+		int32 Ignored = 0;
+		LsnMesh::BuildPatchTerrain(TerrainPatches, RegolithAlbedo, Candidate, Ignored);
+		LsnMesh::AppendByDistance(Candidate, Package.HorizonSearchStartM(), 0.0, Beyond);
+		FLsnPlacedMesh Placed;
+		Placed.Mesh = &Beyond;
+		Placed.Origin = FVector::ZeroVector;
+		const FLsnSilhouette Silhouette({ Placed }, FVector(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM));
+		PatchExcessDeg = -TNumericLimits<double>::Max();
+		for (int32 A = 0; A < Package.AzimuthCount; ++A)
+		{
+			double Measured = 0.0;
+			const double HorizonDeg = Package.HorizonElevationAt(HeightIndex, A);
+			if (!FMath::IsNaN(HorizonDeg) && Silhouette.MaxElevationDeg(Package.AzimuthDegAt(A), Measured))
+			{
+				PatchExcessDeg = FMath::Max(PatchExcessDeg, Measured - HorizonDeg);
+			}
+		}
+		bHasPatchTerrain = PatchExcessDeg <= 0.05;
+		UE_LOG(LogLsn, Display, TEXT("Terrain patches of %s stand %.3f deg above the package horizon at most: %s."), *Package.SiteId, PatchExcessDeg, bHasPatchTerrain ? TEXT("drawn") : TEXT("not drawn"));
+	}
+	if (bHasRealTerrain)
+	{
+		// (built above)
+	}
+	else if (bHasPatchTerrain)
+	{
+		// Over ground from patches the horizon line of the package is drawn by itself.
+		HorizonLine->SetVisibility(true);
+		LsnMesh::BuildPatchTerrain(TerrainPatches, RegolithAlbedo, TerrainData, UnknownTerrainSamples);
+		// Beyond the patches the package has no surface, only its horizon: there the far part of the
+		// plain surface that ends at the horizon points is drawn, so that distant terrain keeps the
+		// outline the package gives it. It starts beyond the corners of the largest patch.
+		double LargestHalfWidthM = 0.0;
+		for (const FLsnTerrainPatch& Patch : TerrainPatches)
+		{
+			LargestHalfWidthM = FMath::Max(LargestHalfWidthM, Patch.HalfWidthM);
+		}
+		FLsnHorizonTerrainParams FarParams = TerrainParams;
+		FarParams.bCraters = false;
+		FLsnMeshData Sheet;
+		LsnMesh::BuildHorizonTerrain(Frame, Package, HeightIndex, FarParams, Sheet, SkippedHorizonSamples);
+		LsnMesh::AppendByDistance(Sheet, UE_SQRT_2 * LargestHalfWidthM, 0.0, TerrainData);
+	}
 	else
 	{
 		LsnMesh::BuildHorizonTerrain(Frame, Package, HeightIndex, TerrainParams, TerrainData, SkippedHorizonSamples);
@@ -440,7 +543,7 @@ void ALsnSiteScene::RebuildGeometry()
 	ApplyMesh(Terrain, TerrainData, RegolithMaterial);
 	// Without the elevation data of the site the ground is a sheet that reaches up to the package
 	// horizon: it stands for no relief and must not throw shadows of its own folds.
-	Terrain->SetCastShadow(bHasRealTerrain);
+	Terrain->SetCastShadow(bHasRealTerrain || bHasPatchTerrain);
 	if (SkippedHorizonSamples > 0)
 	{
 		UE_LOG(LogLsn, Warning, TEXT("%d horizon samples could not be placed (unknown values in the package)."), SkippedHorizonSamples);
@@ -494,6 +597,26 @@ void ALsnSiteScene::RebuildGeometry()
 
 bool ALsnSiteScene::GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const
 {
+	if (bHasPatchTerrain)
+	{
+		// The finest patch that holds the point.
+		const double Az = FMath::DegreesToRadians(AzimuthDeg);
+		const double EastM = DistanceM * FMath::Sin(Az), NorthM = DistanceM * FMath::Cos(Az);
+		double BestSpacing = TNumericLimits<double>::Max(), UpM = 0.0;
+		bool bFound = false;
+		for (const FLsnTerrainPatch& Patch : TerrainPatches)
+		{
+			double Up = 0.0;
+			if (Patch.SpacingM < BestSpacing && Patch.UpAt(EastM, NorthM, Up))
+			{
+				BestSpacing = Patch.SpacingM;
+				UpM = Up;
+				bFound = true;
+			}
+		}
+		OutPoint = FLsnSiteFrame::EnuMToUnreal(FVector(EastM, NorthM, UpM));
+		return bFound;
+	}
 	const int32 NumRings = TerrainGrid.RingDistanceM.Num();
 	if (!bHasRealTerrain || NumRings < 2 || TerrainGrid.AzimuthCount <= 0 || DistanceM > TerrainGrid.RingDistanceM.Last())
 	{
@@ -524,7 +647,7 @@ void ALsnSiteScene::RebuildScaleObjects()
 	bHasLander = false;
 	ScaleObjects->ClearAllMeshSections();
 	Mast->ClearAllMeshSections();
-	if (bHasRealTerrain)
+	if (bHasRealTerrain || bHasPatchTerrain)
 	{
 		// Where the objects stand: azimuth and distance from the site, turn about the vertical,
 		// size factor. Chosen for the look; the lander is far enough to stay small in the view.
@@ -532,8 +655,8 @@ void ALsnSiteScene::RebuildScaleObjects()
 		static const FPlaced Placed[] = {
 			{ TEXT("lander"), 150.0, 38.0, 20.0, 1.0 },
 			{ TEXT("boulder_1"), 118.0, 15.0, 0.0, 1.0 }, { TEXT("boulder_2"), 133.0, 10.0, 70.0, 1.0 }, { TEXT("boulder_3"), 100.0, 27.0, 140.0, 1.0 },
-			{ TEXT("boulder_2"), 147.0, 19.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 16.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 31.0, 30.0, 1.0 },
-			{ TEXT("boulder_2"), 20.0, 13.0, 110.0, 1.0 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
+			{ TEXT("boulder_4"), 147.0, 19.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 16.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 31.0, 30.0, 1.0 },
+			{ TEXT("boulder_4"), 20.0, 13.0, 110.0, 0.8 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
 		};
 		FLsnMeshData All, Rocks;
 		TMap<FString, FLsnMeshData> Models;

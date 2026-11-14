@@ -5,6 +5,7 @@
 #include "Frame/LsnSiteFrame.h"
 #include "Mesh/LsnMesh.h"
 #include "Package/LsnPackage.h"
+#include "Package/LsnTerrainPatches.h"
 #include "Sky/LsnSky.h"
 #include "Terrain/LsnTerrainGrid.h"
 #include "LsnSiteScene.generated.h"
@@ -94,6 +95,10 @@ public:
 
 	/** True if the ground is drawn from real elevation samples; false for the placeholder surface. */
 	bool HasRealTerrain() const { return bHasRealTerrain; }
+	/** The ground is drawn from the terrain patches of the package (no terrain cache for the site). */
+	bool HasPatchTerrain() const { return bHasPatchTerrain; }
+	/** The ground has relief of its own (terrain cache or patches of the package), so that it can be shown from the side and from above. */
+	bool HasDrawnRelief() const { return bHasRealTerrain || bHasPatchTerrain; }
 	const FLsnTerrainGrid& GetTerrainGrid() const { return TerrainGrid; }
 	int32 GetUnknownTerrainSamples() const { return UnknownTerrainSamples; }
 
@@ -260,6 +265,10 @@ private:
 	int32 SkippedHorizonSamples = 0;
 	FLsnTerrainGrid TerrainGrid;
 	bool bHasRealTerrain = false;
+	bool bHasPatchTerrain = false;
+	/** How far the patches stand above the package horizon for the observer height in use, beyond the start of the horizon search; degrees. */
+	double PatchExcessDeg = 0.0;
+	TArray<FLsnTerrainPatch> TerrainPatches;
 	int32 SceneSlot = 0;
 	bool bObstacleViewEnabled = true;
 	bool bFillLightWanted = true;

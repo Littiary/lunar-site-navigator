@@ -113,7 +113,9 @@ slope += CS * small * L.Craters(p + 11.3, 2.9, 0.10);
 slope += CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 11.0, 0.08));
 slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 43.0, 0.07));
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
-float mottle = 1.0 + S * 0.10 * medium * (L.Noise(p * 0.11 + 19.0).z - 0.5);
+// Grey variation on two large scales (about 9 m and 60 m), each on its own turned grid: the
+// ground is not one flat grey, and nothing repeats (no texture is tiled).
+float mottle = 1.0 + S * (0.09 * medium * (L.Noise(q * 0.11 + 19.0).z - 0.5) + 0.08 * (L.Noise(w * 0.017 + 5.0).z - 0.5));
 return float4(n, mottle);
 """
 
@@ -268,14 +270,24 @@ def make_surface():
     link(grey, base, "A")
     link(blend, base, "B")
     ambient = _scalar(material, "Ambient", 0.0, -470, 900)
+    # Light thrown back by the sunlit ground: "Ambient" is the radiance a white surface facing
+    # straight down would get from it; a surface gets the share of the ground it faces,
+    # (1 - n.z) / 2, the form factor of a plane below it. Nothing reaches a face that looks up.
+    facing = _custom(material, "return 0.5 * (1.0 - normalize(N).z);", unreal.CustomMaterialOutputType.CMOT_FLOAT1, ["N"], -470, 1000)
+    link(normal, facing, "N")
+    bounce = node(unreal.MaterialExpressionMultiply, -300, 950)
+    link(ambient, bounce, "A")
+    link(facing, bounce, "B")
     glow = node(unreal.MaterialExpressionMultiply, -150, 850)
     link(colour, glow, "A")
-    link(ambient, glow, "B")
+    link(bounce, glow, "B")
     mel.connect_material_property(base, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(normal, "", unreal.MaterialProperty.MP_NORMAL)
     mel.connect_material_property(glow, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-    mel.connect_material_property(_constant(material, 1.0, 200), "", unreal.MaterialProperty.MP_ROUGHNESS)
-    mel.connect_material_property(_constant(material, 0.0, 300), "", unreal.MaterialProperty.MP_SPECULAR)
+    # Regolith is rough and has no highlight (the defaults); the scale objects are given a sheen,
+    # so that the Sun picks out their bevelled edges.
+    mel.connect_material_property(_scalar(material, "Roughness", 1.0, -470, 200), "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.connect_material_property(_scalar(material, "Specular", 0.0, -470, 300), "", unreal.MaterialProperty.MP_SPECULAR)
     mel.connect_material_property(_constant(material, 0.0, 400), "", unreal.MaterialProperty.MP_METALLIC)
     mel.recompile_material(material)
     unreal.EditorAssetLibrary.save_asset(path, only_if_is_dirty=False)

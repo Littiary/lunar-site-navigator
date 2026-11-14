@@ -80,6 +80,23 @@ function Still([string]$file, [string]$text, [hashtable]$params) {
     & $capture -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -ResX 1920 -ResY 1080 @params | Out-Host
     if (-not (Test-Path (Join-Path $Out $file))) { throw "$file was not written" }
     Add-Note $file $text
+    # Every still in two versions: with the interface and clean (the picture with one line that
+    # says what it shows). The one named above is the version meant for the slide.
+    $other = @{} + $params
+    $extra = "$($params.Extra)"
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($file)
+    if ($extra -match "-LsnNoHud") {
+        $twin = "${stem}_interface.png"
+        $other.Extra = ($extra -replace "-LsnNoHud", "").Trim()
+        $twinText = "The same picture with the interface of the tool."
+    } else {
+        $twin = "${stem}_clean.png"
+        $other.Extra = (($extra -replace '-LsnPresentation', '') -replace '-LsnCaption="[^"]*"', '' -replace '-LsnPage=\S+', '' -replace '-LsnControls', '').Trim() + " -LsnNoHud"
+        $twinText = "The same picture without the interface: the view alone, with one line that says which site, time and package it shows."
+    }
+    & $capture -Out (Join-Path $Out $twin) -EngineRoot $EngineRoot -ResX 1920 -ResY 1080 @other | Out-Host
+    if (-not (Test-Path (Join-Path $Out $twin))) { throw "$twin was not written" }
+    Add-Note $twin $twinText
 }
 function Skip([string]$file, [string]$what) {
     Remove-Old $file
@@ -96,7 +113,7 @@ if ($Only -ne "stills") {
 }
 if ($Only -ne "clip") {
     Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: state chips and time strip of each site, without the controls, with a caption; readable when shown small." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPresentation -LsnCaption=`"One instant, two sites: Sun, Earth and landing state of each, read from the computed packages`"" }
-    Still "still_1b_planner_with_controls.png" "The same view with the controls of the tool: the three main actions, the horizon all round and the grouped bar. Dense; meant for a close look, not for a small picture on a slide." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = $compare }
+    Still "still_1b_planner_with_controls.png" "The same view with the control bar and the drawer open on its tab of further controls. Meant for a close look, not for a small picture on a slide." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnControls" }
     if ($a.Obstacles) {
         Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPresentation -LsnCaption=`"Which terrain hides the Sun, how far away it is, and how many hours of sunlight it costs`"$rootArgument" }
     } else { Skip "still_2_obstacle_highlight.png" "The obstacle that hides the Sun and the hours it costs (contract 0.2, SPEC 5.5)" }

@@ -2,6 +2,8 @@
 // test, not a physical constant.
 
 #include "Tests/LsnTestSupport.h"
+#include "Planner/LsnPlanner.h"
+#include "Package/LsnTerrainPatches.h"
 #include "Frame/LsnSiteFrame.h"
 #include "KismetProceduralMeshLibrary.h"
 #include "Mesh/LsnMesh.h"
@@ -219,6 +221,133 @@ bool FLsnMeshSilhouetteTest::RunTest(const FString& Parameters)
 	const FLsnSilhouette RaisedSilhouette({ Raised }, Eye);
 	const double ExpectedRaisedA = FMath::RadiansToDegrees(FMath::Atan(FMath::Tan(FMath::DegreesToRadians(10.0)) + FMath::Tan(FMath::DegreesToRadians(1.0))));
 	TestTrue(TEXT("a raised mesh is measured where it is"), RaisedSilhouette.MaxElevationDeg(-1.0, El) && FMath::Abs(El - ExpectedRaisedA) < 1e-6);
+	return true;
+}
+
+// P. The ground from the terrain patches of a package (SPEC 5.9). Criteria, written before the first run
+//    (14 November 2026):
+//    1. every node of a patch is a vertex at its (east, north, up), to 1e-6 m;
+//    2. a coarser patch has no triangle inside the square of a finer one, and outside it every cell with
+//       data has two triangles facing up: with a 5 x 5 patch of 5 m spacing inside a 5 x 5 patch of 10 m
+//       spacing that is 16 * 2 + (16 - 4) * 2 = 56 triangles (the first draft of this test gave both
+//       patches the same spacing, so that neither was the finer one; corrected before a valid run);
+//    3. the patches are taken by spacing: the same list in another order gives the same number of
+//       vertices and triangles;
+//    4. a node without data leaves out the cells it belongs to (four for a node in the middle), and they
+//       are counted;
+//    5. the height read at a point is linear between the nodes, and there is none outside the patch;
+//    6. on a published package with patches (if one is there): the patches load with the counts their
+//       manifest states, and the mesh has the triangles of all cells outside the next finer patch.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLsnPatchTerrainTest, "LunarSiteNavigator.Terrain.PatchMesh", LsnTest::Flags)
+bool FLsnPatchTerrainTest::RunTest(const FString& Parameters)
+{
+	auto MakePatch = [](const TCHAR* Id, double Spacing, int32 Count)
+	{
+		FLsnTerrainPatch Patch;
+		Patch.Id = Id;
+		Patch.SpacingM = Spacing;
+		Patch.CountEast = Patch.CountNorth = Count;
+		Patch.HalfWidthM = 0.5 * Spacing * (Count - 1);
+		Patch.EastMinM = Patch.NorthMinM = -Patch.HalfWidthM;
+		for (int32 I = 0; I < Count; ++I)
+		{
+			for (int32 J = 0; J < Count; ++J)
+			{
+				// A tilted plane with a little curvature: up = 0.1 east - 0.05 north - 0.001 (east^2 + north^2).
+				const double East = Patch.EastMinM + J * Spacing, North = Patch.NorthMinM + I * Spacing;
+				Patch.UpM.Add(static_cast<float>(0.1 * East - 0.05 * North - 0.001 * (East * East + North * North)));
+			}
+		}
+		return Patch;
+	};
+	const FLsnTerrainPatch Fine = MakePatch(TEXT("site"), 5.0, 5), Coarse = MakePatch(TEXT("wide"), 10.0, 5);
+	FLsnMeshData Mesh, Swapped;
+	int32 Missing = -1;
+	LsnMesh::BuildPatchTerrain({ Fine, Coarse }, 0.13f, Mesh, Missing);
+	TestEqual(TEXT("P1: every node is a vertex"), Mesh.Positions.Num(), 25 + 25);
+	double Worst = 0.0;
+	for (int32 I = 0; I < 5; ++I)
+	{
+		for (int32 J = 0; J < 5; ++J)
+		{
+			const FVector Expected = FLsnSiteFrame::EnuMToUnreal(FVector(-10.0 + 5.0 * J, -10.0 + 5.0 * I, Fine.UpM[I * 5 + J]));
+			Worst = FMath::Max(Worst, FVector::Distance(Mesh.Positions[I * 5 + J], Expected) / FLsnSiteFrame::CmPerM);
+		}
+	}
+	TestTrue(FString::Printf(TEXT("P1: vertices at (east, north, up), worst %.2e m"), Worst), Worst <= 1e-6);
+	TestEqual(TEXT("P2: 32 triangles of the fine patch and 24 of the coarse one outside it"), Mesh.NumTriangles(), 56);
+	TestEqual(TEXT("P2: no cell without data"), Missing, 0);
+	int32 FacingDown = 0, CoarseInside = 0;
+	for (int32 T = 0; T < Mesh.NumTriangles(); ++T)
+	{
+		FacingDown += Mesh.TriangleFacing(T).Z <= 0.0 ? 1 : 0;
+		if (Mesh.Triangles[T * 3] >= 25)
+		{
+			const FVector Centre = (Mesh.Positions[Mesh.Triangles[T * 3]] + Mesh.Positions[Mesh.Triangles[T * 3 + 1]] + Mesh.Positions[Mesh.Triangles[T * 3 + 2]]) / 3.0;
+			const FVector Enu = FLsnSiteFrame::UnrealToEnuM(Centre);
+			CoarseInside += (FMath::Abs(Enu.X) < 10.0 && FMath::Abs(Enu.Y) < 10.0) ? 1 : 0;
+		}
+	}
+	TestEqual(TEXT("P2: every triangle faces up"), FacingDown, 0);
+	TestEqual(TEXT("P2: no triangle of the coarse patch inside the fine one"), CoarseInside, 0);
+	LsnMesh::BuildPatchTerrain({ Coarse, Fine }, 0.13f, Swapped, Missing);
+	TestEqual(TEXT("P3: the order of the list does not matter (vertices)"), Swapped.Positions.Num(), Mesh.Positions.Num());
+	TestEqual(TEXT("P3: the order of the list does not matter (triangles)"), Swapped.NumTriangles(), Mesh.NumTriangles());
+
+	FLsnTerrainPatch Holed = MakePatch(TEXT("near"), 10.0, 5);
+	Holed.UpM[2 * 5 + 2] = std::numeric_limits<float>::quiet_NaN();
+	LsnMesh::BuildPatchTerrain({ Holed }, 0.13f, Mesh, Missing);
+	TestEqual(TEXT("P4: four cells left out around a node without data"), Missing, 4);
+	TestEqual(TEXT("P4: the other twelve cells are drawn"), Mesh.NumTriangles(), 24);
+
+	double Up = 0.0;
+	TestTrue(TEXT("P5: a height inside the patch"), Coarse.UpAt(5.0, 0.0, Up));
+	TestEqual(TEXT("P5: linear between two nodes"), Up, 0.5 * (static_cast<double>(Coarse.UpM[2 * 5 + 2]) + Coarse.UpM[2 * 5 + 3]), 1e-9);
+	TestFalse(TEXT("P5: none outside the patch"), Coarse.UpAt(25.0, 0.0, Up));
+
+	// On a published package.
+	const FString Root = LsnPlanner::PublishedPackageRoot();
+	TArray<FLsnIndexEntry> Entries;
+	FString Error;
+	if (!LsnPackageIO::LoadIndex(Root, Entries, Error))
+	{
+		AddWarning(TEXT("NOT RUN on published packages: none found."));
+		return true;
+	}
+	int32 Checked = 0;
+	for (const FLsnIndexEntry& Entry : Entries)
+	{
+		TArray<FLsnTerrainPatch> Patches;
+		if (Entry.Kind != TEXT("site") || !LsnPackageIO::LoadTerrainPatches(FPaths::Combine(Root, Entry.Path), Patches, Error))
+		{
+			continue;
+		}
+		++Checked;
+		Patches.Sort([](const FLsnTerrainPatch& A, const FLsnTerrainPatch& B) { return A.SpacingM < B.SpacingM; });
+		int32 ExpectedTriangles = 0, WithoutData = 0;
+		double Inner = -1.0;
+		for (const FLsnTerrainPatch& Patch : Patches)
+		{
+			TestEqual(Entry.SiteId + TEXT(": P6: a patch holds count_north x count_east values"), Patch.UpM.Num(), Patch.CountEast * Patch.CountNorth);
+			for (int32 I = 0; I + 1 < Patch.CountNorth; ++I)
+			{
+				for (int32 J = 0; J + 1 < Patch.CountEast; ++J)
+				{
+					const double E0 = Patch.EastMinM + J * Patch.SpacingM, N0 = Patch.NorthMinM + I * Patch.SpacingM;
+					const bool bInside = FMath::Max(FMath::Abs(E0), FMath::Abs(E0 + Patch.SpacingM)) <= Inner + 5.0e-4 && FMath::Max(FMath::Abs(N0), FMath::Abs(N0 + Patch.SpacingM)) <= Inner + 5.0e-4;
+					const bool bData = !FMath::IsNaN(Patch.UpM[I * Patch.CountEast + J]) && !FMath::IsNaN(Patch.UpM[I * Patch.CountEast + J + 1])
+						&& !FMath::IsNaN(Patch.UpM[(I + 1) * Patch.CountEast + J]) && !FMath::IsNaN(Patch.UpM[(I + 1) * Patch.CountEast + J + 1]);
+					ExpectedTriangles += (!bInside && bData) ? 2 : 0;
+					WithoutData += (!bInside && !bData) ? 1 : 0;
+				}
+			}
+			Inner = FMath::Max(Inner, Patch.HalfWidthM);
+		}
+		LsnMesh::BuildPatchTerrain(Patches, 0.13f, Mesh, Missing);
+		TestEqual(Entry.SiteId + TEXT(": P6: triangles of all cells outside the next finer patch"), Mesh.NumTriangles(), ExpectedTriangles);
+		TestEqual(Entry.SiteId + TEXT(": P6: cells without data"), Missing, WithoutData);
+	}
+	AddInfo(FString::Printf(TEXT("terrain patches read and meshed for %d published site packages"), Checked));
 	return true;
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Package/LsnTerrainPatches.h"
 #include "CoreMinimal.h"
 #include "Frame/LsnSiteFrame.h"
 
@@ -78,6 +79,23 @@ namespace LsnMesh
 	 * Origin: the site's ground point (the Unreal world origin).
 	 * OutSkippedAzimuths counts samples that could not be placed.
 	 */
+	/**
+	 * The ground from the terrain patches of a package (SPEC 5.9), for a site whose elevation
+	 * data is not installed where the terrain caches were made. Every node is a vertex at its
+	 * (east, north, up); where patches overlap the one with the smaller spacing is drawn, so a
+	 * coarser patch has no cell inside a finer one. Patches are taken by spacing, not by their
+	 * order or their ids. A cell with a node without data is left out. For drawing only.
+	 */
+	LUNARSITENAVIGATOR_API void BuildPatchTerrain(const TArray<FLsnTerrainPatch>& Patches, float Albedo, FLsnMeshData& OutMesh, int32& OutCellsWithoutData);
+
+	/**
+	 * Adds to a mesh the triangles of another whose three corners all lie farther from the site
+	 * (horizontally) than MinDistanceM, or all nearer than MaxDistanceM when that is given.
+	 * Used to draw, beyond the terrain patches of a package, the far part of the surface that
+	 * ends at the package horizon.
+	 */
+	LUNARSITENAVIGATOR_API void AppendByDistance(const FLsnMeshData& From, double MinDistanceM, double MaxDistanceM, FLsnMeshData& InOutMesh);
+
 	LUNARSITENAVIGATOR_API void BuildHorizonTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
 		const FLsnHorizonTerrainParams& Params, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths);
 

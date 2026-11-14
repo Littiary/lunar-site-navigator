@@ -1,4 +1,5 @@
 #include "Mesh/LsnMesh.h"
+#include "Package/LsnTerrainPatches.h"
 
 #include "Algo/BinarySearch.h"
 #include "Package/LsnPackage.h"
@@ -793,4 +794,95 @@ double LsnMesh::NearGroundFacingAwayShare(const FLsnTerrainGrid& Grid, double Si
 		}
 	}
 	return Points > 0 ? static_cast<double>(Away) / Points : 0.0;
+}
+
+void LsnMesh::BuildPatchTerrain(const TArray<FLsnTerrainPatch>& Patches, float Albedo, FLsnMeshData& OutMesh, int32& OutCellsWithoutData)
+{
+	OutMesh = FLsnMeshData();
+	OutCellsWithoutData = 0;
+	// Finest first: a coarser patch is drawn only outside the square of the next finer one.
+	TArray<const FLsnTerrainPatch*> Sorted;
+	for (const FLsnTerrainPatch& Patch : Patches)
+	{
+		Sorted.Add(&Patch);
+	}
+	Sorted.Sort([](const FLsnTerrainPatch& A, const FLsnTerrainPatch& B) { return A.SpacingM < B.SpacingM; });
+	const uint8 Grey = static_cast<uint8>(FMath::Clamp(FMath::RoundToInt(Albedo * 255.0f), 0, 255));
+	const FColor Color(Grey, Grey, Grey, 255);
+	double InnerHalfWidthM = -1.0;
+	for (const FLsnTerrainPatch* Patch : Sorted)
+	{
+		const int32 First = OutMesh.Positions.Num();
+		for (int32 I = 0; I < Patch->CountNorth; ++I)
+		{
+			for (int32 J = 0; J < Patch->CountEast; ++J)
+			{
+				const float Up = Patch->UpM[I * Patch->CountEast + J];
+				OutMesh.Positions.Add(FLsnSiteFrame::EnuMToUnreal(FVector(Patch->EastMinM + J * Patch->SpacingM, Patch->NorthMinM + I * Patch->SpacingM, FMath::IsNaN(Up) ? 0.0f : Up)));
+				OutMesh.Colors.Add(Color);
+			}
+		}
+		for (int32 I = 0; I + 1 < Patch->CountNorth; ++I)
+		{
+			for (int32 J = 0; J + 1 < Patch->CountEast; ++J)
+			{
+				const double East0 = Patch->EastMinM + J * Patch->SpacingM, North0 = Patch->NorthMinM + I * Patch->SpacingM;
+				const double East1 = East0 + Patch->SpacingM, North1 = North0 + Patch->SpacingM;
+				// Wholly inside the finer patch: that one is drawn there (half a millimetre of slack for rounding).
+				const double Slack = 5.0e-4;
+				if (FMath::Max(FMath::Abs(East0), FMath::Abs(East1)) <= InnerHalfWidthM + Slack && FMath::Max(FMath::Abs(North0), FMath::Abs(North1)) <= InnerHalfWidthM + Slack)
+				{
+					continue;
+				}
+				const int32 A = I * Patch->CountEast + J, B = A + 1, C = A + Patch->CountEast, D = C + 1;
+				if (FMath::IsNaN(Patch->UpM[A]) || FMath::IsNaN(Patch->UpM[B]) || FMath::IsNaN(Patch->UpM[C]) || FMath::IsNaN(Patch->UpM[D]))
+				{
+					++OutCellsWithoutData;
+					continue;
+				}
+				OutMesh.AddTriangleFacing(First + A, First + B, First + D, FVector::UpVector);
+				OutMesh.AddTriangleFacing(First + A, First + D, First + C, FVector::UpVector);
+			}
+		}
+		InnerHalfWidthM = FMath::Max(InnerHalfWidthM, Patch->HalfWidthM);
+	}
+	OutMesh.UV0.Init(FVector2D::ZeroVector, OutMesh.Positions.Num());
+	OutMesh.ComputeNormals();
+}
+
+void LsnMesh::AppendByDistance(const FLsnMeshData& From, double MinDistanceM, double MaxDistanceM, FLsnMeshData& InOutMesh)
+{
+	TArray<double> DistanceM;
+	DistanceM.Reserve(From.Positions.Num());
+	for (const FVector& Position : From.Positions)
+	{
+		const FVector Enu = FLsnSiteFrame::UnrealToEnuM(Position);
+		DistanceM.Add(FMath::Sqrt(Enu.X * Enu.X + Enu.Y * Enu.Y));
+	}
+	TArray<int32> NewIndex;
+	NewIndex.Init(INDEX_NONE, From.Positions.Num());
+	for (int32 T = 0; T < From.NumTriangles(); ++T)
+	{
+		const int32 Corners[3] = { From.Triangles[T * 3], From.Triangles[T * 3 + 1], From.Triangles[T * 3 + 2] };
+		bool bKeep = true;
+		for (const int32 Corner : Corners)
+		{
+			bKeep = bKeep && DistanceM[Corner] >= MinDistanceM && (MaxDistanceM <= 0.0 || DistanceM[Corner] <= MaxDistanceM);
+		}
+		if (!bKeep)
+		{
+			continue;
+		}
+		for (const int32 Corner : Corners)
+		{
+			if (NewIndex[Corner] == INDEX_NONE)
+			{
+				NewIndex[Corner] = InOutMesh.Positions.Add(From.Positions[Corner]);
+				InOutMesh.Normals.Add(From.Normals.IsValidIndex(Corner) ? From.Normals[Corner] : FVector::UpVector);
+				InOutMesh.UV0.Add(From.UV0.IsValidIndex(Corner) ? From.UV0[Corner] : FVector2D::ZeroVector);
+				InOutMesh.Colors.Add(From.Colors.IsValidIndex(Corner) ? From.Colors[Corner] : FColor::White);
+			}
+			InOutMesh.Triangles.Add(NewIndex[Corner]);
+		}
+	}
 }

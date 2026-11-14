@@ -358,8 +358,29 @@ void ALsnViewGameMode::AddSiteInfo(int32 SiteIndex)
 	SiteInfos[SiteIndex] = Info;
 }
 
+TArray<bool> ALsnViewGameMode::GetSitesHiddenBySearch() const
+{
+	TArray<bool> Hidden;
+	Hidden.Init(false, Sites.Num());
+	const FString Needle = SiteSearch.TrimStartAndEnd();
+	for (int32 Index = 0; Index < Sites.Num() && !Needle.IsEmpty(); ++Index)
+	{
+		Hidden[Index] = !Sites[Index].Name.Contains(Needle) && !Sites[Index].Programme.Contains(Needle) && !Sites[Index].Category.Contains(Needle);
+	}
+	return Hidden;
+}
+
 void ALsnViewGameMode::TypeCustom(TCHAR Character)
 {
+	if (Custom.Focus == 2)
+	{
+		if (SiteSearch.Len() < 40)
+		{
+			SiteSearch.AppendChar(Character);
+			PickerFirstRow = 0;
+		}
+		return;
+	}
 	FString& Field = Custom.Focus == 0 ? Custom.Latitude : Custom.Longitude;
 	if ((FChar::IsDigit(Character) || Character == TEXT('.') || Character == TEXT('-')) && Field.Len() < 12 && !Custom.bRunning)
 	{
@@ -369,6 +390,12 @@ void ALsnViewGameMode::TypeCustom(TCHAR Character)
 
 void ALsnViewGameMode::BackspaceCustom()
 {
+	if (Custom.Focus == 2)
+	{
+		SiteSearch.LeftChopInline(1);
+		PickerFirstRow = 0;
+		return;
+	}
 	FString& Field = Custom.Focus == 0 ? Custom.Latitude : Custom.Longitude;
 	if (Field.Len() > 0 && !Custom.bRunning)
 	{
@@ -573,7 +600,7 @@ void ALsnViewGameMode::TickCustom()
 	if (Step == 1)
 	{
 		Page = ELsnPlannerPage::Summary;
-		Custom.HorizonLine = FString::Printf(TEXT("Step 1 of 2 done in %.0f s: terrain horizon of %s, package %s; %s."), RunS, *CustomName, *PackageId, *Terrain);
+		Custom.HorizonLine = FString::Printf(TEXT("Step 1 of 2 done in %.0f s: terrain horizon of %s; %s."), RunS, *CustomName, *Terrain);
 		const FString Arguments = LsnPlanner::CustomTimelineArguments(CustomTimelineTemplate, Custom.Latitude, Custom.Longitude, CustomName, CustomRoot, CustomStartDate);
 		if (Arguments.IsEmpty())
 		{
@@ -588,7 +615,7 @@ void ALsnViewGameMode::TickCustom()
 	}
 	else
 	{
-		Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2 done in %.0f s: Sun and Earth timeline of 30 days from %s, package %s; %s."), RunS, *CustomStartDate, *PackageId, *Terrain);
+		Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2 done in %.0f s: Sun and Earth timeline of 30 days from %s; %s."), RunS, *CustomStartDate, *Terrain);
 		Custom.Message = Custom.TimelineLine;
 	}
 }
