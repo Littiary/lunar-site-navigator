@@ -66,6 +66,71 @@
    },
    "pyramid_json_sha256": "06c24e0c3f1e1570ab6752f5fc59b6cacd520d4bcbb1785a4ec07be36db966d3"
   },
+  "LDEM_60N_60M": {
+   "base_file": "ldem_60n_60m.img",
+   "base_sha256": "1f694ee9822774e7150da2c4e0e15fe745875365d2860e69ad755803663bd1e4",
+   "levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "dtype": "<i2",
+   "built_utc": "2026-11-14T15:30:48Z",
+   "files": {
+    "mean_L1.npy": {
+     "size_bytes": 481740928,
+     "sha256": "c25e1b0f10060ff51ab1527c06737912f0f2458e6073de814f8489fb7d9aa97b"
+    },
+    "mean_L2.npy": {
+     "size_bytes": 120435328,
+     "sha256": "aede50dfa412390767919284bffa4a4c237e63d07bc69e8367f210342ad2d164"
+    },
+    "mean_L3.npy": {
+     "size_bytes": 30108928,
+     "sha256": "0693c86de523603a3cf33f1ddd308cfb0d1037e4abb33bd84c7d3385fd18ef51"
+    },
+    "mean_L4.npy": {
+     "size_bytes": 7527328,
+     "sha256": "bc6c4383ffb69f7905b5a2941b580f6ef88a4e481a3734ea094e399611a33b65"
+    },
+    "mean_L5.npy": {
+     "size_bytes": 1881928,
+     "sha256": "613e59533958486623149a3177a6d53edc669b93f679004734d1e1f7b6beb179"
+    },
+    "mean_L6.npy": {
+     "size_bytes": 470578,
+     "sha256": "cd07db40fa5624f567231e9a38cac2e1005ffb42760c89fd83bcb56655db5dc1"
+    },
+    "max_L1.npy": {
+     "size_bytes": 481740928,
+     "sha256": "efa5def3a13aba6ed6987664c5de02c241bda735c5dba50d57d00c0348e04ae5"
+    },
+    "max_L2.npy": {
+     "size_bytes": 120435328,
+     "sha256": "8c75fd4c2fc2be42b09e41751fbf1d1b67fa845689e3bb57f52bcb536aadb9b7"
+    },
+    "max_L3.npy": {
+     "size_bytes": 30108928,
+     "sha256": "1d58387c83d3b5c5703eaf1f93dc59cbe4c9ccfa91ab6001ffb1536371b42354"
+    },
+    "max_L4.npy": {
+     "size_bytes": 7527328,
+     "sha256": "1813bdfef28d962b06ae68357d10492bf597420de390c106ecd5a95edaa2d7a9"
+    },
+    "max_L5.npy": {
+     "size_bytes": 1881928,
+     "sha256": "9f25a279fb384810985dbc244b4ab13eba52395c8f722340981573aa624435d2"
+    },
+    "max_L6.npy": {
+     "size_bytes": 470578,
+     "sha256": "a722c6c9def9ffe4c05b3a385666dcfb5c0a69b3ffee5c2f1763aba8ee037780"
+    }
+   },
+   "pyramid_json_sha256": "b06f8af3fb51ab4bf09d70172f9397413c1cb8bb066781855e31b55f90aac23d"
+  },
   "LDEM_60S_60M": {
    "base_file": "ldem_60s_60m.img",
    "base_sha256": "e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c",
@@ -130,6 +195,71 @@
     }
    },
    "pyramid_json_sha256": "a5d4cc093eddb8b6ac1ae4ec4aaa01e21a8b9cc15ad07ba1678414836964fd2e"
+  },
+  "LDEM_80N_20M": {
+   "base_file": "ldem_80n_20m.img",
+   "base_sha256": "9f0521fc28b74ba3c60fc181a14a5189acb0f809bb90a14f1548e744aa6dfe2b",
+   "levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "dtype": "<i2",
+   "built_utc": "2026-11-14T15:29:33Z",
+   "files": {
+    "mean_L1.npy": {
+     "size_bytes": 462080128,
+     "sha256": "bca4b9b1f5af6d1799e46ee66d9834ec63e5929ac879ca52a93d752f9812c019"
+    },
+    "mean_L2.npy": {
+     "size_bytes": 115520128,
+     "sha256": "6fe6bd38ba6ecaf1d80926871ee640939ca4ddd17b9bb7b21dcdc922b495758f"
+    },
+    "mean_L3.npy": {
+     "size_bytes": 28880128,
+     "sha256": "cb0c89ac1ecd81bad562524adcab6645939e0b44833ded14f077a65a47aee5ab"
+    },
+    "mean_L4.npy": {
+     "size_bytes": 7220128,
+     "sha256": "5d7492144cbd2900b2b470037e445916c4e93506f25700cdac255913ecf3cd08"
+    },
+    "mean_L5.npy": {
+     "size_bytes": 1805128,
+     "sha256": "656a1606879f7d0d78235a3fda8e1f03dbf77d3c7b040c38b4cd26db1bab488e"
+    },
+    "mean_L6.npy": {
+     "size_bytes": 451378,
+     "sha256": "dcaedd03e69d4a33db5e34f508dbe137cad7a43b32381f4229b9b33b80fa5402"
+    },
+    "max_L1.npy": {
+     "size_bytes": 462080128,
+     "sha256": "57432c24b954584fb4be387108db5cc6555988aba72a80b256007a9c283771cf"
+    },
+    "max_L2.npy": {
+     "size_bytes": 115520128,
+     "sha256": "4d8fd5e3bea970815bad419e85107a86e5436f80979665f0d395cb2281ad8f2f"
+    },
+    "max_L3.npy": {
+     "size_bytes": 28880128,
+     "sha256": "366c812c361a2e4915ee282ee3ad720b0c8b59f4f652319e13d9d4a2124446ce"
+    },
+    "max_L4.npy": {
+     "size_bytes": 7220128,
+     "sha256": "cc633c9064edf31999f7f1cea9bea030425e33ad533a629f54e87625ee796a3f"
+    },
+    "max_L5.npy": {
+     "size_bytes": 1805128,
+     "sha256": "2d88daae3a2eafb5f74b6ca58eedd9827cbe0b110fd30ce4b49dbbed062e989e"
+    },
+    "max_L6.npy": {
+     "size_bytes": 451378,
+     "sha256": "71a486105a560681f71083e4af5e2684fcae01eb410e26c22cf0abcc927e01b7"
+    }
+   },
+   "pyramid_json_sha256": "8ff16fac93b73ba83cca6c3939a52ff32c9280fee29964e6e2824b71438f8be2"
   },
   "LDEM_80S_20M": {
    "base_file": "ldem_80s_20m.img",
