@@ -147,3 +147,14 @@ def test_open_terrain_default_is_unchanged(synth_label):
     t = lsn_data.open_terrain(label_paths=[synth_label])
     assert isinstance(t, Terrain)
     assert lsn_data.DEFAULT_PRODUCTS == ("LDEM_80S_20M", "LDEM_60S_60M")
+
+
+def test_describe_point_labels_the_resolution_class(moon):
+    d = moon.describe_point(90.0, -89.8)
+    assert d["product_id"] == "SYNTH_S90_100M" and d["pixel_m"] == 100.0 and d["terrain_class"] == "polar"
+    d = moon.describe_point(45.0, -30.0)
+    assert d["product_id"] == "SYN_CYL" and d["terrain_class"] == "global_coarse"
+    assert abs(d["pixel_m"] - 2 * 3.141592653589793 * 1_737_400 / 360 / 4) < 1e-6
+    assert "not resolved" in d["note"]
+    d = moon.describe_point(45.0, -75.0)
+    assert d["product_id"] is None and d["terrain_class"] == "none"

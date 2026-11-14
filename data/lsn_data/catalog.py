@@ -120,6 +120,26 @@ RDR_SAMPLE = tuple(
     )
 )
 
+# 14 orbits spread over mission phase LRO_ES_100 (Jan-Feb 2021, every 27th file). The 20 m and 60 m polar products
+# use data through LRO_ES_54 (Feb 2017), so these returns are NOT in them: an independent sample of the DEM error.
+RDR_INDEPENDENT = tuple(
+    f"LOLARDR_{t}"
+    for t in (
+        "210261356", "210281841", "210302326", "210330411", "210350855", "210371339", "210391823",
+        "210412308", "210440353", "210460837", "210481322", "210501806", "210522250", "210550335",
+    )
+)
+
+# 14 orbits of mission phase LRO_NO_08 (Apr-May 2010, near-circular 50 km orbit, GRGM900C orbits as stated in each
+# label): the LRO_SM_06 files have no valid returns north of 80.5 N (high altitude over the north pole in 2011).
+RDR_NORTH = tuple(
+    f"LOLARDR_{t}"
+    for t in (
+        "100951948", "100972243", "101000137", "101020431", "101040726", "101061019", "101081314",
+        "101101608", "101121901", "101142154", "101170047", "101190339", "101210632", "101230925",
+    )
+)
+
 RDR_FORMAT = Product(
     "_rdr_docs",
     "LOLA RDR record structure (LOLARDR.FMT)",
@@ -158,6 +178,8 @@ PRODUCTS: dict[str, Product] = {
         ROBBINS,
         RDR_FORMAT,
         *(_rdr("LRO_SM_06", n) for n in RDR_SAMPLE),
+        *(_rdr("LRO_ES_100", n) for n in RDR_INDEPENDENT),
+        *(_rdr("LRO_NO_08", n) for n in RDR_NORTH),
     )
 }
 
@@ -199,3 +221,30 @@ MOON_CYLINDRICAL: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("SLDEM2015_256", SLDEM_256_TILES),
     ("LDEM_128", ("LDEM_128",)),
 )
+
+
+# 5 m/pixel LOLA site DEMs of Barker, Mazarico, Neumann (2021), PGDA product 78 (single source, no mirror).
+PGDA_5MPP_ROOT = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
+SITE_DEM_SITES = {"Site04": "Shackleton rim", "Site11": "de Gerlache rim", "Site23": "Malapert massif"}
+
+
+def _site_dem(site: str) -> Product:
+    files = [
+        FileSpec("data", f"{site}_final_adj_5mpp_surf.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_surf.tif", None),
+        FileSpec("count", f"{site}_final_adj_5mpp_ldec.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_ldec.tif", None),
+        FileSpec("uncertainty", f"{site}_final_adj_5mpp_toterr.tif", f"{PGDA_5MPP_ROOT}/{site}/{site}_final_adj_5mpp_toterr.tif", None),
+    ]
+    return Product(
+        f"LOLA5MPP_{site.upper()}",
+        f"LOLA 5 m/pixel site DEM {site} ({SITE_DEM_SITES[site]}), Barker et al. 2021, polar stereographic GeoTIFF",
+        tuple(files),
+        base="raw/lola_5mpp",
+    )
+
+
+PGDA_DOCS = Product("_pgda_docs", "README of the PGDA 5 m/pixel site DEMs",
+                    (FileSpec("doc", "README", f"{PGDA_5MPP_ROOT}/README", None),), base="raw/lola_5mpp")
+PRODUCTS[PGDA_DOCS.product_id] = PGDA_DOCS
+for _s in SITE_DEM_SITES:
+    PRODUCTS[f"LOLA5MPP_{_s.upper()}"] = _site_dem(_s)
+SITE_DEM_PRODUCTS = tuple(f"LOLA5MPP_{_s.upper()}" for _s in SITE_DEM_SITES)
