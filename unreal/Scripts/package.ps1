@@ -33,6 +33,9 @@ $exe = Get-ChildItem -Path $outFull -Recurse -Filter "LunarSiteNavigator.exe" | 
 if (-not $exe) { Write-Host "Packaging reported success but no LunarSiteNavigator.exe is under $outFull"; exit 1 }
 $staged = Get-ChildItem -Path $exe.DirectoryName -Recurse -Filter "index.json" | Where-Object { $_.FullName -like "*LsnPackages*" } | Select-Object -First 1
 if (-not $staged) { Write-Host "The packages were not staged next to the program."; exit 1 }
+# The one-page list of buttons and keys goes with the program.
+$keys = Join-Path $root "KEYS.md"
+if (Test-Path $keys) { Copy-Item $keys (Join-Path $exe.DirectoryName "KEYS.txt") }
 Write-Host "Program:  $($exe.FullName)"
 Write-Host "Packages: $($staged.DirectoryName)"
 exit 0

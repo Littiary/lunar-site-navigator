@@ -56,6 +56,31 @@ namespace LsnHudText
 	inline const TCHAR* SyntheticMarker() { return TEXT("SYNTHETIC DATA"); }
 }
 
+/** A button on screen: a named action of the observer (ALsnObserverPawn::DoAction). */
+struct FLsnButton
+{
+	FName Action;
+	FString Label;
+	FBox2D Box;
+};
+
+/**
+ * The buttons along the bottom of the left (or only) view, in pixels of that view. Shared by
+ * the HUD (drawing) and the pawn (clicking). Two rows on a wide view, four on a narrow one.
+ */
+struct LUNARSITENAVIGATOR_API FLsnToolbar
+{
+	TArray<FLsnButton> Buttons;
+	/** Upper edge of the buttons. */
+	float Top = 0.0f;
+
+	static FLsnToolbar Make(float SizeX, float SizeY);
+	/** The action of the button under a screen point; none outside the buttons. */
+	FName ActionAt(const FVector2D& Point) const;
+	/** Size of the HUD text for a view of that size (1 at 1280 x 720). */
+	static float TextScale(float SizeX, float SizeY);
+};
+
 /** Where the two time strips are on screen, in pixels. Shared by the HUD (drawing) and the pawn (dragging). */
 struct LUNARSITENAVIGATOR_API FLsnTimeStripLayout
 {
@@ -89,5 +114,7 @@ private:
 	float DrawUncertainty(const ALsnSiteScene& Scene, float X, float Y, float Width, float Scale);
 	float DrawTrade(const ALsnSiteScene& Scene, const class ALsnViewGameMode& GameMode, float X, float Y, float Width, float Scale);
 	void DrawPanorama(const FLsnPanorama& Panorama, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, float Scale);
+	void DrawToolbar(const FLsnToolbar& Toolbar, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, const class ALsnViewGameMode* GameMode, float Scale);
+	void DrawHelp(float SizeX, float SizeY, float Scale);
 	void DrawStrip(const FBox2D& Box, const FLsnSitePackage& Package, int32 HeightIndex, double FromPosition, double ToPosition, double CurrentPosition, float Scale);
 };

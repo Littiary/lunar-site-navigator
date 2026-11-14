@@ -9,6 +9,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
+#include "RHIGlobals.h"
+#include "Engine/GameViewportClient.h"
 #include "Misc/Paths.h"
 #include "Planner/LsnPlanner.h"
 #include "Scene/LsnHud.h"
@@ -182,23 +185,10 @@ void ALsnViewGameMode::StartPlay()
 		FarCulling->Set(0, ECVF_SetByGameSetting);
 	}
 
+	SetLowQuality(FParse::Param(FCommandLine::Get(), TEXT("LsnLowQuality")));
+
 	// Two scenes: the second stands far away, is lit on its own lighting channel and is
 	// only ever seen by the right view of a comparison.
-	// An airless body has hard shadows whose only softness is the size of the Sun's disc:
-	// finer shadow pages and more rays for the penumbra than the engine's defaults.
-	const TPair<const TCHAR*, float> ShadowSettings[] = {
-		{ TEXT("r.Shadow.Virtual.ResolutionLodBiasDirectional"), -1.0f },
-		{ TEXT("r.Shadow.Virtual.SMRT.RayCountDirectional"), 16.0f },
-		{ TEXT("r.Shadow.Virtual.SMRT.SamplesPerRayDirectional"), 8.0f },
-	};
-	for (const TPair<const TCHAR*, float>& Setting : ShadowSettings)
-	{
-		if (IConsoleVariable* Variable = IConsoleManager::Get().FindConsoleVariable(Setting.Key))
-		{
-			Variable->Set(Setting.Value, ECVF_SetByGameSetting);
-		}
-	}
-
 	Scenes.Add(GetWorld()->SpawnActor<ALsnSiteScene>(ALsnSiteScene::StaticClass(), FTransform::Identity));
 	Scenes.Add(GetWorld()->SpawnActor<ALsnSiteScene>(ALsnSiteScene::StaticClass(), FTransform(LsnPlanner::SecondSceneOffsetCm())));
 	Scenes[0]->SetSceneSlot(0);
@@ -308,6 +298,20 @@ void ALsnViewGameMode::StartPlay()
 	}
 	FParse::Value(FCommandLine::Get(), TEXT("LsnRequirement="), RequirementIndex);
 
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnBench="), BenchPath))
+	{
+		BenchPath = FPaths::ConvertRelativePathToFull(BenchPath);
+		FParse::Value(FCommandLine::Get(), TEXT("LsnBenchSeconds="), BenchSeconds);
+		// The frame time is that of drawing, not of waiting for the display.
+		if (IConsoleVariable* VSync = IConsoleManager::Get().FindConsoleVariable(TEXT("r.VSync")))
+		{
+			VSync->Set(0, ECVF_SetByCode);
+		}
+		if (IConsoleVariable* MaxFps = IConsoleManager::Get().FindConsoleVariable(TEXT("t.MaxFPS")))
+		{
+			MaxFps->Set(0.0f, ECVF_SetByCode);
+		}
+	}
 	if (FParse::Value(FCommandLine::Get(), TEXT("LsnMovieDir="), MovieDir))
 	{
 		MovieDir = FPaths::ConvertRelativePathToFull(MovieDir);
@@ -320,6 +324,27 @@ void ALsnViewGameMode::StartPlay()
 		ShotPath = FPaths::ConvertRelativePathToFull(ShotPath);
 		// Leave time for shaders and shadow pages before the capture.
 		FramesUntilShot = 240;
+	}
+}
+
+void ALsnViewGameMode::SetLowQuality(bool bLow)
+{
+	bLowQuality = bLow;
+	// An airless body has hard shadows whose only softness is the size of the Sun's disc:
+	// finer shadow pages and more rays for the penumbra than the engine's defaults. The low
+	// quality draws two thirds of the resolution (the engine scales it up) and coarser shadows.
+	const TPair<const TCHAR*, float> Settings[] = {
+		{ TEXT("r.ScreenPercentage"), bLow ? 67.0f : 100.0f },
+		{ TEXT("r.Shadow.Virtual.ResolutionLodBiasDirectional"), bLow ? 0.5f : -1.0f },
+		{ TEXT("r.Shadow.Virtual.SMRT.RayCountDirectional"), bLow ? 4.0f : 16.0f },
+		{ TEXT("r.Shadow.Virtual.SMRT.SamplesPerRayDirectional"), bLow ? 4.0f : 8.0f },
+	};
+	for (const TPair<const TCHAR*, float>& Setting : Settings)
+	{
+		if (IConsoleVariable* Variable = IConsoleManager::Get().FindConsoleVariable(Setting.Key))
+		{
+			Variable->Set(Setting.Value, ECVF_SetByCode);
+		}
 	}
 }
 
@@ -368,6 +393,35 @@ void ALsnViewGameMode::Tick(float DeltaSeconds)
 		FramesUntilShot = 60;
 	}
 #endif
+	if (!BenchPath.IsEmpty() && FramesUntilQuit < 0)
+	{
+		if (BenchWarmUpS > 0.0)
+		{
+			BenchWarmUpS -= DeltaSeconds;
+		}
+		else
+		{
+			BenchFrameMs.Add(1000.0f * DeltaSeconds);
+			BenchSeconds -= DeltaSeconds;
+			if (BenchSeconds <= 0.0 && BenchFrameMs.Num() > 0)
+			{
+				BenchFrameMs.Sort();
+				double Sum = 0.0;
+				for (const float Ms : BenchFrameMs)
+				{
+					Sum += Ms;
+				}
+				const int32 N = BenchFrameMs.Num();
+				const FIntPoint Size = GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport ? GEngine->GameViewport->Viewport->GetSizeXY() : FIntPoint::ZeroValue;
+				const FString Report = FString::Printf(TEXT("frames %d\nmean_ms %.3f\nmedian_ms %.3f\np95_ms %.3f\np99_ms %.3f\nmax_ms %.3f\nresolution %dx%d\ncomparing %d\nlow_quality %d\ngpu %s\n"),
+					N, Sum / N, BenchFrameMs[N / 2], BenchFrameMs[FMath::Min(N - 1, N * 95 / 100)], BenchFrameMs[FMath::Min(N - 1, N * 99 / 100)], BenchFrameMs[N - 1],
+					Size.X, Size.Y, bComparing ? 1 : 0, bLowQuality ? 1 : 0, *GRHIAdapterName);
+				FFileHelper::SaveStringToFile(Report, *BenchPath);
+				UE_LOG(LogLsn, Display, TEXT("Frame times written: %s"), *BenchPath);
+				FramesUntilQuit = 5;
+			}
+		}
+	}
 	if (!MovieDir.IsEmpty())
 	{
 		const APlayerController* Player = GetWorld()->GetFirstPlayerController();

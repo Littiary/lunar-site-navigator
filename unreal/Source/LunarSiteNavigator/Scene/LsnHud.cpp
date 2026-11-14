@@ -169,12 +169,63 @@ void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double Time
 	}
 }
 
+float FLsnToolbar::TextScale(float SizeX, float SizeY)
+{
+	// Sized for the height of the view, and smaller where the view is narrow (the two halves of a comparison).
+	return FMath::Clamp(FMath::Min(SizeY / 720.0f, SizeX / 1000.0f), 0.55f, 4.0f);
+}
+
+FLsnToolbar FLsnToolbar::Make(float SizeX, float SizeY)
+{
+	// Upper rows: the time. Lower rows: sites, planner pages and view.
+	static const TPair<const TCHAR*, const TCHAR*> Entries[] = {
+		{ TEXT("play"), TEXT("Play / pause") }, { TEXT("slower"), TEXT("Slower") }, { TEXT("faster"), TEXT("Faster") },
+		{ TEXT("sample_back"), TEXT("< Step") }, { TEXT("sample_forward"), TEXT("Step >") }, { TEXT("day_back"), TEXT("< Day") }, { TEXT("day_forward"), TEXT("Day >") },
+		{ TEXT("sun_event_back"), TEXT("< Sunrise / set") }, { TEXT("sun_event_forward"), TEXT("Sunrise / set >") }, { TEXT("height_next"), TEXT("Observer height") },
+		{ TEXT("next_site"), TEXT("Next site") }, { TEXT("compare"), TEXT("Two sites") }, { TEXT("next_right_site"), TEXT("Next right site") },
+		{ TEXT("page_calendar"), TEXT("Calendar") }, { TEXT("page_uncertainty"), TEXT("Uncertainty") }, { TEXT("page_trade"), TEXT("Mast / pairs") },
+		{ TEXT("obstacle"), TEXT("Obstacle") }, { TEXT("follow_sun"), TEXT("Follow Sun") }, { TEXT("quality"), TEXT("Low quality") }, { TEXT("help"), TEXT("Help (F1)") },
+	};
+	const int32 Count = UE_ARRAY_COUNT(Entries);
+	const float Left = 0.06f * SizeX, Right = 0.94f * SizeX;
+	// Ten in a row where a label fits; otherwise five.
+	const int32 Columns = (Right - Left) / 10.0f >= 105.0f * TextScale(SizeX, SizeY) ? 10 : 5;
+	const int32 Rows = (Count + Columns - 1) / Columns;
+	const float RowHeight = FMath::Max(0.032f * SizeY, 23.0f), Gap = 0.006f * SizeY;
+	const float Bottom = 0.992f * SizeY;
+	const float CellWidth = (Right - Left) / Columns;
+
+	FLsnToolbar Toolbar;
+	Toolbar.Top = Bottom - Rows * RowHeight - (Rows - 1) * Gap;
+	for (int32 I = 0; I < Count; ++I)
+	{
+		const float X0 = Left + CellWidth * (I % Columns), Y0 = Toolbar.Top + (RowHeight + Gap) * (I / Columns);
+		Toolbar.Buttons.Add({ Entries[I].Key, Entries[I].Value, FBox2D(FVector2D(X0 + 0.5f * Gap, Y0), FVector2D(X0 + CellWidth - 0.5f * Gap, Y0 + RowHeight)) });
+	}
+	return Toolbar;
+}
+
+FName FLsnToolbar::ActionAt(const FVector2D& Point) const
+{
+	for (const FLsnButton& Button : Buttons)
+	{
+		if (Button.Box.IsInside(Point))
+		{
+			return Button.Action;
+		}
+	}
+	return NAME_None;
+}
+
 FLsnTimeStripLayout FLsnTimeStripLayout::Make(float SizeX, float SizeY, const FLsnSitePackage& Package)
 {
 	FLsnTimeStripLayout Layout;
 	const float Left = 0.06f * SizeX, Right = 0.94f * SizeX;
-	Layout.Zoom = FBox2D(FVector2D(Left, SizeY * 0.835f), FVector2D(Right, SizeY * 0.895f));
-	Layout.WholeRange = FBox2D(FVector2D(Left, SizeY * 0.935f), FVector2D(Right, SizeY * 0.965f));
+	// Bottom-up from the buttons: each strip has a line of text below it.
+	const float ButtonsTop = FLsnToolbar::Make(SizeX, SizeY).Top;
+	const float WholeBottom = ButtonsTop - 0.030f * SizeY, ZoomBottom = WholeBottom - 0.060f * SizeY;
+	Layout.WholeRange = FBox2D(FVector2D(Left, WholeBottom - 0.030f * SizeY), FVector2D(Right, WholeBottom));
+	Layout.Zoom = FBox2D(FVector2D(Left, ZoomBottom - 0.060f * SizeY), FVector2D(Right, ZoomBottom));
 	// The zoom strip shows six days around the selected time, or the whole axis if that is shorter.
 	const double SixDays = Package.Time.StepS > 0.0 ? 6.0 * 86400.0 / Package.Time.StepS : 0.0;
 	Layout.ZoomHalfWidthSamples = FMath::Min(0.5 * SixDays, 0.5 * FMath::Max(Package.Time.Count - 1, 1));
@@ -333,8 +384,8 @@ void ALsnHud::DrawHUD()
 	const int32 View = GameMode ? GameMode->GetViewIndexOf(Player) : 0;
 	// Text is sized for the height of the view, and made smaller where the view is narrow
 	// (the two halves of a comparison).
-	const float Scale = FMath::Clamp(FMath::Min(Canvas->SizeY / 720.0f, Canvas->SizeX / 1000.0f), 0.55f, 4.0f);
 	const float SizeX = Canvas->SizeX, SizeY = Canvas->SizeY;
+	const float Scale = FLsnToolbar::TextScale(SizeX, SizeY);
 	const float X = 16.0f * Scale;
 	float Y = 16.0f * Scale;
 	// The read-out keeps to the left column; a line that is too long continues on the next.
@@ -500,8 +551,17 @@ void ALsnHud::DrawHUD()
 			}
 		}
 	}
+	// --- buttons: every main action can be reached with the mouse (left or only view) ------
+	if (View == 0)
+	{
+		DrawToolbar(FLsnToolbar::Make(SizeX, SizeY), *Scene, Pawn, GameMode, Scale);
+	}
 	if (!P.bHasTimeline)
 	{
+		if (View == 0 && Pawn && Pawn->IsHelpShown())
+		{
+			DrawHelp(SizeX, SizeY, Scale);
+		}
 		return;
 	}
 
@@ -661,6 +721,13 @@ void ALsnHud::DrawHUD()
 	DrawText(FString::Printf(TEXT("%.0f days around the selected time   yellow: Sun visible   blue: Earth visible"), 2.0 * Layout.ZoomHalfWidthSamples * P.Time.StepS / 86400.0),
 		Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, Scale * 0.9f);
 	DrawText(FString::Printf(TEXT("%s   to   %s"), *P.Time.StartUtc, *P.Time.EndUtc), Dim, Layout.WholeRange.Min.X, Layout.WholeRange.Max.Y + 2.0f * Scale, Font, Scale * 0.9f);
+	if (View == 0)
+	{
+		const FString Hint = TEXT("mouse: drag on a strip for the time   hold the right button to look round   wheel to zoom");
+		float HintWidth = 0.0f, HintHeight = 0.0f;
+		GetTextSize(Hint, HintWidth, HintHeight, Font, Scale * 0.9f);
+		DrawText(Hint, White, Layout.Zoom.Max.X - HintWidth, Layout.Zoom.Max.Y + 2.0f * Scale, Font, Scale * 0.9f);
+	}
 
 	// Calendar page: the lunar days of this site, and of the other site of a comparison, on one time axis.
 	if (Page == ELsnPlannerPage::Calendar && GameMode)
@@ -677,6 +744,88 @@ void ALsnHud::DrawHUD()
 		}
 		const float Top = FMath::Max(RightY, Y) + 10.0f * Scale;
 		DrawCalendar(FBox2D(FVector2D(Layout.Zoom.Min.X, Top), FVector2D(Layout.Zoom.Max.X, PanelTop - 14.0f * Scale)), Rows, GameMode->GetRequirementIndex(), Scale);
+	}
+	if (View == 0 && Pawn && Pawn->IsHelpShown())
+	{
+		DrawHelp(SizeX, SizeY, Scale);
+	}
+}
+
+void ALsnHud::DrawToolbar(const FLsnToolbar& Toolbar, const ALsnSiteScene& Scene, const ALsnObserverPawn* Pawn, const ALsnViewGameMode* GameMode, float Scale)
+{
+	UFont* Font = GEngine->GetMediumFont();
+	FVector2D Mouse(-1.0, -1.0);
+	float MouseX = 0.0f, MouseY = 0.0f;
+	const APlayerController* Player = GetOwningPlayerController();
+	if (Player && Player->bShowMouseCursor && Player->GetMousePosition(MouseX, MouseY))
+	{
+		Mouse = FVector2D(MouseX, MouseY);
+	}
+	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
+	for (const FLsnButton& Button : Toolbar.Buttons)
+	{
+		// A button that is a switch is drawn lit while it is on.
+		const FName A = Button.Action;
+		const bool bOn = (A == TEXT("play") && Pawn && Pawn->IsPlaying()) || (A == TEXT("compare") && GameMode && GameMode->IsComparing())
+			|| (A == TEXT("page_calendar") && Page == ELsnPlannerPage::Calendar) || (A == TEXT("page_uncertainty") && Page == ELsnPlannerPage::Uncertainty)
+			|| (A == TEXT("page_trade") && Page == ELsnPlannerPage::Trade) || (A == TEXT("obstacle") && Scene.IsObstacleViewEnabled())
+			|| (A == TEXT("follow_sun") && Pawn && Pawn->IsFollowingSun()) || (A == TEXT("quality") && GameMode && GameMode->IsLowQuality())
+			|| (A == TEXT("help") && Pawn && Pawn->IsHelpShown());
+		const bool bHover = Button.Box.IsInside(Mouse);
+		const float Width = Button.Box.Max.X - Button.Box.Min.X, Height = Button.Box.Max.Y - Button.Box.Min.Y;
+		const FLinearColor Fill = bOn ? FLinearColor(0.16f, 0.30f, 0.46f, 0.95f) : FLinearColor(0.09f, 0.09f, 0.11f, 0.90f);
+		DrawRect(bHover ? FLinearColor(0.85f, 0.85f, 0.85f, 1.0f) : FLinearColor(0.38f, 0.38f, 0.42f, 1.0f), Button.Box.Min.X, Button.Box.Min.Y, Width, Height);
+		DrawRect(bHover ? FLinearColor(Fill.R + 0.10f, Fill.G + 0.10f, Fill.B + 0.10f, 1.0f) : Fill, Button.Box.Min.X + 1.0f, Button.Box.Min.Y + 1.0f, Width - 2.0f, Height - 2.0f);
+		// The label is made smaller where it would not fit.
+		float TextSize = Scale * 0.95f, TextWidth = 0.0f, TextHeight = 0.0f;
+		GetTextSize(Button.Label, TextWidth, TextHeight, Font, TextSize);
+		if (TextWidth > Width - 8.0f)
+		{
+			TextSize *= (Width - 8.0f) / TextWidth;
+			GetTextSize(Button.Label, TextWidth, TextHeight, Font, TextSize);
+		}
+		DrawText(Button.Label, White, Button.Box.Min.X + 0.5f * (Width - TextWidth), Button.Box.Min.Y + 0.5f * (Height - TextHeight), Font, TextSize);
+	}
+}
+
+void ALsnHud::DrawHelp(float SizeX, float SizeY, float Scale)
+{
+	static const TCHAR* Lines[] = {
+		TEXT("Mouse"),
+		TEXT("  click a button below; a lit button is switched on"),
+		TEXT("  drag on a time strip: choose the time"),
+		TEXT("  hold the right button and move: look round      wheel: zoom"),
+		TEXT("Keys"),
+		TEXT("  arrow keys  look          Z / X  zoom          Tab  hide the cursor, look with the mouse alone"),
+		TEXT("  Space  play and pause      [ / ]  slower / faster"),
+		TEXT("  Q / E  one step back / forward (Shift: 24 steps)      , / .  one day back / forward"),
+		TEXT("  B / N  previous / next rise or set of the Sun (Shift: of the Earth)      Home / End  first / last sample"),
+		TEXT("  1 .. 9  show that site (Shift: on the right, side by side)      C  two sites side by side"),
+		TEXT("  K  calendar and landing windows      U  uncertainty      M  mast-height trade and site pairs      R  next requirement"),
+		TEXT("  O  obstacle view      F  keep the view on the Sun      PageUp / PageDown  observer height"),
+		TEXT("  H  horizon line of the package      L  weak fill light (a display aid)      G  lower drawing quality"),
+		TEXT("  F1  this list      Esc  quit"),
+	};
+	UFont* Font = GEngine->GetMediumFont();
+	const float TextSize = Scale * 1.05f, LineHeight = 21.0f * Scale;
+	float Width = 0.0f;
+	for (const TCHAR* Text : Lines)
+	{
+		float W = 0.0f, H = 0.0f;
+		GetTextSize(Text, W, H, Font, TextSize);
+		Width = FMath::Max(Width, W);
+	}
+	// Made smaller where the list is wider than the view.
+	const float Fit = FMath::Min(1.0f, (SizeX - 60.0f * Scale) / FMath::Max(Width, 1.0f));
+	Width *= Fit;
+	const float Height = UE_ARRAY_COUNT(Lines) * LineHeight * Fit;
+	const float X = 0.5f * (SizeX - Width), Y0 = 0.5f * (SizeY - Height);
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.97f), X - 16.0f * Scale, Y0 - 14.0f * Scale, Width + 32.0f * Scale, Height + 28.0f * Scale);
+	float Y = Y0;
+	for (const TCHAR* Text : Lines)
+	{
+		DrawText(Text, Text[0] == TEXT(' ') ? White : SunColor, X, Y, Font, TextSize * Fit);
+		Y += LineHeight * Fit;
 	}
 }
 

@@ -37,6 +37,9 @@ enum class ELsnPlannerPage : uint8
  *   -LsnFollowSun                          (keep the view on the Sun's azimuth; default when comparing)
  *   -LsnHorizonLine                        (draw the package horizon as a line)
  *   -LsnNoFillLight  -LsnNoObstacle        (switch the fill light or the obstacle view off)
+ *   -LsnLowQuality                         (lower drawing quality, for slower graphics cards; key G)
+ *   -LsnDo=<action>,<action>               (carry out named actions of the observer at the start)
+ *   -LsnBench=<file.txt> -LsnBenchSeconds=<s>  (measure the frame time for that long, write it and quit)
  *   -LsnShot=<file.png>                    (save one screenshot and quit)
  *   -LsnMovieDir=<folder>                  (with -LsnPlayFrom/-LsnPlayTo: save every frame of that
  *                                           stretch as frame_00000.png ... and quit; run with
@@ -103,6 +106,16 @@ public:
 	const FLsnSitePairs* GetSitePairs() const { return bHasPairs ? &Pairs : nullptr; }
 	ALsnSiteScene* GetSceneOfView(int32 ViewIndex) const { return Scenes.IsValidIndex(ViewIndex) ? Scenes[ViewIndex] : nullptr; }
 
+	// --- drawing quality ----------------------------------------------------
+
+	/**
+	 * Lower drawing quality for slower graphics cards: the scene is drawn at two thirds of the
+	 * resolution and the shadows with coarser pages and fewer rays. What is shown does not
+	 * change; only how finely it is drawn.
+	 */
+	bool IsLowQuality() const { return bLowQuality; }
+	void SetLowQuality(bool bLow);
+
 	/** Finds the package root: command line first, then the imported packages, the contract sample, the pinned copy. */
 	static FString ResolvePackageRoot(FString& OutError);
 
@@ -124,6 +137,12 @@ private:
 	int32 RequirementIndex = 0;
 	FLsnSitePairs Pairs;
 	bool bHasPairs = false;
+
+	bool bLowQuality = false;
+	FString BenchPath;
+	double BenchSeconds = 20.0;
+	double BenchWarmUpS = 6.0;
+	TArray<float> BenchFrameMs;
 
 	FString LoadError;
 	FString ShotPath;
