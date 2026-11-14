@@ -163,3 +163,9 @@ PRODUCTS: dict[str, Product] = {
 
 # What a plain `fetch` downloads (the order is the order of work).
 DEFAULT_SET = ("_docs", "LDEM_80S_20M", "LDEM_60S_60M", "LDEM_16")
+
+
+# Cylindrical mosaics of the whole-Moon terrain, as (mosaic id, tile product ids); used when all tiles are present.
+MOON_CYLINDRICAL: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("LDEM_128", ("LDEM_128",)),
+)
