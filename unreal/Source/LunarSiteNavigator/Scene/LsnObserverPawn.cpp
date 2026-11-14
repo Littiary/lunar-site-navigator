@@ -89,6 +89,23 @@ void ALsnObserverPawn::ApplyView()
 	ElevationDeg = FMath::Clamp(ElevationDeg, -89.0, 89.0);
 	AzimuthDeg = FMath::Fmod(FMath::Fmod(AzimuthDeg, 360.0) + 360.0, 360.0);
 	FovDeg = FMath::Clamp(FovDeg, 1.0, 120.0);
+	// The camera positions away from the observer show the ground from the side and from above.
+	// Without the elevation data of the site the ground is only a sheet up to the package horizon,
+	// which is right from the observer's place and from nowhere else: stay with the observer.
+	if (CameraView != ELsnCameraView::Observer || bArrival)
+	{
+		const ALsnSiteScene* SceneForCamera = FindScene();
+		if (SceneForCamera && SceneForCamera->HasPackage() && !SceneForCamera->HasRealTerrain())
+		{
+			SetCameraView(ELsnCameraView::Observer);
+			bArrival = false;
+			bCameraRefused = true;
+		}
+		else
+		{
+			bCameraRefused = false;
+		}
+	}
 	// Yaw is azimuth and pitch is elevation in the site frame (see the frame tests).
 	SetActorRotation(FRotator(ElevationDeg, AzimuthDeg, 0.0));
 	if (IsOverview())
@@ -184,6 +201,10 @@ FString ALsnObserverPawn::GetCameraNote() const
 	if (CameraView == ELsnCameraView::Wide)
 	{
 		return TEXT("Wide view of the site; the Sun is outside the picture to the right. Not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
+	}
+	if (bCameraRefused)
+	{
+		return TEXT("The camera positions away from the observer need the elevation data of this site, which is not installed on this machine: the observer's view is shown.");
 	}
 	if (IsOverview())
 	{
@@ -324,6 +345,7 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("camera"))
 	{
 		bArrival = false;
+		bCameraRefused = false;
 		SetCameraView(CameraView == ELsnCameraView::Observer ? ELsnCameraView::Hero : CameraView == ELsnCameraView::Hero ? ELsnCameraView::Wide : ELsnCameraView::Observer);
 	}
 	else if (Action == TEXT("arrival"))

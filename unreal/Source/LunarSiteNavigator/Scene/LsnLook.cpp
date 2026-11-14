@@ -20,6 +20,7 @@ namespace LsnLook
 	TAutoConsoleVariable<float> WideUpM(TEXT("lsn.Cam.WideUpM"), 30.0f, TEXT("Wide view: metres above the site."));
 	TAutoConsoleVariable<float> WidePitchDeg(TEXT("lsn.Cam.WidePitchDeg"), -11.0f, TEXT("Wide view: pitch."));
 	TAutoConsoleVariable<float> WideYawDeg(TEXT("lsn.Cam.WideYawDeg"), -60.0f, TEXT("Wide view: turn of the whole view from the Sun's azimuth."));
+	TAutoConsoleVariable<float> HighSunExposure(TEXT("lsn.Look.HighSunExposure"), 0.35f, TEXT("Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground (a camera stops down for bright ground)."));
 	TAutoConsoleVariable<float> ObjectAmbient(TEXT("lsn.Look.ObjectAmbient"), 0.15f, TEXT("Light on the sides of the scale objects that face away from the Sun, as a share of the lit side."));
 	TAutoConsoleVariable<float> WideFovDeg(TEXT("lsn.Cam.WideFovDeg"), 58.0f, TEXT("Wide view: field of view."));
 	TAutoConsoleVariable<float> NoiseStrength(TEXT("lsn.Look.NoiseStrength"), 0.6f, TEXT("Strength of the illustrative roughness in the surface shading."));

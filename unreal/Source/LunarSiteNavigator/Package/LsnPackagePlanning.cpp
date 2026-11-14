@@ -313,6 +313,18 @@ void LsnPackageIO::ReadPlanningFields(const TSharedPtr<FJsonObject>& Manifest, F
 				Event.bHasBand = Number(Object, TEXT("earliest_et_s"), Event.EarliestEtS) && Number(Object, TEXT("latest_et_s"), Event.LatestEtS);
 				Event.EarliestUtc = Text(Object, TEXT("earliest_utc"));
 				Event.LatestUtc = Text(Object, TEXT("latest_utc"));
+				const TSharedPtr<FJsonObject>* Quality = nullptr;
+				if (Object->TryGetObjectField(TEXT("terrain_quality"), Quality) && Quality && Quality->IsValid())
+				{
+					Event.bHasTerrainQuality = true;
+					Event.LimitingPixel = Text(*Quality, TEXT("limiting_pixel"));
+					Event.BandSource = Text(*Quality, TEXT("band_source"));
+					Event.QualityProductId = Text(*Quality, TEXT("product_id"));
+					if (!Number(*Quality, TEXT("height_error_m"), Event.QualityHeightErrorM))
+					{
+						Event.QualityHeightErrorM = std::numeric_limits<double>::quiet_NaN();
+					}
+				}
 			}
 			++Index;
 		}

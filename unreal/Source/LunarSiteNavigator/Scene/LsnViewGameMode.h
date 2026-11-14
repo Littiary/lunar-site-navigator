@@ -204,7 +204,7 @@ private:
 	void TickCustom();
 	bool LaunchCustom(const FString& Arguments, int32 Step, double StatedS);
 	bool LoadCustomResult(bool bNeedTimeline, FString& OutPackageId, FString& OutError);
-	FString CustomPython, CustomTimelineTemplate;
+	FString CustomPython, CustomTimelineTemplate, CustomStartDate;
 	void AddSiteInfo(int32 SiteIndex);
 
 	FString LoadError;

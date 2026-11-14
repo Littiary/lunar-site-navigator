@@ -154,7 +154,7 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 		return true;
 	}
 
-	int32 Sites = 0;
+	int32 Sites = 0, SitesWithQuality = 0, EventsWithQuality = 0;
 	for (const FLsnIndexEntry& Entry : Entries)
 	{
 		if (Entry.Kind != TEXT("site"))
@@ -169,6 +169,28 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 			continue;
 		}
 		TestFalse(FString::Printf(TEXT("%s: imported packages are real, not synthetic"), *P.SiteId), P.bSynthetic);
+		// Since contract 0.10 an event says what terrain pixel it rests on.
+		// Amendment of 14 November 2026: the criterion first written here was "no event of a 0.10
+		// package is without terrain_quality", from the table in SPEC 5.7 ("every event"). The
+		// published 0.11 set does not meet it: the three project sites carry the field in every
+		// event, the 17 curated sites in none (they were computed without the uncertainty band).
+		// The viewer hides the line where the field is missing, so what it needs is: within one
+		// package all events or none, and every value one of the three the contract names.
+		// Reported to the control session as a difference between the contract text and the packages.
+		if (LsnPlanner::ContractAtLeast(P.ContractVersion, 0, 10))
+		{
+			int32 With = 0, UnknownKind = 0;
+			for (const FLsnEvent& Event : P.Events)
+			{
+				const bool bKnownKind = Event.LimitingPixel == TEXT("constrained") || Event.LimitingPixel == TEXT("interpolated") || Event.LimitingPixel == TEXT("unknown");
+				With += Event.bHasTerrainQuality ? 1 : 0;
+				UnknownKind += (Event.bHasTerrainQuality && !bKnownKind) ? 1 : 0;
+			}
+			TestTrue(FString::Printf(TEXT("%s: terrain_quality in all events or in none (%d of %d)"), *P.SiteId, With, P.Events.Num()), With == 0 || With == P.Events.Num());
+			TestEqual(FString::Printf(TEXT("%s: terrain_quality with a kind the contract does not name"), *P.SiteId), UnknownKind, 0);
+			EventsWithQuality += With;
+			SitesWithQuality += With > 0 ? 1 : 0;
+		}
 		TArray<FLsnHudLine> Lines;
 		LsnHudText::BuildStatusLines(P, P.DefaultHeightIndex, 0.0, Lines);
 		TestEqual(FString::Printf(TEXT("%s: no synthetic marker"), *P.SiteId), LinesSayingSynthetic(Lines), 0);
@@ -311,6 +333,7 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 			WorstSilhouetteDeg, SilhouetteToleranceDeg, WorstDirectionDeg, DirectionsCompared, DirectionToleranceDeg));
 	}
 	TestTrue(TEXT("at least one site package was imported"), Sites > 0);
+	AddInfo(FString::Printf(TEXT("terrain_quality: %d of %d site packages state it, %d events in all"), SitesWithQuality, Sites, EventsWithQuality));
 	return true;
 }
 

@@ -30,6 +30,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -106,12 +107,22 @@ def main() -> None:
         azimuth_deg = az["start_deg"] + az["step_deg"] * np.arange(az["count"])
         rings = ring_distances(horizon["max_range_m"]["value"], args.rings)
         lat, lon = destinations(site, azimuth_deg, rings, radius_m)
-        heights = np.asarray(terrain.height_m(lon, lat), dtype="<f4")
+        heights = np.asarray(terrain.height_m(lon, lat), dtype="<f8")
 
         folder = out / site["site_id"]
+        if np.isnan(heights).all():
+            # The elevation product of this site is not installed on this machine. Without a
+            # cache the view draws the site from the horizon of the package and says so.
+            if folder.exists():
+                shutil.rmtree(folder)
+            products = ", ".join(p.get("product_id", "?") for p in horizon.get("terrain_source", {}).get("products", [])) or "unknown product"
+            print(f"skip {site['site_id']}: no elevation data installed here ({products}); the view draws it from the package horizon")
+            continue
         folder.mkdir(parents=True, exist_ok=True)
         data = heights.tobytes()
-        (folder / "heights_m.f4").write_bytes(data)
+        (folder / "heights_m.f8").write_bytes(data)
+        if (folder / "heights_m.f4").exists():
+            (folder / "heights_m.f4").unlink()
         meta = {
             "format": FORMAT,
             "note": "Viewer-side cache for drawing. Not part of the package contract.",
@@ -121,7 +132,7 @@ def main() -> None:
             "reference_radius_m": radius_m,
             "azimuth": az,
             "ring_distance_m": [float(r) for r in rings],
-            "heights": {"file": "heights_m.f4", "dtype": "<f4", "shape": [int(az["count"]), int(rings.size)], "unit": "m",
+            "heights": {"file": "heights_m.f8", "dtype": "<f8", "shape": [int(az["count"]), int(rings.size)], "unit": "m",
                         "sha256": hashlib.sha256(data).hexdigest(), "nan_count": int(np.isnan(heights).sum())},
             "definition": "Height of the terrain above the reference sphere at the point reached from the site along the great circle of the azimuth after the ring distance (arc length on the reference sphere).",
             "sampling": "lsn_data.Terrain.height_m(lon, lat): finest data, bilinear, statistic 'mean'",

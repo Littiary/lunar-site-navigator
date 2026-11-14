@@ -66,6 +66,16 @@ struct FLsnEvent
 	double LatestEtS = 0.0;
 	FString EarliestUtc;
 	FString LatestUtc;
+	/**
+	 * Since 0.10 (SPEC 5.7): what the horizon sample at the event rests on. LimitingPixel is
+	 * "constrained" (the pixel holds a laser return), "interpolated" or "unknown"; the height
+	 * error is NaN where the package states none.
+	 */
+	bool bHasTerrainQuality = false;
+	FString LimitingPixel;
+	FString BandSource;
+	FString QualityProductId;
+	double QualityHeightErrorM = 0.0;
 };
 
 /** The part of a method card the viewer shows next to a number (SPEC 3.2). */

@@ -25,7 +25,7 @@ struct LUNARSITENAVIGATOR_API FLsnTerrainGrid
 	/** Arc length along the reference sphere from the site to each ring, metres, increasing. */
 	TArray<double> RingDistanceM;
 	/** [A, R] height above the reference sphere, metres; NaN where the data has none. */
-	TArray<float> HeightsM;
+	TArray<double> HeightsM;
 
 	double AzimuthDegAt(int32 AzimuthIndex) const { return AzimuthStartDeg + AzimuthStepDeg * AzimuthIndex; }
 

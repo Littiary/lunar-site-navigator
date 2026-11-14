@@ -27,4 +27,6 @@ namespace LsnLook
 	extern TAutoConsoleVariable<float> WideYawDeg;
 	/** Light on the sides of the scale objects that face away from the Sun, as a share of the lit side: stands for the light the ground throws back. */
 	extern TAutoConsoleVariable<float> ObjectAmbient;
+	/** Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground. */
+	extern TAutoConsoleVariable<float> HighSunExposure;
 }

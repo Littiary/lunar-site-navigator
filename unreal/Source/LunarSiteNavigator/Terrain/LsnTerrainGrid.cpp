@@ -64,21 +64,38 @@ bool FLsnTerrainGrid::Load(const FString& Directory, FLsnTerrainGrid& OutGrid, F
 		OutGrid.RingDistanceM.Add(Ring->AsNumber());
 	}
 	const int32 NumRings = OutGrid.RingDistanceM.Num();
-	if ((*Heights)->GetStringField(TEXT("dtype")) != TEXT("<f4") || static_cast<int32>((*Shape)[0]->AsNumber()) != OutGrid.AzimuthCount
+	// 64-bit heights since the horizon search of a package can start 5 m from the site: a 32-bit
+	// height of several kilometres is known to half a millimetre only, which at 5 m is 0.006 deg.
+	// Older caches hold 32-bit values and are still read.
+	const FString DType = (*Heights)->GetStringField(TEXT("dtype"));
+	const bool bDouble = DType == TEXT("<f8");
+	const int64 ValueSize = bDouble ? sizeof(double) : sizeof(float);
+	if ((!bDouble && DType != TEXT("<f4")) || static_cast<int32>((*Shape)[0]->AsNumber()) != OutGrid.AzimuthCount
 		|| static_cast<int32>((*Shape)[1]->AsNumber()) != NumRings || OutGrid.AzimuthCount <= 0 || NumRings <= 0)
 	{
-		OutError = FString::Printf(TEXT("%s: heights must be <f4 with shape [azimuths, rings]"), *MetaPath);
+		OutError = FString::Printf(TEXT("%s: heights must be <f8 or <f4 with shape [azimuths, rings]"), *MetaPath);
 		return false;
 	}
 	const FString DataPath = FPaths::Combine(Directory, (*Heights)->GetStringField(TEXT("file")));
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *DataPath) || Bytes.Num() != static_cast<int64>(OutGrid.AzimuthCount) * NumRings * static_cast<int64>(sizeof(float)))
+	if (!FFileHelper::LoadFileToArray(Bytes, *DataPath) || Bytes.Num() != static_cast<int64>(OutGrid.AzimuthCount) * NumRings * ValueSize)
 	{
-		OutError = FString::Printf(TEXT("%s is missing or does not hold %d x %d 32-bit values"), *DataPath, OutGrid.AzimuthCount, NumRings);
+		OutError = FString::Printf(TEXT("%s is missing or does not hold %d x %d values of type %s"), *DataPath, OutGrid.AzimuthCount, NumRings, *DType);
 		return false;
 	}
 	OutGrid.HeightsM.SetNumUninitialized(OutGrid.AzimuthCount * NumRings);
-	FMemory::Memcpy(OutGrid.HeightsM.GetData(), Bytes.GetData(), Bytes.Num());
+	if (bDouble)
+	{
+		FMemory::Memcpy(OutGrid.HeightsM.GetData(), Bytes.GetData(), Bytes.Num());
+	}
+	else
+	{
+		const float* Values = reinterpret_cast<const float*>(Bytes.GetData());
+		for (int32 Index = 0; Index < OutGrid.HeightsM.Num(); ++Index)
+		{
+			OutGrid.HeightsM[Index] = Values[Index];
+		}
+	}
 	return true;
 }
 

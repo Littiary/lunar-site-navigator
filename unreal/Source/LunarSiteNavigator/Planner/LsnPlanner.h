@@ -81,7 +81,19 @@ namespace LsnPlanner
 	 * site package with a timeline), from a template with the places {lat}, {lon}, {name}
 	 * and {out}. Empty when there is no template: then there is no second step.
 	 */
-	LUNARSITENAVIGATOR_API FString CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot);
+	LUNARSITENAVIGATOR_API FString CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot, const FString& StartDate = FString());
+
+	/** The core's one command for a complete package of a custom coordinate (core/README.md, contract 0.11); the place {start} takes the first day of its window. */
+	LUNARSITENAVIGATOR_API FString DefaultCustomTimelineTemplate();
+
+	/** The last line "progress <k>/<n> <text>" the core printed; false if it printed none. */
+	LUNARSITENAVIGATOR_API bool LastProgress(const FString& Output, int32& OutStage, int32& OutStages, FString& OutText);
+
+	/** "measured terrain pixel, height +/- 5.0 m" for an event that states its terrain quality (since 0.10); empty otherwise. */
+	LUNARSITENAVIGATOR_API FString TerrainQualityPhrase(const FLsnEvent& Event);
+
+	/** True if a contract version "major.minor" is at least the given one, compared part by part (0.10 is newer than 0.9). */
+	LUNARSITENAVIGATOR_API bool ContractAtLeast(const FString& Version, int32 Major, int32 Minor);
 
 	/** Share of a running step to show as done: time run over the time stated for it, at most 0.95. */
 	LUNARSITENAVIGATOR_API double StepShare(double RunS, double StatedS);

@@ -172,7 +172,16 @@ void ALsnSiteScene::UpdateLook()
 	// How the scene is drawn follows one package value: the share of the Sun's disc that is
 	// visible at the selected sample. Nothing here changes a number or a position.
 	const double SunShare = GetSunVisibleFraction();
-	SunLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread());
+	// The exposure is fixed for ground under a low Sun. Under a high Sun the same ground is several
+	// times brighter, so the display intensity is taken down as a camera would stop down: between
+	// 5 and 45 degrees of the package's Sun elevation. A display choice; no number comes from it.
+	float HighSun = 1.0f;
+	FLsnBodyAtTime SunForExposure;
+	if (SampleBody(TEXT("SUN"), TimePosition, SunForExposure))
+	{
+		HighSun = FMath::Lerp(1.0f, LsnLook::HighSunExposure.GetValueOnGameThread(), FMath::SmoothStep(5.0f, 45.0f, static_cast<float>(SunForExposure.ElevationDeg)));
+	}
+	SunLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread() * HighSun);
 	FillLight->SetIntensity(LsnLook::FillLux.GetValueOnGameThread());
 	if (RegolithMaterial)
 	{
@@ -429,6 +438,9 @@ void ALsnSiteScene::RebuildGeometry()
 	TerrainData.RoundPositionsToFloat();
 	Terrain->SetRelativeLocation(FVector::ZeroVector);
 	ApplyMesh(Terrain, TerrainData, RegolithMaterial);
+	// Without the elevation data of the site the ground is a sheet that reaches up to the package
+	// horizon: it stands for no relief and must not throw shadows of its own folds.
+	Terrain->SetCastShadow(bHasRealTerrain);
 	if (SkippedHorizonSamples > 0)
 	{
 		UE_LOG(LogLsn, Warning, TEXT("%d horizon samples could not be placed (unknown values in the package)."), SkippedHorizonSamples);

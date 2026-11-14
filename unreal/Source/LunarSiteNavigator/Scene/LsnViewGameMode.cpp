@@ -431,6 +431,12 @@ void ALsnViewGameMode::StartCustom()
 	{
 		GConfig->GetString(TEXT("LunarSiteNavigator"), TEXT("CustomTimelineCommand"), CustomTimelineTemplate, GGameIni);
 	}
+	if (CustomTimelineTemplate.IsEmpty())
+	{
+		CustomTimelineTemplate = LsnPlanner::DefaultCustomTimelineTemplate();
+	}
+	// The window of a custom site starts on the day it is asked for (UTC); the core computes 30 days from it.
+	CustomStartDate = FDateTime::UtcNow().ToString(TEXT("%Y-%m-%d"));
 	// Run from a checkout, the core and the data reader of this very repository are used, so that
 	// the package is of the same contract version as the published ones.
 	const FString RepoCore = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../core")));
@@ -520,6 +526,13 @@ void ALsnViewGameMode::TickCustom()
 	Custom.Message = Custom.Step == 1
 		? FString::Printf(TEXT("Step 1 of 2, terrain horizon of %s: the science core has run %.0f s (a few seconds)"), *CustomName, RunS)
 		: FString::Printf(TEXT("Step 2 of 2, Sun and Earth timeline: the science core has run %.0f s of about %.0f s"), RunS, Custom.StatedS);
+	int32 Stage = 0, Stages = 0;
+	FString StageText;
+	if (Custom.Step == 2 && LsnPlanner::LastProgress(CustomOutput, Stage, Stages, StageText))
+	{
+		// The core says which of its stages it is in.
+		Custom.Message = FString::Printf(TEXT("Step 2 of 2, Sun and Earth timeline, stage %d of %d: %s (%.0f s)"), Stage, Stages, *StageText, RunS);
+	}
 	if (FPlatformProcess::IsProcRunning(CustomProcess))
 	{
 		return;
@@ -561,7 +574,7 @@ void ALsnViewGameMode::TickCustom()
 	{
 		Page = ELsnPlannerPage::Summary;
 		Custom.HorizonLine = FString::Printf(TEXT("Step 1 of 2 done in %.0f s: terrain horizon of %s, package %s; %s."), RunS, *CustomName, *PackageId, *Terrain);
-		const FString Arguments = LsnPlanner::CustomTimelineArguments(CustomTimelineTemplate, Custom.Latitude, Custom.Longitude, CustomName, CustomRoot);
+		const FString Arguments = LsnPlanner::CustomTimelineArguments(CustomTimelineTemplate, Custom.Latitude, Custom.Longitude, CustomName, CustomRoot, CustomStartDate);
 		if (Arguments.IsEmpty())
 		{
 			Custom.TimelineLine = TEXT("Step 2 of 2, Sun and Earth timeline: not available in this build (no command of the science core has been set for it); the horizon only is shown.");
@@ -569,13 +582,13 @@ void ALsnViewGameMode::TickCustom()
 		}
 		else
 		{
-			// The core states about half a minute for a complete package with a short timeline.
-			LaunchCustom(Arguments, 2, 30.0);
+			// The core states 12 to 13 s for a complete package of 30 days (core/README.md).
+			LaunchCustom(Arguments, 2, 13.0);
 		}
 	}
 	else
 	{
-		Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2 done in %.0f s: Sun and Earth timeline, package %s; %s."), RunS, *PackageId, *Terrain);
+		Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2 done in %.0f s: Sun and Earth timeline of 30 days from %s, package %s; %s."), RunS, *CustomStartDate, *PackageId, *Terrain);
 		Custom.Message = Custom.TimelineLine;
 	}
 }

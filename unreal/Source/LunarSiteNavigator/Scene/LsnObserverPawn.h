@@ -126,6 +126,8 @@ private:
 	void SetCameraView(ELsnCameraView NewView);
 	bool ComposedLocation(const ALsnSiteScene& Scene, ELsnCameraView View, FVector& OutLocation) const;
 	bool bArrival = false;
+	/** A camera position away from the observer was asked for at a site whose elevation data is not installed here. */
+	bool bCameraRefused = false;
 	double ArrivalElapsedS = 0.0;
 	double ArrivalSeconds = 8.0;
 	bool bFirstDay = false;

@@ -708,7 +708,19 @@ void ALsnHud::DrawHUD()
 		Chip.Headline = FString::Printf(TEXT("%s in %s%s"), Countdown.bVisibleNow ? TEXT("sets") : TEXT("rises"), Countdown.bLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Countdown.SecondsToChange));
 		// With a stated horizon error the event is a range, not an instant.
 		const FLsnEvent* Event = LsnPlanner::EventEndingCountdown(P, Body, H, EtS, Countdown);
-		if (Event && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS && P.Uncertainty.bHasHorizonError)
+		const FString Quality = Event ? LsnPlanner::TerrainQualityPhrase(*Event) : FString();
+		if (Event && !Quality.IsEmpty() && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS)
+		{
+			// Since 0.10: what the event rests on, and how wide its band is for that height error.
+			// Short, so that it stays readable in the chip: "measured pixel +/- 5.0 m: ... to ...".
+			Chip.Detail = FString::Printf(TEXT("%s: %s to %s"), *Quality.Replace(TEXT(" terrain pixel, height"), TEXT(" pixel")).Replace(TEXT("terrain pixel of unknown kind"), TEXT("pixel of unknown kind")),
+				*LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS));
+		}
+		else if (Event && !Quality.IsEmpty())
+		{
+			Chip.Detail = TEXT("rests on a ") + Quality;
+		}
+		else if (Event && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS && P.Uncertainty.bHasHorizonError)
 		{
 			Chip.Detail = FString::Printf(TEXT("horizon +/- %.2f deg: %s to %s"), P.Uncertainty.HorizonErrorDeg, *LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS));
 		}
@@ -799,7 +811,7 @@ void ALsnHud::DrawHUD()
 	{
 		Y = DrawWrapped(Text, Alert, Margin, Y, ColumnWidth, TypeM) + 4.0f * Scale;
 	};
-	if (bOverview)
+	if (Pawn && !Pawn->GetCameraNote().IsEmpty())
 	{
 		Notice(Pawn->GetCameraNote());
 	}

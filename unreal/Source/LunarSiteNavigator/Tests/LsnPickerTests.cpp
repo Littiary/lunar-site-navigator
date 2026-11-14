@@ -166,6 +166,34 @@ bool FLsnCustomCoordinatesTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("W3: a third of the stated time has run"), LsnPlanner::StepShare(10.0, 30.0), 1.0 / 3.0, 1e-12);
 	TestEqual(TEXT("W3: never shown as done while it runs"), LsnPlanner::StepShare(45.0, 30.0), 0.95, 1e-12);
 	TestEqual(TEXT("W3: no stated time, no share"), LsnPlanner::StepShare(10.0, 0.0), 0.0, 1e-12);
+	// The core's one command for a complete package (contract 0.11, core/README.md) and what it prints.
+	TestEqual(TEXT("W4: the start date is filled in"), LsnPlanner::CustomTimelineArguments(LsnPlanner::DefaultCustomTimelineTemplate(), TEXT("-89.45"), TEXT("222.8"), Name, TEXT("C:/Out/Custom"), TEXT("2026-11-14")),
+		FString(TEXT("-m lsncore custom --lat -89.45 --lon 222.8 --start 2026-11-14 --name \"Custom -89.45, 222.8\" --out \"C:/Out/Custom\"")));
+	int32 Stage = 0, Stages = 0;
+	FString StageText;
+	TestTrue(TEXT("W4: the last progress line counts"), LsnPlanner::LastProgress(TEXT("progress 1/6 checking the kernels\nprogress 4/6 Sun and Earth visibility: 30 days\nC:/Out/site/x\n"), Stage, Stages, StageText));
+	TestEqual(TEXT("W4: its stage"), Stage, 4);
+	TestEqual(TEXT("W4: of how many"), Stages, 6);
+	TestEqual(TEXT("W4: its text"), StageText, FString(TEXT("Sun and Earth visibility: 30 days")));
+	TestFalse(TEXT("W4: no progress line, no stage"), LsnPlanner::LastProgress(TEXT("error: kernels are missing\n"), Stage, Stages, StageText));
+	TestFalse(TEXT("W4: a broken line is not a stage"), LsnPlanner::LastProgress(TEXT("progress x/6 text\n"), Stage, Stages, StageText));
+
+	// What an event rests on (contract 0.10, terrain_quality).
+	FLsnEvent Event;
+	TestTrue(TEXT("W4: an event without the field says nothing"), LsnPlanner::TerrainQualityPhrase(Event).IsEmpty());
+	Event.bHasTerrainQuality = true;
+	Event.LimitingPixel = TEXT("constrained");
+	Event.QualityHeightErrorM = 5.0;
+	TestEqual(TEXT("W4: a pixel with a laser return"), LsnPlanner::TerrainQualityPhrase(Event), FString(TEXT("measured terrain pixel, height +/- 5.0 m")));
+	Event.LimitingPixel = TEXT("interpolated");
+	Event.QualityHeightErrorM = 0.46;
+	TestEqual(TEXT("W4: a filled pixel"), LsnPlanner::TerrainQualityPhrase(Event), FString(TEXT("interpolated terrain pixel, height +/- 0.5 m")));
+	Event.LimitingPixel = TEXT("unknown");
+	Event.QualityHeightErrorM = std::numeric_limits<double>::quiet_NaN();
+	TestEqual(TEXT("W4: nothing known"), LsnPlanner::TerrainQualityPhrase(Event), FString(TEXT("terrain pixel of unknown kind")));
+	TestTrue(TEXT("W4: 0.10 is newer than 0.9"), LsnPlanner::ContractAtLeast(TEXT("0.10"), 0, 9));
+	TestFalse(TEXT("W4: 0.9 is older than 0.10"), LsnPlanner::ContractAtLeast(TEXT("0.9"), 0, 10));
+
 	TestEqual(TEXT("W: the core's own command"), Arguments, FString(TEXT("-m lsncore site --lat -89.45 --lon 222.8 --name \"Custom -89.45, 222.8\" --out \"C:/Out/Custom\"")));
 	return true;
 }

@@ -334,13 +334,68 @@ FString LsnPlanner::TerrainSourceLabel(const FLsnTerrainSource& Source)
 	return Source.PixelM > 0.0 ? FString::Printf(TEXT("terrain: %s, %.0f m pixels"), *Source.ResolutionClass, Source.PixelM) : FString::Printf(TEXT("terrain: %s"), *Source.ResolutionClass);
 }
 
-FString LsnPlanner::CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot)
+FString LsnPlanner::CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot, const FString& StartDate)
 {
 	if (Template.IsEmpty())
 	{
 		return FString();
 	}
-	return Template.Replace(TEXT("{lat}"), *LatitudeText).Replace(TEXT("{lon}"), *LongitudeText).Replace(TEXT("{name}"), *Name).Replace(TEXT("{out}"), *OutputRoot);
+	return Template.Replace(TEXT("{lat}"), *LatitudeText).Replace(TEXT("{lon}"), *LongitudeText).Replace(TEXT("{name}"), *Name).Replace(TEXT("{out}"), *OutputRoot).Replace(TEXT("{start}"), *StartDate);
+}
+
+FString LsnPlanner::DefaultCustomTimelineTemplate()
+{
+	return TEXT("-m lsncore custom --lat {lat} --lon {lon} --start {start} --name \"{name}\" --out \"{out}\"");
+}
+
+bool LsnPlanner::LastProgress(const FString& Output, int32& OutStage, int32& OutStages, FString& OutText)
+{
+	TArray<FString> Lines;
+	Output.ParseIntoArrayLines(Lines);
+	for (int32 Index = Lines.Num() - 1; Index >= 0; --Index)
+	{
+		const FString Line = Lines[Index].TrimStartAndEnd();
+		if (!Line.StartsWith(TEXT("progress ")))
+		{
+			continue;
+		}
+		const FString Rest = Line.RightChop(9);
+		FString Count, Text, Stage, Stages;
+		if (!Rest.Split(TEXT(" "), &Count, &Text))
+		{
+			Count = Rest;
+		}
+		if (Count.Split(TEXT("/"), &Stage, &Stages) && Stage.IsNumeric() && Stages.IsNumeric() && FCString::Atoi(*Stages) > 0)
+		{
+			OutStage = FCString::Atoi(*Stage);
+			OutStages = FCString::Atoi(*Stages);
+			OutText = Text.TrimStartAndEnd();
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
+
+FString LsnPlanner::TerrainQualityPhrase(const FLsnEvent& Event)
+{
+	if (!Event.bHasTerrainQuality)
+	{
+		return FString();
+	}
+	const TCHAR* Kind = Event.LimitingPixel == TEXT("constrained") ? TEXT("measured terrain pixel") : Event.LimitingPixel == TEXT("interpolated") ? TEXT("interpolated terrain pixel") : TEXT("terrain pixel of unknown kind");
+	return FMath::IsFinite(Event.QualityHeightErrorM) ? FString::Printf(TEXT("%s, height +/- %.1f m"), Kind, Event.QualityHeightErrorM) : FString(Kind);
+}
+
+bool LsnPlanner::ContractAtLeast(const FString& Version, int32 Major, int32 Minor)
+{
+	FString MajorText, MinorText;
+	if (!Version.Split(TEXT("."), &MajorText, &MinorText))
+	{
+		return false;
+	}
+	const int32 HasMajor = FCString::Atoi(*MajorText), HasMinor = FCString::Atoi(*MinorText);
+	return HasMajor > Major || (HasMajor == Major && HasMinor >= Minor);
 }
 
 double LsnPlanner::StepShare(double RunS, double StatedS)

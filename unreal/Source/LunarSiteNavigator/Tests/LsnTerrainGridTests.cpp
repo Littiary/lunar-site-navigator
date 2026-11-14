@@ -343,7 +343,8 @@ bool FLsnTerrainRealTest::RunTest(const FString& Parameters)
 				double HighestDeg = -90.0;
 				for (int32 R = 0; R < NumRings; ++R)
 				{
-					const float HeightM = Grid.HeightsM[A * NumRings + R];
+					// The grid holds 64-bit heights since 14 November 2026 (it held 32-bit ones before); read as they are.
+					const double HeightM = Grid.HeightsM[A * NumRings + R];
 					if (FMath::IsNaN(HeightM) || Grid.RingDistanceM[R] > P.MaxRangeM)
 					{
 						continue;

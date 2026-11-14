@@ -330,7 +330,7 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 		double LastKnownHeightM = Package.SurfaceHeightM;
 		for (int32 R = 0; R < NumRings; ++R)
 		{
-			const float HeightM = Grid.HeightsM[A * NumRings + R];
+			const double HeightM = Grid.HeightsM[A * NumRings + R];
 			if (FMath::IsNaN(HeightM))
 			{
 				++OutUnknownSamples;
