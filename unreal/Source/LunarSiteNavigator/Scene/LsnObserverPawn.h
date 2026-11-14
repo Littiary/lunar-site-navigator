@@ -131,6 +131,8 @@ private:
 	bool bArrival = false;
 	/** A camera position away from the observer was asked for at a site whose elevation data is not installed here. */
 	bool bCameraRefused = false;
+	/** The camera position the scale objects were last switched for (0 none yet, else the view + 1). */
+	int32 ObjectsSwitchedFor = 0;
 	double ArrivalElapsedS = 0.0;
 	double ArrivalSeconds = 8.0;
 	bool bFirstDay = false;

@@ -106,6 +106,19 @@ void ALsnObserverPawn::ApplyView()
 			bCameraRefused = false;
 		}
 	}
+	// The scale objects go with the camera position: off in the observer's own view (and so side by
+	// side), on near the lander and in the wide view. The button still switches them by hand.
+	if (ObjectsSwitchedFor != static_cast<int32>(CameraView) + 1)
+	{
+		if (ALsnSiteScene* SceneForObjects = const_cast<ALsnSiteScene*>(FindScene()))
+		{
+			if (ObjectsSwitchedFor != 0 || CameraView != ELsnCameraView::Observer)
+			{
+				SceneForObjects->SetScaleObjectsVisible(CameraView != ELsnCameraView::Observer);
+			}
+			ObjectsSwitchedFor = static_cast<int32>(CameraView) + 1;
+		}
+	}
 	// Yaw is azimuth and pitch is elevation in the site frame (see the frame tests).
 	SetActorRotation(FRotator(ElevationDeg, AzimuthDeg, 0.0));
 	if (IsOverview())
@@ -133,6 +146,15 @@ void ALsnObserverPawn::ApplyView()
 				const FVector Back = FLsnSiteFrame::AzElToUnrealDir(AzimuthDeg, 0.0) * (-CameraBackM * FLsnSiteFrame::CmPerM);
 				SetActorLocation(Scene->GetEyeUnreal() + Back + FVector(0.0, 0.0, CameraUpM * FLsnSiteFrame::CmPerM));
 			}
+		}
+	}
+
+	// No boulder within the clearance of where the camera now stands.
+	if (ALsnSiteScene* SceneForBoulders = const_cast<ALsnSiteScene*>(FindScene()))
+	{
+		if (SceneForBoulders->HasPackage())
+		{
+			SceneForBoulders->KeepBouldersClearOf(GetActorLocation());
 		}
 	}
 

@@ -15,6 +15,7 @@
 //    (same vertex count, same positions): the horizon comparison cannot see them.
 
 #include "Tests/LsnTestSupport.h"
+#include "Planner/LsnPlanner.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Mesh/LsnProps.h"
@@ -109,6 +110,87 @@ bool FLsnPropsSceneTest::RunTest(const FString& Parameters)
 	}
 	GEngine->DestroyWorldContext(World);
 	World->DestroyWorld(false);
+	return true;
+}
+
+// Q. Scale objects and the camera (written on 15 November 2026, before the first run).
+//    1. A scene starts with the scale objects off (the observer's own view and the two-site view show none).
+//    2. With a published package that has drawn relief: told that the camera stands on the ground point of
+//       a boulder, the scene draws no boulder within 15 m of that point, and fewer boulders than before;
+//       told that the camera is 10 km away, it draws all of them again.
+namespace LsnPropsCameraTest
+{
+	struct FSceneFixture
+	{
+		UWorld* World = nullptr;
+		ALsnSiteScene* Scene = nullptr;
+
+		FSceneFixture()
+		{
+			World = UWorld::CreateWorld(EWorldType::Game, false);
+			FWorldContext& Context = GEngine->CreateNewWorldContext(EWorldType::Game);
+			Context.SetCurrentWorld(World);
+			World->InitializeActorsForPlay(FURL());
+			World->BeginPlay();
+			Scene = World->SpawnActor<ALsnSiteScene>(ALsnSiteScene::StaticClass(), FTransform::Identity);
+		}
+
+		~FSceneFixture()
+		{
+			GEngine->DestroyWorldContext(World);
+			World->DestroyWorld(false);
+		}
+	};
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLsnPropsCameraTest, "LunarSiteNavigator.Props.BouldersKeepClearOfTheCamera", LsnTest::Flags)
+bool FLsnPropsCameraTest::RunTest(const FString& Parameters)
+{
+	const FString Root = LsnPlanner::PublishedPackageRoot();
+	TArray<FLsnIndexEntry> Entries;
+	FString Error;
+	if (!LsnPackageIO::LoadIndex(Root, Entries, Error))
+	{
+		AddWarning(TEXT("NOT RUN: no published packages found."));
+		return true;
+	}
+	int32 Checked = 0;
+	for (const FLsnIndexEntry& Entry : Entries)
+	{
+		if (Entry.Kind != TEXT("site") || Checked >= 3)
+		{
+			continue;
+		}
+		LsnPropsCameraTest::FSceneFixture Fixture;
+		if (!Fixture.Scene->LoadPackageDirectory(FPaths::Combine(Root, Entry.Path), Error) || !Fixture.Scene->HasDrawnRelief())
+		{
+			continue;
+		}
+		ALsnSiteScene& Scene = *Fixture.Scene;
+		++Checked;
+		TestFalse(Entry.SiteId + TEXT(": Q1: the scale objects are off at the start"), Scene.AreScaleObjectsVisible());
+		Scene.KeepBouldersClearOf(Scene.GetActorLocation() + FVector(0.0, 0.0, 1.0e6));
+		const TArray<FVector> All = Scene.GetDrawnBoulders();
+		if (!TestTrue(Entry.SiteId + TEXT(": Q2: boulders are placed"), All.Num() > 0))
+		{
+			continue;
+		}
+		const FVector Camera = Scene.GetActorLocation() + All[0] + FVector(0.0, 0.0, 200.0);
+		Scene.KeepBouldersClearOf(Camera);
+		TestTrue(Entry.SiteId + TEXT(": Q2: fewer boulders with the camera on one of them"), Scene.GetDrawnBoulders().Num() < All.Num());
+		double Nearest = TNumericLimits<double>::Max();
+		for (const FVector& Ground : Scene.GetDrawnBoulders())
+		{
+			Nearest = FMath::Min(Nearest, FVector::Distance(Scene.GetActorLocation() + Ground, Camera) / FLsnSiteFrame::CmPerM);
+		}
+		TestTrue(Entry.SiteId + FString::Printf(TEXT(": Q2: no boulder within 15 m of the camera (nearest %.1f m)"), Nearest), Nearest >= ALsnSiteScene::BoulderClearanceM);
+		Scene.KeepBouldersClearOf(Scene.GetActorLocation() + FVector(0.0, 0.0, 1.0e6));
+		TestEqual(Entry.SiteId + TEXT(": Q2: all boulders again with the camera far away"), Scene.GetDrawnBoulders().Num(), All.Num());
+	}
+	if (Checked == 0)
+	{
+		AddWarning(TEXT("NOT RUN: no published package with drawn relief."));
+	}
 	return true;
 }
 

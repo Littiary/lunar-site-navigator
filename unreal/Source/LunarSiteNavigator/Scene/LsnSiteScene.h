@@ -109,6 +109,12 @@ public:
 	 */
 	void SetScaleObjectsVisible(bool bVisible);
 	bool AreScaleObjectsVisible() const { return bScaleObjectsVisible; }
+	/** No boulder is drawn nearer to the camera than this: an unlit boulder close to the lens is a black blob. */
+	static constexpr double BoulderClearanceM = 15.0;
+	/** Tells the scene where the camera stands; boulders nearer than the clearance are left out. */
+	void KeepBouldersClearOf(const FVector& CameraUnreal);
+	/** Where the boulders that are drawn stand (their points on the ground), in Unreal axes. */
+	const TArray<FVector>& GetDrawnBoulders() const { return DrawnBoulders; }
 	/** The mast stands where the observer is: it is shown only to a camera that is not the observer. */
 	void SetMastVisible(bool bVisible);
 	/** A point of the drawn ground at an azimuth and distance from the site, relative to the actor; false without elevation data there. */
@@ -266,6 +272,10 @@ private:
 	FLsnTerrainGrid TerrainGrid;
 	bool bHasRealTerrain = false;
 	bool bHasPatchTerrain = false;
+	/** Ground points of all boulders of the list, those that are drawn, and the camera they keep clear of. */
+	TArray<FVector> BoulderGround, DrawnBoulders;
+	FVector BoulderCamera = FVector::ZeroVector;
+	bool bHasBoulderCamera = false;
 	/** How far the patches stand above the package horizon for the observer height in use, beyond the start of the horizon search; degrees. */
 	double PatchExcessDeg = 0.0;
 	TArray<FLsnTerrainPatch> TerrainPatches;
