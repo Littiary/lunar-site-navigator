@@ -255,3 +255,17 @@ PRODUCTS["LDEC_80S_20M"] = _polar_dem(
     "LDEC_80S_20M",
     "LOLA returns per 20 m pixel of LDEM_80S_20M (uint8; 0 = interpolated pixel)",
 )
+
+
+# LROC "Anthropogenic Features on the Moon" (Wagner et al. 2017, updated): coordinates of landers measured on LROC NAC
+# images (retroreflectors from laser ranging), PDS LRO-L-LROC-5-RDR-V1.0 extras.
+LROC_ANTHRO_ROOT = "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS"
+PRODUCTS["LROC_ANTHROPOGENIC"] = Product(
+    "LROC_ANTHROPOGENIC",
+    "LROC Anthropogenic Features on the Moon shapefile (360 domain) and README",
+    (
+        FileSpec("reference", "ANTHROPOGENIC_OBJECTS_360.ZIP", f"{LROC_ANTHRO_ROOT}/ANTHROPOGENIC_OBJECTS_360.ZIP", None),
+        FileSpec("doc", "ANTHROPOGENIC_OBJECTS_README.TXT", f"{LROC_ANTHRO_ROOT}/ANTHROPOGENIC_OBJECTS_README.TXT", None),
+    ),
+    base="raw/catalogs",
+)
