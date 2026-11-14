@@ -1,0 +1,27 @@
+{
+  "description": "Rise/transit/set search of Horizons for the Sun from four points on the lunar reference sphere (test points, not catalogued landing sites). One of them is 1 km above the sphere to exercise the dip of the horizon.",
+  "api": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "common_parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@301",
+    "COORD_TYPE": "GEODETIC",
+    "QUANTITIES": "4,13",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS"
+  },
+  "targets": {"SUN": "10"},
+  "sites": [
+    {"id": "eq_near", "lon_deg": 0.0, "lat_deg": 0.0, "height_km": 0.0, "note": "mean sub-Earth point"},
+    {"id": "low_lat_east", "lon_deg": 23.47, "lat_deg": 0.67, "height_km": 0.0, "note": "near side, low latitude"},
+    {"id": "far_mid_north_1km", "lon_deg": -150.0, "lat_deg": 45.0, "height_km": 1.0, "note": "far side, 1 km above the sphere: horizon dip 1.94 deg"},
+    {"id": "south_85", "lon_deg": 45.0, "lat_deg": -85.0, "height_km": 0.0, "note": "south polar region, slow crossings"}
+  ],
+  "spans": [
+    {"id": "rts_60d", "start_utc": "2026-11-01 00:00", "stop_utc": "2026-12-31 00:00", "step": "1m TVH", "note": "rise/transit/set rows only, 1-minute search step, true visual horizon"}
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Acceptance threshold: event finder versus the rise and set search of JPL Horizons (Sun, smooth sphere)",
+  "written_utc": "2026-11-14T10:33:11Z",
+  "rule": "Written and committed before any Horizons rise/set response was fetched or compared. This file is not edited afterwards. If the comparison exceeds the threshold, the cause is found and reported; the threshold stays.",
+  "applies_to": "Every rise and every set row returned by Horizons for the cases in cases.json.",
+  "thresholds": {
+    "event_time_seconds_max": {
+      "value": 120.0,
+      "definition": "Largest absolute difference between a rise or set time found by the core on a smooth sphere and the time of the matching rise or set row printed by Horizons. 120 s is twice the 1-minute search step requested from Horizons, which is the accuracy Horizons states for this mode; the core's own numerical accuracy is 0.25 s."
+    },
+    "unmatched_events_max": {
+      "value": 0,
+      "definition": "Number of Horizons rise or set rows without a core event of the same kind within the time threshold, plus the number of core events inside the Horizons time span (excluding its first and last 10 minutes) without a Horizons row."
+    }
+  },
+  "event_definition": "Horizons rise and set in TVH mode: relative to the true visual horizon of the reference ellipsoid, including the dip of the horizon for a site above it, without refraction. For the Sun the core uses the upper limb, which is what the Horizons documentation states for the Sun. If the response text states a different definition, the comparison uses the definition stated there and the report says so."
+}
