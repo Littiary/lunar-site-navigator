@@ -1,0 +1,47 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/GameModeBase.h"
+#include "LsnViewGameMode.generated.h"
+
+class ALsnSiteScene;
+
+/**
+ * Stage 1 view: spawns the scene for one site package and puts the camera at
+ * the eye of the observer. The whole scene is built in code; the project has
+ * no map asset of its own.
+ *
+ * Command line:
+ *   -LsnPackage=<site package directory>   or
+ *   -LsnPackageRoot=<package root>         (the first site in index.json is shown)
+ *   -LsnTime=<timeline sample index>   -LsnHeight=<observer height index>
+ *   -LsnYaw=<azimuth, deg>  -LsnPitch=<elevation, deg>  -LsnFov=<horizontal field of view, deg>
+ *   -LsnHorizonLine                        (draw the package horizon as a line)
+ *   -LsnShot=<file.png>                    (save one screenshot and quit)
+ */
+UCLASS()
+class LUNARSITENAVIGATOR_API ALsnViewGameMode : public AGameModeBase
+{
+	GENERATED_BODY()
+
+public:
+	ALsnViewGameMode();
+
+	virtual void StartPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+
+	ALsnSiteScene* GetScene() const { return Scene; }
+	const FString& GetLoadError() const { return LoadError; }
+
+	/** Finds the package to show: command line first, then the sample of the contract. */
+	static FString ResolvePackageDirectory(FString& OutError);
+
+private:
+	UPROPERTY()
+	TObjectPtr<ALsnSiteScene> Scene;
+
+	FString LoadError;
+	FString ShotPath;
+	int32 FramesUntilShot = -1;
+	int32 FramesUntilQuit = -1;
+};
