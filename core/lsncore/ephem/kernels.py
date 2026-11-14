@@ -58,6 +58,19 @@ KERNEL_SET: tuple[Kernel, ...] = (
 )
 
 
+# Optional second group, needed only for ground-station geometry (direct-to-Earth windows):
+# the orientation of the Earth and the positions of the Deep Space Network stations. It is
+# kept apart from KERNEL_SET so that the identifier of the base set, which is part of
+# every package id, does not change. Load order: the long-term Earth orientation first,
+# the recent high-precision one second, so that the latter wins where both have data.
+STATION_KERNEL_SET: tuple[Kernel, ...] = (
+    Kernel("earth_1962_260806_2126_combined.bpc", "pck", "binary PCK", "Orientation of the Earth (ITRF93), 1962 to 2126; measured to August 2026, predicted after"),
+    Kernel("earth_000101_270208_261113.bpc", "pck", "binary PCK", "Orientation of the Earth (ITRF93), high precision, 2000 to 8 February 2027; measured to 13 November 2026"),
+    Kernel("earthstns_itrf93_260814.bsp", "spk/stations", "SPK", "Positions of the Deep Space Network stations in ITRF93"),
+    Kernel("earth_topo_260814.tf", "fk/stations", "FK", "Topocentric frames of the Deep Space Network stations"),
+)
+
+
 def kernel_dir() -> Path:
     """Directory holding the downloaded kernels (not under version control)."""
     override = os.environ.get("LSN_KERNEL_DIR")
@@ -72,14 +85,11 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def fetch(force: bool = False) -> dict:
-    """Download the kernel set and write the manifest. Returns the manifest."""
+def _fetch_group(group: tuple, known: dict, force: bool) -> list:
     target = kernel_dir()
     target.mkdir(parents=True, exist_ok=True)
-    previous = read_manifest() if MANIFEST_PATH.exists() else {"kernels": []}
-    known = {entry["name"]: entry for entry in previous["kernels"]}
     entries = []
-    for kernel in KERNEL_SET:
+    for kernel in group:
         path = target / kernel.name
         entry = known.get(kernel.name)
         if force or not path.exists() or entry is None or _sha256(path) != entry["sha256"]:
@@ -99,11 +109,19 @@ def fetch(force: bool = False) -> dict:
                 "retrieved_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
         entries.append(entry)
+    return entries
+
+
+def fetch(force: bool = False, stations: bool = True) -> dict:
+    """Download the kernel sets and write the manifest. Returns the manifest."""
+    previous = read_manifest() if MANIFEST_PATH.exists() else {}
+    known = {entry["name"]: entry for entry in previous.get("kernels", []) + previous.get("station_kernels", [])}
     manifest = {
         "description": "NAIF generic kernels used by the ephemeris stream, in load order. "
         "Written by lsncore.ephem.fetch_kernels; do not edit by hand.",
         "source_root": NAIF_ROOT,
-        "kernels": entries,
+        "kernels": _fetch_group(KERNEL_SET, known, force),
+        "station_kernels": _fetch_group(STATION_KERNEL_SET, known, force) if stations else previous.get("station_kernels", []),
     }
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
@@ -138,10 +156,46 @@ def load(verify: bool = True) -> None:
     _LOADED = True
 
 
+_STATIONS_LOADED = False
+
+
+def stations_available() -> bool:
+    """True if the optional station kernels have been downloaded."""
+    directory = kernel_dir()
+    listed = {entry["name"] for entry in read_manifest().get("station_kernels", [])}
+    return all(kernel.name in listed and (directory / kernel.name).exists() for kernel in STATION_KERNEL_SET)
+
+
+def load_stations(verify: bool = True) -> None:
+    """Load the base set and the station group (idempotent)."""
+    global _STATIONS_LOADED
+    load(verify)
+    if _STATIONS_LOADED:
+        return
+    manifest = {entry["name"]: entry for entry in read_manifest().get("station_kernels", [])}
+    directory = kernel_dir()
+    for kernel in STATION_KERNEL_SET:
+        path = directory / kernel.name
+        if not path.exists() or kernel.name not in manifest:
+            raise FileNotFoundError(f"Station kernel {kernel.name} not found in {directory}. Run: python -m lsncore.ephem.fetch_kernels")
+        if verify and _sha256(path) != manifest[kernel.name]["sha256"]:
+            raise RuntimeError(f"Kernel {kernel.name} does not match the manifest checksum")
+        spice.furnsh(str(path))
+    _STATIONS_LOADED = True
+
+
+def station_kernel_set_id() -> str:
+    """Short identifier of the station kernel group."""
+    manifest = {entry["name"]: entry for entry in read_manifest()["station_kernels"]}
+    joined = "".join(manifest[kernel.name]["sha256"] for kernel in STATION_KERNEL_SET)
+    return hashlib.sha256(joined.encode("ascii")).hexdigest()[:12]
+
+
 def unload() -> None:
-    global _LOADED
+    global _LOADED, _STATIONS_LOADED
     spice.kclear()
     _LOADED = False
+    _STATIONS_LOADED = False
 
 
 def kernel_set_id() -> str:

@@ -1,2 +1,3 @@
 horizons/raw/** -text
 horizons_rts/raw/** -text
+stations/raw/** -text
