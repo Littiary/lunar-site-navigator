@@ -1,23 +1,23 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.6"
+    "version": "0.9"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T14:15:51.000Z",
+  "generated_utc": "2026-11-14T15:36:07.758Z",
   "scenario_id": "south-polar-sites",
   "packages": [
     {
       "kind": "direction_table",
-      "package_id": "dirtab-296ce1d712205623",
-      "path": "direction_table/dirtab-296ce1d712205623",
+      "package_id": "dirtab-fbc51d64e42ab803",
+      "path": "direction_table/dirtab-fbc51d64e42ab803",
       "synthetic": false,
       "status": "ok"
     },
     {
       "kind": "site",
-      "package_id": "site-6ded733f4be837e5",
-      "path": "site/de-gerlache-rim-crest/site-6ded733f4be837e5",
+      "package_id": "site-f5debe0fd2f3cdf7",
+      "path": "site/de-gerlache-rim-crest/site-f5debe0fd2f3cdf7",
       "synthetic": false,
       "status": "ok",
       "site_id": "de-gerlache-rim-crest",
@@ -28,8 +28,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1275539289e03655",
-      "path": "site/malapert-massif-summit/site-1275539289e03655",
+      "package_id": "site-29ad241e86f8307d",
+      "path": "site/malapert-massif-summit/site-29ad241e86f8307d",
       "synthetic": false,
       "status": "ok",
       "site_id": "malapert-massif-summit",
@@ -40,8 +40,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-a4f5f765a5d43bbf",
-      "path": "site/shackleton-rim-crest/site-a4f5f765a5d43bbf",
+      "package_id": "site-a4d3f54375701349",
+      "path": "site/shackleton-rim-crest/site-a4d3f54375701349",
       "synthetic": false,
       "status": "ok",
       "site_id": "shackleton-rim-crest",
@@ -52,8 +52,8 @@
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-e039b2b260dd7d83",
-      "path": "site_pairs/pairs-e039b2b260dd7d83",
+      "package_id": "pairs-fa4b9bc4663c9738",
+      "path": "site_pairs/pairs-fa4b9bc4663c9738",
       "synthetic": false,
       "status": "ok",
       "site_ids": [

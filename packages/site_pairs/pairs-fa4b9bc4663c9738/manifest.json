@@ -1,19 +1,19 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.6"
+    "version": "0.9"
   },
   "kind": "site_pairs",
-  "package_id": "pairs-e039b2b260dd7d83",
-  "content_sha256": "60af7cc6d2906e43e7c525b09e29652f5493acd4b9c08f96c6364c69b4781a0a",
+  "package_id": "pairs-fa4b9bc4663c9738",
+  "content_sha256": "7a4edf712d6aa36bdfcf9c3a9f40c8fae5afb5e3c08b3eb22d0ef63fecaba217",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
   "request": {
     "site_package_ids": [
-      "site-a4f5f765a5d43bbf",
-      "site-6ded733f4be837e5",
-      "site-1275539289e03655"
+      "site-a4d3f54375701349",
+      "site-f5debe0fd2f3cdf7",
+      "site-29ad241e86f8307d"
     ],
     "windows": [
       "sun_visible",
@@ -26,18 +26,18 @@
     "site_packages": [
       {
         "site_id": "shackleton-rim-crest",
-        "package_id": "site-a4f5f765a5d43bbf",
-        "content_sha256": "6c958aca28bebcfd9b33d78970e20ec07824bb92f10e25e22c9de457844f0254"
+        "package_id": "site-a4d3f54375701349",
+        "content_sha256": "6c509aa9a8a6e5aa57117cc5b7e9af2a40eba87020ac75093830b356d298387a"
       },
       {
         "site_id": "de-gerlache-rim-crest",
-        "package_id": "site-6ded733f4be837e5",
-        "content_sha256": "890aabafa42292c570500ff61851d6ef27424edc94f23fff116682aae80b26c5"
+        "package_id": "site-f5debe0fd2f3cdf7",
+        "content_sha256": "be4ea2c65744170a31be618c731e3520a1874657b8359b20fe7e6a435cb481cb"
       },
       {
         "site_id": "malapert-massif-summit",
-        "package_id": "site-1275539289e03655",
-        "content_sha256": "6f638f1994f02777ae5dccead2ca1ca705c78322692f7cccf3d21d5cc32c964e"
+        "package_id": "site-29ad241e86f8307d",
+        "content_sha256": "113ba0670e2d855f4e2f114b5eebbf9717aa905d5169773ca3807f69938996c7"
       }
     ]
   },
@@ -83,7 +83,7 @@
       "name": "Shackleton crater rim crest",
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
-      "package_id": "site-a4f5f765a5d43bbf",
+      "package_id": "site-a4d3f54375701349",
       "observer_height_m": 2.0
     },
     {
@@ -91,7 +91,7 @@
       "name": "de Gerlache crater rim crest",
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
-      "package_id": "site-6ded733f4be837e5",
+      "package_id": "site-f5debe0fd2f3cdf7",
       "observer_height_m": 2.0
     },
     {
@@ -99,7 +99,7 @@
       "name": "Mons Malapert (Malapert massif) summit",
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
-      "package_id": "site-1275539289e03655",
+      "package_id": "site-29ad241e86f8307d",
       "observer_height_m": 2.0
     }
   ],
@@ -2976,13 +2976,13 @@
     }
   ],
   "provenance": {
-    "created_utc": "2026-11-14T14:15:50.711Z",
+    "created_utc": "2026-11-14T15:36:07.450Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {},
     "software": {
       "core_version": "0.1.0",
       "science_version": "1",
-      "git_commit": "c9b2aab10c19782bff1cb7345db2bc08b8e16e19",
+      "git_commit": "31d1a5ca97506b22af0c35cfcd1ce5d79c32406a",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",

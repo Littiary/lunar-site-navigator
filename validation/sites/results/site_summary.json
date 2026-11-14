@@ -1,6 +1,6 @@
 {
-  "generated_utc": "2026-11-14T14:16:13Z",
-  "contract_version": "0.6",
+  "generated_utc": "2026-11-14T15:36:34Z",
+  "contract_version": "0.9",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2028-11-14T00:00:00.000Z",
@@ -23,8 +23,8 @@
     ]
   },
   "site_pairs": {
-    "package_id": "pairs-e039b2b260dd7d83",
-    "content_sha256": "60af7cc6d2906e43e7c525b09e29652f5493acd4b9c08f96c6364c69b4781a0a",
+    "package_id": "pairs-fa4b9bc4663c9738",
+    "content_sha256": "7a4edf712d6aa36bdfcf9c3a9f40c8fae5afb5e3c08b3eb22d0ef63fecaba217",
     "observer_heights_m": [
       2.0,
       2.0,
@@ -152,8 +152,8 @@
   },
   "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
-  "direction_table_id": "dirtab-296ce1d712205623",
-  "run_time_s": 1089.6643692999787,
+  "direction_table_id": "dirtab-fbc51d64e42ab803",
+  "run_time_s": 680.1164513000112,
   "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
   "sites": [
     {
@@ -162,11 +162,11 @@
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
       "surface_height_m": 1701.0723774096787,
-      "package_id": "site-a4f5f765a5d43bbf",
-      "content_sha256": "6c958aca28bebcfd9b33d78970e20ec07824bb92f10e25e22c9de457844f0254",
+      "package_id": "site-a4d3f54375701349",
+      "content_sha256": "6c509aa9a8a6e5aa57117cc5b7e9af2a40eba87020ac75093830b356d298387a",
       "status": "ok",
       "warnings": [],
-      "direction_table_id": "dirtab-296ce1d712205623",
+      "direction_table_id": "dirtab-fbc51d64e42ab803",
       "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
         "far_field_max_deg": 0.0,
@@ -174,9 +174,26 @@
         "ceiling_height_m": 7027.0,
         "shortest_reach_m": 300000.0
       },
+      "terrain_source": {
+        "at_site": {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole"
+        },
+        "resolution_class": "fine",
+        "products": [
+          {
+            "product_id": "LDEM_80S_20M",
+            "pixel_m": 20.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 1.0
+          }
+        ]
+      },
       "timings_s": {
-        "horizon": 2.825223,
-        "timeline": 512.964522
+        "horizon": 2.75765,
+        "timeline": 672.443852,
+        "terrain_patches": 0.3843
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -609,11 +626,11 @@
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
       "surface_height_m": 1815.1855746334436,
-      "package_id": "site-6ded733f4be837e5",
-      "content_sha256": "890aabafa42292c570500ff61851d6ef27424edc94f23fff116682aae80b26c5",
+      "package_id": "site-f5debe0fd2f3cdf7",
+      "content_sha256": "be4ea2c65744170a31be618c731e3520a1874657b8359b20fe7e6a435cb481cb",
       "status": "ok",
       "warnings": [],
-      "direction_table_id": "dirtab-296ce1d712205623",
+      "direction_table_id": "dirtab-fbc51d64e42ab803",
       "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
         "far_field_max_deg": 0.0,
@@ -621,9 +638,26 @@
         "ceiling_height_m": 7027.0,
         "shortest_reach_m": 300000.0
       },
+      "terrain_source": {
+        "at_site": {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole"
+        },
+        "resolution_class": "fine",
+        "products": [
+          {
+            "product_id": "LDEM_80S_20M",
+            "pixel_m": 20.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 1.0
+          }
+        ]
+      },
       "timings_s": {
-        "horizon": 7.094447,
-        "timeline": 310.57521
+        "horizon": 3.37421,
+        "timeline": 505.260304,
+        "terrain_patches": 0.431641
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -1031,11 +1065,11 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "surface_height_m": 5173.498293993088,
-      "package_id": "site-1275539289e03655",
-      "content_sha256": "6f638f1994f02777ae5dccead2ca1ca705c78322692f7cccf3d21d5cc32c964e",
+      "package_id": "site-29ad241e86f8307d",
+      "content_sha256": "113ba0670e2d855f4e2f114b5eebbf9717aa905d5169773ca3807f69938996c7",
       "status": "ok",
       "warnings": [],
-      "direction_table_id": "dirtab-296ce1d712205623",
+      "direction_table_id": "dirtab-fbc51d64e42ab803",
       "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
       "horizon_error_bounds": {
         "far_field_max_deg": 0.471091031892759,
@@ -1043,9 +1077,26 @@
         "ceiling_height_m": 7027.0,
         "shortest_reach_m": 300000.0
       },
+      "terrain_source": {
+        "at_site": {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole"
+        },
+        "resolution_class": "fine",
+        "products": [
+          {
+            "product_id": "LDEM_80S_20M",
+            "pixel_m": 20.0,
+            "projection": "polar stereographic on a sphere, true scale at the pole",
+            "azimuth_share": 1.0
+          }
+        ]
+      },
       "timings_s": {
-        "horizon": 2.087852,
-        "timeline": 251.282811
+        "horizon": 2.94093,
+        "timeline": 427.503126,
+        "terrain_patches": 0.431575
       },
       "sun_centre_elevation_range_deg": [
         -5.556787014007568,
