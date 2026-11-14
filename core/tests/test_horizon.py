@@ -422,3 +422,19 @@ def test_nothing_is_missed_on_lola_data():
     # runtime of the full default request on real data
     elapsed = _best_of_three(lambda: compute_horizon(terrain, -89.5, 137.0, [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]))
     assert elapsed <= MAX_RUNTIME_S, f"{elapsed:.2f} s"
+
+
+def test_site_far_from_the_pole_on_lola_data():
+    """Rays that leave the 20 m product and run on over the 60 m product. Added after a
+    measurement run failed there with larger pruning cells: points beyond the corner of
+    the finer raster asked it for a neighbourhood it could not bound."""
+    lsn_data = pytest.importorskip("lsn_data")
+    from lsncore.dem import LolaTerrain
+
+    try:
+        reader = lsn_data.open_terrain()
+    except FileNotFoundError:
+        pytest.skip("LOLA products are not on this machine")
+    terrain = LolaTerrain(reader)
+    res = _assert_complete(terrain, reader, -82.0, -45.0, 300_000.0, azimuths=np.arange(0.0, 360.0, 45.0), heights=(2.0,))
+    assert np.isfinite(res.elevation_deg).all() and res.coverage_complete

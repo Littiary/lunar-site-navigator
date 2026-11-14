@@ -1,10 +1,10 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.3"
+    "version": "0.4"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T11:54:07.666Z",
+  "generated_utc": "2026-11-14T12:16:58.480Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
@@ -16,8 +16,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-0c0ce671f55e8cb1",
-      "path": "site/synthetic-sample-site/site-0c0ce671f55e8cb1",
+      "package_id": "site-1451265c92cadec8",
+      "path": "site/synthetic-sample-site/site-1451265c92cadec8",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",

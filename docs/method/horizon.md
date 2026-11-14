@@ -63,7 +63,7 @@ rebuilt so that nothing is skipped without proof:
    elevation angle is most sensitive to small relief).
 2. **Near zone.** Every lattice point out to about 4.6 km is evaluated on the finest data.
 3. **Cells with a proof.** Beyond that the lattice is grouped into cells whose length
-   grows with distance (0.25 deg in radians times the distance, 1.3 km at 300 km). For each
+   grows with distance (0.5 deg in radians times the distance, up to 2.4 km). For each
    cell the terrain source returns an upper bound of the surface inside it, read from
    block-maximum overview levels. From that bound follows the highest elevation anything
    in the cell could have. A cell is skipped only if this is below the horizon already
@@ -83,16 +83,17 @@ of the overview block that contains a point contains every finest pixel within o
 size of it. The map scale of the polar stereographic projection is taken into account
 when the neighbourhood size is chosen.
 
-On the LOLA products, 0.1 to 0.7 % of the lattice beyond the near zone has to be walked;
+On the LOLA products, 0.2 to 1.3 % of the lattice beyond the near zone has to be walked;
 the rest is excluded by the bound. All observer heights share the same terrain
-evaluations.
+evaluations. The size of the cells changes the cost, not the result: a cell is either
+proven irrelevant or walked completely.
 
 | Setting | Value |
 |---|---|
 | Azimuth step | 0.25 deg (1440 rays), configurable |
 | First point | one finest pixel from the site |
 | Lattice step | half a finest pixel; an eighth of a pixel within 10 pixels of the site |
-| Cell length | 0.25 deg in radians times the distance, at most 256 lattice points, and never more than the overview levels can bound |
+| Cell length | 0.5 deg in radians times the distance, at most 256 lattice points, and never more than the overview levels can bound |
 | Interpolation | bilinear between pixel centres (data reader), finest product that covers the point |
 | Arithmetic | 64-bit floats; arrays are stored as 32-bit floats in the package (rounding of an angle near 10 deg: about 1e-6 deg) |
 
@@ -166,6 +167,7 @@ is recomputed independently from the data and must have the elevation the code s
 | Synthetic rough raster with single-pixel spikes of 40 to 200 m (20 m pixels, with overviews), 3 sites x 16 azimuths x 3 observer heights | never more than 0.002 deg below the reference | worst case 0.000000 deg below; up to 0.011 deg above |
 | LOLA products (20 m and 60 m south-polar), 3 arbitrary test points x 12 azimuths, observer 2 m, 300 km (in the test suite; skipped where the data is absent) | same | 0.000000 deg below |
 | LOLA products, 6 test points x 36 azimuths x 3 observer heights (measured once, by script) | same | worst case 0.000000 deg below; up to 0.1 deg above within 1 km, 0.008 deg above beyond |
+| LOLA products, a site at latitude -82 whose rays leave the 20 m product (in the test suite) | same | 0.000000 deg below |
 | Reported obstacle recomputed from the data | 1e-5 deg | passes |
 | Data stream's gridded 100 m synthetic raster against its analytic surface (bowl, ring ridge at 12 km), smooth part | 0.02 deg | 0.0052 deg (mean -0.0026 deg) |
 
@@ -195,6 +197,9 @@ Recorded here because thresholds and reference files must not be bent to make a 
 - Far-field test: the mountain placed outside the search radius was too low to raise the
   horizon by the 0.1 deg the test demands as proof that the case is not trivial. The
   mountain was made higher and closer. No tolerance and no inequality was changed.
+- Runtime tests: a single timed run was replaced by the shortest of three runs, after
+  single runs failed while the laptop's processor was slowed down (section 6). The 5 s
+  limit was not changed.
 - Completeness tests: the first version also demanded that the code be no more than 0.002
   deg *above* the 1 m reference for obstacles beyond 1 km. The code turned out to be
   above it (0.0022 deg on LOLA data, 0.011 deg on the spiked raster) because the
@@ -205,15 +210,28 @@ Recorded here because thresholds and reference files must not be bent to make a 
 ## 6. Runtime
 
 Measured on the team laptop (Windows 11, Python 3.14.7, NumPy 2.5.4), single process,
-default settings (0.25 deg, 300 km, six observer heights), while other work was running
-on the machine:
+default settings (0.25 deg, 300 km, six observer heights):
 
 | Terrain source | Time per site |
 |---|---|
-| LOLA 20 m and 60 m south-polar products with six overview levels, six test points | 1.9 to 2.5 s (3.9 s on the first read of a region not yet in the file cache) |
-| Analytic function | 1.1 to 3.6 s |
+| LOLA 20 m and 60 m south-polar products with six overview levels, six test points, three runs each | 1.0 to 1.5 s (median 1.2 s) |
+| Analytic function | about 1 to 2 s |
 
 Target: under 5 s. The LOLA runtime is asserted in the test suite when the data is present.
+
+The same call can take three to four times longer on this laptop: after a few seconds of
+sustained load the processor lowers its clock, and every NumPy operation slows down by the
+same factor (measured: 2.0 s, then 5.8 s, 7.8 s, 7.8 s for four identical calls in a row,
+with identical call counts; processor time, not waiting). The search was made cheaper
+after that observation (one exact bound per cell for the ground observer and a cheap
+valid one for the other heights; larger cells), which brought the time at full clock
+speed from about 2 s down to the figures above. The test takes the shortest of three runs.
+
+A defect found by a measurement run, not by the tests: with the larger cells, sample
+points beyond the corner of the 20 m raster asked that raster for a neighbourhood it
+cannot bound, and the search stopped with an error for a site at latitude -82. Points
+whose neighbourhood cannot touch a raster now get nothing from it, and that site is in
+the test suite.
 
 ## 7. What was learned from the first version
 

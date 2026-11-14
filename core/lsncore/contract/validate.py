@@ -195,7 +195,7 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
         if series is None:
             errors.append(f"timeline/series/{body}: missing series for a listed body")
             continue
-        for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg"):
+        for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg", "ellipse_visible_share"):
             _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
         for name in ("margin_deg", "visible_fraction", "lit_fraction", "blocker_azimuth_index"):
             _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
@@ -238,6 +238,8 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             errors.append(f"timeline/events/{i}: height_index out of range")
         if not (t0 <= ev["et_s"] <= t1):
             errors.append(f"timeline/events/{i}: et_s outside the time grid")
+        if "earliest_et_s" in ev and not ev["earliest_et_s"] <= ev["et_s"] <= ev["latest_et_s"]:
+            errors.append(f"timeline/events/{i}: the event must lie between its earliest and latest time")
         if last is not None and ev["et_s"] < last:
             errors.append(f"timeline/events/{i}: events must be sorted by et_s")
         last = ev["et_s"]

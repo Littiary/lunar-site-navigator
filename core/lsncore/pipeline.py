@@ -23,6 +23,7 @@ from .obstacles import ABS_TOL_M, NEAR_FIELD_M, REL_TOL
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
 from .timeline import IntervalSet, TimeGrid
+from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, visibility_window
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -171,6 +172,113 @@ def blocking_methods(dem_set_id: str, azimuth_step_deg: float, series_step_s: fl
     }
 
 
+def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) -> dict:
+    """Method cards of the horizon-error band and of the landing-ellipse survey."""
+    local = "local East/North/Up at each point; up is the outward radial direction of the reference sphere"
+    data = [dem_set_id, direction_table_id]
+    evidence = [
+        "core/tests/test_uncertainty.py::test_band_of_a_rising_body_against_the_closed_form: band edges against delta / rate (threshold 2 s)",
+        "core/tests/test_uncertainty.py::test_window_of_a_displaced_point_follows_from_its_own_local_frame: window edges of nine displaced points against a 1 s brute-force scan (threshold 2 s)",
+        "core/tests/test_uncertainty.py::test_ellipse_points_fill_the_ellipse_evenly (threshold 0.5 m)",
+        "The stated error and the stated ellipse are inputs. Whether they describe the real elevation model or the real landing accuracy has not been checked.",
+    ]
+    cards = {}
+    if "horizon_error_deg" in stated:
+        cards[pk.M_HORIZON_ERROR] = pk.method_card(
+            "Band for a stated horizon error",
+            "visible_certain: the times at which the body is visible even if the terrain horizon is higher than computed by the stated angle. visible_possible: the times at which it is visible if the horizon is lower by that angle. visible_uncertain: possible and not certain. For every rise and set, earliest and latest give the interval of the uncertain set that contains the event.",
+            "The event finder is run on the horizon profile raised and lowered by the stated angle (one common shift of the whole profile). Raising a horizon can only hide and lowering it can only reveal, so certain lies inside the nominal window and the nominal window inside possible.",
+            local,
+            "TDB",
+            data,
+            {"horizon_error_deg": stated["horizon_error_deg"]},
+            "analytic-test-passed",
+            evidence,
+            [
+                "One common shift is assumed. Real horizon errors differ from azimuth to azimuth and with the distance of the limiting terrain (a height error of the elevation model matters more for near terrain); the band does not model that.",
+                "The stated angle is an input, not an estimate of the elevation model's accuracy.",
+                "Ephemeris, landing position and observer height are not in this band.",
+                "Where the body grazes the horizon, a small angle moves an event by many hours; events can appear or disappear inside the band, and then the nominal event keeps its own time as both bounds.",
+            ],
+        )
+    if "landing_ellipse" in stated:
+        cards[pk.M_ELLIPSE] = pk.method_card(
+            "Survey of the stated landing ellipse",
+            "visible_all_points / visible_any_point: the times at which the body is visible at every sample point of the ellipse / at one point at least. ellipse_visible_share: at every sample of the series, the share of the points at which it is visible. points: the sample points with their terrain height and visible time; visible_s: visible time at the centre, and the least, median and largest over the points.",
+            "Sample points fill the ellipse evenly in area (sunflower pattern, the centre first, deterministic). For every point the terrain horizon is computed with the same settings as for the site, and the event finder is run with the direction of the body from that point.",
+            local,
+            "TDB",
+            data,
+            dict(stated["landing_ellipse"]),
+            "analytic-test-passed",
+            evidence,
+            [
+                "A survey, not a probability: no landing-dispersion distribution is assumed. With few points, a small part of the ellipse with different lighting can be missed.",
+                "Computed for the default observer height only.",
+                "Not combined with the horizon error.",
+                "Each point's horizon has the limits of docs/method/horizon.md; neighbouring points can differ strongly where near terrain sets the horizon.",
+            ],
+        )
+    return cards
+
+
+def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings):
+    """Bands for a stated horizon error and windows at the sample points of a stated ellipse."""
+    from .ephem import directions as d
+    from .ephem import table as ephem_table
+    from .events import finder
+
+    table = ephem_table.load_table(table_dir)
+    grid = TimeGrid.from_contract(timeline.time)
+    domain = (grid.start_et_s, grid.end_et_s)
+    heights = horizon.observer_heights_m
+    rules = {body: finder.threshold_from_contract(thresholds[body], "visible") for body in timeline.bodies}
+    notes = []
+
+    bands = None
+    error_deg = stated.get("horizon_error_deg")
+    if error_deg:
+        bands = {}
+        ground = d.Site(csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
+        for body in timeline.bodies:
+            direction = finder.site_direction(ground, table, body)
+            for h in range(len(heights)):
+                nominal = timeline.window(f"{body.lower()}_visible", h)
+                bands[(body, h)] = horizon_error_band(direction, horizon.elevation_deg[h], az_step, domain, rules[body], error_deg, nominal)
+
+    ellipse = None
+    spec = stated.get("landing_ellipse")
+    if spec:
+        r_site = horizon.reference_radius_m + horizon.surface_height_m
+        points = ellipse_points(csite["lat_deg"], csite["lon_deg"], spec["semi_major_m"], spec["semi_minor_m"], spec["azimuth_deg"], spec["points"], r_site)
+        sets = {body: [] for body in timeline.bodies}
+        ground_heights = []
+        for k, (lat, lon) in enumerate(points):
+            if k == 0:  # the centre is the site itself
+                profile, ground_height = horizon.elevation_deg[hd], horizon.surface_height_m
+            else:
+                try:
+                    here = compute_horizon(terrain, float(lat), float(lon), [heights[hd]], az_step, max_range, settings)
+                    profile, ground_height = here.elevation_deg[0], here.surface_height_m
+                except ValueError:
+                    profile, ground_height = None, None
+            if profile is None or not np.all(np.isfinite(profile)):
+                notes.append(f"landing ellipse: sample point {k} has no complete terrain horizon and was left out")
+                ground_heights.append(ground_height)
+                for body in timeline.bodies:
+                    sets[body].append(None)
+                continue
+            ground_heights.append(ground_height)
+            place = d.Site(float(lon), float(lat), ground_height / 1000.0)
+            for body in timeline.bodies:
+                if k == 0:
+                    sets[body].append(timeline.window(f"{body.lower()}_visible", hd))
+                else:
+                    sets[body].append(visibility_window(finder.site_direction(place, table, body), profile, az_step, domain, rules[body]))
+        ellipse = {"spec": spec, "height_index": hd, "points": points, "surface_height_m": ground_heights, "sets": sets}
+    return bands, ellipse, notes
+
+
 def calendar_methods(dem_set_id: str, direction_table_id: str) -> dict:
     """Method cards of the lunar-day calendar and of the landing windows."""
     local = "local East/North/Up at the site; up is the outward radial direction of the reference sphere"
@@ -301,6 +409,8 @@ def run_scenario(
             }
             if scenario.get("requirements"):
                 timeline_request["requirements"] = scenario["requirements"]
+            if scenario.get("uncertainty"):
+                timeline_request["uncertainty"] = scenario["uncertainty"]
         except ImportError:
             extra_warnings.append(
                 "timeline: the ephemeris modules are not installed; this package holds the horizon only"
@@ -327,6 +437,16 @@ def run_scenario(
             methods.update(
                 blocking_methods(terrain.describe()["dem_set_id"], az_step, float(window["step_s"]), timeline.direction_table_id)
             )
+            stated = scenario.get("uncertainty") or {}
+            if stated:
+                default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
+                hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
+                bands, ellipse, notes = _uncertainty_inputs(
+                    csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings
+                )
+                warnings.extend(notes)
+                add_uncertainty_to_timeline(timeline, stated.get("horizon_error_deg"), bands, ellipse, ephem_directions.et_to_utc_z)
+                methods.update(uncertainty_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id, stated))
             landing = site.get("landing_utc")
             add_calendar_to_timeline(
                 timeline, read_package(table_dir), len(heights), scenario.get("requirements"),

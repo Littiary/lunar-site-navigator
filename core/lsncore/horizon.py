@@ -57,7 +57,7 @@ class HorizonSettings:
     fine_step_px: float = 0.5  # lattice step
     inner_zone_px: float = 10.0  # extent of the denser lattice next to the site
     inner_step_px: float = 0.125  # its step: elevation angles are most sensitive there
-    cell_growth: float = math.radians(0.25)  # cell length / distance
+    cell_growth: float = math.radians(0.5)  # cell length / distance
     max_cell_points: int = 256  # upper limit of lattice points per cell
     refine_candidates: int = 4  # best near-zone maxima per azimuth that are refined
     refine_rounds: int = 4
@@ -248,10 +248,14 @@ def compute_horizon(
         bound = np.asarray(terrain.cover_max_m(clon, clat, np.broadcast_to(0.5 * (s_b - s_a), clat.shape)), dtype=np.float64)
         cell_has_data = np.isfinite(bound)
         g_a, g_b = s_a / radius, s_b / radius
+        # Upper bound of tan(elevation) in each cell for every observer height. With
+        # tan(e) = t0(g) - m / (r sin g), t0 being the value for an observer on the ground,
+        # the largest value over the cell is at most max t0 - m / (r sin g_b): one exact
+        # bound for the ground observer, and a cheap valid one for the others.
         with np.errstate(invalid="ignore"):
-            t_bound = np.stack(
-                [_tan_upper(bound, g_a[None, :], g_b[None, :], radius, ground, m) for m in heights]
-            )  # [H, A, K]
+            t_ground = _tan_upper(bound, g_a[None, :], g_b[None, :], radius, ground, 0.0)  # [A, K]
+            per_metre = 1.0 / ((radius + bound) * np.sin(g_b)[None, :])
+            t_bound = t_ground[None] - heights[:, None, None] * per_metre[None]  # [H, A, K]
         t_bound = np.where(np.isfinite(t_bound), t_bound, -np.inf)
         pending = cell_has_data.copy()
         per_ray = 1  # cells walked per azimuth in the first round; then everything that survives

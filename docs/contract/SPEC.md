@@ -1,4 +1,4 @@
-# Package contract, version 0.3
+# Package contract, version 0.4
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -103,7 +103,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.3"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.4"}` |
 | `kind` | `site` or `direction_table` |
 | `package_id` | `site-` or `dirtab-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -161,6 +161,7 @@ same package ids.
 | `bodies` | `SUN`, `EARTH` |
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
 | `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to |
+| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg` and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
 | `mission_profile` | Reserved |
 | `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use |
 
@@ -171,7 +172,7 @@ same package ids.
 `request` echoes, in canonical form, the part of the scenario that concerns this site:
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
-`bodies`, `thresholds`, and since 0.3 `requirements` and the site's `landing_utc`; or `null`).
+`bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -253,11 +254,13 @@ Present only when a time window was computed.
 | `series.<BODY>.margin_deg` | `[H, N]` elevation of the disc centre minus the terrain horizon at the same azimuth, for each observer height |
 | `series.<BODY>.visible_fraction` | `[H, N]` fraction of the disc area above the terrain horizon, 0 to 1 |
 | `series.<BODY>.lit_fraction` | `[H, N]` optional, since 0.2. Fraction of the disc that is above the terrain horizon and not hidden by another body; for the Sun: `visible_fraction` reduced by an eclipse by the Earth. Use it for power; use `visible_fraction` for line of sight to the terrain |
+| `series.<BODY>.ellipse_visible_share` | `[N]` optional, since 0.4. Share of the sample points of the stated landing ellipse at which the body is visible; see 5.7 |
 | `series.<BODY>.blocker_azimuth_index` | `[H, N]` `<i4`, since 0.2. For every sample, the azimuth index of the horizon sample that limits the view of the disc; see 5.5 |
 | `events[]` | Rise and set events, sorted by time |
 | `windows[]` | Interval sets |
 | `metrics[]` | Summary numbers |
 | `blockers[]` | Since 0.2. The obstacles that cost visible time compared with a smooth sphere; see 5.5 |
+| `uncertainty` | Since 0.4, only if the scenario states assumptions. What was assumed and what follows; see 5.7 |
 | `calendar` | Since 0.3. Visible time per lunar day; see 5.6 |
 | `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
 
@@ -265,7 +268,8 @@ Present only when a time window was computed.
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
 terrain that hides or reveals it), `threshold` (the condition crossed), `method`.
 Optional: `obstacle_lat_deg`, `obstacle_lon_deg`, `sigma_s` (1-sigma time uncertainty),
-`closing_rate_deg_per_h`, `grazing`.
+`closing_rate_deg_per_h`, `grazing`, and since 0.4 `earliest_et_s`, `latest_et_s`,
+`earliest_utc`, `latest_utc` (range of the event time for the stated horizon error; 5.7).
 
 **Window:** `id`, `subject` (`SUN`, `EARTH`, `COMBINED`), `height_index`, `definition`
 (a sentence), optional `threshold`, `intervals_et_s` (`[[start, end], …]`, sorted,
@@ -403,6 +407,43 @@ The landing windows are computed from the edges of the visibility windows by int
 arithmetic, not by trying dates, so they have the accuracy of the event times. The
 requirement is the scenario's; the package cannot tell whether it is the right one.
 
+### 5.7 Uncertainty band and landing ellipse (since 0.4)
+
+Both are answers to "what if" questions with a stated assumption. Neither is an error
+estimate of the result, and they are not combined.
+
+**Stated horizon error** (`uncertainty.horizon_error_deg` in the scenario). The whole
+horizon profile is shifted up and down by the stated angle, the same at every azimuth.
+Per body and observer height:
+
+| Window id | Meaning |
+|---|---|
+| `<body>_visible_certain` | Visible even if the horizon is higher than computed by the stated angle |
+| `<body>_visible_possible` | Visible if the horizon is lower by that angle |
+| `<body>_visible_uncertain` | Possible and not certain: the band |
+
+Always: certain is inside `<body>_visible`, which is inside possible. Metrics
+`<body>_visible_certain_s`, `<body>_visible_possible_s`, `<body>_visible_uncertain_s`.
+Every event gets `earliest_et_s`, `latest_et_s` (and the UTC strings): the interval of
+the band that contains it; equal to the event time if the band is empty there. A
+requirement (5.6) may name `sun_visible_certain` instead of `sun_visible` to get landing
+windows that hold under the stated error.
+
+**Stated landing ellipse** (`uncertainty.landing_ellipse`). The site is the centre.
+Sample points fill the ellipse evenly in area; each has its own terrain horizon and its
+own local vertical. Computed for the default observer height only.
+
+| Field | Content |
+|---|---|
+| windows `<body>_visible_all_points`, `<body>_visible_any_point` | Visible at every sample point; at one point at least. The site's own window lies between them |
+| `series.<BODY>.ellipse_visible_share` | `[N]`: share of the points at which the body is visible at each sample of the series (1 = everywhere in the ellipse, 0 = nowhere) |
+| `uncertainty.landing_ellipse.points[]` | `lat_deg`, `lon_deg`, `surface_height_m`, `visible_s` per body (`null` if the point has no complete horizon). The first point is the site |
+| `uncertainty.landing_ellipse.visible_s.<BODY>` | `centre_s`, `min_s`, `median_s`, `max_s` over the points |
+
+`timeline.uncertainty.horizon_error` and `.landing_ellipse` repeat the stated numbers and
+carry an `assumption` sentence that a viewer must show with the band. The share of
+points is a survey of the ellipse, not a probability.
+
 ## 6. Direction-table package (decision 3)
 
 One table serves every site. It stores positions relative to the **centre of the Moon**.
@@ -460,6 +501,17 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.4 (14 November 2026)
+
+Additive; nothing that existed in 0.3 changed its meaning, name, unit or layout.
+
+- Scenario and site request: `uncertainty` (`horizon_error_deg`, `landing_ellipse`).
+- Windows `<body>_visible_certain`, `_possible`, `_uncertain`, `_all_points`, `_any_point` and the matching metrics (5.7).
+- Events: `earliest_et_s`, `latest_et_s`, `earliest_utc`, `latest_utc`.
+- `timeline.series.<BODY>.ellipse_visible_share`, `timeline.uncertainty`.
+- New method card ids: `timeline.horizon_error`, `timeline.landing_ellipse`.
+- The sample scenario states an invented horizon error and an invented ellipse; the sample was regenerated (new site package id).
 
 ### 0.3 (14 November 2026)
 

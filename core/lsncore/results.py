@@ -53,6 +53,8 @@ class BodySeries:
     # [H, N] fraction of the disc that is above the terrain horizon and not hidden by another
     # body (for the Sun: not eclipsed by the Earth); None = not computed
     lit_fraction: np.ndarray | None = None
+    # [N] share of the sample points of the landing ellipse at which the body is visible
+    ellipse_visible_share: np.ndarray | None = None
     # [H, N] index of the horizon sample that limits the view of the disc (lsncore.blocking)
     blocker_azimuth_index: np.ndarray | None = None
 
@@ -76,6 +78,8 @@ class TimelineResult:
     thresholds: dict[str, dict] = field(default_factory=dict)
     # obstacles that cost visible time compared with a smooth sphere; None = not computed
     blockers: list | None = None
+    # what was assumed for the uncertainty band and the landing ellipse; None = not computed
+    uncertainty: dict | None = None
     # visible time per lunar day (lsncore.calendar); None = not computed
     calendar: dict | None = None
     # landing windows and slip tolerance per stated requirement; None = no requirement stated

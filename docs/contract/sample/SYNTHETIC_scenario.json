@@ -1,7 +1,7 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.3"
+    "version": "0.4"
   },
   "kind": "scenario",
   "scenario_id": "synthetic-sample",
@@ -76,6 +76,15 @@
       ]
     }
   ],
+  "uncertainty": {
+    "horizon_error_deg": 0.1,
+    "landing_ellipse": {
+      "semi_major_m": 3000.0,
+      "semi_minor_m": 1000.0,
+      "azimuth_deg": 30.0,
+      "points": 9
+    }
+  },
   "data": {
     "dem_set_id": "SYNTHETIC-no-terrain-data",
     "kernel_set_id": "SYNTHETIC-no-kernels",

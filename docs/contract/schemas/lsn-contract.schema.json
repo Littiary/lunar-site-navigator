@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.3",
+  "title": "Lunar Site Navigator package contract, version 0.4",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
   "required": [
@@ -690,6 +690,9 @@
                       "$ref": "#/$defs/utc"
                     }
                   ]
+                },
+                "uncertainty": {
+                  "$ref": "#/$defs/uncertainty_request"
                 }
               }
             }
@@ -974,6 +977,18 @@
         },
         "grazing": {
           "type": "boolean"
+        },
+        "earliest_et_s": {
+          "type": "number"
+        },
+        "latest_et_s": {
+          "type": "number"
+        },
+        "earliest_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "latest_utc": {
+          "$ref": "#/$defs/utc"
         }
       }
     },
@@ -1118,6 +1133,9 @@
         },
         "lit_fraction": {
           "$ref": "#/$defs/array_ref"
+        },
+        "ellipse_visible_share": {
+          "$ref": "#/$defs/array_ref"
         }
       }
     },
@@ -1192,6 +1210,134 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/opportunity"
+          }
+        },
+        "uncertainty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "horizon_error": {
+              "type": "object",
+              "required": [
+                "error_deg",
+                "assumption",
+                "method"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "error_deg": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "assumption": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "method": {
+                  "$ref": "#/$defs/method_id"
+                }
+              }
+            },
+            "landing_ellipse": {
+              "type": "object",
+              "required": [
+                "semi_major_m",
+                "semi_minor_m",
+                "azimuth_deg",
+                "height_index",
+                "assumption",
+                "points",
+                "visible_s",
+                "method"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "semi_major_m": {
+                  "type": "number"
+                },
+                "semi_minor_m": {
+                  "type": "number"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                },
+                "height_index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "assumption": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "points": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "lat_deg",
+                      "lon_deg",
+                      "surface_height_m",
+                      "visible_s"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "lat_deg": {
+                        "type": "number"
+                      },
+                      "lon_deg": {
+                        "type": "number"
+                      },
+                      "surface_height_m": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "visible_s": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "visible_s": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "centre_s",
+                      "min_s",
+                      "median_s",
+                      "max_s"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "centre_s": {
+                        "type": "number"
+                      },
+                      "min_s": {
+                        "type": "number"
+                      },
+                      "median_s": {
+                        "type": "number"
+                      },
+                      "max_s": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "method": {
+                  "$ref": "#/$defs/method_id"
+                }
+              }
+            }
           }
         }
       }
@@ -1663,6 +1809,9 @@
           "items": {
             "$ref": "#/$defs/requirement"
           }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/uncertainty_request"
         }
       }
     },
@@ -2262,6 +2411,46 @@
         },
         "method": {
           "$ref": "#/$defs/method_id"
+        }
+      }
+    },
+    "uncertainty_request": {
+      "description": "Stated assumptions for the uncertainty band and the landing-ellipse survey.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "horizon_error_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 5
+        },
+        "landing_ellipse": {
+          "type": "object",
+          "required": [
+            "semi_major_m",
+            "semi_minor_m",
+            "azimuth_deg",
+            "points"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "semi_major_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "semi_minor_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "azimuth_deg": {
+              "type": "number"
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
         }
       }
     }
