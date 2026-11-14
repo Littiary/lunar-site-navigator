@@ -1,0 +1,130 @@
+{
+ "generated_utc": "2026-11-14T11:24:19Z",
+ "data_root": "C:\\lsn-data",
+ "checkpoint_1_checksums": {
+  "files_in_manifest": 16,
+  "total_bytes": 3809475925,
+  "problems": [],
+  "cross_check_failed": [],
+  "data_files_without_matching_cross_check": [],
+  "passed": true
+ },
+ "checkpoint_2_georeferencing": {
+  "craters": {
+   "Shackleton": {
+    "vertices_used": 17,
+    "median_crest_offset_m": 420.0,
+    "fraction_offset_le_1000m": 1.0,
+    "median_drop_crest_to_inside_m": 1020.9902865096369,
+    "mean_crest_height_m": 1250.7408808809914,
+    "gazetteer_feature_id": 5450,
+    "outline_diameter_km": 20.92,
+    "passed": true
+   },
+   "Shoemaker": {
+    "vertices_used": 60,
+    "median_crest_offset_m": 930.0,
+    "fraction_offset_le_1000m": 0.5166666666666667,
+    "median_drop_crest_to_inside_m": 1128.0381788793543,
+    "mean_crest_height_m": -518.3901634087681,
+    "gazetteer_feature_id": 5494,
+    "outline_diameter_km": 51.82,
+    "passed": false
+   },
+   "Faustini": {
+    "vertices_used": 60,
+    "median_crest_offset_m": 1220.0,
+    "fraction_offset_le_1000m": 0.38333333333333336,
+    "median_drop_crest_to_inside_m": 743.0747282638013,
+    "mean_crest_height_m": 230.56689152185012,
+    "gazetteer_feature_id": 1919,
+    "outline_diameter_km": 42.48,
+    "passed": false
+   },
+   "Cabeus": {
+    "vertices_used": 60,
+    "median_crest_offset_m": 1500.0,
+    "fraction_offset_le_1000m": 0.23333333333333334,
+    "median_drop_crest_to_inside_m": 1278.9641255923725,
+    "mean_crest_height_m": 365.9316986595365,
+    "gazetteer_feature_id": 953,
+    "outline_diameter_km": 100.58,
+    "passed": false
+   },
+   "de Gerlache": {
+    "vertices_used": 60,
+    "median_crest_offset_m": 280.0,
+    "fraction_offset_le_1000m": 0.95,
+    "median_drop_crest_to_inside_m": 813.3259049249086,
+    "mean_crest_height_m": 750.4981820226409,
+    "gazetteer_feature_id": 1439,
+    "outline_diameter_km": 32.71,
+    "passed": true
+   },
+   "Haworth": {
+    "vertices_used": 60,
+    "median_crest_offset_m": 1400.0,
+    "fraction_offset_le_1000m": 0.38333333333333336,
+    "median_drop_crest_to_inside_m": 1237.5992166670296,
+    "mean_crest_height_m": 19.704699011781333,
+    "gazetteer_feature_id": 14502,
+    "outline_diameter_km": 51.42,
+    "passed": false
+   }
+  },
+  "passed": false
+ },
+ "checkpoint_3_values_and_reference_radius": {
+  "label_min_max": {
+   "LDEM_80S_20M": {
+    "measured_min_dn": -14594,
+    "measured_max_dn": 14054,
+    "label_min_dn": -14594,
+    "label_max_dn": 14054,
+    "passed": true,
+    "min_m": -7297.0,
+    "max_m": 7027.0
+   },
+   "LDEM_60S_60M": {
+    "measured_min_dn": -18258,
+    "measured_max_dn": 14053,
+    "label_min_dn": -18258,
+    "label_max_dn": 14053,
+    "passed": true,
+    "min_m": -9129.0,
+    "max_m": 7026.5
+   },
+   "passed": true
+  },
+  "shackleton": {
+   "floor_mean_height_m": -2741.80810546875,
+   "floor_radius_km": 1734.6581918945312,
+   "floor_radius_km_published": 1734.63,
+   "rim_mean_crest_height_m": 1250.7408808809914,
+   "rim_height_m_published": 1300,
+   "depth_m": 3992.5489863497414,
+   "depth_m_published": 4100,
+   "passed": true
+  },
+  "overlap_20m_vs_60m": {
+   "pixels_compared": 102657424,
+   "mean_difference_m": 0.013328290544450283,
+   "median_abs_difference_m": 0.388916015625,
+   "p99_abs_difference_m": 3.0555419921875,
+   "passed": true
+  },
+  "cylindrical_16ppd_vs_polar": {
+   "ldem16_pixels_compared": 875520,
+   "polar_level_used": 6,
+   "polar_pixel_m_used": 1280.0,
+   "mean_difference_m": -0.262672409782906,
+   "median_abs_difference_m": 13.682493932820066,
+   "p95_abs_difference_m": 60.36206223692789,
+   "rmse_m": 31.34089887564443,
+   "correlation": 0.999852034394828,
+   "passed": true
+  },
+  "passed": true
+ },
+ "all_passed": false
+}
