@@ -1,0 +1,222 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.1"
+  },
+  "kind": "direction_table",
+  "package_id": "dirtab-250a3fe71759fa79",
+  "content_sha256": "2d89927d01ec073535b66f57275c7297747f353e8a7e1c59c4a31f815aff2da6",
+  "status": "ok",
+  "synthetic": false,
+  "warnings": [],
+  "request": {
+    "start_et_s": 847882869.1827118,
+    "step_s": 3600.0,
+    "count": 8763,
+    "bodies": [
+      "SUN",
+      "EARTH"
+    ],
+    "frame": "MOON_ME_DE440_ME421",
+    "center": "MOON",
+    "aberration_correction": "LT+S"
+  },
+  "inputs": {
+    "science_version": 0,
+    "kernel_set_id": "bfe870fccfa5",
+    "kernels": [
+      {
+        "name": "naif0012.tls",
+        "bytes": 5257,
+        "sha256": "678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+        "load_order": 0
+      },
+      {
+        "name": "pck00011.tpc",
+        "bytes": 131226,
+        "sha256": "3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+        "load_order": 1
+      },
+      {
+        "name": "de440s.bsp",
+        "bytes": 32726016,
+        "sha256": "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+        "load_order": 2
+      },
+      {
+        "name": "moon_pa_de440_200625.bpc",
+        "bytes": 12863488,
+        "sha256": "60cd55aa401ea2ea97360636f567554bfe4e37bb829f901b4460a455dfaf783f",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/moon_pa_de440_200625.bpc",
+        "load_order": 3
+      },
+      {
+        "name": "moon_de440_250416.tf",
+        "bytes": 19478,
+        "sha256": "a47c71e9c9f33796bdafb2c9d69a7ee447b6016ecad80f71cd6f3e479f9cf768",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf",
+        "load_order": 4
+      }
+    ]
+  },
+  "methods": {
+    "dirtab.body_radii": {
+      "title": "Body radii used for the discs",
+      "definition": "Radius that defines the apparent disc of each body: angular radius = asin(radius / distance).",
+      "algorithm": "Read from the planetary constants kernel: Sun radius; Earth equatorial radius (the largest half-width of its slightly flattened disc).",
+      "frame": "none",
+      "time_scale": "none",
+      "data": [
+        "pck00011.tpc"
+      ],
+      "parameters": {
+        "earth_polar_radius_km": 6356.7519
+      },
+      "validation": {
+        "status": "externally-validated",
+        "evidence": [
+          "Angular diameters agree with JPL Horizons to 0.001 arcsec (validation/horizons/results/validation_table.md)."
+        ]
+      },
+      "limits": [
+        "The flattening of the Earth's disc (0.3 %) is not modelled.",
+        "No limb darkening, no atmosphere of the Earth."
+      ]
+    },
+    "dirtab.interpolation": {
+      "title": "Interpolation error of the table",
+      "definition": "Largest difference between positions interpolated from the table and positions computed directly, in km and as an angle seen from the centre of the Moon.",
+      "algorithm": "Recommended interpolation 'lagrange-4-point': for a time between records i and i+1, with u = (t - t_i) / step, each vector component is w(-1) p[i-1] + w(0) p[i] + w(1) p[i+1] + w(2) p[i+2], where w(-1) = -u(u-1)(u-2)/6, w(0) = (u+1)(u-1)(u-2)/2, w(1) = -(u+1)u(u-2)/2, w(2) = (u+1)u(u-1)/6; at the two ends of the table the nearest complete stencil is used. The error is measured at 4000 pseudo-random epochs inside the table against direct SPICE.",
+      "frame": "MOON_ME_DE440_ME421: lunar mean-Earth/polar-axis frame, DE440 orientation aligned with the DE421 mean-Earth frame (the frame of the LOLA elevation products)",
+      "time_scale": "TDB",
+      "data": [
+        "naif0012.tls (sha256 678e32bdb5a7)",
+        "pck00011.tpc (sha256 3dff7b1dbece)",
+        "de440s.bsp (sha256 c1c7feeab882)",
+        "moon_pa_de440_200625.bpc (sha256 60cd55aa401e)",
+        "moon_de440_250416.tf (sha256 a47c71e9c9f3)"
+      ],
+      "parameters": {
+        "samples": 4000,
+        "seed": 20261114,
+        "linear_max_error_arcsec": 0.4745081214113234
+      },
+      "validation": {
+        "status": "analytic-test-passed",
+        "evidence": [
+          "Tests core/tests/events/test_events.py::test_table_interpolation_error_is_below_threshold and core/tests/events/test_site_timeline.py::test_stated_interpolation_error_is_measured_and_small."
+        ]
+      },
+      "limits": [
+        "Valid inside the table only. Interpolate vectors, never angles."
+      ]
+    },
+    "dirtab.positions": {
+      "title": "Apparent positions of the Sun and the Earth",
+      "definition": "Position of the centre of each body relative to the centre of the Moon, in the Moon body-fixed frame, as seen at the record time: corrected for one-way light time and stellar aberration (reception).",
+      "algorithm": "SPICE spkpos(target, et, 'MOON_ME_DE440_ME421', 'LT+S', 'MOON') at every record. A site direction is obtained by subtracting the site position vector and projecting on East, North, Up.",
+      "frame": "MOON_ME_DE440_ME421: lunar mean-Earth/polar-axis frame, DE440 orientation aligned with the DE421 mean-Earth frame (the frame of the LOLA elevation products)",
+      "time_scale": "TDB",
+      "data": [
+        "naif0012.tls (sha256 678e32bdb5a7)",
+        "pck00011.tpc (sha256 3dff7b1dbece)",
+        "de440s.bsp (sha256 c1c7feeab882)",
+        "moon_pa_de440_200625.bpc (sha256 60cd55aa401e)",
+        "moon_de440_250416.tf (sha256 a47c71e9c9f3)"
+      ],
+      "parameters": {
+        "aberration_correction": "LT+S",
+        "observer": "centre of the Moon",
+        "step_s": 3600.0,
+        "spice_toolkit": "CSPICE_N0067"
+      },
+      "validation": {
+        "status": "externally-validated",
+        "evidence": [
+          "Test validation/tests/test_horizons.py (comparison with JPL Horizons, thresholds fixed beforehand in validation/horizons/thresholds.json).",
+          "28 Horizons cases, 95676 rows: largest direction difference 0.099 arcsec through this table, 0.005 arcsec with the observer at the site (threshold 1 arcsec). Report: validation/horizons/results/validation_table.md."
+        ]
+      },
+      "limits": [
+        "Light time and stellar aberration are evaluated for the centre of the Moon, not for the site: up to 0.1 arcsec for the Earth, 0.005 arcsec for the Sun.",
+        "No terrain and no light bending; directions only.",
+        "UTC labels after the last announced leap second assume that no further leap second is introduced."
+      ]
+    }
+  },
+  "frame": "MOON_ME_DE440_ME421",
+  "center": "MOON",
+  "aberration_correction": "LT+S",
+  "bodies": [
+    "SUN",
+    "EARTH"
+  ],
+  "time": {
+    "scale": "TDB",
+    "epoch": "J2000",
+    "start_et_s": 847882869.1827118,
+    "step_s": 3600.0,
+    "count": 8763,
+    "start_utc": "2026-11-13T23:00:00.000Z",
+    "end_utc": "2027-11-14T01:00:00.000Z",
+    "leap_seconds_in_range": 0
+  },
+  "positions_km": {
+    "file": "positions_km.f8",
+    "dtype": "<f8",
+    "shape": [
+      8763,
+      2,
+      3
+    ],
+    "unit": "km",
+    "method": "dirtab.positions",
+    "sha256": "9db187189b304ec65fdf2eb50c8ff1a19f9025a4e691f3676f1d2a54b12b43c1",
+    "nan_count": 0
+  },
+  "body_radii_km": {
+    "SUN": {
+      "value": 695700.0,
+      "unit": "km",
+      "method": "dirtab.body_radii"
+    },
+    "EARTH": {
+      "value": 6378.1366,
+      "unit": "km",
+      "method": "dirtab.body_radii"
+    }
+  },
+  "interpolation": {
+    "recommended": "lagrange-4-point",
+    "max_error_km": {
+      "value": 0.022271621799535967,
+      "unit": "km",
+      "method": "dirtab.interpolation"
+    },
+    "max_error_arcsec": {
+      "value": 1.3440775185070336e-05,
+      "unit": "arcsec",
+      "method": "dirtab.interpolation"
+    }
+  },
+  "provenance": {
+    "created_utc": "2026-11-14T12:04:32.222Z",
+    "scenario_id": "south-polar-sites",
+    "timings_s": {
+      "direction_table": 0.301396
+    },
+    "software": {
+      "core_version": "0.1.0",
+      "science_version": "0",
+      "git_commit": "d1af9e601e9c171fded70188e25fb4e1429ebe23",
+      "git_dirty": false,
+      "python": "3.14.7",
+      "numpy": "2.5.4",
+      "os": "Windows 11",
+      "byteorder": "little"
+    }
+  }
+}

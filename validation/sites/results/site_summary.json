@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T12:03:08Z",
+  "generated_utc": "2026-11-14T12:11:39Z",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2027-11-14T00:00:00.000Z",
@@ -20,7 +20,7 @@
   "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-250a3fe71759fa79",
-  "run_time_s": 274.17611900001066,
+  "run_time_s": 419.6042324999871,
   "status": "unverified against an independent illumination product or mission record",
   "sites": [
     {
@@ -42,8 +42,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.424608,
-        "timeline": 47.212928
+        "horizon": 2.627517,
+        "timeline": 147.551678
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -281,8 +281,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.348726,
-        "timeline": 65.582144
+        "horizon": 9.505131,
+        "timeline": 125.135097
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -520,8 +520,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 9.717626,
-        "timeline": 145.649971
+        "horizon": 8.350602,
+        "timeline": 124.72494
       },
       "sun_centre_elevation_range_deg": [
         -5.536576271057129,

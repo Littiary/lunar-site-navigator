@@ -6,9 +6,11 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 `card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code; `tests/test_card.py` fails if the committed card and a fresh build disagree.
 
-## `sites/` — end-to-end results for the south-polar site records
+## `sites/` — end-to-end results for the south-polar site records, and the published packages
 
-`python -m validation.sites.run <sites.json>` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, countdowns) for the site records of the data stream and validates the packages against the contract. `sites/scenario.json` is the input, `sites/results/site_summary.md` and `.json` the summary. The packages go to `build/packages/sites` (not under version control). These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
+`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, eclipses, ground-station windows, countdowns) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
+
+The published packages are regenerated, never edited by hand, and are republished in the same commit as any change that alters results. These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
 ## `landers/` — published records of real lunar landers
 
