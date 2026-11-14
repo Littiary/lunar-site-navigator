@@ -1,0 +1,6 @@
+# Fixture packages and engine assets are stored byte for byte.
+TestData/** -text
+*.uasset binary
+*.umap binary
+*.f4 binary
+*.f8 binary
