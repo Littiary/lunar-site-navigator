@@ -74,6 +74,7 @@ python Scripts\export_terrain.py ..\packages     # real ground (needs the data s
 Scripts\capture.ps1 -Out <png> -Time 2092 -Yaw 211 -Pitch -3 -Fov 40
 Scripts\record.ps1 -Out <mp4> -Site <site_id> -From 2088 -To 2100 -Seconds 25   # needs ffmpeg
 Scripts\package.ps1 -Out <folder>               # stand-alone Windows program
+Scripts\pitch.ps1                               # pitch clip and six stills -> docs\unreal\pitch (needs ffmpeg)
 ```
 
 The scene reads the published packages from `packages/` at the root of the repository,
@@ -120,10 +121,17 @@ sample.
 | `Esc` | quit |
 
 Command line: `-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with index.json>`,
-`-LsnSite=<site_id>`, `-LsnCompare=<site_id>,<site_id>`, `-LsnTime=`, `-LsnHeight=`,
+`-LsnSite=<site_id>`, `-LsnCompare=<site_id>,<site_id>`, `-LsnTime=`, `-LsnUtc=<2027-07-28T18:00:00Z>`,
+`-LsnHeight=`, `-LsnPage=calendar|uncertainty|trade`, `-LsnRequirement=<index>`,
 `-LsnYaw=` (while following the Sun: the offset from its azimuth), `-LsnPitch=`, `-LsnFov=`,
 `-LsnFollowSun`, `-LsnHorizonLine`, `-LsnNoFillLight`, `-LsnNoObstacle`, `-LsnShot=<png>`,
-`-LsnPlayFrom= -LsnPlayTo= -LsnPlaySeconds= -LsnMovieDir=`.
+`-LsnPlayFrom= -LsnPlayTo=` (or `-LsnPlayFromUtc= -LsnPlayToUtc=`) `-LsnPlaySeconds= -LsnMovieDir=`,
+`-LsnCameraUp=<m> -LsnCameraBack=<m>`, `-LsnNoHud`.
+
+`Scripts\pitch.ps1` makes everything under `docs/unreal/pitch/` from the published
+packages and writes `README.txt` there: which package, site and time each file shows. A
+view whose data the published packages lack is not produced, and the text file says so;
+run the script again when `packages/` has been regenerated.
 
 Without a package argument the scene uses `packages/` of the repository (in the
 stand-alone program: its copy of that folder), then `docs/contract/sample/packages`, then
