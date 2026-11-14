@@ -284,10 +284,10 @@ def _check_terrain(manifest: dict, errors: list[str]) -> None:
     ids = [p["id"] for p in patches]
     if len(set(ids)) != len(ids):
         errors.append("terrain/patches: ids must be unique")
-    spacings = [p["spacing_m"] for p in patches]
-    if spacings != sorted(spacings):
-        errors.append("terrain/patches must be listed finest first")
-    if stated != [{"id": p["id"], "half_width_m": p["half_width_m"], "spacing_m": p["spacing_m"]} for p in patches]:
+    # Patches are selected by id; the order of the list is not part of the contract (SPEC 5.9).
+    written = [{"id": p["id"], "half_width_m": p["half_width_m"], "spacing_m": p["spacing_m"]} for p in patches]
+    by_id = lambda items: sorted(items or [], key=lambda p: str(p["id"]))  # noqa: E731
+    if by_id(stated) != by_id(written):
         errors.append("terrain/patches differ from request/terrain_patches")
     for i, p in enumerate(patches):
         where = f"terrain/patches/{i}"
