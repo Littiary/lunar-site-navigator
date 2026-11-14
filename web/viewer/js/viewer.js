@@ -15,7 +15,7 @@ const INDEX_URL = params.get("index") || "../packages/index.json";
 const NOTICE_URL = params.get("notice") || "../notice.json";
 
 const $ = (id) => document.getElementById(id);
-const state = { index: null, site: null, h: 0, i: 0, data: null, view3d: null, playing: null };
+const state = { index: null, site: null, h: 0, i: 0, data: null, view3d: null, sky: null, playing: null };
 
 function showError(message) {
   const box = $("error");
@@ -59,7 +59,8 @@ function render() {
     $("events").innerHTML = eventsHtml(site, h, i);
   }
   $("footer").innerHTML = footerHtml(site);
-  if (state.view3d) state.view3d.update(viewInput());
+  if (state.view3d) { const v = viewInput(); state.view3d.update(v); showMissing(v.missing); }
+  if (state.sky && !$("panel-sky").hidden) updateSky();
   const q = new URLSearchParams(location.search);
   q.set("site", site.manifest.site.site_id); q.set("h", String(h)); q.set("i", String(i));
   history.replaceState(null, "", `?${q}`);
@@ -70,7 +71,27 @@ function viewInput() {
     const s = state.data.series[body];
     return s ? { az: s.az[state.i], el: s.el[state.i] } : null;
   };
-  return { siteId: state.site.id, h: state.h, horizon: state.data.horizon, azimuth: state.site.manifest.horizon.azimuth, sun: pick("SUN"), earth: pick("EARTH") };
+  return { siteId: state.site.id, h: state.h, horizon: state.data.horizon, distance: state.data.distance, azimuth: state.site.manifest.horizon.azimuth,
+    sun: pick("SUN"), earth: pick("EARTH"), missing: missingForGroundView(state.site) };
+}
+
+function showMissing(missing) {
+  $("missing3d").innerHTML = missing.length
+    ? `Not shown, because this package (contract ${esc(state.site.manifest.contract.version)}) does not contain them: ${missing.map(esc).join("; ")}. A terrain surface around the site is not part of the package contract.`
+    : "";
+}
+
+// Package fields the ground view (Task 8 B) would use but this package does not have.
+function missingForGroundView(site) {
+  const m = site.manifest, hz = m.horizon, tl = m.timeline || {};
+  const series = Object.values(tl.series || {});
+  const checks = [
+    ["horizon.obstacles and horizon.obstacle_id (outlines and labels of obstacles, contract 0.2)", hz.obstacles && hz.obstacle_id],
+    ["timeline.blockers and series.<BODY>.blocker_azimuth_index (which obstacle hides the body, contract 0.2)", tl.blockers && series.some((s) => s.blocker_azimuth_index)],
+    ["series.<BODY>.lit_fraction (lit share of the Sun, contract 0.2)", series.some((s) => s.lit_fraction)],
+    ["horizon.elevation_lower_deg / elevation_upper_deg (uncertainty band of the profile, reserved)", hz.elevation_lower_deg && hz.elevation_upper_deg],
+  ];
+  return checks.filter(([, present]) => !present).map(([label]) => label);
 }
 
 function setSample(i) {
@@ -109,11 +130,35 @@ function wire() {
     button.textContent = "Pause"; button.setAttribute("aria-pressed", "true");
     state.playing = setInterval(() => setSample(state.i + 1 >= state.site.timeline.time.count ? 0 : state.i + 1), 120);
   });
-  const tabs = [["tab-2d", "panel-2d"], ["tab-3d", "panel-3d"]];
+  const tabs = [["tab-2d", "panel-2d"], ["tab-sky", "panel-sky"], ["tab-3d", "panel-3d"]];
   tabs.forEach(([tab, panel]) => $(tab).addEventListener("click", async () => {
     tabs.forEach(([t, p]) => { $(t).setAttribute("aria-selected", String(t === tab)); $(p).hidden = t !== tab; });
     if (tab === "tab-3d") await open3d();
+    if (tab === "tab-sky") await openSky();
   }));
+  $("sky-span").addEventListener("change", () => updateSky());
+  ["sky-zoom-in", "sky-zoom-out", "sky-center-sun", "sky-center-earth", "sky-reset"].forEach((id) =>
+    $(id).addEventListener("click", () => state.sky && state.sky.command(id)));
+}
+
+async function openSky() {
+  if (!state.sky) {
+    const sky = await import("./sky.js");
+    state.skyModule = sky;
+    state.sky = sky.createSky($("sky"), { onPick: (j) => setSample(j) });
+  }
+  updateSky();
+  state.sky.resize();
+}
+
+function updateSky() {
+  if (!state.sky || !state.site) return;
+  const v = $("sky-span").value;
+  const span = v === "all" && state.site.timeline ? state.site.timeline.time.count : Number(v);
+  state.sky.update({ site: state.site, data: state.data, h: state.h, i: state.i, spanSamples: span });
+  $("band-sky").innerHTML = state.skyModule.bandNote(state.site, state.h);
+  const c = state.sky.check();
+  if (c) $("check-sky").textContent = `Horizon check: ${c.vertices} vertices read back from the drawing differ from the package profile by at most ${c.maxElevationDiffDeg.toExponential(1)}° in elevation and ${c.maxAzimuthDiffDeg.toExponential(1)}° in azimuth.`;
 }
 
 async function open3d() {
@@ -122,9 +167,11 @@ async function open3d() {
     const { createView } = await import("./view3d.js");
     state.view3d = createView($("view3d"), { onCheck: (text) => { $("check3d").textContent = text; } });
     ["zoom-in", "zoom-out", "look-sun", "look-earth"].forEach((id) => $(id).addEventListener("click", () => state.view3d.command(id)));
-    state.view3d.update(viewInput());
+    const v = viewInput();
+    state.view3d.update(v);
+    showMissing(v.missing);
   } catch (e) {
-    $("view3d").innerHTML = `<p class="banner">The 3-D view could not start: ${esc(e.message || e)}. It loads three.js from cdn.jsdelivr.net.</p>`;
+    $("view3d").innerHTML = `<p class="banner">The 3-D view could not start: ${esc(e.message || e)}. The views "Horizon and time" and "Sky panorama" show the same package data without WebGL.</p>`;
   }
 }
 

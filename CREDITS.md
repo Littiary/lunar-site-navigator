@@ -58,7 +58,7 @@ Every third-party item used in this project gets one row here before it is merge
 | Pillow | 13.0.0 | MIT-CMU (HPND) | https://python-pillow.org | `validation/lro_images/` (reads the browse image; not needed by the core) |
 | Unreal Engine (with its ProceduralMeshComponent and Python editor plugins and engine default font) | 5.8.4 | Epic Games Unreal Engine EULA: proprietary, not open source; free to download and use. The repository contains no engine source code and no Fab or Megascans assets; the project's own code in `unreal/` is under Apache 2.0 like the rest of the repository | https://www.unrealengine.com/eula/unreal | `unreal/`: a supplementary 3-D scene; the public interface of the project is the web page, which does not need Unreal Engine |
 | FFmpeg (tool; joins rendered frames into the clips under `docs/unreal/`, not shipped) | 8.1.2 | LGPL 2.1 or later / GPL 2 or later, depending on the build | https://ffmpeg.org/ | `unreal/Scripts/record.ps1` |
-| three.js | 0.160.0 | MIT | https://github.com/mrdoob/three.js ; served from https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js | `web/viewer/js/view3d.js` (3-D view; loaded by the browser from the jsDelivr CDN, not stored in the repository) |
+| three.js | 0.160.0 | MIT | https://github.com/mrdoob/three.js ; copied from the npm package https://registry.npmjs.org/three/-/three-0.160.0.tgz (integrity and SHA-256 in `web/viewer/vendor/three/README.md`) | `web/viewer/vendor/three/` (stored in the repository with its LICENSE so that the 3-D view works offline), used by `web/viewer/js/view3d.js` |
 
 ## Images, fonts and other assets
 

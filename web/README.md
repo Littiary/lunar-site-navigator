@@ -61,10 +61,18 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - pick a site, an observer height and a time sample (slider, ±1 h, ±1 day, play, jump to the previous or next package event);
   - the SVG shows the terrain horizon (`horizon.elevation_deg`) and the Sun and the Earth at that sample (`timeline.series`);
   - tables list the values at that sample, every window that contains it, and the events around it.
-- **3-D view (three.js 0.160.0 from jsDelivr):**
-  - the horizon profile is drawn on a sphere around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
-  - drag to look around, use the wheel or the buttons to zoom;
-  - a built-in check reads the drawn horizon line back and prints its largest difference from the package profile (about 2e-7° in elevation, which is float32 rounding).
+- **Sky panorama (Task 7 C, `js/sky.js`):**
+  - a 360° panorama: azimuth left to right, wrapping around, and elevation bottom to top;
+  - the terrain horizon, plus the paths of the Sun and the Earth over ±1 day to the whole window around the selected time;
+  - a path is solid where the package window `<body>_visible` contains the sample and faded elsewhere (a time comparison, no threshold);
+  - drag to pan, use the wheel, a pinch or the buttons to zoom; pointing at a path shows that sample's package values, and clicking or tapping it selects that time;
+  - angles map linearly to pixels, with no trigonometry; a built-in check reads the drawn horizon back and compares it with the package (it agrees to within floating-point rounding).
+- **3-D ground view (Task 8 B, three.js 0.160.0 stored in `viewer/vendor/three/`, so it works offline):**
+  - the horizon profile is drawn as terrain around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
+  - the horizon ring is coloured by the distance of the terrain that sets the horizon (`horizon.distance_m`: < 1 km near field, 1–10 km, 10–100 km, ≥ 100 km; comparisons only);
+  - a built-in check reads the drawn horizon line back against the package (about 2e-7°, float32 rounding);
+  - without WebGL the tab says so and points to the 2-D views;
+  - the panel names the newer package fields the ground view would use but the package lacks (obstacles, blockers, lit fraction, uncertainty arrays); nothing is drawn in their place.
 
 **No science in the browser.**
 - `js/package.js` checks every array against the byte length and SHA-256 in its manifest; Web Crypto needs https or localhost, and otherwise the footer says that checksums were not verified.
@@ -81,6 +89,8 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - the package metrics for the whole window (visible shares, longest outages, DSN share, relay need, eclipses);
   - the next events.
 - **Shared time:** a sample of the time grid of the left site. Each pane shows the sample of its own package nearest to that instant, labelled with its own UTC. If the grids ever differ, the pane says so.
+- **Pane view:** one shared switch shows either the horizon chart or the sky panorama in both panes. The panorama is the same `js/sky.js` module, one instance per pane. The "Paths for" span is shared, and clicking a path in either pane moves the shared timeline.
+- **Uncertainty band:** shown only when a package has the windows `<body>_visible_uncertain` (contract 0.4 and later, SPEC 5.7). Path samples inside the band are dashed, and the package's assumption sentence is shown with it. The published packages (contract 0.1) have no band, and the pane says so.
 - **Layout:** the panes stack on narrow screens.
 - **Shareable links:** `?a=<site_id>&b=<site_id>&ha=<height index>&hb=<height index>&i=<sample>` opens a selection.
 
