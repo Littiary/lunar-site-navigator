@@ -29,7 +29,7 @@ def strip_comments(source: str) -> str:
 
 class NoScienceInTheBrowserTests(unittest.TestCase):
     def test_loader_and_2d_viewer_use_no_numerical_functions(self):
-        for name in ("package.js", "viewer.js"):
+        for name in ("package.js", "panel.js", "viewer.js", "compare.js"):
             code = strip_comments((VIEWER / "js" / name).read_text(encoding="utf-8"))
             self.assertEqual(NUMERIC.findall(code), [], name)
 
@@ -43,7 +43,7 @@ class NoScienceInTheBrowserTests(unittest.TestCase):
         self.assertTrue(NUMERIC.findall(inside))  # the transform is where it should be
 
     def test_no_value_is_interpolated(self):
-        for name in ("viewer.js", "view3d.js"):
+        for name in ("panel.js", "viewer.js", "compare.js", "view3d.js"):
             code = strip_comments((VIEWER / "js" / name).read_text(encoding="utf-8")).lower()
             self.assertNotIn("interpolat", code, name)
 
@@ -53,14 +53,34 @@ class ExternalResourceTests(unittest.TestCase):
         html = (VIEWER / "index.html").read_text(encoding="utf-8")
         urls = re.findall(r"https?://[^\s\"'<>)]+", html)
         self.assertEqual(urls, ["https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"])
-        for name in ("package.js", "viewer.js", "view3d.js"):
+        for name in ("package.js", "panel.js", "viewer.js", "compare.js", "view3d.js"):
             code = (VIEWER / "js" / name).read_text(encoding="utf-8")
             self.assertEqual(re.findall(r"""(?:from|import)\s*\(?\s*["'](https?:[^"']+)""", code), [], name)
 
-    def test_page_reads_the_package_index_and_the_notice_relative_to_the_site(self):
-        code = (VIEWER / "js" / "viewer.js").read_text(encoding="utf-8")
-        self.assertIn('"../packages/index.json"', code)
-        self.assertIn('"../notice.json"', code)
+    def test_compare_page_loads_nothing_from_outside(self):
+        html = (VIEWER / "compare.html").read_text(encoding="utf-8")
+        self.assertEqual(re.findall(r"https?://[^\s\"'<>)]+", html), [])
+
+    def test_pages_read_the_package_index_and_the_notice_relative_to_the_site(self):
+        for name in ("viewer.js", "compare.js"):
+            code = (VIEWER / "js" / name).read_text(encoding="utf-8")
+            self.assertIn('"../packages/index.json"', code, name)
+            self.assertIn('"../notice.json"', code, name)
+
+
+class SplitScreenTests(unittest.TestCase):
+    """Task 7 split screen: two sites, one shared time, values from the packages."""
+
+    def test_two_panes_share_one_time_control(self):
+        html = (VIEWER / "compare.html").read_text(encoding="utf-8")
+        self.assertEqual(html.count('class="pane"'), 2)
+        for control in ('id="play"', 'id="speed"', 'id="date"', 'id="slider"'):
+            self.assertEqual(html.count(control), 1, control)
+
+    def test_each_pane_uses_the_sample_of_its_own_package(self):
+        code = (VIEWER / "js" / "compare.js").read_text(encoding="utf-8")
+        self.assertIn("nearestSample(site, et)", code)
+        self.assertIn("sampleUtc(site, i)", code)
 
 
 if __name__ == "__main__":

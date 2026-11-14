@@ -24,14 +24,14 @@ button[aria-pressed="true"], .tabs button[aria-selected="true"] { border-color: 
 #slider { flex: 1 1 200px; min-width: 160px; }
 .tabs { display: flex; gap: 6px; margin: 16px 0 8px; }
 .chart { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
-#horizon { display: block; width: 100%; min-width: 640px; height: auto; }
-#horizon .terrain { fill: var(--terrain-fill); }
-#horizon .horizon { fill: none; stroke: var(--terrain); stroke-width: 1.5; }
-#horizon .grid { stroke: var(--line); stroke-width: 1; }
-#horizon text { fill: var(--muted); font-size: 12px; }
-#horizon .sun { fill: var(--sun); }
-#horizon .earth { fill: var(--earth); }
-#horizon .label { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.chart svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.chart svg .terrain { fill: var(--terrain-fill); }
+.chart svg .horizon { fill: none; stroke: var(--terrain); stroke-width: 1.5; }
+.chart svg .grid { stroke: var(--line); stroke-width: 1; }
+.chart svg text { fill: var(--muted); font-size: 12px; }
+.chart svg .sun { fill: var(--sun); }
+.chart svg .earth { fill: var(--earth); }
+.chart svg .label { fill: var(--ink); font-size: 13px; font-weight: 600; }
 .view3d { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 260px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; background: #05070a; }
 .view3d canvas { display: block; width: 100%; height: 100%; }
 .table { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
@@ -43,3 +43,25 @@ tr:last-child td { border-bottom: 0; }
 .yes { color: var(--ok); font-weight: 600; }
 .no { color: var(--muted); }
 footer { margin-top: 32px; }
+main.wide { max-width: 1600px; }
+.timebar { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 4px 0; }
+.timebar input[type="datetime-local"] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; min-height: 36px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.pane { min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.pane-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.pane-head label { display: flex; gap: 6px; align-items: center; flex: 1 1 240px; min-width: 0; max-width: 100%; }
+.pane-head select { flex: 1 1 auto; width: 0; min-width: 0; }
+.pane .chart svg { min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 0.85rem; }
+.chip.on { color: var(--ok); border-color: var(--ok); font-weight: 600; }
+.chip.off { color: var(--muted); }
+.note { color: var(--warn); }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } .timebar { position: static; } }
+.pane-time { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; }
+.pane .chart svg text { font-size: 26px; }
+.pane .chart svg .label { font-size: 30px; }
+.pane .chart svg circle { r: 12px; }
+.pane .mono { overflow-wrap: anywhere; }
+.pane table[data-role="summary"] { min-width: 0; }
+.pane table[data-role="summary"] th { white-space: normal; }
