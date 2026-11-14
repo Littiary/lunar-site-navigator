@@ -1,4 +1,4 @@
-# Ephemeris, time and event finding
+# Ephemeris and time
 
 This folder answers one question for the science core: **seen from a point on the Moon, where are the Sun and the Earth in the local sky at a given time, and how large do they appear?** It contains no terrain. The terrain horizon comes from the core stream; the event finder combines the two.
 
@@ -6,19 +6,20 @@ This folder answers one question for the science core: **seen from a point on th
 
 | Path | Content |
 |---|---|
-| `ephemeris/kernels.py`, `fetch_kernels.py` | Kernel set definition, download, checksum check, loading |
-| `ephemeris/kernel_manifest.json` | What was downloaded: file, URL, size, SHA-256, retrieval time (written by the script) |
-| `ephemeris/directions.py` | Time conversion, site, site-independent direction table, azimuth / elevation / angular radius |
-| `ephemeris/tests/` | Acceptance tests |
+| `core/lsncore/ephem/kernels.py`, `fetch_kernels.py` | Kernel set definition, download, checksum check, loading |
+| `core/lsncore/ephem/kernel_manifest.json` | What was downloaded: file, URL, size, SHA-256, retrieval time (written by the script) |
+| `core/lsncore/ephem/directions.py` | Time conversion, site, site-independent direction table and its interpolation, azimuth / elevation / angular radius |
+| `core/lsncore/events/finder.py` | Disc signals against a horizon profile, rise and set events, windows, countdown |
+| `core/tests/ephem/`, `core/tests/events/` | Acceptance tests |
 | `validation/horizons/` | Comparison against JPL Horizons: thresholds, queries, raw responses, results |
 
 Set-up from the repository root:
 
 ```
 python -m venv .venv
-.venv/Scripts/python -m pip install -r ephemeris/requirements.txt
-.venv/Scripts/python -m ephemeris.fetch_kernels
-.venv/Scripts/python -m pytest ephemeris
+.venv/Scripts/python -m pip install -e "core[dev,ephem]"
+.venv/Scripts/python -m lsncore.ephem.fetch_kernels
+.venv/Scripts/python -m pytest core validation
 ```
 
 Kernels are downloaded to `data/kernels/` (not under version control). Set `LSN_KERNEL_DIR` to use another folder.
@@ -56,4 +57,4 @@ Measured difference between the two paths (7 sites from the equator to 0.5° fro
 
 ## Sources
 
-Kernels, library versions and licences are listed in [CREDITS.md](../CREDITS.md).
+Kernels, library versions and licences are listed in [CREDITS.md](../../../CREDITS.md).

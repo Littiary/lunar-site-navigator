@@ -53,7 +53,7 @@ from typing import Callable
 
 import numpy as np
 
-from . import directions as d
+from ..ephem import directions as d
 
 MOON_RADIUS_M = d.MOON_RADIUS_KM * 1000.0
 THRESHOLDS = ("upper_limb", "half_disc", "center", "lower_limb")

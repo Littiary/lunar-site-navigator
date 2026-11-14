@@ -4,7 +4,7 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 
-**What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`ephemeris/`) and by the JPL Horizons system (observer table, user-defined site on body 301).
+**What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`core/lsncore/ephem/`) and by the JPL Horizons system (observer table, user-defined site on body 301).
 
 **Why this is an independent check.** Horizons is separate software run by the JPL Solar System Dynamics group. It uses the DE441 ephemeris and its own implementation of the lunar mean-Earth frame, light time, stellar aberration and light bending. The core uses SPICE with DE440 and NAIF frame kernels. Agreement tests the whole chain apart from terrain: ephemeris, body-fixed frame, time scales, aberration correction, site vector and local East-North-Up projection.
 

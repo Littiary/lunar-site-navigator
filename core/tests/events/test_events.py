@@ -11,9 +11,9 @@ scan step (60 s by default) may be missed.
 import numpy as np
 import pytest
 
-from ephemeris import directions as d
-from ephemeris import events as ev
-from ephemeris import kernels
+from lsncore import events as ev
+from lsncore.ephem import directions as d
+from lsncore.ephem import kernels
 
 TOL_EVENT_S = 1.0  # event time accuracy on analytic cases
 TOL_FRACTION = 0.002  # strip quadrature versus the closed form for a flat horizon

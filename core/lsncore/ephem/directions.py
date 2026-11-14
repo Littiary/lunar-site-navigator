@@ -1,6 +1,6 @@
 """Directions and angular sizes of the Sun and the Earth seen from the Moon.
 
-Conventions (see ``ephemeris/README.md`` for the reasons):
+Conventions (see ``core/lsncore/ephem/README.md`` for the reasons):
 
 * Body-fixed frame: ``MOON_ME_DE440_ME421`` -- the lunar mean-Earth/polar-axis
   frame realised from the DE440 principal-axis orientation and aligned with the

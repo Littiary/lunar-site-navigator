@@ -2,7 +2,7 @@
 
 Usage (from the repository root)::
 
-    python -m ephemeris.fetch_kernels [--force]
+    python -m lsncore.ephem.fetch_kernels [--force]
 """
 
 from __future__ import annotations

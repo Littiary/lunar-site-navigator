@@ -2,7 +2,7 @@
 
 The kernels are NAIF generic kernels. They are never committed; this module
 downloads them unmodified and records what was downloaded in
-``ephemeris/kernel_manifest.json`` (file name, URL, size, SHA-256, retrieval
+``core/lsncore/ephem/kernel_manifest.json`` (file name, URL, size, SHA-256, retrieval
 time). Loading checks every file against that manifest, so a result can always
 be traced to an exact kernel set.
 """
@@ -24,7 +24,7 @@ NAIF_ROOT = "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/"
 # Generic client name; no personal contact data is sent.
 USER_AGENT = "lunar-ephemeris-tool/0.1 (python-urllib; kernel download)"
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = Path(__file__).resolve().parent / "kernel_manifest.json"
 
 
@@ -101,7 +101,7 @@ def fetch(force: bool = False) -> dict:
         entries.append(entry)
     manifest = {
         "description": "NAIF generic kernels used by the ephemeris stream, in load order. "
-        "Written by ephemeris/fetch_kernels.py; do not edit by hand.",
+        "Written by lsncore.ephem.fetch_kernels; do not edit by hand.",
         "source_root": NAIF_ROOT,
         "kernels": entries,
     }
@@ -130,7 +130,7 @@ def load(verify: bool = True) -> None:
         path = directory / kernel.name
         if not path.exists():
             raise FileNotFoundError(
-                f"Kernel {kernel.name} not found in {directory}. Run: python -m ephemeris.fetch_kernels"
+                f"Kernel {kernel.name} not found in {directory}. Run: python -m lsncore.ephem.fetch_kernels"
             )
         if verify and _sha256(path) != manifest[kernel.name]["sha256"]:
             raise RuntimeError(f"Kernel {kernel.name} does not match the manifest checksum")

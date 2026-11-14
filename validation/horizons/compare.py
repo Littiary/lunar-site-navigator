@@ -19,8 +19,8 @@ from pathlib import Path
 import numpy as np
 import spiceypy as spice
 
-from ephemeris import directions as d
-from ephemeris import kernels
+from lsncore.ephem import directions as d
+from lsncore.ephem import kernels
 
 from .fetch import HERE, RAW, iter_cases, load_cases
 

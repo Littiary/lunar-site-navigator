@@ -10,8 +10,8 @@ import numpy as np
 import pytest
 import spiceypy as spice
 
-from ephemeris import directions as d
-from ephemeris import kernels
+from lsncore.ephem import directions as d
+from lsncore.ephem import kernels
 
 ARCSEC = 1.0 / 3600.0  # degrees
 
