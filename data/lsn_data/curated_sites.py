@@ -96,6 +96,19 @@ def _terrain_entry(t, lon, lat) -> dict:
     }
 
 
+PROGRAMME = [("apollo_", "Apollo"), ("surveyor_", "Surveyor"), ("change_", "Chang'e"), ("chandrayaan_", "Chandrayaan"),
+             ("slim", "SLIM"), ("im_1", "CLPS"), ("im_2", "CLPS"), ("blue_ghost", "CLPS"), ("artemis3_", "Artemis")]
+
+
+def _programme(rec: dict) -> str:
+    if rec["kind"] == "project_candidate":
+        return "Project sites"
+    for prefix, name in PROGRAMME:
+        if rec["site_id"].startswith(prefix):
+            return name
+    raise ValueError(f"no programme for {rec['site_id']}")
+
+
 def build(root=None) -> dict:
     import lsn_data
 
@@ -108,6 +121,11 @@ def build(root=None) -> dict:
     sites = []
 
     def finish(rec):
+        # descriptive fields for the viewers' site picker; the machine category is kept as "kind"
+        rec["kind"] = rec.pop("category")
+        rec["category"] = {"past_landing": "past landing", "project_candidate": "project site",
+                           "artemis_iii_candidate_region_representative": "candidate"}[rec["kind"]]
+        rec["programme"] = _programme(rec)
         lon, lat = rec["lon_deg_east"], rec["lat_deg"]
         d = _terrain_entry(moon, lon, lat)
         nf = _terrain_entry(near, lon, lat)
@@ -204,7 +222,8 @@ def build(root=None) -> dict:
         "generated_utc": mf.utc_now(),
         "sites": sites,
         "omitted": omitted,
-        "counts": {c: sum(1 for s in sites if s["category"] == c) for c in sorted({s["category"] for s in sites})},
+        "counts": {c: sum(1 for s in sites if s["kind"] == c) for c in sorted({s["kind"] for s in sites})},
+        "display_fields": "category ('past landing', 'candidate', 'project site') and programme are descriptive, for site pickers",
     }
 
 
