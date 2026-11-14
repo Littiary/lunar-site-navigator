@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Lunar Site Navigator viewer</title>
+<link rel="stylesheet" href="viewer.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Lunar Site Navigator — interactive viewer</h1>
+    <p class="muted">Every number on this page is read from the published result packages of the science core. The browser does not compute any of them.
+      <a href="../index.html">Evidence page</a></p>
+    <div id="notice" class="banner" hidden></div>
+    <div id="error" class="banner" hidden></div>
+  </header>
+
+  <section class="controls" aria-label="Selection">
+    <label>Site <select id="site"></select></label>
+    <label>Observer height <select id="height"></select></label>
+  </section>
+
+  <section class="time" aria-label="Time">
+    <div class="time-row">
+      <button type="button" data-step="-day" title="One day earlier">−1 d</button>
+      <button type="button" data-step="-1" title="One sample earlier">−1 h</button>
+      <input id="slider" type="range" min="0" value="0" step="1" aria-label="Time sample">
+      <button type="button" data-step="1" title="One sample later">+1 h</button>
+      <button type="button" data-step="day" title="One day later">+1 d</button>
+      <button type="button" id="play" aria-pressed="false">Play</button>
+    </div>
+    <div class="time-row">
+      <output id="utc" class="mono"></output>
+      <button type="button" id="prev-event">◂ Previous event</button>
+      <button type="button" id="next-event">Next event ▸</button>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-2d" aria-selected="true">Horizon and time</button>
+    <button type="button" role="tab" id="tab-3d" aria-selected="false">3-D view</button>
+  </nav>
+
+  <section id="panel-2d" role="tabpanel" aria-labelledby="tab-2d">
+    <div class="chart"><svg id="horizon" role="img" aria-label="Terrain horizon with the Sun and the Earth"></svg></div>
+    <p class="muted small">Grey: terrain horizon at the selected observer height (<code>horizon.elevation_deg</code>). Markers: disc centres of the Sun and the Earth at the selected sample (<code>timeline.series</code>), without terrain.</p>
+  </section>
+
+  <section id="panel-3d" role="tabpanel" aria-labelledby="tab-3d" hidden>
+    <div id="view3d" class="view3d"><p class="muted">Loading the 3-D view…</p></div>
+    <p class="muted small">Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. <span id="check3d"></span></p>
+    <div class="time-row"><button type="button" id="zoom-in">Zoom in</button><button type="button" id="zoom-out">Zoom out</button><button type="button" id="look-sun">Look at the Sun</button><button type="button" id="look-earth">Look at the Earth</button></div>
+  </section>
+
+  <section aria-label="Values at the selected time">
+    <h2>At the selected time</h2>
+    <div class="table"><table id="readout"></table></div>
+    <h2>Windows that contain this time</h2>
+    <div class="table"><table id="windows"></table></div>
+    <h2>Events around this time</h2>
+    <div class="table"><table id="events"></table></div>
+  </section>
+
+  <footer id="footer" class="muted small"></footer>
+</main>
+<script type="module" src="js/viewer.js"></script>
+</body>
+</html>
