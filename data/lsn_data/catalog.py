@@ -94,6 +94,39 @@ ROBBINS = Product(
     base="raw/catalogs",
 )
 
+MIT_RDR_ROOT = "https://imbrium.mit.edu/DATA/LOLA_RDR"
+
+
+def _rdr(phase: str, name: str) -> Product:
+    """One LOLA RDR file (individual laser returns of about one orbit), used as an independent reference."""
+    low = name.lower()
+    return Product(
+        name,
+        f"LOLA RDR {phase}: geolocated laser returns of one orbit (independent check of the gridded products)",
+        (
+            FileSpec("data", f"{low}.dat", f"data/lola_rdr/{phase.lower()}/{low}.dat", f"{MIT_RDR_ROOT}/{phase}/{name}.DAT"),
+            FileSpec("label", f"{low}.lbl", f"data/lola_rdr/{phase.lower()}/{low}.lbl", f"{MIT_RDR_ROOT}/{phase}/{name}.LBL"),
+        ),
+        base="raw/lola_rdr",
+    )
+
+
+# 13 orbits spread over mission phase LRO_SM_06 (every 26th file of the phase), so that all longitudes are crossed.
+RDR_SAMPLE = tuple(
+    f"LOLARDR_{t}"
+    for t in (
+        "110320314", "110340414", "110360514", "110380613", "110400713", "110420812", "110440912",
+        "110461013", "110481113", "110501213", "110521312", "110561318", "110581419",
+    )
+)
+
+RDR_FORMAT = Product(
+    "_rdr_docs",
+    "LOLA RDR record structure (LOLARDR.FMT)",
+    (FileSpec("doc", "lolardr.fmt", "label/lolardr.fmt", None),),
+    base="raw/lola_rdr",
+)
+
 PRODUCTS: dict[str, Product] = {
     p.product_id: p
     for p in (
@@ -109,10 +142,60 @@ PRODUCTS: dict[str, Product] = {
             "LDEM_16",
             "LOLA global DEM, 16 pixel/degree, simple cylindrical (independent check of the polar products)",
         ),
+        _polar_dem(
+            "LDEM_80N_20M",
+            "LOLA north-polar DEM, 80N to pole, 20 m/pixel, polar stereographic (whole-Moon coverage)",
+        ),
+        _polar_dem(
+            "LDEM_60N_60M",
+            "LOLA north-polar DEM, 60N to pole, 60 m/pixel, polar stereographic (whole-Moon coverage)",
+        ),
+        _cyl_dem(
+            "LDEM_128",
+            "LOLA global DEM, 128 pixel/degree, simple cylindrical (global fallback and independent check)",
+        ),
         DOCS,
         ROBBINS,
+        RDR_FORMAT,
+        *(_rdr("LRO_SM_06", n) for n in RDR_SAMPLE),
     )
 }
 
 # What a plain `fetch` downloads (the order is the order of work).
 DEFAULT_SET = ("_docs", "LDEM_80S_20M", "LDEM_60S_60M", "LDEM_16")
+
+
+MIT_SLDEM_ROOT = "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG"
+
+
+def _sldem_tile(name: str) -> Product:
+    low = name.lower()
+    base = "data/sldem2015/tiles/float_img"
+    return Product(
+        name,
+        "SLDEM2015 tile: LOLA altimetry co-registered with SELENE (Kaguya) Terrain Camera stereo, 60S-60N, simple cylindrical, float km",
+        (
+            FileSpec("data", f"{low}.img", f"{base}/{low}.img", f"{MIT_SLDEM_ROOT}/{name}.IMG"),
+            FileSpec("label", f"{low}.lbl", f"{base}/{low}.lbl", f"{MIT_SLDEM_ROOT}/{name}.LBL"),
+            FileSpec("label_xml", f"{low}.xml", f"{base}/{low}.xml", None),
+        ),
+    )
+
+
+SLDEM_256_TILES = tuple(
+    f"SLDEM2015_256_{lat}_{lon}_FLOAT" for lat in ("60S_0S", "0N_60N") for lon in ("000_120", "120_240", "240_360")
+)
+SLDEM_512_TILES = tuple(
+    f"SLDEM2015_512_{lat}_{lon:03d}_{lon + 45:03d}_FLOAT"
+    for lat in ("60S_30S", "30S_00S", "00N_30N", "30N_60N")
+    for lon in range(0, 360, 45)
+)
+for _t in SLDEM_256_TILES + SLDEM_512_TILES:
+    PRODUCTS[_t] = _sldem_tile(_t)
+
+# Cylindrical mosaics of the whole-Moon terrain, as (mosaic id, tile product ids); used when all tiles are present.
+MOON_CYLINDRICAL: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("SLDEM2015_512", SLDEM_512_TILES),
+    ("SLDEM2015_256", SLDEM_256_TILES),
+    ("LDEM_128", ("LDEM_128",)),
+)

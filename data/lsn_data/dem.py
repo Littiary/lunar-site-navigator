@@ -370,25 +370,59 @@ class Terrain:
         want = np.broadcast_to(want_in, shape).ravel()  # 0 means "finest available"
         x, y = lonlat_to_xy(lon, lat, self.products[0].grid0.radius_m, self.pole)
         out = np.full(lon.shape, np.nan)
-        todo = np.ones(lon.shape, dtype=bool)
-        # Rule: a point is read from the (product, level) pair with the coarsest pixel that is
-        # not larger than the request and that covers the point. If the request is finer than
-        # anything covering the point, the finest covering product is used at level 0.
-        pairs = [(p, k) for p in self.products for k in p.levels if (statistic, k) in p._levels]
-        pairs.sort(key=lambda pk: -pk[0].pixel_m(pk[1]))  # coarsest first
-        for p, k in pairs:
+        prod, level, stat = self._select(x, y, want, statistic)
+        for i, p in enumerate(self.products):
+            for k in np.unique(level[prod == i]):
+                for st in ("mean", "max"):
+                    sel = (prod == i) & (level == k) & (stat == (st == "max"))
+                    if sel.any():
+                        out[sel] = p.height_xy(x[sel], y[sel], int(k), st, method)
+        return out.reshape(shape)
+
+    def _select(self, x, y, want, statistic: str):
+        """Per point: index of the product (-1: none), level, and whether the 'max' statistic is read.
+
+        Rule: a point is read from the (product, level) pair with the coarsest pixel that is not larger than the
+        request and that covers the point. If the request is finer than anything covering the point, the finest
+        covering product is used at level 0.
+        """
+        prod = np.full(x.shape, -1, dtype=np.int64)
+        level = np.zeros(x.shape, dtype=np.int64)
+        is_max = np.zeros(x.shape, dtype=bool)
+        todo = np.ones(x.shape, dtype=bool)
+        pairs = [(i, p, k) for i, p in enumerate(self.products) for k in p.levels if (statistic, k) in p._levels]
+        pairs.sort(key=lambda ipk: -ipk[1].pixel_m(ipk[2]))  # coarsest first
+        for i, p, k in pairs:
             sel = todo & (want >= p.pixel_m(k)) & p.grid(k).covers_xy(x, y)
             if sel.any():
-                out[sel] = p.height_xy(x[sel], y[sel], k, statistic, method)
+                prod[sel], level[sel], is_max[sel] = i, k, statistic == "max"
                 todo &= ~sel
-        for p in self.products:  # finest first
+        for i, p in enumerate(self.products):  # finest first
             if not todo.any():
                 break
             sel = todo & p.grid(0).covers_xy(x, y)
             if sel.any():
-                out[sel] = p.height_xy(x[sel], y[sel], 0, "mean", method)
+                prod[sel], level[sel], is_max[sel] = i, 0, False
                 todo &= ~sel
-        return out.reshape(shape)
+        return prod, level, is_max
+
+    def source(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean"):
+        """Which product and level ``height_m`` reads for each point: (product ids, levels); '' and -1 where none."""
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        want_in = np.asarray(0.0 if max_pixel_m is None else max_pixel_m, dtype=np.float64)
+        shape = np.broadcast(lon, lat, want_in).shape
+        x, y = lonlat_to_xy(np.broadcast_to(lon, shape).ravel(), np.broadcast_to(lat, shape).ravel(), self.products[0].grid0.radius_m, self.pole)
+        prod, level, _ = self._select(x, y, np.broadcast_to(want_in, shape).ravel(), statistic)
+        ids = np.array([""] + [p.product_id for p in self.products], dtype=object)[prod + 1]
+        return ids.reshape(shape), np.where(prod >= 0, level, -1).reshape(shape)
+
+    def covers(self, lon_deg, lat_deg):
+        x, y = lonlat_to_xy(lon_deg, lat_deg, self.products[0].grid0.radius_m, self.pole)
+        out = np.zeros(np.shape(x), dtype=bool)
+        for p in self.products:
+            out |= p.grid(0).covers_xy(x, y)
+        return out
 
     def radius_m(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean", method: str = "bilinear") -> np.ndarray:
         return self.height_m(lon_deg, lat_deg, max_pixel_m, statistic, method) + self.reference_radius_m
