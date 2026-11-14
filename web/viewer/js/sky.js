@@ -3,7 +3,9 @@
 // Azimuth runs left to right (north, east, south, west, north) and wraps around; elevation
 // runs bottom to top. The terrain is the horizon profile of the package. The paths of the Sun
 // and the Earth are their package series over a chosen span of samples; a path is drawn solid
-// where the package window `<body>_visible` contains the sample and faded elsewhere.
+// where the package window `<body>_visible` contains the sample and faded elsewhere. If the
+// package states a horizon error (contract 0.4 and later, SPEC 5.7), samples inside the window
+// `<body>_visible_uncertain` (the uncertainty band) are drawn dashed; otherwise no band is shown.
 //
 // Rule: every value comes from the package. Angles are mapped linearly to pixels; there is no
 // trigonometry and nothing is computed or interpolated. Hovering shows the stored values of
@@ -103,6 +105,7 @@ export function createSky(container, { onPick } = {}) {
         const s = data.series[body];
         if (!s) continue;
         const win = windowsAtHeight(site, h).find((w) => w.id === `${body.toLowerCase()}_visible`);
+        const band = windowsAtHeight(site, h).find((w) => w.id === `${body.toLowerCase()}_visible_uncertain`);
         for (const shift of shifts()) {
           let prev = null;
           for (let j = from; j <= to; j++) {
@@ -110,12 +113,15 @@ export function createSky(container, { onPick } = {}) {
             if (!Number.isFinite(a) || !Number.isFinite(e)) { prev = null; continue; }
             const x = xOf(shift + a), y = yOf(e);
             const on = win ? containing(win.intervals_et_s, sampleEt(site, j)) >= 0 : true;
+            const unsure = band ? containing(band.intervals_et_s, sampleEt(site, j)) >= 0 : false;
             if (prev && (prev.a - a > 180 || a - prev.a > 180)) prev = null; // the path crosses north: no line across the panorama
             if (prev) {
               g.strokeStyle = COLORS[body]; g.globalAlpha = on && prev.on ? 1 : 0.3; g.lineWidth = on && prev.on ? 2 : 1.5;
+              g.setLineDash(unsure || prev.unsure ? [5, 4] : []);
               g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(x, y); g.stroke();
+              g.setLineDash([]);
             }
-            prev = { x, y, a, on };
+            prev = { x, y, a, on, unsure };
             if (x >= -PICK_PX && x <= size.w + PICK_PX) drawn.push({ x, y, body, j });
           }
         }
@@ -155,10 +161,12 @@ export function createSky(container, { onPick } = {}) {
     const s = data.series[p.body];
     const win = windowsAtHeight(site, h).find((w) => w.id === `${p.body.toLowerCase()}_visible`);
     const inside = win ? containing(win.intervals_et_s, sampleEt(site, p.j)) >= 0 : null;
+    const band = windowsAtHeight(site, h).find((w) => w.id === `${p.body.toLowerCase()}_visible_uncertain`);
+    const unsure = band ? (containing(band.intervals_et_s, sampleEt(site, p.j)) >= 0 ? "yes" : "no") : null;
     tip.innerHTML = `<strong>${NAMES[p.body]}</strong> · <span class="mono">${esc(sampleUtc(site, p.j))}</span><br>
       azimuth ${fixed(s.az[p.j], 3)}°, elevation ${fixed(s.el[p.j], 3)}° (centre, no terrain)<br>
       margin above terrain horizon ${fixed(s.margin[p.j], 3)}°, disc above it ${fixed(100 * s.fraction[p.j], 1)} %<br>
-      in window <code>${p.body.toLowerCase()}_visible</code>: ${inside === null ? "—" : inside ? "yes" : "no"} · click to go to this time`;
+      in window <code>${p.body.toLowerCase()}_visible</code>: ${inside === null ? "—" : inside ? "yes" : "no"}${unsure === null ? "" : `, in the uncertainty band: ${unsure}`} · click to go to this time`;
     tip.hidden = false;
     tip.style.left = `${Math.min(px + 12, size.w - tip.offsetWidth - 4)}px`;
     tip.style.top = `${Math.max(4, py - tip.offsetHeight - 12)}px`;
@@ -252,7 +260,26 @@ export function createSky(container, { onPick } = {}) {
       return { vertices: horizonPts.length, maxAzimuthDiffDeg: dAz, maxElevationDiffDeg: dEl, pathPoints: drawn.length };
     },
     pick: (x, y) => nearest(x, y),
+    band: () => bandInfo(input && input.site, input && input.h),
     points: () => drawn.slice(), // drawn path points {x, y, body, j}, for checks
     viewSpan: () => view.span,   // degrees of azimuth across the canvas, for checks
   };
+}
+
+// What the package says about the uncertainty band (SPEC 5.7): present only if the package has
+// the windows <body>_visible_uncertain; the assumption sentence must be shown with it.
+export function bandInfo(site, h) {
+  if (!site || !site.timeline) return { present: false, reason: "no time window" };
+  const ids = windowsAtHeight(site, h).map((w) => w.id).filter((id) => id.endsWith("_visible_uncertain"));
+  if (!ids.length) {
+    return { present: false, reason: `the package (contract ${site.manifest.contract.version}) states no horizon error, so it has no uncertainty band` };
+  }
+  const stated = (site.timeline.uncertainty || {}).horizon_error || {};
+  return { present: true, windows: ids, assumption: stated.assumption || "" };
+}
+
+export function bandNote(site, h) {
+  const b = bandInfo(site, h);
+  if (!b.present) return `Uncertainty band: not shown, because ${b.reason}.`;
+  return `Dashed path: inside the uncertainty band (${b.windows.map((id) => `<code>${esc(id)}</code>`).join(", ")}): visible or hidden depending on the stated horizon error. Assumption stated in the package: ${esc(b.assumption)}`;
 }

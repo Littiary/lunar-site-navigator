@@ -68,3 +68,5 @@ main.wide { max-width: 1600px; }
 .sky { position: relative; width: 100%; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; background: #05070a; }
 .sky canvas { display: block; cursor: grab; }
 .sky-tip { position: absolute; max-width: min(420px, 90%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; pointer-events: none; }
+.note-band { color: var(--muted); margin: 6px 0; }
+.pane .sky { margin-top: 4px; }

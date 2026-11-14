@@ -99,5 +99,27 @@ class SkyPanoramaTests(unittest.TestCase):
         self.assertNotIn("fraction[j] >", code)   # no threshold applied to a package value
 
 
+class SkyInComparisonTests(unittest.TestCase):
+    """Task 7 C in the split screen: one panorama module, one instance per pane, shared time."""
+
+    def test_compare_reuses_the_panorama_module(self):
+        code = (VIEWER / "js" / "compare.js").read_text(encoding="utf-8")
+        self.assertIn('from "./sky.js"', code)
+        self.assertIn("createSky(pane.q(\"sky\")", code)
+        self.assertNotIn("getContext(", code)  # no second drawing implementation
+
+    def test_compare_has_a_shared_view_switch(self):
+        html = (VIEWER / "compare.html").read_text(encoding="utf-8")
+        for needle in ('id="view-chart"', 'id="view-sky"', 'id="sky-span"', 'data-role="sky"', 'data-role="band"'):
+            self.assertEqual(html.count(needle), 1, needle)
+
+    def test_band_comes_only_from_package_windows(self):
+        code = (VIEWER / "js" / "sky.js").read_text(encoding="utf-8")
+        self.assertIn("_visible_uncertain", code)
+        self.assertIn("assumption", code)          # SPEC 5.7: the assumption is shown with the band
+        self.assertNotIn("dem_height_error_m", code)  # no band computed from the stated error
+        self.assertNotIn("horizon_error_deg", code)
+
+
 if __name__ == "__main__":
     unittest.main()

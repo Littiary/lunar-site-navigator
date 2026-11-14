@@ -123,8 +123,9 @@ function wire() {
 
 async function openSky() {
   if (!state.sky) {
-    const { createSky } = await import("./sky.js");
-    state.sky = createSky($("sky"), { onPick: (j) => setSample(j) });
+    const sky = await import("./sky.js");
+    state.skyModule = sky;
+    state.sky = sky.createSky($("sky"), { onPick: (j) => setSample(j) });
   }
   updateSky();
   state.sky.resize();
@@ -135,6 +136,7 @@ function updateSky() {
   const v = $("sky-span").value;
   const span = v === "all" && state.site.timeline ? state.site.timeline.time.count : Number(v);
   state.sky.update({ site: state.site, data: state.data, h: state.h, i: state.i, spanSamples: span });
+  $("band-sky").innerHTML = state.skyModule.bandNote(state.site, state.h);
   const c = state.sky.check();
   if (c) $("check-sky").textContent = `Horizon check: ${c.vertices} vertices read back from the drawing differ from the package profile by at most ${c.maxElevationDiffDeg.toExponential(1)}° in elevation and ${c.maxAzimuthDiffDeg.toExponential(1)}° in azimuth.`;
 }

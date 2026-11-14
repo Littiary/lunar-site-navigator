@@ -87,6 +87,8 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - the package metrics for the whole window (visible shares, longest outages, DSN share, relay need, eclipses);
   - the next events.
 - **Shared time:** a sample of the time grid of the left site. Each pane shows the sample of its own package nearest to that instant, labelled with its own UTC. If the grids ever differ, the pane says so.
+- **Pane view:** one shared switch shows either the horizon chart or the sky panorama in both panes. The panorama is the same `js/sky.js` module, one instance per pane. The "Paths for" span is shared, and clicking a path in either pane moves the shared timeline.
+- **Uncertainty band:** shown only when a package has the windows `<body>_visible_uncertain` (contract 0.4 and later, SPEC 5.7). Path samples inside the band are dashed, and the package's assumption sentence is shown with it. The published packages (contract 0.1) have no band, and the pane says so.
 - **Layout:** the panes stack on narrow screens.
 - **Shareable links:** `?a=<site_id>&b=<site_id>&ha=<height index>&hb=<height index>&i=<sample>` opens a selection.
 
