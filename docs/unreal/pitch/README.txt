@@ -1,6 +1,6 @@
 Pitch material of the Unreal planner view. Every file is a real render of the running scene
 from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1
-at repository commit 1ea4245 on 2026-11-14 15:28 UTC.
+at repository commit df3718b on 2026-11-14 16:23 UTC.
 
 Packages: Shackleton crater rim crest: site-a4f5f765a5d43bbf (contract 0.6); de Gerlache crater rim crest: site-6ded733f4be837e5 (contract 0.6).
 Published fields: obstacles and their cost: True; lunar-day calendar: True; stated horizon error or landing ellipse: True.
@@ -21,7 +21,7 @@ still_4_uncertainty_band.png
     Shackleton crater rim crest at 2027-07-28T17:00:00Z, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse.
 
 still_5_south_pole_wide.png
-    The south-polar terrain around Shackleton crater rim crest at 2027-09-19T13:00:00Z, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package.
+    The south-polar terrain around Shackleton crater rim crest at 2027-09-19T13:00:00Z, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package. A weak fill light is on for this still only, as a viewing aid, so that the terrain in shadow can be told apart; without it shadows are black (the still says so).
 
 still_7_mast_and_lander.png
     Shackleton crater rim crest at 2027-09-19T13:00:00Z: the camera stands 5 m above and 22 m behind the observer (not the observer's view) and shows the mast that carries the observer at 10 m and the lander beside it. Both are scale objects of the team's own design, not part of the package.
