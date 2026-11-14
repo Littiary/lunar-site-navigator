@@ -2,7 +2,11 @@
 
 Python package `lsncore`. It computes every number of the project and writes it to
 versioned packages; see [the contract](../docs/contract/SPEC.md). The horizon method, its
-checks and its limits are in [docs/method/horizon.md](../docs/method/horizon.md).
+checks and its limits are in [docs/method/horizon.md](../docs/method/horizon.md); the obstacle
+report in [docs/method/obstacles.md](../docs/method/obstacles.md); the calendar and the slip tolerance in
+[docs/method/calendar.md](../docs/method/calendar.md); the uncertainty band and the landing ellipse in
+[docs/method/uncertainty.md](../docs/method/uncertainty.md); the mast-height trade and site pairs in
+[docs/method/trade_pairs.md](../docs/method/trade_pairs.md).
 
 ## Setup
 
@@ -17,15 +21,32 @@ python -m venv .venv
 
 ```
 python -m lsncore site --lat -89.5 --lon 200 --name "Test" --out <package root>
+python -m lsncore scenario --sites data/sites/sites.json --id three-sites --start 2026-11-14T00:00:00.000Z --end 2028-11-14T00:00:00.000Z --out scenario.json
 python -m lsncore run <scenario.json> --out <package root>
 python -m lsncore validate <package dir | json file> ...
 python -m lsncore sample                                  # regenerate docs/contract/sample
 ```
 
 `site` computes the terrain horizon of one point (options: `--heights`, `--azimuth-step`,
-`--max-range-km`). `run` computes every site of a scenario file; when the ephemeris
-modules are installed and the scenario has a time window, it also writes the direction
-table and the timeline of each site.
+`--max-range-km`). `scenario` writes a scenario file from the site records of the data
+stream; options state what else is wanted: `--landing-utc` (planned landing),
+`--preset <id>` (an example requirement from
+[`docs/contract/presets`](../docs/contract/presets/README.md); repeatable, `all` for every
+one) or `--requirements <file>` (your own requirements on the landing time),
+`--horizon-error-deg`, `--dem-height-error-m` and `--ellipse` (assumptions for the
+uncertainty band and the landing-ellipse survey), `--heights` (mast heights to compare). `run` computes every site of a scenario file. With
+a time window and the ephemeris modules installed, a site package then holds:
+
+| Part | From |
+|---|---|
+| horizon, its obstacles, far-field bound | terrain |
+| series, events, windows, metrics | direction table and event finder |
+| blocker of every sample, time lost to each obstacle against a smooth sphere | [obstacles.md](../docs/method/obstacles.md) |
+| lunar-day calendar; landing windows and slip tolerance of stated requirements | [calendar.md](../docs/method/calendar.md) |
+| band for a stated horizon error; survey of a stated landing ellipse | [uncertainty.md](../docs/method/uncertainty.md) |
+| mast-height trade table | [trade_pairs.md](../docs/method/trade_pairs.md) |
+
+and with two or more sites a site-pairs package is written next to them.
 
 Terrain: by default the LOLA products under the data root of the data stream
 (`LSN_DATA_ROOT`). `--dem-label <file.lbl>` (repeatable) opens other products of the same
@@ -41,6 +62,10 @@ computation and writes invented numbers (the walking skeleton behind the contrac
 | `lsncore/horizon.py` | Terrain horizon on a sphere, several observer heights in one pass, far-field bound | A |
 | `lsncore/dem.py` | Terrain interface; adapter for the data stream's reader; analytic terrain for tests | A |
 | `lsncore/pipeline.py` | Scenario in, packages out; method cards of the horizon | A |
+| `lsncore/obstacles.py`, `lsncore/blocking.py` | Obstacles of the horizon; which one limits a body; time lost to terrain against a smooth sphere | A |
+| `lsncore/calendar.py` | Visible time per lunar day; landing windows of a stated requirement; slip tolerance | A |
+| `lsncore/uncertainty.py` | Band for a stated horizon error; survey of a stated landing ellipse | A |
+| `lsncore/trade.py`, `lsncore/pairs.py` | Mast-height trade table; what two sites achieve together (site-pairs package) | A |
 | `lsncore/timeline.py` | `TimeGrid`, `IntervalSet` (window algebra) | A |
 | `lsncore/geometry.py` | Site frame, great-circle steps, topocentric direction | A |
 | `lsncore/scenario.py` | Scenario file | A |

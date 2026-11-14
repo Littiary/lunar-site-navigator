@@ -10,6 +10,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -19,10 +20,10 @@ import numpy as np
 from .. import SCIENCE_VERSION, __version__
 
 CONTRACT_NAME = "lsn-package"
-CONTRACT_VERSION = "0.1"
+CONTRACT_VERSION = "0.6"
 CONTRACT_MAJOR = 0
 
-_ID_PREFIX = {"site": "site", "direction_table": "dirtab"}
+_ID_PREFIX = {"site": "site", "direction_table": "dirtab", "site_pairs": "pairs"}
 _EXTENSION = {"<f4": "f4", "<f8": "f8", "<i4": "i4", "|u1": "u1"}
 
 
@@ -207,7 +208,16 @@ class PackageWriter:
         write_json(tmp / "manifest.json", manifest)
         if final.exists():
             shutil.rmtree(final)
-        tmp.rename(final)
+        # On Windows another process (a virus scanner, an indexer) may hold the fresh files
+        # open for a moment, and the rename is then refused. Try again for a few seconds.
+        for attempt in range(25):
+            try:
+                tmp.rename(final)
+                break
+            except PermissionError:
+                if attempt == 24:
+                    raise
+                time.sleep(0.2)
         return final
 
 
@@ -261,6 +271,8 @@ def write_index(root: Path | str, scenario_id: str | None = None) -> Path:
                 lon_deg=m["site"]["lon_deg"],
                 has_timeline="timeline" in m,
             )
+        elif m["kind"] == "site_pairs":
+            entry["site_ids"] = [s["site_id"] for s in m["sites"]]
         entries.append(entry)
     index = {
         "contract": contract_header(),

@@ -1,10 +1,11 @@
-# Package contract, version 0.1
+# Package contract, version 0.6
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
 
 - Machine-checkable schema: [`schemas/lsn-contract.schema.json`](schemas/lsn-contract.schema.json) (JSON Schema 2020-12).
 - Sample with invented values: [`sample/`](sample/README.md).
+- What changed since earlier versions: [section 10](#10-changes).
 - Reference writer, reader and validator: `core/lsncore/contract/`.
 - Owner: the core stream. Other streams request changes; they do not edit these files
   (CONTRIBUTING.md, rule 2).
@@ -19,6 +20,7 @@ validator or a reader relies on.
 | Scenario | one JSON file, `kind: "scenario"` | The single input of the tool: sites, time window, observer heights, thresholds, data versions |
 | Site package | directory, `kind: "site"` | Everything computed for one site: site geometry, 360° horizon, and (when computed) time series, events, windows, metrics |
 | Direction-table package | directory, `kind: "direction_table"` | Sun and Earth positions over time, independent of any site |
+| Site-pairs package | directory, `kind: "site_pairs"` | Since 0.5. What every two sites of a scenario achieve together; written when a scenario has two or more sites with a timeline |
 | Index | `index.json`, `kind: "index"` | Lists the packages under a package root, so static pages need no directory listing |
 
 A **package** is a directory that holds `manifest.json` and the binary arrays the manifest
@@ -29,6 +31,7 @@ refers to. Nothing else may be in the directory. The directory name is the packa
   index.json
   direction_table/<package_id>/manifest.json, positions_km.f8
   site/<site_id>/<package_id>/manifest.json, horizon_*.f4|f8, series_*.f4
+  site_pairs/<package_id>/manifest.json
 ```
 
 Readers find packages through `index.json` (`packages[].path` is relative to the package
@@ -102,9 +105,9 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.1"}` |
-| `kind` | `site` or `direction_table` |
-| `package_id` | `site-` or `dirtab-` followed by 16 hex digits; see 3.4 |
+| `contract` | `{"name": "lsn-package", "version": "0.6"}` |
+| `kind` | `site`, `direction_table` or `site_pairs` |
+| `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
 | `status` | `ok`; `partial` (something requested is missing, explained in `warnings`); `error` |
 | `synthetic` | `true` if any value is invented. Then `synthetic_notice` is required and every method card has status `synthetic` |
@@ -159,8 +162,10 @@ same package ids.
 | `time_window` | `start_utc`, `end_utc`, `step_s`, or `null` for horizon only |
 | `bodies` | `SUN`, `EARTH` |
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
+| `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to. Three example requirements are in [`presets/requirements.json`](presets/README.md) |
+| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg`, `dem_height_error_m` (since 0.6) and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
 | `mission_profile` | Reserved |
-| `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use |
+| `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use. `dem_set_id: "any"` accepts the installed elevation products; a run on another set than the one named still happens and writes a warning. The package always records what was used |
 
 ## 5. Site package
 
@@ -169,7 +174,7 @@ same package ids.
 `request` echoes, in canonical form, the part of the scenario that concerns this site:
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
-`bodies`, `thresholds`, or `null`).
+`bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -204,10 +209,34 @@ same package ids.
 | `obstacle_lat_deg`, `obstacle_lon_deg` | `[H, A]` `<f8` | Optional. Coordinates of that point |
 | `error_bounds` | | Optional named quantities. The horizon core writes `far_field_max_deg` (largest amount by which terrain beyond the reach of the rays could still raise the horizon; 0 = search radius proven sufficient), `far_field_open_azimuth_fraction`, `ceiling_height_m` (the terrain ceiling that bound assumes) and `shortest_reach_m`; see [`../method/horizon.md`](../method/horizon.md) |
 | `flags` | | `coverage_complete`, `truncated_at_data_edge`, `nodata_fraction` |
+| `obstacle_id` | `[H, A]` `<i4` | Since 0.2. For each observer height and azimuth, the index into `obstacles` of the obstacle that this azimuth belongs to; -1 where the horizon has no data |
+| `obstacles` | list | Since 0.2. One record per obstacle, see below. `obstacles[k].id` is `k` |
 
 Between azimuth samples, readers interpolate linearly (periodically). The obstacle point,
 its distance and its height can change abruptly from one azimuth to the next; they must
 not be interpolated, only read at the nearest sample.
+
+**Obstacle** (since 0.2). An obstacle is a run of neighbouring azimuths whose horizon is
+set by the same piece of terrain: the limiting points of neighbouring azimuths lie at
+nearly the same distance (within 10 %, or within 50 m). Where the limiting point jumps
+nearer or farther, a new obstacle begins. The grouping is done separately for each
+observer height; ids are unique across heights.
+
+| Field | Content |
+|---|---|
+| `id`, `height_index` | Position in the list; observer height the grouping belongs to |
+| `azimuth_start_index`, `azimuth_count` | The run: azimuth indices `(azimuth_start_index + k) mod A` for `k = 0 … azimuth_count - 1`. A run may pass through azimuth 0 |
+| `azimuth_start_deg`, `azimuth_end_deg` | First and last azimuth of the run in degrees (`end` is smaller than `start` when the run passes through 0) |
+| `peak_azimuth_deg`, `peak_elevation_deg` | Where the obstacle stands highest in the profile, and how high |
+| `peak_distance_m`, `peak_lat_deg`, `peak_lon_deg`, `peak_height_m` | The limiting terrain point at the peak azimuth |
+| `distance_min_m`, `distance_max_m` | Range of the distances of the limiting points along the run |
+| `near_field` | `true` if the peak is closer than 1 km: such an obstacle depends on single pixels of the elevation model and on the observer height |
+| `method` | Method card |
+
+The outline of an obstacle in 3-D is the sequence of limiting points
+(`obstacle_lat_deg`, `obstacle_lon_deg`, `obstacle_height_m` at `[height_index, j]`) for
+the azimuth indices `j` of its run. Obstacles are geometric runs of the profile; they
+carry no names.
 
 Reserved optional arrays, same shape: `obstacle_dem_layer` (`|u1`), `elevation_sigma_deg`,
 `elevation_lower_deg`, `elevation_upper_deg` (uncertainty band).
@@ -226,15 +255,24 @@ Present only when a time window was computed.
 | `series.<BODY>.angular_radius_deg` | `[N]` optional |
 | `series.<BODY>.margin_deg` | `[H, N]` elevation of the disc centre minus the terrain horizon at the same azimuth, for each observer height |
 | `series.<BODY>.visible_fraction` | `[H, N]` fraction of the disc area above the terrain horizon, 0 to 1 |
+| `series.<BODY>.lit_fraction` | `[H, N]` optional, since 0.2. Fraction of the disc that is above the terrain horizon and not hidden by another body; for the Sun: `visible_fraction` reduced by an eclipse by the Earth. Use it for power; use `visible_fraction` for line of sight to the terrain |
+| `series.<BODY>.ellipse_visible_share` | `[N]` optional, since 0.4. Share of the sample points of the stated landing ellipse at which the body is visible; see 5.7 |
+| `series.<BODY>.blocker_azimuth_index` | `[H, N]` `<i4`, since 0.2. For every sample, the azimuth index of the horizon sample that limits the view of the disc; see 5.5 |
 | `events[]` | Rise and set events, sorted by time |
 | `windows[]` | Interval sets |
 | `metrics[]` | Summary numbers |
+| `blockers[]` | Since 0.2. The obstacles that cost visible time compared with a smooth sphere; see 5.5 |
+| `uncertainty` | Since 0.4, only if the scenario states assumptions. What was assumed and what follows; see 5.7 |
+| `calendar` | Since 0.3. Visible time per lunar day; see 5.6 |
+| `height_trade` | Since 0.5. Visible time and longest outage per observer height; see 5.8 |
+| `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
 
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
 terrain that hides or reveals it), `threshold` (the condition crossed), `method`.
 Optional: `obstacle_lat_deg`, `obstacle_lon_deg`, `sigma_s` (1-sigma time uncertainty),
-`closing_rate_deg_per_h`, `grazing`.
+`closing_rate_deg_per_h`, `grazing`, and since 0.4 `earliest_et_s`, `latest_et_s`,
+`earliest_utc`, `latest_utc` (range of the event time for the stated horizon error; 5.7).
 
 **Window:** `id`, `subject` (`SUN`, `EARTH`, `COMBINED`), `height_index`, `definition`
 (a sentence), optional `threshold`, `intervals_et_s` (`[[start, end], …]`, sorted,
@@ -244,8 +282,199 @@ true start or end is unknown), `method`.
 
 **Metric:** `id`, `label`, `value`, `unit`, `height_index` (or `null`), `method`.
 
+Window ids written by the core, each per observer height: `<body>_visible` (the
+scenario's condition), `<body>_any_part_visible`, `<body>_full_disc_visible`,
+`sun_and_earth_visible`, and since 0.2 `<body>_visible_smooth_sphere`,
+`<body>_lost_to_terrain`, `<body>_gained_from_terrain` (5.5). `<body>` is `sun` or `earth`.
+
 In Python, a window is a `lsncore.timeline.IntervalSet`. Union, intersection, complement,
 `close_gaps` and `drop_short` are defined there once and used by every feature.
+
+### 5.5 Showing the obstacle (since 0.2)
+
+These fields answer three questions for a site: what is in the way of the Sun or the
+Earth at a given time, where it is, and what it costs.
+
+**The comparison.** For every body and observer height the core also evaluates the
+scenario's visibility condition over a *smooth sphere through the site*: no terrain, the
+horizon a circle below the horizontal by the dip angle of the observer height. Then
+
+```
+<body>_lost_to_terrain     = visible over the smooth sphere AND NOT visible over the terrain
+<body>_gained_from_terrain = visible over the terrain AND NOT visible over the smooth sphere
+visible over the terrain   = smooth sphere - lost + gained          (as sets of time)
+```
+
+Time is gained where the terrain lies below the smooth horizon, as it does around a site
+on a summit. The three windows are in `windows[]`; their durations are the metrics
+`<body>_visible_s`, `<body>_visible_smooth_sphere_s`, `<body>_lost_to_terrain_s` and
+`<body>_gained_from_terrain_s` (seconds).
+
+**Per sample.** `series.<BODY>.blocker_azimuth_index[h, i]` is the azimuth index `j` of
+the horizon sample that limits the view of the disc at sample `i`. Which sample that is
+depends on the scenario's condition for the body: for "any part visible" it is, among
+the horizon samples under the disc, the one where the upper edge of the disc stands
+highest above the horizon (for a hidden disc: where its first light will appear); for
+the centre condition it is the sample nearest to the azimuth of the centre; for "whole
+disc visible" the one where the horizon reaches highest above the lower edge. The index
+is defined at every sample, also while the body is visible.
+
+**Blocker** (one record per body, observer height and obstacle that costs time; sorted by
+cost, largest first):
+
+| Field | Content |
+|---|---|
+| `body`, `height_index` | What is hidden, for which observer height |
+| `obstacle_id` | Index into `horizon.obstacles`; -1 if the limiting sample has no data |
+| `lost_s` | Part of `<body>_lost_to_terrain` during which this obstacle is the limiting one, in seconds |
+| `share_of_lost` | `lost_s` divided by the total lost time of that body and height |
+| `intervals_et_s`, `intervals_utc` | When: sorted, disjoint intervals |
+| `azimuth_start_deg`, `azimuth_end_deg`, `peak_azimuth_deg`, `peak_elevation_deg`, `peak_distance_m`, `peak_lat_deg`, `peak_lon_deg`, `peak_height_m`, `near_field` | Copied from the obstacle record, so that a label needs no second lookup |
+| `method` | Method card |
+
+The totals come from the visibility windows and have the accuracy of the event times.
+The split between obstacles is resolved to the step of the series: each sample stands
+for the half step before and after it.
+
+**Recipe for a viewer** (height index `h`, body `B`, time-slider sample `i`):
+
+1. `f = series.B.visible_fraction[h, i]`: 1 whole disc visible, 0 hidden, between: partly hidden.
+2. `j = series.B.blocker_azimuth_index[h, i]`. The limiting terrain point is at azimuth
+   `j * step_deg`, distance `horizon.distance_m[h, j]`, position
+   `horizon.obstacle_lat_deg[h, j]`, `obstacle_lon_deg[h, j]`, `obstacle_height_m[h, j]`.
+3. `k = horizon.obstacle_id[h, j]`; `horizon.obstacles[k]` gives the run of azimuths to
+   highlight and the peak for a label.
+4. The record in `timeline.blockers` with the same `body`, `height_index` and
+   `obstacle_id` gives the hours this obstacle costs in the computed window
+   (`lost_s / 3600`); there is none if it costs nothing.
+5. Show the method card and, if `near_field` is true, say that the obstacle is within
+   1 km and depends on single pixels of the elevation model.
+
+### 5.6 Opportunity calendar and slip tolerance (since 0.3)
+
+**Calendar.** `timeline.calendar` cuts the computed range into lunar days and gives the
+visible time in each. A lunar day begins when the Sun crosses the 180 degree meridian
+of the body-fixed frame (the middle of the far side, close to new Moon). The periods do
+not depend on the site, so the rows of several sites line up.
+
+| Field | Content |
+|---|---|
+| `period`, `definition`, `method` | `lunar_day`; the sentence above; method card |
+| `periods[]` | `index`, `start_et_s`, `end_et_s`, `start_utc`, `end_utc`, `complete`. The periods follow each other without gaps and cover the range of the series. The first and the last are cut by the ends of the range and have `complete: false`: their totals are not totals of a full lunar day |
+| `quantities[]` | `id`, `label`, `unit` (seconds), `window` (the window id it is taken from), `values[h][p]` for observer height `h` and period `p`, `method` |
+
+Quantity ids: `sun_visible_s`, `earth_visible_s`, `sun_and_earth_visible_s` (time for
+which the window holds inside the lunar day), `sun_longest_outage_s`,
+`earth_longest_outage_s` (longest stretch inside the lunar day without the body; a
+stretch that continues across a boundary is cut there), and `sun_lit_s` when the package
+has the eclipse-aware window `sun_lit`.
+
+**Requirement.** A scenario may state requirements on the landing time:
+
+```json
+{"id": "example-surface-stay", "label": "…", "mission_duration_s": 432000,
+ "conditions": [
+   {"window": "earth_visible", "kind": "visible_at_landing"},
+   {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": 172800},
+   {"window": "earth_visible", "kind": "total_in_mission", "min_s": 216000}]}
+```
+
+A requirement is always an input of the scenario. Three examples, chosen by the team and
+labelled as such (they are not requirements of NASA or of any mission), are shipped in
+[`presets/requirements.json`](presets/requirements.json): `example-standard` (Earth in
+view at landing, 10 Earth days of unbroken sunlight), `example-strict` and
+`example-loose`. Viewers read that file to offer presets and must show the `label` of
+the requirement with every number derived from it.
+
+`window` is the id of any window of the timeline. `visible_at_landing`: the window's
+condition holds at the landing time. `continuous_from_landing`: it holds without
+interruption for `min_s` from landing. `total_in_mission`: it holds for at least `min_s`
+in total between landing and landing + `mission_duration_s`. All conditions must hold.
+
+**Opportunity** (one record per requirement and observer height):
+
+| Field | Content |
+|---|---|
+| `requirement_id`, `height_index` | Which requirement (in `request.timeline.requirements`), which observer height |
+| `landing_windows_et_s`, `landing_windows_utc` | The landing times for which the requirement holds: sorted, disjoint intervals |
+| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration. Later landings are not in the windows, whatever the truth |
+| `clipped_start`, `clipped_end` | The first window starts at the start of the range, or the last one ends at `latest_landing`: its true extent is unknown |
+| `feasible_fraction` | Total length of the windows divided by the time from the start of the range to `latest_landing` |
+| `window_count`, `longest_window_s`, `median_window_s` | Summary of the windows |
+| `feasible_s_per_period` | Feasible landing time inside each period of the calendar |
+| `planned_landing` | `null`, or the slip report for the site's `landing_utc` (below) |
+| `method` | Method card |
+
+**Slip report** (`planned_landing`): `utc`, `et_s`; `feasible` (the requirement holds for
+a landing at the planned time); `slip_tolerance_s` (the landing can be delayed by up to
+this much and the requirement still holds; 0 if not feasible); `early_tolerance_s` (or
+advanced by this much); `slip_tolerance_is_lower_bound` (the window is cut by the end of
+what can be judged); `wait_s` (0 if feasible, otherwise the time to the next landing
+window, `null` if there is none in the range); `wait_after_window_s` (from the end of the
+current window to the next one); `next_window_start_utc`, `next_window_length_s`.
+
+The landing windows are computed from the edges of the visibility windows by interval
+arithmetic, not by trying dates, so they have the accuracy of the event times. The
+requirement is the scenario's; the package cannot tell whether it is the right one.
+
+### 5.7 Uncertainty band and landing ellipse (since 0.4)
+
+Both are answers to "what if" questions with a stated assumption. Neither is an error
+estimate of the result, and they are not combined.
+
+**Stated horizon error.** Two assumptions can be stated, alone or together (they are
+added): `uncertainty.horizon_error_deg`, a shift of the whole profile by the same angle
+at every azimuth; and, since 0.6, `uncertainty.dem_height_error_m`, a height error of
+the terrain point that sets the horizon, which moves the horizon in that azimuth by
+`atan(height error / distance)`: much for near terrain, little for far terrain. The
+profile is raised and lowered by the resulting error. Per body and observer height:
+
+| Window id | Meaning |
+|---|---|
+| `<body>_visible_certain` | Visible even if the horizon is higher than computed by the stated angle |
+| `<body>_visible_possible` | Visible if the horizon is lower by that angle |
+| `<body>_visible_uncertain` | Possible and not certain: the band |
+
+Always: certain is inside `<body>_visible`, which is inside possible. Metrics
+`<body>_visible_certain_s`, `<body>_visible_possible_s`, `<body>_visible_uncertain_s`.
+Every event gets `earliest_et_s`, `latest_et_s` (and the UTC strings): the interval of
+the band that contains it; equal to the event time if the band is empty there. A
+requirement (5.6) may name `sun_visible_certain` instead of `sun_visible` to get landing
+windows that hold under the stated error.
+
+**Stated landing ellipse** (`uncertainty.landing_ellipse`). The site is the centre.
+Sample points fill the ellipse evenly in area; each has its own terrain horizon and its
+own local vertical. Computed for the default observer height only.
+
+| Field | Content |
+|---|---|
+| windows `<body>_visible_all_points`, `<body>_visible_any_point` | Visible at every sample point; at one point at least. The site's own window lies between them |
+| `series.<BODY>.ellipse_visible_share` | `[N]`: share of the points at which the body is visible at each sample of the series (1 = everywhere in the ellipse, 0 = nowhere) |
+| `uncertainty.landing_ellipse.points[]` | `lat_deg`, `lon_deg`, `surface_height_m`, `visible_s` per body (`null` if the point has no complete horizon). The first point is the site |
+| `uncertainty.landing_ellipse.visible_s.<BODY>` | `centre_s`, `min_s`, `median_s`, `max_s` over the points |
+
+`timeline.uncertainty.horizon_error` (`error_deg` and/or `dem_height_error_m`, and since
+0.6 `applied_error_deg` with the least, median and largest error used at the default
+observer height) and `.landing_ellipse` repeat the stated numbers and carry an
+`assumption` sentence that a viewer must show with the band. The share of
+points is a survey of the ellipse, not a probability.
+
+### 5.8 Mast-height trade (since 0.5)
+
+`timeline.height_trade` puts the observer heights of the package side by side:
+
+| Field | Content |
+|---|---|
+| `observer_heights_m` | The heights of the package, lowest first |
+| `quantities[]` | `id`, `label`, `unit` (seconds), `window` (the window id it is read from), `values[h]`, `change_s[h]` (value minus the value at the lowest height), `method` |
+
+Quantity ids: `sun_visible_s`, `earth_visible_s`, `sun_and_earth_visible_s` (total time
+the window holds in the computed range), `sun_longest_outage_s`,
+`earth_longest_outage_s` (longest continuous time it does not), `sun_lit_s` when the
+eclipse-aware window exists, and `sun_least_lunar_day_s` (Sun-visible time in the least
+sunlit complete lunar day of the calendar). Only the listed heights are computed; a
+viewer must not interpolate between them. For more heights, list them in the
+scenario's `observer_heights_m` (up to 16).
 
 ## 6. Direction-table package (decision 3)
 
@@ -275,17 +504,49 @@ az = atan2(d · east, d · north)      el = asin((d · up) / |d|)
 Viewers use this only to place the Sun and the Earth in a scene. Rise and set times,
 margins and visible fractions are read from the site package, never recomputed.
 
+## 6a. Site-pairs package (since 0.5)
+
+Written at `site_pairs/<package_id>/` when a scenario has at least two sites with a
+timeline. It holds no arrays. Each site is taken at its default observer height; all
+sites share the time range of the scenario.
+
+| Field | Content |
+|---|---|
+| `request` | `site_package_ids` (in the order of `sites`), `windows` (the window ids compared) |
+| `inputs.site_packages[]` | `site_id`, `package_id`, `content_sha256` of each site package used |
+| `time` | The common time grid |
+| `sites[]` | `site_id`, `name`, `lat_deg`, `lon_deg`, `package_id`, `observer_height_m` |
+| `pairs[]` | One entry for every two sites: `site_a`, `site_b`, `distance_m` (great circle on the reference sphere), `windows[]` |
+
+A row of `pairs[].windows[]`, for one compared window (`sun_visible`, `earth_visible`,
+`sun_and_earth_visible`):
+
+| Field | Content |
+|---|---|
+| `window` | The window id |
+| `a_s`, `b_s` | Time the window holds at site A, at site B |
+| `either_s`, `both_s`, `neither_s` | At one of them at least; at both; at neither. `either_s + neither_s` is the length of the range |
+| `either_fraction` | `either_s` divided by the length of the range |
+| `longest_neither_s`, `neither_intervals_et_s`, `neither_intervals_utc` | The joint outages |
+| `gain_over_better_s` | `either_s` minus the larger of `a_s` and `b_s`: what the second site adds |
+| `covered_share_of_better_outage` | That gain divided by the time the better site lacks; `null` if it lacks none |
+| `method` | Method card |
+
+The package says when at least one site sees the body. It does not say that power or
+data can be moved between the sites.
+
 ## 7. Index
 
 `packages[]`: `kind`, `package_id`, `path`, `synthetic`, `status`; for sites also
-`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline`.
+`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline`; for site pairs `site_ids`.
 
 ## 8. Versioning
 
 The version is `major.minor`. Adding an optional field raises the minor number; readers
 must ignore fields they do not know and keep working. Changing the meaning, unit or layout
 of an existing field raises the major number; a reader must refuse a package with another
-major number and say why. While the major number is 0 the format may still change, but
+major number and say why. A reader written for 0.2 reads 0.1 packages (it finds the 0.2
+fields absent); the validator accepts every minor version up to its own. While the major number is 0 the format may still change, but
 only in announced batches, and every change updates this document, the schema and the
 sample in the same commit.
 
@@ -301,3 +562,59 @@ with the stated size, digest and NaN count; every `method` has a card and every 
 used; array shapes agree with the axes; events are sorted and inside the time grid;
 intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
+
+## 10. Changes
+
+### 0.6 (14 November 2026)
+
+Additive, with one relaxation; nothing that existed in 0.5 changed its meaning, name,
+unit or layout, and a scenario that states only what 0.5 knew gives a package with every
+field of 0.5.
+
+- Scenario and site request: `uncertainty.dem_height_error_m`.
+- `timeline.uncertainty.horizon_error`: `dem_height_error_m`, `applied_error_deg`.
+- Relaxation: `timeline.uncertainty.horizon_error.error_deg` is present only if a common shift was stated. In 0.5 it was always present, because a common shift was the only horizon error that could be stated. A reader must not assume it when `dem_height_error_m` is there.
+- Requirement presets in `docs/contract/presets/requirements.json` (a documented file next to the contract; not part of a package).
+- The sample scenario states an invented terrain height error in addition; the sample was regenerated (new ids).
+
+### 0.5 (14 November 2026)
+
+Additive; nothing that existed in 0.4 changed its meaning, name, unit or layout.
+
+- `timeline.height_trade` (5.8).
+- New package kind `site_pairs` with id prefix `pairs-` (6a); the index lists it with `site_ids`. Readers that only know `site` and `direction_table` must skip index entries of other kinds.
+- New method card ids: `timeline.height_trade`, `pairs.complementarity`.
+- The sample scenario has a second invented site, so the sample holds two site packages and one site-pairs package; it was regenerated (new ids).
+
+### 0.4 (14 November 2026)
+
+Additive; nothing that existed in 0.3 changed its meaning, name, unit or layout.
+
+- Scenario and site request: `uncertainty` (`horizon_error_deg`, `landing_ellipse`).
+- Windows `<body>_visible_certain`, `_possible`, `_uncertain`, `_all_points`, `_any_point` and the matching metrics (5.7).
+- Events: `earliest_et_s`, `latest_et_s`, `earliest_utc`, `latest_utc`.
+- `timeline.series.<BODY>.ellipse_visible_share`, `timeline.uncertainty`.
+- New method card ids: `timeline.horizon_error`, `timeline.landing_ellipse`.
+- The sample scenario states an invented horizon error and an invented ellipse; the sample was regenerated (new site package id).
+
+### 0.3 (14 November 2026)
+
+Additive; nothing that existed in 0.2 changed its meaning, name, unit or layout.
+
+- Scenario: `requirements[]`; `sites[].landing_utc` is now used as the planned landing.
+- Site request: `request.timeline.requirements`, `request.timeline.landing_utc` (so that the package id depends on them).
+- `timeline.calendar`, `timeline.opportunities[]` (5.6).
+- New method card ids: `timeline.calendar`, `timeline.opportunity`.
+- The sample scenario states an invented example requirement and a planned landing; the sample was regenerated (new site package id).
+
+### 0.2 (14 November 2026)
+
+Additive; nothing that existed in 0.1 changed its meaning, name, unit or layout.
+
+- `horizon.obstacle_id`, `horizon.obstacles[]`: the profile grouped into obstacles (5.3).
+- `timeline.series.<BODY>.blocker_azimuth_index`, `timeline.blockers[]` (5.5).
+- New window ids `<body>_visible_smooth_sphere`, `<body>_lost_to_terrain`, `<body>_gained_from_terrain` and metrics `<body>_visible_s`, `<body>_visible_smooth_sphere_s`, `<body>_lost_to_terrain_s`, `<body>_gained_from_terrain_s` (5.5).
+- `timeline.series.<BODY>.lit_fraction` (5.4), optional.
+- New method card ids: `horizon.obstacles`, `timeline.smooth_sphere`, `timeline.blocking`, `timeline.lit_fraction`.
+- The validator accepts packages of older minor versions.
+- The sample was regenerated: its package ids changed (new directories), and its invented horizon now has a far ridge and a near rock field so that it falls into several obstacles. Find the packages through `index.json`.

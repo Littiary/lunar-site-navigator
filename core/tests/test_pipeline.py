@@ -98,3 +98,34 @@ def test_cli_site_on_the_data_streams_synthetic_dem(tmp_path):
     elevation = pkg.array(manifest["horizon"]["elevation_deg"])
     h = manifest["horizon"]["default_height_index"]
     assert abs(int(np.argmax(elevation[h])) - 90) <= 1  # the cone lies towards 90 deg east
+
+
+def test_scenario_command_builds_a_valid_scenario_from_site_records(tmp_path):
+    from lsncore.contract import validate_document
+
+    records = {
+        "schema": "lunar-site-navigator site records v0",
+        "sites": [
+            {"site_id": "rim_crest_a", "name": "Rim crest A", "lon_deg_east": 205.5, "lat_deg": -89.8},
+            {"site_id": "summit_b", "name": "Summit B", "lon_deg_east": 2.0, "lat_deg": -86.0},
+        ],
+    }
+    (tmp_path / "sites.json").write_text(json.dumps(records))
+    (tmp_path / "req.json").write_text(json.dumps([
+        {"id": "stay", "label": "Example", "mission_duration_s": 86400.0,
+         "conditions": [{"window": "sun_visible_certain", "kind": "continuous_from_landing", "min_s": 3600.0}]}
+    ]))
+    out = tmp_path / "scenario.json"
+    code = cli.main([
+        "scenario", "--sites", str(tmp_path / "sites.json"), "--id", "two-sites", "--start", "2026-11-14T00:00:00.000Z",
+        "--end", "2027-11-14T00:00:00.000Z", "--step", "7200", "--landing-utc", "2027-01-10T00:00:00.000Z",
+        "--requirements", str(tmp_path / "req.json"), "--horizon-error-deg", "0.05", "--ellipse", "100", "50", "30", "13",
+        "--out", str(out),
+    ])
+    assert code == 0
+    scenario = json.loads(out.read_text())
+    validate_document(scenario)
+    assert [s["site_id"] for s in scenario["sites"]] == ["rim-crest-a", "summit-b"]
+    assert scenario["sites"][0]["lon_deg"] == 205.5 and scenario["sites"][0]["landing_utc"] == "2027-01-10T00:00:00.000Z"
+    assert scenario["uncertainty"] == {"horizon_error_deg": 0.05, "landing_ellipse": {"semi_major_m": 100.0, "semi_minor_m": 50.0, "azimuth_deg": 30.0, "points": 13}}
+    assert scenario["requirements"][0]["id"] == "stay" and scenario["data"]["dem_set_id"] == "any"

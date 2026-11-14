@@ -1,23 +1,23 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.1"
+    "version": "0.6"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T10:22:41.491Z",
+  "generated_utc": "2026-11-14T12:58:26.824Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
       "kind": "direction_table",
-      "package_id": "dirtab-a0525ccdcf377912",
-      "path": "direction_table/dirtab-a0525ccdcf377912",
+      "package_id": "dirtab-d96af27ea88fdf07",
+      "path": "direction_table/dirtab-d96af27ea88fdf07",
       "synthetic": true,
       "status": "ok"
     },
     {
       "kind": "site",
-      "package_id": "site-a02ee316b65e2af1",
-      "path": "site/synthetic-sample-site/site-a02ee316b65e2af1",
+      "package_id": "site-881f258af3f098e0",
+      "path": "site/synthetic-sample-site/site-881f258af3f098e0",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",
@@ -25,6 +25,29 @@
       "lat_deg": -88.0,
       "lon_deg": 45.0,
       "has_timeline": true
+    },
+    {
+      "kind": "site",
+      "package_id": "site-f29be876a9e6f92f",
+      "path": "site/synthetic-sample-site-b/site-f29be876a9e6f92f",
+      "synthetic": true,
+      "status": "ok",
+      "site_id": "synthetic-sample-site-b",
+      "name": "SYNTHETIC SAMPLE SITE B (not a real place)",
+      "lat_deg": -87.5,
+      "lon_deg": 60.0,
+      "has_timeline": true
+    },
+    {
+      "kind": "site_pairs",
+      "package_id": "pairs-a2b391a13b5d1fe8",
+      "path": "site_pairs/pairs-a2b391a13b5d1fe8",
+      "synthetic": true,
+      "status": "ok",
+      "site_ids": [
+        "synthetic-sample-site",
+        "synthetic-sample-site-b"
+      ]
     }
   ]
 }
