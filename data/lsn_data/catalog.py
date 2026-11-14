@@ -165,7 +165,37 @@ PRODUCTS: dict[str, Product] = {
 DEFAULT_SET = ("_docs", "LDEM_80S_20M", "LDEM_60S_60M", "LDEM_16")
 
 
+MIT_SLDEM_ROOT = "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG"
+
+
+def _sldem_tile(name: str) -> Product:
+    low = name.lower()
+    base = "data/sldem2015/tiles/float_img"
+    return Product(
+        name,
+        "SLDEM2015 tile: LOLA altimetry co-registered with SELENE (Kaguya) Terrain Camera stereo, 60S-60N, simple cylindrical, float km",
+        (
+            FileSpec("data", f"{low}.img", f"{base}/{low}.img", f"{MIT_SLDEM_ROOT}/{name}.IMG"),
+            FileSpec("label", f"{low}.lbl", f"{base}/{low}.lbl", f"{MIT_SLDEM_ROOT}/{name}.LBL"),
+            FileSpec("label_xml", f"{low}.xml", f"{base}/{low}.xml", None),
+        ),
+    )
+
+
+SLDEM_256_TILES = tuple(
+    f"SLDEM2015_256_{lat}_{lon}_FLOAT" for lat in ("60S_0S", "0N_60N") for lon in ("000_120", "120_240", "240_360")
+)
+SLDEM_512_TILES = tuple(
+    f"SLDEM2015_512_{lat}_{lon:03d}_{lon + 45:03d}_FLOAT"
+    for lat in ("60S_30S", "30S_00S", "00N_30N", "30N_60N")
+    for lon in range(0, 360, 45)
+)
+for _t in SLDEM_256_TILES + SLDEM_512_TILES:
+    PRODUCTS[_t] = _sldem_tile(_t)
+
 # Cylindrical mosaics of the whole-Moon terrain, as (mosaic id, tile product ids); used when all tiles are present.
 MOON_CYLINDRICAL: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("SLDEM2015_512", SLDEM_512_TILES),
+    ("SLDEM2015_256", SLDEM_256_TILES),
     ("LDEM_128", ("LDEM_128",)),
 )
