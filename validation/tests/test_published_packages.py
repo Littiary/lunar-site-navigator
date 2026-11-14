@@ -175,7 +175,10 @@ def test_every_site_package_holds_the_common_fields():
         # Terrain patches for drawing (contract 0.7): the default near, mid and far patches, each a square grid around the site.
         terrain = manifest["terrain"]
         assert terrain["use"] == "drawing" and terrain["method"] == "terrain.patch" and "terrain.patch" in manifest["methods"]
-        assert [patch["id"] for patch in terrain["patches"]] == ["near", "mid", "far"] == [patch["id"] for patch in manifest["request"]["terrain_patches"]]
+        # Patches are identified by their id, not by their position; a project site may also hold the patch 'site'.
+        ids = [patch["id"] for patch in terrain["patches"]]
+        assert ids == [patch["id"] for patch in manifest["request"]["terrain_patches"]] and len(set(ids)) == len(ids), site_id
+        assert {"near", "mid", "far"} <= set(ids) and set(ids) - {"near", "mid", "far"} <= ({"site"} if site_id in PROJECT_SITES else set()), site_id
         for patch in terrain["patches"]:
             assert patch["up_m"]["shape"] == [patch["count_north"], patch["count_east"]], (site_id, patch["id"])
             assert patch["count_east"] == patch["count_north"] == round(2 * patch["half_width_m"] / patch["spacing_m"]) + 1
@@ -295,6 +298,7 @@ def test_site_pairs_package_compares_the_project_sites_only():
 def test_readme_says_for_every_site_what_served_it_and_what_it_carries():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert f"version {CONTRACT_VERSION}" in readme
+    assert "A viewer selects a patch by its `id`, not by its position in the list" in readme
     rows = {}
     for line in readme.splitlines():
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]

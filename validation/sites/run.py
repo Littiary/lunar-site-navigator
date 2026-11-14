@@ -20,6 +20,7 @@ Usage (from the repository root, with the terrain under LSN_DATA_ROOT)::
 
     python -m validation.sites.run data/sites/sites.json --write-scenario
     python -m validation.sites.run data/sites/sites.json --publish
+    python -m validation.sites.run data/sites/sites.json --readme-only
     python -m validation.sites.run data/sites/sites.json [--out FOLDER] [--start UTC] [--end UTC] [--only project|curated] [--no-before]
 
 ``--publish`` replaces the published packages in ``packages/`` at the repository root
@@ -53,6 +54,7 @@ from lsncore.dem import open_lola, open_moon
 from lsncore.ephem import kernels
 from lsncore.pipeline import run_scenario
 from lsncore.scenario import height_error_presets, requirement_presets, site_labels
+from lsncore.terrain_patch import DEFAULT_PATCHES
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
@@ -72,6 +74,9 @@ CURATED_SCENARIO_ID = "curated-sites"
 LANDING_ELLIPSE = {"semi_major_m": 100.0, "semi_minor_m": 100.0, "azimuth_deg": 0.0, "points": 13}
 PLANNED_LANDING_UTC = "2027-01-10T00:00:00.000Z"
 PROJECT_HEIGHTS_M = [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]
+# Terrain patches of the project sites: the three default patches and a fourth one, 1 km wide
+# at 5 m, which with the near field is read from the 5 m site raster itself.
+PROJECT_PATCHES = [dict(spec) for spec in DEFAULT_PATCHES] + [{"id": "site", "half_width_m": 500.0, "spacing_m": 5.0}]
 CURATED_HEIGHTS_M = [0.0, 2.0, 10.0]
 NEAR_TERRAIN_M = 1000.0
 PACKAGE_FOLDERS = ("direction_table", "site", "site_pairs")
@@ -128,6 +133,7 @@ def build_scenario(records: list, labels: dict, start_utc: str, end_utc: str) ->
         "data": {"dem_set_id": "any", "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
         "requirements": list(requirement_presets().values()),
         "uncertainty": {"dem_height_error_model": stated_height_error_model(), "landing_ellipse": dict(LANDING_ELLIPSE)},
+        "terrain_patches": [dict(spec) for spec in PROJECT_PATCHES],
     }
     validate_document(scenario)
     return scenario
@@ -842,7 +848,7 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         "relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m) and calls the 118 m product coarse.",
         "- **Uncertainty band** and **landing-circle survey** are in the project sites only. The height-error model was measured on the polar products; it is not applied to sites served by the 118 m product, "
         "where unresolved relief, not height error, limits the horizon.",
-        "- The terrain patches are for drawing only and are read at 20 m and coarser, also where the near field is on: near a project site the drawn ground and the 5 m surface behind the numbers differ by about a metre.",
+        "- The terrain patches are for drawing only. **A viewer selects a patch by its `id`, not by its position in the list**: " + _patch_sentence(sites),
         "- The direction table holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
         "- **Kind** gives the labels `programme` and `category` that every site package and its entry in `index.json` carry, as the data stream states them in `data/sites/curated_sites.json`; a site picker can group by them.",
         "",
@@ -894,6 +900,22 @@ def _file_bytes(path: Path) -> int:
     return path.stat().st_size
 
 
+def _patch_sentence(sites: list) -> str:
+    """Which terrain patches the published site packages hold, by id."""
+    ids = {}
+    for manifest in sites:
+        ids.setdefault(tuple(patch["id"] for patch in manifest["terrain"]["patches"]), []).append(manifest["site"]["name"])
+    described = []
+    for patch_ids, names in sorted(ids.items(), key=lambda item: -len(item[1])):
+        who = "every site" if len(ids) == 1 else (f"the {len(names)} other sites" if len(names) > 3 else ", ".join(names))
+        described.append(f"{who}: " + ", ".join(f"`{name}`" for name in patch_ids))
+    text = "in this set " + "; ".join(described) + ". "
+    if not any("site" in patch_ids for patch_ids in ids):
+        text += "From the next publish on the project sites also hold a patch `site` (1 km wide at 5 m spacing, read from the 5 m site raster). The list is written finest first, so `site` will stand first, where `near` stands now: a viewer that takes patches by position would then draw the wrong one. "
+    text += "With the near field on, a patch is read from the 5 m site raster where the raster has a level of the patch spacing, otherwise from the 20 m product and coarser."
+    return text
+
+
 def _folder_bytes(folder: Path) -> int:
     return sum(_file_bytes(f) for f in folder.rglob("*") if f.is_file()) if folder.exists() else 0
 
@@ -904,6 +926,7 @@ def main() -> None:
     parser.add_argument("--curated", default=str(CURATED_SITES), help="curated site list of the data stream")
     parser.add_argument("--publish", action="store_true", help="replace the published packages in packages/ and write their README")
     parser.add_argument("--write-scenario", action="store_true", help="write the two scenario files of the published set and stop")
+    parser.add_argument("--readme-only", action="store_true", help="write packages/README.md again from the published packages, the committed scenario files and the stored summary; nothing is computed")
     parser.add_argument("--out", default=str(REPO / "build" / "packages" / "sites"))
     parser.add_argument("--jobs", type=int, default=0, help="processes the run may use (default: half the processors, at most 8); the packages do not depend on it")
     parser.add_argument("--only", choices=["project", "curated"], help="compute one of the two sets only (not with --publish)")
@@ -914,6 +937,20 @@ def main() -> None:
     if args.publish and (args.only or args.no_before):
         parser.error("--publish computes both sets and the comparison without the near field")
     jobs = args.jobs if args.jobs > 0 else max(1, min((os.cpu_count() or 2) // 2, 8))
+    sites_arg = Path(args.sites_file).as_posix()
+    if args.readme_only:
+        # The README is a product of this command, like the packages; this writes it again from
+        # what is published, with the scenarios that produced the packages, not the ones the
+        # code would build today.
+        stored = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_SCENARIO_ID: "scenario_curated.json"}
+        scenarios = {scenario_id: json.loads((HERE / name).read_text(encoding="utf-8")) for scenario_id, name in stored.items()}
+        summary = json.loads((HERE / "results" / "site_summary.json").read_text(encoding="utf-8"))
+        order = {site["site_id"]: k for k, site in enumerate(summary["all_sites"])}
+        manifests = {path.parent: json.loads(path.read_text(encoding="utf-8")) for path in PUBLISHED.rglob("manifest.json")}
+        rank = lambda item: ({"direction_table": 0, "site": 1, "site_pairs": 2}[item[1]["kind"]], order.get(item[1].get("site", {}).get("site_id"), 0))
+        write_readme(PUBLISHED, [path for path, _ in sorted(manifests.items(), key=rank)], scenarios, summary, f"python -m validation.sites.run {sites_arg} --publish")
+        print((PUBLISHED / "README.md").relative_to(REPO).as_posix())
+        return
 
     project_records = json.loads(Path(args.sites_file).read_text(encoding="utf-8"))["sites"]
     curated_records = json.loads(Path(args.curated).read_text(encoding="utf-8"))["sites"]
@@ -1030,7 +1067,6 @@ def main() -> None:
             shutil.copytree(out / name, PUBLISHED / name)
         shutil.copy2(out / "index.json", PUBLISHED / "index.json")
         published = [PUBLISHED / path.relative_to(out) for path in written]
-        sites_arg = Path(args.sites_file).as_posix()
         write_readme(PUBLISHED, published, scenarios, summary, f"python -m validation.sites.run {sites_arg} --publish")
         out = PUBLISHED
     print(f"{len(written)} packages ({len(site_dirs)} sites), contract {summary['contract_version']}, {summary['size']['total_bytes'] / 1e6:.1f} MB, in {elapsed:.1f} s with {jobs} jobs -> {out}")
