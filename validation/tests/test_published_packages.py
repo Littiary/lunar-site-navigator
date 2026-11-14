@@ -22,6 +22,9 @@ ROOT = REPO / "packages"
 PROJECT_SITES = ("shackleton-rim-crest", "de-gerlache-rim-crest", "malapert-massif-summit")
 PROJECT_HEIGHTS_M = [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]
 OTHER_HEIGHTS_M = [0.0, 2.0, 10.0]
+# The LOLA polar products: the data stream measured the terrain height error on them, so a site
+# they serve can carry the uncertainty band and terrain_quality.
+POLAR_PRODUCTS = ("LDEM_80S_20M", "LDEM_60S_60M", "LDEM_80N_20M", "LDEM_60N_60M")
 
 
 def _curated() -> dict:
@@ -228,6 +231,12 @@ def test_project_sites_carry_every_option_and_the_near_field():
 
         assert manifest["warnings"] == [], (site_id, manifest["warnings"])
 
+        # The fourth terrain patch, 1 km wide at 5 m, read from the 5 m site raster itself; identified by its id.
+        (site_patch,) = [patch for patch in manifest["terrain"]["patches"] if patch["id"] == "site"]
+        assert (site_patch["half_width_m"], site_patch["spacing_m"], site_patch["count_east"], site_patch["count_north"]) == (500.0, 5.0, 201, 201), site_id
+        assert [(source["product_id"], source["level"], source["pixel_m"]) for source in site_patch["sources"]] == [(rasters[0]["product_id"], 0, 5.0)], site_id
+        assert site_patch["up_m"]["nan_count"] == 0
+
         # The planned landing and its slip report.
         assert request["landing_utc"] is not None
         for opportunity in timeline["opportunities"]:
@@ -236,23 +245,46 @@ def test_project_sites_carry_every_option_and_the_near_field():
 
 def test_other_sites_carry_the_stated_reduced_set_and_the_resolution_warning():
     sites = _sites()
+    model = height_error_presets()
     others = [site_id for site_id in sites if site_id not in PROJECT_SITES]
     assert len(others) == 17
-    classes = set()
+    classes, with_band, without_band = set(), [], []
     for site_id in others:
         manifest = sites[site_id]
         horizon, timeline, request = manifest["horizon"], manifest["timeline"], manifest["request"]["timeline"]
+        source = horizon["terrain_source"]
         assert horizon["observer_heights_m"] == OTHER_HEIGHTS_M, site_id
         assert horizon["observer_heights_m"][horizon["default_height_index"]] == 2.0
-        # No near field, no stated uncertainty, no planned landing.
+        # No near field, no landing-circle survey, no planned landing.
         assert not any(layer["product_id"].startswith("LOLA5MPP") for layer in manifest["inputs"]["dem"]["layers"]), site_id
-        assert "uncertainty" not in timeline and not request.get("uncertainty") and not request.get("landing_utc"), site_id
+        assert not request.get("landing_utc"), site_id
         assert all("ellipse_visible_share" not in timeline["series"][body] for body in ("SUN", "EARTH"))
         assert all(opportunity["planned_landing"] is None for opportunity in timeline["opportunities"])
+        assert len(timeline["events"]) > 0
+
+        if source["at_site"]["product_id"] in POLAR_PRODUCTS:
+            # Served by a LOLA polar product: the band of the sourced height-error model, and for every
+            # event its range and what the terrain behind it is worth.
+            with_band.append(site_id)
+            assert set(request["uncertainty"]) == {"dem_height_error_model"}, site_id
+            assert set(timeline["uncertainty"]) == {"horizon_error"}, site_id
+            assert timeline["uncertainty"]["horizon_error"]["dem_height_error_model"]["id"] == model["default"]
+            layer_ids = {layer["product_id"] for layer in manifest["inputs"]["dem"]["layers"]}
+            for event in timeline["events"]:
+                assert event["earliest_et_s"] <= event["et_s"] <= event["latest_et_s"], site_id
+                quality = event["terrain_quality"]
+                assert quality["product_id"] in layer_ids and quality["limiting_pixel"] in ("constrained", "interpolated", "unknown"), site_id
+                assert quality["height_error_m"] is None or quality["height_error_m"] > 0.0
+        else:
+            # Served by a product for which no height error was measured: no band and no terrain_quality,
+            # rather than one from a number nobody measured.
+            without_band.append(site_id)
+            assert "uncertainty" not in timeline and not request.get("uncertainty"), site_id
+            assert not any("terrain_quality" in event or "earliest_et_s" in event for event in timeline["events"]), site_id
+
         # A site that is not served by a fine product says so in a warning that names the product and the pixel;
         # there is no other warning in a published package.
         assert all("resolution class" in warning for warning in manifest["warnings"]), (site_id, manifest["warnings"])
-        source = horizon["terrain_source"]
         classes.add(source["resolution_class"])
         warnings = [warning for warning in manifest["warnings"] if "resolution class" in warning]
         if source["resolution_class"] == "fine":
@@ -262,6 +294,13 @@ def test_other_sites_carry_the_stated_reduced_set_and_the_resolution_warning():
         if source["at_site"]["pixel_m"] > 100.0:
             assert source["resolution_class"] != "fine" and warnings, site_id
     assert "fine" in classes and len(classes) >= 2
+    assert sorted(with_band) == ["artemis3-region-mons-mouton-representative", "chandrayaan-3", "im-1-odysseus", "im-2-athena"]
+    assert len(without_band) == 13
+    # The README says which sites have no terrain_quality and why.
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert f"The other {len(without_band)} (" in readme and "No band and no `terrain_quality` is written for them" in readme
+    for site_id in without_band:
+        assert sites[site_id]["site"]["name"] in readme.split(f"The other {len(without_band)} (", 1)[1].split(")", 1)[0], site_id
 
 
 def test_direction_table_holds_the_orientation_of_the_earth():

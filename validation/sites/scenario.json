@@ -165,5 +165,27 @@
       "azimuth_deg": 0.0,
       "points": 13
     }
-  }
+  },
+  "terrain_patches": [
+    {
+      "id": "near",
+      "half_width_m": 2000.0,
+      "spacing_m": 20.0
+    },
+    {
+      "id": "mid",
+      "half_width_m": 8000.0,
+      "spacing_m": 80.0
+    },
+    {
+      "id": "far",
+      "half_width_m": 32000.0,
+      "spacing_m": 320.0
+    },
+    {
+      "id": "site",
+      "half_width_m": 500.0,
+      "spacing_m": 5.0
+    }
+  ]
 }
