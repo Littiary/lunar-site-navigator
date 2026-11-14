@@ -164,3 +164,17 @@ def test_moon_sample_quality_unknown_on_cylindrical(moon):
     q = moon.sample_quality(np.array([45.0, 90.0]), np.array([-30.0, -89.8]))
     assert list(q["product_id"]) == ["SYN_CYL", "SYNTH_S90_100M"]
     assert list(q["returns_in_pixel"]) == [-1, -1] and np.isnan(q["height_rms_error_m"]).all()
+
+
+def test_mosaic_covers_fast_path_equals_per_tile_rule(tiles):
+    m = CylMosaic(tiles)
+    rng = np.random.default_rng(3)
+    lon = rng.uniform(-400, 400, 20000)
+    lat = rng.uniform(-90, 90, 20000)
+    lat[:50] = [0.0, 60.0, -60.0, 60.0 + 1e-13, -60.0 - 1e-13] * 10
+    slow = np.zeros(lon.shape, dtype=bool)
+    for t in m.tiles:
+        slow |= t.grid0.covers(lon, lat)
+    assert np.array_equal(m.covers(lon, lat), slow)
+    m2 = CylMosaic(tiles[:1])  # a partial band: per-tile rule only
+    assert np.array_equal(m2.covers(lon, lat), tiles[0].grid0.covers(lon, lat))
