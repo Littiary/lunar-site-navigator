@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T14:36:58Z",
+ "generated_utc": "2026-11-14T14:59:05Z",
  "criterion": "data/checkpoints/thresholds_moon.json",
  "coverage": [
   {
@@ -39,7 +39,7 @@
   {
    "missing_products": [
     "SLDEM2015_512",
-    "SLDEM2015_256"
+    "SLDEM2015_256 (4 of 6 tiles)"
    ]
   }
  ],
@@ -110,11 +110,11 @@
    "raw/lola_rdr/LOLARDR_110581419/lolardr_110581419.lbl"
   ],
   "problems": [],
-  "cross_check_failed": [],
+  "cross_check_failed": [
+   "raw/lola/LDEM_128/ldem_128.img"
+  ],
   "data_files_without_matching_cross_check": [
-   "raw/lola/LDEM_128/ldem_128.img",
-   "raw/lola/LDEM_60N_60M/ldem_60n_60m.img",
-   "raw/lola/LDEM_80N_20M/ldem_80n_20m.img"
+   "raw/lola/LDEM_128/ldem_128.img"
   ],
   "passed": false
  },

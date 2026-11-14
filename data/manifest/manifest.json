@@ -33,7 +33,15 @@
       "hashed_utc": "2026-11-14T14:43:07Z",
       "http_last_modified": "Tue, 30 May 2017 16:56:29 GMT",
       "http_etag": "\"592da43d-37159000\"",
-      "cross_checks": []
+      "cross_checks": [
+        {
+          "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/img/ldec_80s_20m.img",
+          "sha256": "5601290a9c1e08ad2cb5d1632b488cb1b6b2920be82166b9d4af0b1bc8bcc6bb",
+          "size_bytes": 924160000,
+          "matches": true,
+          "checked_utc": "2026-11-14T14:58:50Z"
+        }
+      ]
     },
     "raw/lola/LDEC_80S_20M/ldec_80s_20m.lbl": {
       "path": "raw/lola/LDEC_80S_20M/ldec_80s_20m.lbl",
@@ -621,6 +629,24 @@
       "hashed_utc": "2026-11-14T14:38:19Z",
       "http_last_modified": "Wed, 22 Feb 2023 19:23:48 GMT",
       "http_etag": "\"c137330f346d91:0\"",
+      "cross_checks": []
+    },
+    "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img": {
+      "path": "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img",
+      "role": "data",
+      "product_id": "SLDEM2015_256_60S_0S_000_120_FLOAT",
+      "product_version": null,
+      "data_set_id": null,
+      "source_url": "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_256_60S_0S_000_120_FLOAT.IMG",
+      "equivalent_urls": [
+        "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/sldem2015_256_60s_0s_000_120_float.img"
+      ],
+      "size_bytes": 1887436800,
+      "sha256": "d7e14a51e8902d93b6909700592be7a5a8d097e7d9c69c457863467289c29383",
+      "retrieved_utc": "2026-11-14T14:58:56Z",
+      "hashed_utc": "2026-11-14T14:58:56Z",
+      "http_last_modified": "Wed, 26 Aug 2015 15:11:22 GMT",
+      "http_etag": "\"55ddd71a-70800000\"",
       "cross_checks": []
     },
     "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.lbl": {
@@ -2724,5 +2750,5 @@
       "cross_checks": []
     }
   },
-  "generated_utc": "2026-11-14T14:56:54Z"
+  "generated_utc": "2026-11-14T14:58:56Z"
 }
