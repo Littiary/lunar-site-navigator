@@ -24,6 +24,20 @@ LDEC_URLS = [
 ]
 
 
+WHAT_IT_SHOWS = (
+    "Both products are made from the same LOLA laser returns. The 5 m product re-adjusts the tracks (orbit errors "
+    "reduced more than tenfold, page of PGDA product 78) and grids them at 5 m with its own interpolation; the 20 m "
+    "product uses the original geolocation and GMT gridding at 20 m. CAN show: (1) differences in georeferencing "
+    "between the two (the translation fit), (2) how much the 20 m gridding and interpolation depart from the better "
+    "controlled 5 m surface, in particular at 20 m pixels without returns where the 5 m pixel has returns (class "
+    "20m_interpolated__5m_constrained: the closest we have to a measurement of the 20 m interpolation error), (3) "
+    "what the 20 m product cannot resolve below 20 m. CANNOT show: errors common to both (LOLA radial error, residual "
+    "orbit error after adjustment, returns edited out of both), and in pixels interpolated in both products it "
+    "compares two interpolations of the same returns, not a surface with the truth. The 5 m RMS error maps are the "
+    "producers' model estimate (fractal clone ensemble, Barker et al. 2021), not a measurement against independent data."
+)
+
+
 def thresholds() -> dict:
     return json.loads((repo_data_dir() / "checkpoints" / "thresholds_near_field.json").read_text(encoding="utf-8"))
 
@@ -83,8 +97,12 @@ def compare_site(d20: PolarDEM, d5: PolarDEM, count5: np.ndarray, err5: np.ndarr
     r20 = np.floor((g20.y_ul_m - y) / g20.pixel_m).astype(int)
     c20 = np.floor((x - g20.x_ul_m) / g20.pixel_m).astype(int)
     x0, y0, x1, y1 = g5.x_ul_m, g5.y_ul_m, g5.x_lr_m, g5.y_lr_m
-    ldec, rr0, cc0, n_checked = ldec20_window(d20, x0, y0, x1, y1)
-    n20 = ldec[r20 - rr0, c20 - cc0]
+    if getattr(d20, "_q_count", None) is not None:
+        n20 = np.asarray(d20._q_count[r20, c20]).astype(int)
+        n_checked = "full LDEC_80S_20M file (manifest SHA-256)"
+    else:
+        ldec, rr0, cc0, n_checked = ldec20_window(d20, x0, y0, x1, y1)
+        n20 = ldec[r20 - rr0, c20 - cc0]
     # 5 m pixels of that 20 m pixel: 20 m pixel edges are multiples of 20 m from the 20 m corner (aligned with 5 m)
     xe = g20.x_ul_m + c20 * g20.pixel_m
     ye = g20.y_ul_m - r20 * g20.pixel_m
@@ -105,12 +123,35 @@ def compare_site(d20: PolarDEM, d5: PolarDEM, count5: np.ndarray, err5: np.ndarr
     split = {}
     for name, m in classes.items():
         split[name] = {"all": _q(d[m]), **{f"slope_{lo}_{hi}_deg": _q(d[m & (slope >= lo) & (slope < hi)]) for lo, hi in SLOPE_CLASSES}}
+    # post hoc (requested after the criterion was written): 2 x 2 by the status of each product's own pixel
+    c5 = count5[R, C] > 0
+    both = {
+        "20m_constrained__5m_constrained": ok & (n20 >= 1) & c5,
+        "20m_constrained__5m_interpolated": ok & (n20 >= 1) & ~c5,
+        "20m_interpolated__5m_constrained": ok & (n20 == 0) & c5,
+        "20m_interpolated__5m_interpolated": ok & (n20 == 0) & ~c5,
+    }
+    split_pixels = {k: {"all": _q(d[m]), **{f"slope_{lo}_{hi}_deg": _q(d[m & (slope >= lo) & (slope < hi)]) for lo, hi in SLOPE_CLASSES}}
+                    for k, m in both.items()}
     # 5 m product's own RMS error within 1 km of the site record
     sx, sy = site_xy
     rr, cc = np.mgrid[0 : g5.n_rows : 2, 0 : g5.n_cols : 2]
     ex, ey = g5.rowcol_to_xy(rr, cc)
-    near = np.hypot(ex - sx, ey - sy) <= 1000.0
+    dist = np.hypot(ex - sx, ey - sy)
+    near = dist <= 1000.0
     e_near = err5[rr[near], cc[near]]
+    err_rings = {}
+    for rad in (500.0, 1000.0, 2000.0):
+        m = dist <= rad
+        e = np.asarray(err5[rr[m], cc[m]], dtype=float)
+        k = np.asarray(count5[rr[m], cc[m]]) > 0
+        err_rings[f"within_{int(rad)}_m"] = {
+            "pixels": int(m.sum()), "fraction_constrained": float(k.mean()),
+            "median_m": float(np.nanmedian(e)), "p95_m": float(np.nanpercentile(e, 95)),
+            "median_m_constrained": float(np.nanmedian(e[k])) if k.any() else None,
+            "median_m_interpolated": float(np.nanmedian(e[~k])) if (~k).any() else None,
+            "inside_extent": bool(rad <= min(sx - x0, x1 - sx, y0 - sy, sy - y1)),
+        }
     crit2 = th["checkpoint_2_georeferencing"]
     crit3 = th["checkpoint_3_values"]["pass_if"]
     checks = {
@@ -136,6 +177,8 @@ def compare_site(d20: PolarDEM, d5: PolarDEM, count5: np.ndarray, err5: np.ndarr
         "fraction_of_5m_pixels_with_returns": float(np.mean(count5 > 0)),
         "ldec20_rows_compared_between_mirrors": n_checked,
         "split_by_counts": split,
+        "split_by_each_products_pixel_post_hoc": split_pixels,
+        "rms_error_map_near_site": err_rings,
         "own_rms_error_within_1km_of_site": {"median_m": float(np.nanmedian(e_near)), "p95_m": float(np.nanpercentile(e_near, 95)),
                                              "two_sigma_m": 2.0 * float(np.nanmedian(e_near))},
     }
@@ -176,8 +219,12 @@ def run(root=None) -> dict:
     sites = {s["site_id"]: (s["polar_stereographic_x_m"], s["polar_stereographic_y_m"])
              for s in json.loads((repo_data_dir() / "sites" / "sites.json").read_text(encoding="utf-8"))["sites"]}
     which = {"LOLA5MPP_SITE04": "shackleton_rim_crest", "LOLA5MPP_SITE11": "de_gerlache_rim_crest", "LOLA5MPP_SITE23": "malapert_massif_summit"}
+    from . import attach_counts
+
+    attach_counts(d20, root)
     rep = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_near_field.json",
-           "checkpoint_1": checkpoint_1(root), "sites": {}}
+           "checkpoint_1": checkpoint_1(root), "sites": {},
+           "what_this_can_and_cannot_show": WHAT_IT_SHOWS}
     dems = site_dems(root)
     t = Terrain([d20, d60] + dems)
     for d5 in dems:
