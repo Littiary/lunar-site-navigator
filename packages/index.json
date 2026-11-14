@@ -1,0 +1,66 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.9"
+  },
+  "kind": "index",
+  "generated_utc": "2026-11-14T15:36:07.758Z",
+  "scenario_id": "south-polar-sites",
+  "packages": [
+    {
+      "kind": "direction_table",
+      "package_id": "dirtab-fbc51d64e42ab803",
+      "path": "direction_table/dirtab-fbc51d64e42ab803",
+      "synthetic": false,
+      "status": "ok"
+    },
+    {
+      "kind": "site",
+      "package_id": "site-f5debe0fd2f3cdf7",
+      "path": "site/de-gerlache-rim-crest/site-f5debe0fd2f3cdf7",
+      "synthetic": false,
+      "status": "ok",
+      "site_id": "de-gerlache-rim-crest",
+      "name": "de Gerlache crater rim crest",
+      "lat_deg": -88.6641,
+      "lon_deg": -68.41044,
+      "has_timeline": true
+    },
+    {
+      "kind": "site",
+      "package_id": "site-29ad241e86f8307d",
+      "path": "site/malapert-massif-summit/site-29ad241e86f8307d",
+      "synthetic": false,
+      "status": "ok",
+      "site_id": "malapert-massif-summit",
+      "name": "Mons Malapert (Malapert massif) summit",
+      "lat_deg": -85.98795,
+      "lon_deg": 2.05767,
+      "has_timeline": true
+    },
+    {
+      "kind": "site",
+      "package_id": "site-a4d3f54375701349",
+      "path": "site/shackleton-rim-crest/site-a4d3f54375701349",
+      "synthetic": false,
+      "status": "ok",
+      "site_id": "shackleton-rim-crest",
+      "name": "Shackleton crater rim crest",
+      "lat_deg": -89.80531,
+      "lon_deg": -154.23109,
+      "has_timeline": true
+    },
+    {
+      "kind": "site_pairs",
+      "package_id": "pairs-fa4b9bc4663c9738",
+      "path": "site_pairs/pairs-fa4b9bc4663c9738",
+      "synthetic": false,
+      "status": "ok",
+      "site_ids": [
+        "shackleton-rim-crest",
+        "de-gerlache-rim-crest",
+        "malapert-massif-summit"
+      ]
+    }
+  ]
+}
