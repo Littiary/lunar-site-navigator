@@ -56,26 +56,53 @@ namespace LsnHudText
 	inline const TCHAR* SyntheticMarker() { return TEXT("SYNTHETIC DATA"); }
 }
 
+/** How a button is drawn: one of the three main actions, a button of the grouped bar, or a control of the right view. */
+enum class ELsnButtonStyle : uint8
+{
+	Main,
+	Bar,
+	RightView,
+};
+
 /** A button on screen: a named action of the observer (ALsnObserverPawn::DoAction). */
 struct FLsnButton
 {
 	FName Action;
 	FString Label;
 	FBox2D Box;
+	ELsnButtonStyle Style = ELsnButtonStyle::Bar;
+	/** The labelled group of the bar the button belongs to. */
+	FString Group;
+};
+
+/** The label of a group of the bar, where it is drawn. */
+struct FLsnButtonGroupLabel
+{
+	FString Text;
+	FVector2D Position = FVector2D::ZeroVector;
 };
 
 /**
- * The buttons along the bottom of the left (or only) view, in pixels of that view. Shared by
- * the HUD (drawing) and the pawn (clicking). Two rows on a wide view, four on a narrow one.
+ * The buttons of the planner, in pixels of the whole window. Shared by the HUDs (drawing:
+ * each view draws the buttons that lie in it) and the pawn (clicking).
+ *
+ * Three main actions under the header on the left; a bar of two rows along the bottom, in
+ * labelled groups (time, observer, site, plan, view, info); side by side, the right view's
+ * own control in its header.
  */
 struct LUNARSITENAVIGATOR_API FLsnToolbar
 {
 	TArray<FLsnButton> Buttons;
-	/** Upper edge of the buttons. */
+	TArray<FLsnButtonGroupLabel> GroupLabels;
+	/** Upper edge of the bar, with its group labels. */
 	float Top = 0.0f;
+	/** Lower edge of the header (site name, time, state chips). */
+	float HeaderBottom = 0.0f;
 
-	static FLsnToolbar Make(float SizeX, float SizeY);
-	/** The action of the button under a screen point; none outside the buttons. */
+	static FLsnToolbar Make(float WindowSizeX, float SizeY, bool bComparing);
+	/** Upper edge of the bar for a window height; the time strips are laid out above it. */
+	static float BarTop(float SizeY);
+	/** The action of the button under a point of the window; none outside the buttons. */
 	FName ActionAt(const FVector2D& Point) const;
 	/** Size of the HUD text for a view of that size (1 at 1280 x 720). */
 	static float TextScale(float SizeX, float SizeY);
@@ -114,7 +141,9 @@ private:
 	float DrawUncertainty(const ALsnSiteScene& Scene, float X, float Y, float Width, float Scale);
 	float DrawTrade(const ALsnSiteScene& Scene, const class ALsnViewGameMode& GameMode, float X, float Y, float Width, float Scale);
 	void DrawPanorama(const FLsnPanorama& Panorama, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, float Scale);
-	void DrawToolbar(const FLsnToolbar& Toolbar, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, const class ALsnViewGameMode* GameMode, float Scale);
+	void DrawToolbar(const FLsnToolbar& Toolbar, float ViewX0, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, const class ALsnViewGameMode* GameMode, float Scale);
+	/** Draws text made smaller where it is wider than MaxWidth; returns the width drawn. */
+	float DrawFit(const FString& Text, const FLinearColor& Color, float X, float Y, float MaxWidth, float TextScale);
 	void DrawHelp(float SizeX, float SizeY, float Scale);
 	void DrawStrip(const FBox2D& Box, const FLsnSitePackage& Package, int32 HeightIndex, double FromPosition, double ToPosition, double CurrentPosition, float Scale);
 };

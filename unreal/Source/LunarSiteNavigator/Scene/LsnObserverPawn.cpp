@@ -55,9 +55,9 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 {
 	static const TArray<FName> Actions = {
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
-		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
+		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("next_sunset"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
 		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("next_requirement"),
-		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("help"), TEXT("quit"),
+		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
 }
@@ -165,6 +165,24 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("day_forward")) { StepSamples(Scene, SamplesPerDay); }
 	else if (Action == TEXT("sun_event_back")) { JumpToEvent(Scene, TEXT("SUN"), -1); }
 	else if (Action == TEXT("sun_event_forward")) { JumpToEvent(Scene, TEXT("SUN"), 1); }
+	else if (Action == TEXT("next_sunset"))
+	{
+		// The package's next event of type "set" of the Sun for this observer height; nothing is found here.
+		const double NowEtS = Package.EtOfPosition(Scene->GetTimePosition());
+		const FLsnEvent* Next = nullptr;
+		for (const FLsnEvent& Event : Package.Events)
+		{
+			if (Event.Body == TEXT("SUN") && Event.Type == TEXT("set") && Event.HeightIndex == Scene->GetHeightIndex() && Event.EtS > NowEtS && (!Next || Event.EtS < Next->EtS))
+			{
+				Next = &Event;
+			}
+		}
+		if (Next && Package.Time.StepS > 0.0)
+		{
+			bPlaying = false;
+			Scene->SetTimePosition(FMath::Clamp((Next->EtS - Package.Time.StartEtS) / Package.Time.StepS, 0.0, static_cast<double>(FMath::Max(Package.Time.Count - 1, 0))));
+		}
+	}
 	else if (Action == TEXT("earth_event_back")) { JumpToEvent(Scene, TEXT("EARTH"), -1); }
 	else if (Action == TEXT("earth_event_forward")) { JumpToEvent(Scene, TEXT("EARTH"), 1); }
 	else if (Action == TEXT("first_sample")) { bPlaying = false; Scene->SetTimeIndex(0); }
@@ -204,6 +222,7 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("height_next")) { Scene->SetHeightIndex((Scene->GetHeightIndex() + 1) % FMath::Max(Package.NumHeights(), 1)); }
 	else if (Action == TEXT("scale_objects")) { Scene->SetScaleObjectsVisible(!Scene->AreScaleObjectsVisible()); }
 	else if (Action == TEXT("quality")) { if (GameMode) { GameMode->SetLowQuality(!GameMode->IsLowQuality()); } }
+	else if (Action == TEXT("details")) { bShowDetails = !bShowDetails; }
 	else if (Action == TEXT("help")) { bShowHelp = !bShowHelp; }
 	else if (Action == TEXT("quit"))
 	{
@@ -375,6 +394,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		int32 SizeX = 0, SizeY = 0;
 		float CursorX = 0.0f, CursorY = 0.0f;
 		PC->GetViewportSize(SizeX, SizeY);
+		const int32 WindowSizeX = SizeX;
 		if (GameMode && GameMode->IsComparing())
 		{
 			SizeX /= 2;
@@ -382,7 +402,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		// A click on a button carries out its action.
 		if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton) && PC->GetMousePosition(CursorX, CursorY) && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoHud")))
 		{
-			const FName Clicked = FLsnToolbar::Make(SizeX, SizeY).ActionAt(FVector2D(CursorX, CursorY));
+			const FName Clicked = FLsnToolbar::Make(WindowSizeX, SizeY, GameMode && GameMode->IsComparing()).ActionAt(FVector2D(CursorX, CursorY));
 			if (!Clicked.IsNone())
 			{
 				DoAction(Clicked);
@@ -438,7 +458,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
 		{ EKeys::O, TEXT("obstacle"), TEXT("obstacle") }, { EKeys::H, TEXT("horizon_line"), TEXT("horizon_line") }, { EKeys::L, TEXT("fill_light"), TEXT("fill_light") },
 		{ EKeys::F, TEXT("follow_sun"), TEXT("follow_sun") }, { EKeys::PageUp, TEXT("height_up"), TEXT("height_up") }, { EKeys::PageDown, TEXT("height_down"), TEXT("height_down") },
-		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
+		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
 	for (const FKeyAction& KeyAction : KeyActions)
 	{
