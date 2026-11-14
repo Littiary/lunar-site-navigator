@@ -22,45 +22,6 @@ Every package holds the terrain horizon with its obstacles and terrain source, t
 
 The published packages are regenerated, never edited by hand, and are republished whenever a change alters results (the code change is committed first, the regenerated packages in the commit that follows, so that their provenance names a clean commit). The method behind them reproduces the published LOLA illumination maps on terrain of the same resolution (`pgda/`), but the numbers of these three sites themselves have no independent counterpart; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
-## `web_set/` — the published packages without arrays the web view does not use
-
-`python -m validation.web_set.build` writes a second package root, `build/packages_web/` (ignored by git), from the published set in `packages/`. Nothing is computed: it needs no kernels, no terrain data and no run of the core, and the same published set always gives the same bytes. The web build is pointed at it with `cd web && python -m lsn_web.site --packages ../build/packages_web/index.json`. The complete packages in `packages/` stay the result; this set is a copy for one reader.
-
-The web set holds the 20 site packages and the site-pairs package, under the same `package_id` and the same paths, and an `index.json` that lists them. Every package passes the contract validator. A site package differs from the published one in three things:
-
-* seven optional arrays are not in it: `horizon.obstacle_height_m`, `obstacle_lat_deg`, `obstacle_lon_deg`, `obstacle_height_error_m`, `obstacle_constrained` and `series.<BODY>.angular_radius_deg`, `ellipse_visible_share`. The contract schema does not require them and no file of the web code names them;
-* `warnings` has one more entry, which says that the package is a web subset, what was left out, and the id and content digest of the complete package;
-* `content_sha256` is therefore another value.
-
-Everything else is the published package: the arrays that stay are the same files byte for byte, and the manifest is the same value for value (events, windows, metrics with the countdowns, calendar, landing windows, uncertainty, obstacles, blockers, height trade, method cards, provenance). The direction-table package is not in the web set, because the web view does not read it; each site package still names it in `inputs`.
-
-`--smaller` also leaves out `series.<BODY>.blocker_azimuth_index` and `lit_fraction`. The web view does not fetch them, but its ground view looks whether the manifest has them, and without them it says on the page that the package does not contain them; the method card `timeline.lit_fraction` goes with its array, because the contract wants every card to be referred to. No number changes.
-
-Sizes for the set published at `ec83a98` (`--transfer` prints the last two columns; compression is gzip at level 6, and whether a host compresses the array files depends on the host):
-
-| Set | Files | Bytes as files | Sent if the host compresses JSON | Sent if it compresses every file |
-|---|---|---|---|---|
-| published, `packages/` | 490 | 85,136,716 | 64,304,825 | 35,326,956 |
-| web set | 365 | 78,490,896 | 57,683,139 | 31,107,207 |
-| web set, `--smaller` | 305 | 63,901,876 | 43,142,353 | 30,345,702 |
-
-What the viewer fetches to show one site at one observer height (the index, the manifest, two horizon arrays and four series arrays per body):
-
-| Site | Published set | Web set | Web set, `--smaller` |
-|---|---|---|---|
-| `apollo-11`, the first site of the index | 2,362,909 bytes | 2,359,737 bytes | 2,356,649 bytes |
-| `shackleton-rim-crest`, the largest package | 5,019,053 bytes | 5,015,065 bytes | 5,011,977 bytes |
-
-The first load hardly changes, because the viewer already fetches no array that is left out; the manifest is a few kilobytes shorter. With the two JSON files compressed by the host the first load is 1,474,132 bytes for `apollo-11` and 2,660,382 bytes for `shackleton-rim-crest`, from either set to within a kilobyte.
-
-The contract does not let more be left out, so the set is larger than the 25 to 30 MB that was aimed at:
-
-* the terrain patches (10.2 MB) stay, because the request names them and the validator then requires the `terrain` block;
-* a per-height array cannot hold one observer height, and a series cannot hold every third sample: their shapes follow `observer_heights_m` and `time.count`, which belong to the request and so to the `package_id`. A package with fewer heights or samples is another package, and the windows, events and metrics of the manifest are stated per height and against the full series;
-* the manifests (27.6 MB as files, 6.8 MB compressed) hold the numbers the pages show.
-
-`tests/test_web_set.py` builds both variants from `packages/` and checks: every package passes the validator; each manifest equals the published one value for value once the arrays left out, the note and the digest are set aside, over all 20 sites; the arrays that stay are byte-identical; what is left out is optional in the schema and not named by the web code; and the evidence page and the charts that the code of the web stream builds from the web set are those it builds from the published set, apart from the content digests and the banner with the note.
-
 ## `pgda/` — terrain-dependent results versus the published LOLA illumination maps
 
 **What is compared.** The share of time, over one 18.6-year nodal cycle at hourly steps, during which any part of the Sun's disc, and any part of the Earth's disc, is above the terrain horizon. The reference is an independent computation by the LOLA Science Team at NASA Goddard (Mazarico et al. 2011), published as 60 m maps of the south pole through the Planetary Geodesy Data Archive: `AVGVISIB_85S_060M_201608`, `..._EARTH` and the permanent-shadow map `LPSR_85S_060M_201608`. Their labels define the values exactly as that share. This checks the whole terrain chain at once: reading the elevation model, the horizon, the ephemeris and the disc test.
