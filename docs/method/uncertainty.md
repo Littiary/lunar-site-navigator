@@ -183,7 +183,9 @@ continuous, and at 20 m every point examined has the Sun throughout.
    resolution-limited.
 3. **One sign for the whole profile.** Real errors differ from azimuth to azimuth. One
    sign everywhere is the unfavourable case for a single event and says little about how
-   errors along the profile combine.
+   errors along the profile combine. The lowered profile also ignores the terrain behind
+   the limiting point: if the limiting point were lower, the next ridge would set the
+   horizon, so `possible` is an outer bound and the band is on the wide side.
 4. **A survey, not a probability.** With 13 points, a part of the ellipse that covers less
    than a tenth of its area can be missed entirely. No statement like "visible with 90 %
    probability" follows from the share of points.
