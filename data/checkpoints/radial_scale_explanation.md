@@ -23,7 +23,10 @@ unaffected by it.
    | LDEM_60S_60M | 235 876 LOLA RDR laser returns, 60.5-79.5 S | -0.03e-5 | 0.04e-5 |
    | LDEM_80S_20M | LDEM_16 cylindrical cells, 80.5-89.5 S (reported only) | -1.8e-5 | 1.7e-5 |
    | LDEM_60S_60M | LDEM_16 cylindrical cells, 60.5-79.5 S (reported only) | -0.2e-5 | 0.5e-5 |
-   | LDEM_80S_20M, LDEM_60S_60M | LDEM_128 cylindrical cells (criterion A) | pending: LDEM_128 still downloading | |
+   | LDEM_80S_20M | 20 000 LDEM_128 cells, 80.5-89.5 S (criterion A: passed) | -0.21e-5 | 0.17e-5 |
+   | LDEM_60S_60M | 20 000 LDEM_128 cells, 60.5-79.5 S (criterion A: passed) | 0.006e-5 | 0.035e-5 |
+
+   Against LDEM_128 the translation is (0.1, -0.2) +- 0.3 m and (0.1, -0.1) +- 0.2 m, the rotation below 0.0001 deg.
 
    Against LDEM_16 both polar products show a rotation of +0.005 to +0.007 deg (8 sigma), which the laser returns do
    not show (-0.0004 +- 0.0002 deg and 0.00001 +- 0.00002 deg): it is a property of LDEM_16 (product V3.1, 2019,
@@ -68,7 +71,8 @@ at 150 km) or an equivalent size-dependent offset; cause not determined.**
 
 Smith et al. (2010) give the lowest point of the Moon as -9117 m at 187.5074 E, 70.360 S (Antoniadi). Our 60 m
 south-polar product gives -9128.8 m at exactly that point, which is also the lowest point within 5 km: -11.8 m,
-inside the 50 m criterion. LDEM_16 fails the criterion at both points (-103 m at the highest point, +138 m at the
+inside the 50 m criterion; LDEM_128 gives -7.1 m there and, at the highest point, an extreme 5.9 m below the
+published 10 783.4 m, 0.35 km from the stated position (both pass). LDEM_16 fails the criterion at both points (-103 m at the highest point, +138 m at the
 lowest): its 1.9 km cells average the extremes away; its own maximum and minimum lie within 1 km of the published
 positions. The criterion stays as written; LDEM_16 is not used for terrain.
 
