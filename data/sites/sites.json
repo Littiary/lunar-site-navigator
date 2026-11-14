@@ -1,0 +1,126 @@
+{
+ "schema": "lunar-site-navigator site records v0",
+ "generated_utc": "2026-11-14T10:40:15Z",
+ "sites": [
+  {
+   "site_id": "shackleton_rim_crest",
+   "name": "Shackleton crater rim crest",
+   "lon_deg_east": 205.76891,
+   "lat_deg": -89.80531,
+   "polar_stereographic_x_m": -2566.6,
+   "polar_stereographic_y_m": -5316.7,
+   "ground_height_m_above_1737.4km_sphere": 1701.1,
+   "ground_radius_m": 1739101.1,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest DEM point on radial lines +-1500 m (20 m step, bilinear) through the vertices of the IAU outline",
+    "outline_vertices": 17,
+    "outline_determination_diameter_km": 20.92
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "Shackleton",
+    "feature_id": 5450,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/5450",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ]
+  },
+  {
+   "site_id": "de_gerlache_rim_crest",
+   "name": "de Gerlache crater rim crest",
+   "lon_deg_east": 291.58956,
+   "lat_deg": -88.6641,
+   "polar_stereographic_x_m": -37668.7,
+   "polar_stereographic_y_m": 14906.1,
+   "ground_height_m_above_1737.4km_sphere": 1815.2,
+   "ground_radius_m": 1739215.2,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest DEM point on radial lines +-1500 m (20 m step, bilinear) through the vertices of the IAU outline",
+    "outline_vertices": 590,
+    "outline_determination_diameter_km": 32.71
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "de Gerlache",
+    "feature_id": 1439,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/1439",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ]
+  },
+  {
+   "site_id": "malapert_massif_summit",
+   "name": "Mons Malapert (Malapert massif) summit",
+   "lon_deg_east": 2.05767,
+   "lat_deg": -85.98795,
+   "polar_stereographic_x_m": 4370.0,
+   "polar_stereographic_y_m": 121630.0,
+   "ground_height_m_above_1737.4km_sphere": 5173.5,
+   "ground_radius_m": 1742573.5,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest 20 m DEM pixel whose centre lies inside the IAU outline polygon",
+    "outline_vertices": 25,
+    "pixels_inside_outline": 4516827
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "Mons Malapert",
+    "feature_id": 16338,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/16338",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ]
+  }
+ ]
+}

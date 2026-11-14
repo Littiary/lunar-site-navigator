@@ -28,6 +28,8 @@ def main(argv: list[str] | None = None) -> int:
     pp.add_argument("products", nargs="*", default=["LDEM_80S_20M", "LDEM_60S_60M"])
     pp.add_argument("--levels", type=int, default=6)
 
+    sub.add_parser("checkpoints", help="run the three data checkpoints and write data/checkpoints/report.json")
+
     sub.add_parser("where", help="print the data root and manifest path")
 
     a = ap.parse_args(argv)
@@ -62,6 +64,18 @@ def main(argv: list[str] | None = None) -> int:
             meta = pyramid.build(dem, derived_dir(root) / pid, a.levels, source_sha256=sha)
             print(f"{pid}: levels {meta['levels']} written to {derived_dir(root) / pid}")
         return 0
+    if a.cmd == "checkpoints":
+        import json
+
+        from . import checkpoints
+        from .paths import repo_data_dir
+
+        rep = checkpoints.run_all(root)
+        out = repo_data_dir() / "checkpoints" / "report.json"
+        out.write_text(json.dumps(rep, indent=1) + "\n", encoding="utf-8")
+        print(json.dumps(rep, indent=1))
+        print("ALL PASSED" if rep["all_passed"] else "FAILED", "->", out)
+        return 0 if rep["all_passed"] else 1
     if a.cmd == "cross-check":
         from .fetch import cross_check
 

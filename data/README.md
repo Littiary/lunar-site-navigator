@@ -71,3 +71,14 @@ checks the committed bytes equal the generator output.
 from lsn_data import open_terrain
 t = open_terrain(label_paths=["data/fixtures/synth_s90_100m.lbl"])
 ```
+
+## Checkpoints (status is in `data/checkpoints/report.json`, produced by `python -m lsn_data checkpoints`)
+
+Thresholds are in `data/checkpoints/thresholds.json`, committed before the first measurement and not edited since.
+Post-hoc diagnostics (not pass/fail rules) are in `data/checkpoints/diagnostics.json`.
+
+## Site records
+
+`data/sites/sites.json`: three south-polar sites (Shackleton rim crest, de Gerlache rim crest, Mons Malapert summit), each anchored on an
+IAU Gazetteer feature with URL and retrieval time (`data/sites/gazetteer_records.json`), located on the 20 m DEM by a stated rule, with reference
+frame and terrain product checksum. They are the project's own candidate sites, not NASA landing sites.
