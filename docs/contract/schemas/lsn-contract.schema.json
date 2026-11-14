@@ -1256,6 +1256,35 @@
         },
         "method": {
           "$ref": "#/$defs/method_id"
+        },
+        "reference": {
+          "description": "Since 0.10. The instant a countdown metric is counted from.",
+          "type": "object",
+          "required": [
+            "utc",
+            "et_s",
+            "time_scale",
+            "is"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "utc": {
+              "$ref": "#/$defs/utc"
+            },
+            "et_s": {
+              "type": "number"
+            },
+            "time_scale": {
+              "const": "TDB"
+            },
+            "is": {
+              "enum": [
+                "planned landing of the site",
+                "start of the time window",
+                "stated reference time"
+              ]
+            }
+          }
         }
       }
     },

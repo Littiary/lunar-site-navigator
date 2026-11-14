@@ -319,8 +319,14 @@ steps, 1e-5 degrees for the reported point, 5 s per site).
 | Runtime on LDEM_128, six heights, 1440 azimuths, 300 km | 2.6 to 2.9 s at the three mid-latitude sites; 1.4 s at 62 S (60 m polar product); 8.7 s at 85 N on the latitude-longitude grid |
 
 The LDEM_128 rows were measured on 14 November 2026 with overview levels built in a
-scratch folder, because the data stream had not built them yet; the corresponding test
-is skipped until they exist under the data root. Between 0.4 and 5.5 % of the lattice
+scratch folder, before the data stream had built its own. Since then every product has
+them, and between 60 degrees south and north the reader serves the finer SLDEM2015
+mosaic (118 m pixels) instead of LDEM_128. The test now runs on it: at 26.1 N nothing is
+missed, and the horizon takes 3.4 to 3.7 s. Its first run took 7.7 s and failed the 5 s
+limit, partly under load from other work on the machine and partly because the search
+for cell boundaries took consecutive points of different rays for one long step and
+asked the reader about coverage more often than needed; both were removed, the limit
+was not touched. Between 0.4 and 5.5 % of the lattice
 points beyond the near zone had to be walked.
 
 **Limits.**

@@ -287,6 +287,15 @@ Present only when a time window was computed.
 | `height_trade` | Since 0.5. Visible time and longest outage per observer height; see 5.8 |
 | `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
 
+**Countdown metrics** (`<body>_visible_at_reference`, `<body>_time_to_set_s`,
+`<body>_time_to_rise_s` and the two `_is_lower_bound` flags) are counted from one
+instant per site: the site's `landing_utc` if the scenario states one inside the time
+window, otherwise the start of the window. Since 0.10 each of them carries that instant
+as `reference`: `utc`, `et_s` (TDB seconds past J2000, `time_scale` says so) and `is`
+(`planned landing of the site`, `start of the time window` or `stated reference time`).
+A reader takes the instant from this field, not from the label. Packages before 0.10
+have it in the label only; there the rule above applies, with `request.timeline.landing_utc`.
+
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
 terrain that hides or reveals it), `threshold` (the condition crossed), `method`.
@@ -721,6 +730,7 @@ Additive; nothing that existed in 0.9 changed its meaning, name, unit or layout.
 - Scenario and site request: `uncertainty.dem_height_error_model`.
 - Site package: `horizon.obstacle_height_error_m`, `horizon.obstacle_constrained`; `terrain_quality` in every event; `dem_height_error_model`, `applied_height_error_m`, `sources`, `limiting_pixels` in `timeline.uncertainty.horizon_error`.
 - Presets: `docs/contract/presets/terrain_height_error.json`.
+- Countdown metrics carry `reference` (the instant they are counted from); section 5.4. Their values and ids are unchanged.
 - `inputs.dem.layers[]` can name a 5 m site raster when the run used the near field ([method note](../method/near_field.md)).
 
 ### 0.9 (14 November 2026)
