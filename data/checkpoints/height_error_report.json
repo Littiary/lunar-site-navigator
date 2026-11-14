@@ -1,0 +1,284 @@
+{
+ "generated_utc": "2026-11-14T14:06:00Z",
+ "method": "data/checkpoints/height_error_method.json",
+ "difference": "d = DEM height (bilinear) - laser return height, metres; half-widths of |d - median|",
+ "independent_files": [
+  "LOLARDR_210261356",
+  "LOLARDR_210281841"
+ ],
+ "independent_files_expected": 14,
+ "fit_residual_files": [
+  "LOLARDR_110320314",
+  "LOLARDR_110340414",
+  "LOLARDR_110360514",
+  "LOLARDR_110380613",
+  "LOLARDR_110400713",
+  "LOLARDR_110420812",
+  "LOLARDR_110440912",
+  "LOLARDR_110461013",
+  "LOLARDR_110481113",
+  "LOLARDR_110501213",
+  "LOLARDR_110521312",
+  "LOLARDR_110561318",
+  "LOLARDR_110581419"
+ ],
+ "independent_returns_available": "no: the LRO_ES_100 files (2021) and probes of LRO_ES_56, 60, 70, 80 and 90 contain no valid ranges (every spot flagged, radius field empty); LOLA altimetry effectively ends with the data the products use (through LRO_ES_54). The method's independent sample does not exist; this is a deviation from height_error_method.json",
+ "interpolated_vs_constrained": "returns used by the 20 m product only fall in pixels with count >= 1, so the residuals describe data-constrained pixels; pixels without returns are characterised by site_counts and gap_interpolation_proxy",
+ "products": {
+  "LDEM_80S_20M": {
+   "band_deg": [
+    -89.8,
+    -80.5
+   ],
+   "independent_LRO_ES_100": {
+    "all": {
+     "n": 0
+    },
+    "slope_0_5_deg": {
+     "n": 0
+    },
+    "slope_5_10_deg": {
+     "n": 0
+    },
+    "slope_10_20_deg": {
+     "n": 0
+    },
+    "slope_20_30_deg": {
+     "n": 0
+    },
+    "slope_30_90_deg": {
+     "n": 0
+    }
+   },
+   "fit_residual_LRO_SM_06_lower_bound": {
+    "all": {
+     "n": 21294,
+     "median_m": 0.26565965290194526,
+     "half_width_68_m": 0.8450238827129429,
+     "half_width_95_m": 3.8625172654271744,
+     "p99_abs_m": 7.523660684476837,
+     "mean_m": 0.3163562395858991
+    },
+    "slope_0_5_deg": {
+     "n": 8315,
+     "median_m": 0.2852351198052929,
+     "half_width_68_m": 0.5633919047731752,
+     "half_width_95_m": 2.396888888448152,
+     "p99_abs_m": 4.488657947239772,
+     "mean_m": 0.3669199445113027
+    },
+    "slope_5_10_deg": {
+     "n": 6934,
+     "median_m": 0.24705990207701234,
+     "half_width_68_m": 0.8576269198400392,
+     "half_width_95_m": 3.988896333804919,
+     "p99_abs_m": 7.422813935804676,
+     "mean_m": 0.27061323573469626
+    },
+    "slope_10_20_deg": {
+     "n": 5025,
+     "median_m": 0.24848465098034467,
+     "half_width_68_m": 1.2575035660796907,
+     "half_width_95_m": 5.310917105842533,
+     "p99_abs_m": 9.90069453007953,
+     "mean_m": 0.3342031929450341
+    },
+    "slope_20_30_deg": {
+     "n": 943,
+     "median_m": 0.24428492057722906,
+     "half_width_68_m": 1.972351991542111,
+     "half_width_95_m": 5.7097005500442215,
+     "p99_abs_m": 10.35836969174166,
+     "mean_m": 0.19296632177070364
+    },
+    "slope_30_90_deg": {
+     "n": 77,
+     "median_m": -0.18756702057828534,
+     "half_width_68_m": 3.329219117050116,
+     "half_width_95_m": 9.018711869234757,
+     "p99_abs_m": 20.993037355720034,
+     "mean_m": -0.6781822783415552
+    }
+   }
+  },
+  "LDEM_60S_60M": {
+   "band_deg": [
+    -79.5,
+    -60.5
+   ],
+   "independent_LRO_ES_100": {
+    "all": {
+     "n": 0
+    },
+    "slope_0_5_deg": {
+     "n": 0
+    },
+    "slope_5_10_deg": {
+     "n": 0
+    },
+    "slope_10_20_deg": {
+     "n": 0
+    },
+    "slope_20_30_deg": {
+     "n": 0
+    },
+    "slope_30_90_deg": {
+     "n": 0
+    }
+   },
+   "fit_residual_LRO_SM_06_lower_bound": {
+    "all": {
+     "n": 235876,
+     "median_m": 0.17026845081272768,
+     "half_width_68_m": 1.012131730880435,
+     "half_width_95_m": 3.170824115603182,
+     "p99_abs_m": 6.266186498101575,
+     "mean_m": 0.2056979458872867
+    },
+    "slope_0_5_deg": {
+     "n": 82705,
+     "median_m": 0.17740976522554774,
+     "half_width_68_m": 0.756372428139413,
+     "half_width_95_m": 2.0473154344851596,
+     "p99_abs_m": 3.6586345283571045,
+     "mean_m": 0.23494183077141717
+    },
+    "slope_5_10_deg": {
+     "n": 76536,
+     "median_m": 0.17624170579529164,
+     "half_width_68_m": 0.9924278161301687,
+     "half_width_95_m": 2.878573298074424,
+     "p99_abs_m": 5.236770963965329,
+     "mean_m": 0.22692583277824152
+    },
+    "slope_10_20_deg": {
+     "n": 64391,
+     "median_m": 0.15689293902096324,
+     "half_width_68_m": 1.3179799004911001,
+     "half_width_95_m": 3.9403416183593167,
+     "p99_abs_m": 7.501122574608407,
+     "mean_m": 0.197468731389126
+    },
+    "slope_20_30_deg": {
+     "n": 11892,
+     "median_m": 0.053482111398579946,
+     "half_width_68_m": 1.95256163769266,
+     "half_width_95_m": 6.86339169087859,
+     "p99_abs_m": 14.88902360354158,
+     "mean_m": -0.14060239629859567
+    },
+    "slope_30_90_deg": {
+     "n": 352,
+     "median_m": 1.5605438454836502,
+     "half_width_68_m": 4.368896359549373,
+     "half_width_95_m": 15.026382385558083,
+     "p99_abs_m": 20.347318808108827,
+     "mean_m": 1.9238171776982163
+    }
+   }
+  }
+ },
+ "site_counts_LDEC_80S_20M": {
+  "shackleton_rim_crest": {
+   "window_m": 3020,
+   "fraction_no_return": 0.2525766413753783,
+   "median_returns_per_pixel": 2.0,
+   "longest_row_gap_m": 220,
+   "rows_compared_between_mirrors": 6
+  },
+  "de_gerlache_rim_crest": {
+   "window_m": 3020,
+   "fraction_no_return": 0.3059514933555546,
+   "median_returns_per_pixel": 1.0,
+   "longest_row_gap_m": 280,
+   "rows_compared_between_mirrors": 6
+  },
+  "malapert_massif_summit": {
+   "window_m": 3020,
+   "fraction_no_return": 0.21073637121178895,
+   "median_returns_per_pixel": 2.0,
+   "longest_row_gap_m": 180,
+   "rows_compared_between_mirrors": 6
+  }
+ },
+ "gap_interpolation_proxy_LDEM_80S_20M": {
+  "shackleton_rim_crest": {
+   "gap_120_m": {
+    "n": 43790,
+    "median_m": -0.25,
+    "half_width_68_m": 2.75,
+    "half_width_95_m": 6.5,
+    "p99_abs_m": 9.25,
+    "mean_m": -0.35086206896551725
+   },
+   "gap_200_m": {
+    "n": 42582,
+    "median_m": -0.75,
+    "half_width_68_m": 3.5,
+    "half_width_95_m": 9.0,
+    "p99_abs_m": 13.5,
+    "mean_m": -0.9687661453196186
+   },
+   "gap_280_m": {
+    "n": 41374,
+    "median_m": -1.5,
+    "half_width_68_m": 4.25,
+    "half_width_95_m": 12.25,
+    "p99_abs_m": 21.0,
+    "mean_m": -1.908680572340117
+   }
+  },
+  "de_gerlache_rim_crest": {
+   "gap_120_m": {
+    "n": 43790,
+    "median_m": -0.25,
+    "half_width_68_m": 1.75,
+    "half_width_95_m": 4.5,
+    "p99_abs_m": 6.75,
+    "mean_m": -0.26224594656314226
+   },
+   "gap_200_m": {
+    "n": 42582,
+    "median_m": -0.75,
+    "half_width_68_m": 2.75,
+    "half_width_95_m": 6.5,
+    "p99_abs_m": 10.5,
+    "mean_m": -0.7324162791789958
+   },
+   "gap_280_m": {
+    "n": 41374,
+    "median_m": -1.75,
+    "half_width_68_m": 3.5,
+    "half_width_95_m": 8.25,
+    "p99_abs_m": 13.5,
+    "mean_m": -1.482241262628704
+   }
+  },
+  "malapert_massif_summit": {
+   "gap_120_m": {
+    "n": 43790,
+    "median_m": -0.25,
+    "half_width_68_m": 1.75,
+    "half_width_95_m": 5.0,
+    "p99_abs_m": 8.25,
+    "mean_m": -0.14567823704042018
+   },
+   "gap_200_m": {
+    "n": 42582,
+    "median_m": -0.5,
+    "half_width_68_m": 3.0,
+    "half_width_95_m": 8.25,
+    "p99_abs_m": 14.75,
+    "mean_m": -0.41730073740077966
+   },
+   "gap_280_m": {
+    "n": 41374,
+    "median_m": -1.25,
+    "half_width_68_m": 4.0,
+    "half_width_95_m": 12.0,
+    "p99_abs_m": 22.25,
+    "mean_m": -0.8292103736646202
+   }
+  }
+ }
+}
