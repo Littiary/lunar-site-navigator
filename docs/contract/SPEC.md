@@ -202,7 +202,7 @@ same package ids.
 | `distance_m` | `[H, A]` `<f4` | Distance from the site to the terrain point that sets the horizon, measured as arc length along the reference sphere |
 | `obstacle_height_m` | `[H, A]` `<f4` | Optional. Terrain height of that point above the reference sphere |
 | `obstacle_lat_deg`, `obstacle_lon_deg` | `[H, A]` `<f8` | Optional. Coordinates of that point |
-| `error_bounds` | | Optional named quantities, for example the bound on what terrain beyond `max_range_m` could add |
+| `error_bounds` | | Optional named quantities. The horizon core writes `far_field_max_deg` (largest amount by which terrain beyond the reach of the rays could still raise the horizon; 0 = search radius proven sufficient), `far_field_open_azimuth_fraction`, `ceiling_height_m` (the terrain ceiling that bound assumes) and `shortest_reach_m`; see [`../method/horizon.md`](../method/horizon.md) |
 | `flags` | | `coverage_complete`, `truncated_at_data_edge`, `nodata_fraction` |
 
 Between azimuth samples, readers interpolate linearly (periodically). The obstacle point,

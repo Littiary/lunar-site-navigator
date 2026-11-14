@@ -29,6 +29,9 @@ class HorizonResult:
     nodata_fraction: float = 0.0
     # name -> (value, unit, method id)
     error_bounds: dict[str, tuple[float, str, str]] = field(default_factory=dict)
+    # [H, A]: largest amount by which terrain beyond the reach of the data or of the search
+    # radius could still raise the horizon in that azimuth
+    far_field_bound_deg: np.ndarray | None = None
     dem_pixel: dict | None = None
     warnings: list[str] = field(default_factory=list)
 
