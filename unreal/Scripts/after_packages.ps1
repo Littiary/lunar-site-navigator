@@ -37,8 +37,10 @@ if (Get-Process UnrealEditor -ErrorAction SilentlyContinue) { Write-Host "The Un
 if (-not $NoMerge) {
     Step "Merge origin/main" {
         if (git -C $repo status --porcelain --untracked-files=no) { Write-Host "The working tree has changes; commit them first."; $global:LASTEXITCODE = 1; return }
-        git -C $repo fetch origin
-        if ($LASTEXITCODE -eq 0) { git -C $repo merge --no-edit origin/main }
+        # git reports progress on the error stream; that is not a failure.
+        $ErrorActionPreference = "Continue"
+        git -C $repo fetch origin 2>&1 | ForEach-Object { "$_" }
+        if ($LASTEXITCODE -eq 0) { git -C $repo merge --no-edit origin/main 2>&1 | ForEach-Object { "$_" } }
     }
 }
 Step "What is published" {
