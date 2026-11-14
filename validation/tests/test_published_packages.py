@@ -100,7 +100,8 @@ def test_packages_were_written_with_the_contract_version_of_this_checkout():
 def test_published_sites_are_the_curated_list_of_the_data_stream():
     curated, sites = _curated(), _sites()
     assert sorted(sites) == sorted(curated) and len(sites) == 20
-    assert {site_id for site_id, record in curated.items() if record["category"] == "project_candidate"} == set(PROJECT_SITES)
+    # 'kind' holds the machine value; older versions of the list had it in 'category'.
+    assert {site_id for site_id, record in curated.items() if record.get("kind", record["category"]) == "project_candidate"} == set(PROJECT_SITES)
     for site_id, record in curated.items():
         site = sites[site_id]["site"]
         assert abs(site["lat_deg"] - record["lat_deg"]) < 1e-9, site_id

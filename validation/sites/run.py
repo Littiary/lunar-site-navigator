@@ -132,6 +132,15 @@ def build_scenario(records: list, start_utc: str, end_utc: str) -> dict:
     return scenario
 
 
+def record_kind(record: dict) -> str:
+    """Machine value that says what a record of the curated list is.
+
+    The data stream first wrote it in ``category`` and later moved it to ``kind``, when
+    ``category`` became a descriptive text; both forms are read.
+    """
+    return record.get("kind", record["category"])
+
+
 def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
     """The sites of the curated list that are not project sites: fewer observer heights, no stated uncertainty, no planned landing."""
     scenario = {
@@ -152,7 +161,7 @@ def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
                 "notes": record["status"],
             }
             for record in records
-            if record["category"] != "project_candidate"
+            if record_kind(record) != "project_candidate"
         ],
         "observer_heights_m": CURATED_HEIGHTS_M,
         "default_height_m": 2.0,
@@ -885,7 +894,7 @@ def main() -> None:
 
     project_records = json.loads(Path(args.sites_file).read_text(encoding="utf-8"))["sites"]
     curated_records = json.loads(Path(args.curated).read_text(encoding="utf-8"))["sites"]
-    categories = {record["site_id"].replace("_", "-"): record["category"] for record in curated_records}
+    categories = {record["site_id"].replace("_", "-"): record_kind(record) for record in curated_records}
     for record in project_records:
         categories.setdefault(record["site_id"].replace("_", "-"), "project_candidate")
 
