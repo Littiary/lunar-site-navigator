@@ -15,10 +15,6 @@ ROOT = Path(__file__).resolve().parent
 
 
 def pytest_configure(config):
-    # The marker of the data tests is registered in data/pyproject.toml, which pytest reads
-    # only when it is started inside data/. Started from the repository root, as the setup
-    # guide says, it would otherwise warn about an unknown marker.
-    config.addinivalue_line("markers", "needs_data: test needs the downloaded LOLA files under the data root")
     foreign = []
     for name in ("lsncore", "lsn_data"):
         try:

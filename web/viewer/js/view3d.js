@@ -8,6 +8,9 @@
 //
 // The only trigonometry is the display transform between (azimuth, elevation) and a screen
 // direction, in the marked block below; no scientific value is computed here.
+//
+// Ground view (Task 8 B): the horizon ring is coloured by the distance of the terrain that sets
+// the horizon in each azimuth (horizon.distance_m of the package), in fixed classes.
 
 import * as THREE from "three";
 
@@ -52,7 +55,25 @@ function discSprite(color, scale) {
   return sprite;
 }
 
+// Distance classes of the ring, in metres (comparison only). Below 1 km the horizon depends on
+// single pixels of the elevation model (SPEC 5.3, near field).
+const DISTANCE_CLASSES = [[1000, [1.0, 0.48, 0.45]], [10000, [0.94, 0.65, 0.29]], [100000, [0.9, 0.93, 0.95]], [Infinity, [0.43, 0.66, 1.0]]];
+function distanceColor(d) {
+  if (!Number.isFinite(d)) return [0.5, 0.5, 0.5];
+  return DISTANCE_CLASSES.find(([limit]) => d < limit)[1];
+}
+
+function webglAvailable() {
+  try {
+    const c = document.createElement("canvas");
+    return Boolean(window.WebGLRenderingContext && (c.getContext("webgl2") || c.getContext("webgl")));
+  } catch (e) {
+    return false;
+  }
+}
+
 export function createView(container, { onCheck } = {}) {
+  if (!webglAvailable()) throw new Error("WebGL is not available in this browser or on this device");
   container.innerHTML = "";
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -76,19 +97,20 @@ export function createView(container, { onCheck } = {}) {
   const sunLabel = textSprite("Sun", "#f0a54a", 4), earthLabel = textSprite("Earth", "#6ea8fe", 4);
   scene.add(sun, earth, sunLabel, earthLabel);
 
-  let terrain = null, line = null, key = null, input = null, pending = false;
+  let terrain = null, line = null, dots = null, key = null, input = null, pending = false;
 
-  function buildTerrain(horizon, azimuth) {
-    if (terrain) { scene.remove(terrain, line); terrain.geometry.dispose(); line.geometry.dispose(); }
+  function buildTerrain(horizon, azimuth, distance) {
+    if (terrain) { scene.remove(terrain, line, dots); terrain.geometry.dispose(); line.geometry.dispose(); }
     const n = azimuth.count;
-    const pos = [], col = [], idx = [], edge = [];
+    const pos = [], col = [], idx = [], edge = [], edgeCol = [];
     for (let k = 0; k <= n; k++) {
       const a = azimuth.start_deg + k * azimuth.step_deg;
       const top = direction(a, horizon[k % n]).multiplyScalar(R);
       const bottom = direction(a, BOTTOM_DEG).multiplyScalar(R);
       pos.push(top.x, top.y, top.z, bottom.x, bottom.y, bottom.z);
-      col.push(0.16, 0.17, 0.19, 0.02, 0.02, 0.025); // linear values; shown lighter after sRGB output
+      col.push(0.05, 0.055, 0.065, 0.006, 0.006, 0.008); // linear values; shown lighter after sRGB output
       edge.push(direction(a, horizon[k % n]).multiplyScalar(R * 0.995));
+      edgeCol.push(...distanceColor(distance ? distance[k % n] : NaN));
       if (k < n) idx.push(2 * k, 2 * k + 1, 2 * k + 2, 2 * k + 1, 2 * k + 3, 2 * k + 2);
     }
     const g = new THREE.BufferGeometry();
@@ -96,8 +118,12 @@ export function createView(container, { onCheck } = {}) {
     g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
     g.setIndex(idx);
     terrain = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
-    line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(edge), new THREE.LineBasicMaterial({ color: 0xd0d7de }));
-    scene.add(terrain, line);
+    const edgeGeometry = new THREE.BufferGeometry().setFromPoints(edge);
+    edgeGeometry.setAttribute("color", new THREE.Float32BufferAttribute(edgeCol, 3));
+    line = new THREE.Line(edgeGeometry, new THREE.LineBasicMaterial({ vertexColors: true }));
+    // WebGL draws lines one pixel wide; the same vertices as points make the colours readable.
+    dots = new THREE.Points(edgeGeometry, new THREE.PointsMaterial({ vertexColors: true, size: 3, sizeAttenuation: false }));
+    scene.add(terrain, line, dots);
     if (onCheck) onCheck(horizonCheck(horizon, azimuth));
   }
 
@@ -158,7 +184,7 @@ export function createView(container, { onCheck } = {}) {
       const k = `${next.siteId}:${next.h}`;
       if (k !== key) {
         key = k;
-        buildTerrain(next.horizon, next.azimuth);
+        buildTerrain(next.horizon, next.azimuth, next.distance);
         if (next.sun && Number.isFinite(next.sun.az)) { look.az = next.sun.az; look.el = Math.max(-10, Math.min(30, next.sun.el)); }
       }
       placeBody(sun, sunLabel, next.sun);
@@ -173,5 +199,6 @@ export function createView(container, { onCheck } = {}) {
     },
     resize: requestDraw,
     check: () => lastCheck,
+    ringColors: () => { const c = line && line.geometry.getAttribute("color"); return c ? Array.from(c.array) : null; },
   };
 }

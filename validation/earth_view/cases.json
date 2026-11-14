@@ -1,0 +1,36 @@
+{
+  "description": "Queries to JPL Horizons for the orientation of the Earth as seen from the Moon. Fetched once with validation/horizons/fetch.py --dir validation/earth_view; the responses are stored unchanged in raw/.",
+  "api": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "common_parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS"
+  },
+  "queries": [
+    {
+      "id": "earth_from_moon__week",
+      "what": "Sub-observer point on the Earth, observer at the centre of the Moon, hourly for one week",
+      "parameters": {"COMMAND": "399", "CENTER": "500@301", "QUANTITIES": "14,17", "START_TIME": "2026-11-14 00:00", "STOP_TIME": "2026-11-21 00:00", "STEP_SIZE": "1 h"}
+    },
+    {
+      "id": "earth_from_moon__two_years",
+      "what": "The same every 167 hours for two years, so that every hour of the day and every season occurs",
+      "parameters": {"COMMAND": "399", "CENTER": "500@301", "QUANTITIES": "14,17", "START_TIME": "2026-11-14 00:00", "STOP_TIME": "2028-11-14 00:00", "STEP_SIZE": "167 h"}
+    },
+    {
+      "id": "moon_from_earth__week",
+      "what": "Position angle of the Moon's north pole, observer at the centre of the Earth, hourly for one week",
+      "parameters": {"COMMAND": "301", "CENTER": "500@399", "QUANTITIES": "14,17", "START_TIME": "2026-11-14 00:00", "STOP_TIME": "2026-11-21 00:00", "STEP_SIZE": "1 h"}
+    },
+    {
+      "id": "moon_from_earth__two_years",
+      "what": "The same every 167 hours for two years",
+      "parameters": {"COMMAND": "301", "CENTER": "500@399", "QUANTITIES": "14,17", "START_TIME": "2026-11-14 00:00", "STOP_TIME": "2028-11-14 00:00", "STEP_SIZE": "167 h"}
+    }
+  ]
+}

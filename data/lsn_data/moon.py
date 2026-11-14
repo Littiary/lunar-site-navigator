@@ -125,6 +125,27 @@ class MoonTerrain:
                 levels[sel] = self._cyl_level(c, want[sel], statistic)
         return ids.reshape(shape), levels.reshape(shape)
 
+    def sample_quality(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean") -> dict:
+        """As ``Terrain.sample_quality``; cylindrical products have no quality layers (-1 / NaN)."""
+        lon, lat, want, shape = self._broadcast(lon_deg, lat_deg, max_pixel_m)
+        n = lon.size
+        out = {"product_id": np.full(n, "", dtype=object), "level": np.full(n, -1, dtype=np.int64),
+               "returns_in_pixel": np.full(n, -1, dtype=np.int64), "constrained": np.full(n, -1, dtype=np.int64),
+               "height_rms_error_m": np.full(n, np.nan), "quality_source": np.full(n, "", dtype=object)}
+        group = self._plan(lon, lat, want, statistic)
+        for gi, t in enumerate(self.polar):
+            sel = group == gi
+            if sel.any():
+                q = t.sample_quality(lon[sel], lat[sel], want[sel], statistic)
+                for k in out:
+                    out[k][sel] = q[k]
+        for ci, c in enumerate(self.cylindrical):
+            sel = group == len(self.polar) + ci
+            if sel.any():
+                out["product_id"][sel] = c.product_id
+                out["level"][sel] = self._cyl_level(c, want[sel], statistic)
+        return {k: v.reshape(shape) for k, v in out.items()}
+
     def describe_point(self, lon_deg: float, lat_deg: float) -> dict:
         """Product, pixel size and terrain class of the finest data at one point, for provenance labels.
 

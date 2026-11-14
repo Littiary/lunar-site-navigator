@@ -7,7 +7,7 @@
 <title>Lunar Site Navigator viewer</title>
 <link rel="stylesheet" href="viewer.css">
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": { "three": "./vendor/three/three.module.js" } }
 </script>
 </head>
 <body>
@@ -43,6 +43,7 @@
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tab-2d" aria-selected="true">Horizon and time</button>
+    <button type="button" role="tab" id="tab-sky" aria-selected="false">Sky panorama</button>
     <button type="button" role="tab" id="tab-3d" aria-selected="false">3-D view</button>
   </nav>
 
@@ -51,9 +52,29 @@
     <p class="muted small">Grey: terrain horizon at the selected observer height (<code>horizon.elevation_deg</code>). Markers: disc centres of the Sun and the Earth at the selected sample (<code>timeline.series</code>), without terrain.</p>
   </section>
 
+  <section id="panel-sky" role="tabpanel" aria-labelledby="tab-sky" hidden>
+    <div class="time-row">
+      <label>Paths for <select id="sky-span">
+        <option value="24">±1 day</option>
+        <option value="168" selected>±7 days</option>
+        <option value="360">±15 days</option>
+        <option value="720">±30 days</option>
+        <option value="all">the whole time window</option>
+      </select></label>
+      <button type="button" id="sky-zoom-in">Zoom in</button><button type="button" id="sky-zoom-out">Zoom out</button>
+      <button type="button" id="sky-center-sun">Centre on the Sun</button><button type="button" id="sky-center-earth">Centre on the Earth</button>
+      <button type="button" id="sky-reset">Whole horizon</button>
+    </div>
+    <div id="sky" class="sky"></div>
+    <p class="muted small">360° panorama: azimuth left to right, elevation bottom to top. Grey: terrain horizon at the selected observer height. Lines: paths of the Sun and the Earth (disc centres, <code>timeline.series</code>) around the selected time, solid where the package window <code>&lt;body&gt;_visible</code> holds, faded where it does not. Drag to pan, use the wheel, a pinch or the buttons to zoom; point at a path to read its values, click or tap it to go to that time. <span id="check-sky"></span></p>
+    <p id="band-sky" class="small note-band"></p>
+  </section>
+
   <section id="panel-3d" role="tabpanel" aria-labelledby="tab-3d" hidden>
     <div id="view3d" class="view3d"><p class="muted">Loading the 3-D view…</p></div>
-    <p class="muted small">Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. <span id="check3d"></span></p>
+    <p class="muted small">Ground view from the site. Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. The horizon ring is coloured by the distance of the terrain that sets the horizon (<code>horizon.distance_m</code>):
+      <span class="swatch d1"></span>&lt; 1 km (near field) <span class="swatch d2"></span>1–10 km <span class="swatch d3"></span>10–100 km <span class="swatch d4"></span>≥ 100 km. <span id="check3d"></span></p>
+    <p class="muted small" id="missing3d"></p>
     <div class="time-row"><button type="button" id="zoom-in">Zoom in</button><button type="button" id="zoom-out">Zoom out</button><button type="button" id="look-sun">Look at the Sun</button><button type="button" id="look-earth">Look at the Earth</button></div>
   </section>
 

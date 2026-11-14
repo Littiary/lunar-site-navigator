@@ -103,11 +103,40 @@ def horizon_error_band(direction, elevation_deg, step_deg: float, domain, rule, 
         return Band(nominal, nominal, nominal, IntervalSet.empty(nominal.domain), 0.0)
     certain = visibility_window(direction, elevation + error, step_deg, domain, rule)
     possible = visibility_window(direction, elevation - error, step_deg, domain, rule)
-    # Raising a horizon can only hide, lowering it can only reveal. Event times are located
-    # to a fraction of a second, so the three sets are made consistent to that level.
-    certain = certain.intersection(nominal)
-    possible = possible.union(nominal)
-    return Band(nominal, certain, possible, possible.intersection(certain.complement()), float(error.max()))
+    return band_from_windows(nominal, certain, possible, float(error.max()))
+
+
+def band_from_windows(nominal: IntervalSet, raised: IntervalSet, lowered: IntervalSet, error_deg: float) -> Band:
+    """The band from the windows over the raised and over the lowered horizon.
+
+    Raising a horizon can only hide, lowering it can only reveal. Event times are located
+    to a fraction of a second, so the three sets are made consistent to that level.
+    """
+    certain = raised.intersection(nominal)
+    possible = lowered.union(nominal)
+    return Band(nominal, certain, possible, possible.intersection(certain.complement()), float(error_deg))
+
+
+_TABLES: dict = {}
+
+
+def window_job(lon_deg: float, lat_deg: float, height_km: float, table_dir: str, body: str, profile, step_deg: float, domain, threshold: dict) -> list:
+    """One visibility window, from plain arguments, so that it can run in another process.
+
+    Returns the intervals; the caller builds the IntervalSet. The result does not depend
+    on the process it runs in.
+    """
+    from .ephem import directions as d
+    from .ephem import kernels
+    from .ephem import table as ephem_table
+    from .events import finder
+
+    kernels.load()
+    if table_dir not in _TABLES:
+        _TABLES[table_dir] = ephem_table.load_table(table_dir)
+    direction = finder.site_direction(d.Site(float(lon_deg), float(lat_deg), float(height_km)), _TABLES[table_dir], body)
+    rule = finder.threshold_from_contract(threshold, "visible")
+    return visibility_window(direction, np.asarray(profile, dtype=np.float64), step_deg, domain, rule).as_list()
 
 
 def event_time_bounds(event_times, band: Band) -> list[tuple[float, float]]:

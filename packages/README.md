@@ -9,18 +9,21 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Item | Value |
 |---|---|
 | Command | `python -m validation.sites.run data/sites/sites.json --publish` |
-| Code | commit `c9b2aab` (clean working tree, as recorded in the provenance of every package) |
-| Generated | 2026-11-14T14:16:13Z |
+| Code | commit `31d1a5c` (clean working tree, as recorded in the provenance of every package) |
+| Generated | 2026-11-14T15:36:34Z |
 | Scenario | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z, series step 3600 s |
 | Stated inputs of the scenario | requirements `example-standard`, `example-strict`, `example-loose` (the examples of `docs/contract/presets/requirements.json`; not requirements of NASA or of any mission); horizon error 0.05 deg; terrain height error 1 m; landing circle of 100 m radius, 13 points; planned landing 2027-01-10T00:00:00.000Z at every site. All chosen by the team to show what follows from them |
-| Contract | `lsn-package` version 0.6 |
+| Contract | `lsn-package` version 0.9 |
 | Terrain | `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0` |
 | Terrain layer | LDEM_80S_20M V2.0, 20 m; data file sha256 `db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG |
 | Terrain layer | LDEM_60S_60M V2.0, 60 m; data file sha256 `e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG |
+| Terrain that served Shackleton crater rim crest | The height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths |
+| Terrain that served de Gerlache crater rim crest | The height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths |
+| Terrain that served Mons Malapert (Malapert massif) summit | The height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths |
 | Kernel set | `bfe870fccfa5`: naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf |
 | Station kernel group | `bacdf4d6169a`: earth_1962_260806_2126_combined.bpc, earth_000101_270208_261113.bpc, earthstns_itrf93_260814.bsp, earth_topo_260814.tf |
 | Body-fixed frame | `MOON_ME_DE440_ME421`, aberration correction `LT+S` |
-| Size | 26.2 MB in 70 files (without this file) |
+| Size | 27.9 MB in 82 files (without this file) |
 
 Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain files are described in `data/manifest/manifest.json`.
 
@@ -30,21 +33,24 @@ Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain f
 
 | Kind | Package | Site | Status | Path |
 |---|---|---|---|---|
-| direction table | `dirtab-296ce1d712205623` | all sites | ok | `direction_table/dirtab-296ce1d712205623` |
-| site | `site-a4f5f765a5d43bbf` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-a4f5f765a5d43bbf` |
-| site | `site-6ded733f4be837e5` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-6ded733f4be837e5` |
-| site | `site-1275539289e03655` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-1275539289e03655` |
-| site pairs | `pairs-e039b2b260dd7d83` | every two of the 3 sites | ok | `site_pairs/pairs-e039b2b260dd7d83` |
+| direction table | `dirtab-fbc51d64e42ab803` | all sites | ok | `direction_table/dirtab-fbc51d64e42ab803` |
+| site | `site-a4d3f54375701349` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-a4d3f54375701349` |
+| site | `site-f5debe0fd2f3cdf7` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-f5debe0fd2f3cdf7` |
+| site | `site-29ad241e86f8307d` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-29ad241e86f8307d` |
+| site pairs | `pairs-fa4b9bc4663c9738` | every two of the 3 sites | ok | `site_pairs/pairs-fa4b9bc4663c9738` |
 
 Every site package holds, each with its method card:
 
-- the 360 degree terrain horizon for six observer heights, with the position and height of the limiting terrain at every azimuth and the list of obstacles (`horizon.obstacles`);
+- the 360 degree terrain horizon for six observer heights, with the position and height of the limiting terrain at every azimuth, the list of obstacles (`horizon.obstacles`) and the elevation products that served the site with their resolution class (`horizon.terrain_source`);
 - for the time window, the direction series of the Sun and the Earth, the visible fraction of each disc, the lit fraction of the Sun (terrain and eclipses by the Earth together) and, for every sample, the horizon sample that limits the view (`blocker_azimuth_index`);
 - rise and set events with their range for the stated horizon error, visibility windows (including eclipses of the Sun by the Earth and per-station direct-to-Earth windows) and metrics;
 - the obstacles that cost visible time compared with a smooth sphere (`timeline.blockers`);
 - the lunar-day calendar (`timeline.calendar`) and, for each example requirement and observer height, the landing windows and the slip report of the planned landing (`timeline.opportunities`);
 - the uncertainty band for the stated horizon error and the survey of the stated landing circle (`timeline.uncertainty`, `series.<BODY>.ellipse_visible_share`);
-- the mast-height trade (`timeline.height_trade`).
+- the mast-height trade (`timeline.height_trade`);
+- three terrain patches around the site for drawing (`terrain.patches`: 4, 16 and 64 km wide). They are for drawing only: visibility, events and windows come from the timeline, which was computed on the finest elevation data.
+
+The direction table also holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.
 
 The site-pairs package compares every two sites at their default observer height: when at least one of them sees the Sun or the Earth, and the joint outages.
 

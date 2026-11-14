@@ -45,9 +45,39 @@ def open_terrain(label_paths=None, products=DEFAULT_PRODUCTS, root=None, near_fi
         if not lbl.exists():
             raise FileNotFoundError(f"{lbl} not found; run `python -m lsn_data fetch` (data root {root})")
         dems.append(PolarDEM(lbl, pyramid_dir=derived_dir(root) / pid))
+    for d in dems:
+        attach_counts(d, root)
     if near_field:
         dems += site_dems(root)
     return Terrain(dems)
+
+
+def attach_counts(dem, root=None) -> bool:
+    """Attach the LOLA count product (LDEC_<id>, returns per pixel) to a polar DEM if it is present. Heights are
+    not affected; ``Terrain.sample_quality`` reports the count. Returns True if attached."""
+    import numpy as np
+
+    from .georef import PolarGrid
+    from .paths import data_root, raw_dir
+    from .pdslabel import parse_label
+
+    root = Path(root) if root else data_root()
+    cid = "LDEC" + dem.product_id[4:] if dem.product_id.startswith("LDEM") else None
+    if cid is None:
+        return False
+    lbl = raw_dir(root) / cid / f"{cid.lower()}.lbl"
+    img = raw_dir(root) / cid / f"{cid.lower()}.img"
+    if not (lbl.exists() and img.exists()):
+        return False
+    lab = parse_label(lbl)
+    g = PolarGrid.from_label(lab)
+    if g != dem.grid0 or (lab["SAMPLE_TYPE"], int(lab["SAMPLE_BITS"])) not in (("LSB_INTEGER", 8), ("UNSIGNED_INTEGER", 8)):
+        raise ValueError(f"{cid} is not on the grid of {dem.product_id} or not 8-bit")
+    if img.stat().st_size != g.n_rows * g.n_cols:
+        raise ValueError(f"{img.name}: unexpected size")
+    dem.attach_quality(count=np.memmap(img, dtype=np.uint8, mode="r", shape=(g.n_rows, g.n_cols)),
+                       source=f"{cid} (LOLA returns per pixel)")
+    return True
 
 
 def site_dems(root=None):
@@ -62,8 +92,21 @@ def site_dems(root=None):
         pid = f"LOLA5MPP_{site.upper()}"
         f = root / "raw" / "lola_5mpp" / pid / f"{site}_final_adj_5mpp_surf.tif"
         if f.exists():
-            out.append(PolarDEM.from_geotiff(f, product_id=pid, pyramid_dir=derived_dir(root) / pid,
-                                             data_set_id="PGDA LOLA_5mpp (Barker et al. 2021)"))
+            from . import geotiff as gt
+
+            d = PolarDEM.from_geotiff(f, product_id=pid, pyramid_dir=derived_dir(root) / pid,
+                                      data_set_id="PGDA LOLA_5mpp (Barker et al. 2021)")
+            layers = {}
+            for name, suffix in (("count", "ldec"), ("rms_error", "toterr")):
+                q = f.with_name(f"{site}_final_adj_5mpp_{suffix}.tif")
+                if q.exists():
+                    qi = gt.read_header(q)
+                    if (qi.width, qi.height, qi.tiepoint, qi.pixel_scale) != (d.grid0.n_cols, d.grid0.n_rows,
+                                                                             gt.read_header(f).tiepoint, gt.read_header(f).pixel_scale):
+                        raise ValueError(f"{q.name} is not on the grid of {f.name}")
+                    layers[name] = gt.open_array(q, qi)
+            d.attach_quality(**layers, source=f"{site} *_ldec.tif and *_toterr.tif (Barker et al. 2021)")
+            out.append(d)
     return out
 
 
@@ -84,13 +127,20 @@ def open_moon(root=None, near_field=False):
             lbl = raw_dir(root) / pid / f"{pid.lower()}.lbl"
             img = raw_dir(root) / pid / f"{pid.lower()}.img"
             if lbl.exists() and img.exists():
-                dems.append(PolarDEM(lbl, pyramid_dir=derived_dir(root) / pid))
+                d = PolarDEM(lbl, pyramid_dir=derived_dir(root) / pid)
+                attach_counts(d, root)
+                dems.append(d)
             else:
                 missing.append(pid)
         if near_field and pole < 0:
             dems += site_dems(root)
         if dems:
             polar.append(Terrain(dems))
+    import json
+
+    from .paths import repo_data_dir
+
+    approved = json.loads((repo_data_dir() / "manifest" / "approved_mosaics.json").read_text(encoding="utf-8"))["approved"]
     cyl = []
     for mosaic_id, tile_ids in catalog.MOON_CYLINDRICAL:
         tiles = []
@@ -99,7 +149,9 @@ def open_moon(root=None, near_field=False):
             img = raw_dir(root) / tid / f"{tid.lower()}.img"
             if lbl.exists() and img.exists():
                 tiles.append(CylDEM(lbl, pyramid_dir=derived_dir(root) / tid))
-        if tiles and len(tiles) == len(tile_ids):
+        if tiles and len(tiles) == len(tile_ids) and mosaic_id not in approved:
+            missing.append(f"{mosaic_id} (present but not approved in data/manifest/approved_mosaics.json)")
+        elif tiles and len(tiles) == len(tile_ids):
             cyl.append(CylMosaic(tiles, product_id=mosaic_id))
         else:
             missing.append(mosaic_id + (f" ({len(tiles)} of {len(tile_ids)} tiles)" if tiles else ""))

@@ -1,16 +1,20 @@
 """End-to-end run for the south-polar site records of the data stream.
 
 Builds one scenario with every site record, runs the core pipeline (LOLA terrain horizon
--> SPICE direction table -> events, windows, countdowns -> obstacles, lunar-day calendar,
-landing windows for the example requirements, uncertainty band and landing-ellipse
-survey, mast-height trade, complementary site pairs), validates every package against
-the contract and writes a summary. The scenario and the summary are kept in this folder.
+-> SPICE direction table with the orientation of the Earth -> events, windows, countdowns
+-> obstacles, lunar-day calendar, landing windows for the example requirements,
+uncertainty band and landing-ellipse survey, mast-height trade, terrain patches for
+drawing, complementary site pairs), validates every package against the contract and
+writes a summary. The scenario and the summary are kept in this folder.
 
 Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
 
     python -m validation.sites.run data/sites/sites.json --write-scenario
     python -m validation.sites.run data/sites/sites.json --publish
     python -m validation.sites.run data/sites/sites.json [--out FOLDER] [--start UTC] [--end UTC]
+
+``--jobs N`` sets the number of processes (default: half the processors, at most eight).
+The sites are computed side by side; the packages are the same for any number of jobs.
 
 ``--publish`` replaces the published packages in ``packages/`` at the repository root
 (the folder the web pages and the Unreal scene read) and writes ``packages/README.md``,
@@ -28,7 +32,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -292,6 +298,7 @@ def summarise(package_dir: Path) -> dict:
         "direction_table_id": timeline["direction_table_id"],
         "dem_set_id": m["inputs"]["dem"]["dem_set_id"],
         "horizon_error_bounds": {k: v["value"] for k, v in m["horizon"].get("error_bounds", {}).items()},
+        "terrain_source": {key: m["horizon"]["terrain_source"][key] for key in ("at_site", "resolution_class", "products")},
         "timings_s": m["provenance"].get("timings_s"),
         "sun_centre_elevation_range_deg": [float(sun.min()), float(sun.max())],
         "earth_centre_elevation_range_deg": [float(earth.min()), float(earth.max())],
@@ -333,7 +340,7 @@ def to_markdown(summary: dict) -> str:
             f"## {site['name']}",
             "",
             f"{abs(site['lat_deg']):.5f} deg S, {site['lon_deg']:.5f} deg E, terrain height {site['surface_height_m']:.1f} m above the 1737.4 km sphere. "
-            f"Package `{site['package_id']}`, status `{site['status']}`. Sun centre elevation {sun_lo:.2f} to {sun_hi:.2f} deg; "
+            f"Package `{site['package_id']}`, status `{site['status']}`. Terrain: {_terrain_source_text(site['terrain_source'])}. Sun centre elevation {sun_lo:.2f} to {sun_hi:.2f} deg; "
             f"Earth centre elevation {earth_lo:.2f} to {earth_hi:.2f} deg.",
             "",
             "| Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |",
@@ -386,6 +393,13 @@ def to_markdown(summary: dict) -> str:
         "- The shares of time above are cut by the terrain only. Eclipses of the Sun by the Earth are listed per site (opaque Earth, no atmosphere) and are in the package as the windows 'sun_eclipsed_by_earth', 'sun_totally_eclipsed_by_earth' and 'sun_lit'.",
     ]
     return "\n".join(lines) + "\n"
+
+
+def _terrain_source_text(source: dict) -> str:
+    """Which elevation products served a site, in one sentence."""
+    at = source["at_site"]
+    horizon = ", ".join(f"{p['product_id']} ({p['pixel_m']:g} m) in {100 * p['azimuth_share']:.1f} % of the azimuths" for p in source["products"])
+    return f"the height at the site is read from {at['product_id']} ({at['pixel_m']:g} m pixels, resolution class {source['resolution_class']}); the horizon at the default observer height is set by {horizon}"
 
 
 def _three(values: list, unit: str = "h") -> str:
@@ -522,6 +536,8 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
     for layer in sites[0]["inputs"]["dem"]["layers"]:
         recorded = f"data file sha256 `{layer['sha256']}`, {layer['source_url']}" if layer["sha256"] else "checksum and source URL are not recorded in the package; see `data/manifest/manifest.json`"
         lines.append(f"| Terrain layer | {layer['product_id']} {layer['version']}, {layer['pixel_m']:g} m; {recorded} |")
+    for m in sites:
+        lines.append(f"| Terrain that served {m['site']['name']} | {_terrain_source_text(m['horizon']['terrain_source'])[0].upper() + _terrain_source_text(m['horizon']['terrain_source'])[1:]} |")
     lines += [
         f"| Kernel set | `{kernels.kernel_set_id()}`: " + ", ".join(entry["name"] for entry in kernel_manifest["kernels"]) + " |",
         f"| Station kernel group | `{kernels.station_kernel_set_id()}`: " + ", ".join(entry["name"] for entry in kernel_manifest["station_kernels"]) + " |",
@@ -547,13 +563,16 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
         "",
         "Every site package holds, each with its method card:",
         "",
-        "- the 360 degree terrain horizon for six observer heights, with the position and height of the limiting terrain at every azimuth and the list of obstacles (`horizon.obstacles`);",
+        "- the 360 degree terrain horizon for six observer heights, with the position and height of the limiting terrain at every azimuth, the list of obstacles (`horizon.obstacles`) and the elevation products that served the site with their resolution class (`horizon.terrain_source`);",
         "- for the time window, the direction series of the Sun and the Earth, the visible fraction of each disc, the lit fraction of the Sun (terrain and eclipses by the Earth together) and, for every sample, the horizon sample that limits the view (`blocker_azimuth_index`);",
         "- rise and set events with their range for the stated horizon error, visibility windows (including eclipses of the Sun by the Earth and per-station direct-to-Earth windows) and metrics;",
         "- the obstacles that cost visible time compared with a smooth sphere (`timeline.blockers`);",
         "- the lunar-day calendar (`timeline.calendar`) and, for each example requirement and observer height, the landing windows and the slip report of the planned landing (`timeline.opportunities`);",
         "- the uncertainty band for the stated horizon error and the survey of the stated landing circle (`timeline.uncertainty`, `series.<BODY>.ellipse_visible_share`);",
-        "- the mast-height trade (`timeline.height_trade`).",
+        "- the mast-height trade (`timeline.height_trade`);",
+        "- three terrain patches around the site for drawing (`terrain.patches`: 4, 16 and 64 km wide). They are for drawing only: visibility, events and windows come from the timeline, which was computed on the finest elevation data.",
+        "",
+        "The direction table also holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
         "",
         "The site-pairs package compares every two sites at their default observer height: when at least one of them sees the Sun or the Earth, and the joint outages.",
         "",
@@ -583,6 +602,7 @@ def main() -> None:
     parser.add_argument("--publish", action="store_true", help="replace the published packages in packages/ and write their README")
     parser.add_argument("--write-scenario", action="store_true", help="write validation/sites/scenario.json for the published scenario and stop")
     parser.add_argument("--out", default=str(REPO / "build" / "packages" / "sites"))
+    parser.add_argument("--jobs", type=int, default=0, help="processes the run may use (default: half the processors, at most 8); the packages do not depend on it")
     parser.add_argument("--start", default=DEFAULT_START)
     parser.add_argument("--end", default=DEFAULT_END)
     args = parser.parse_args()
@@ -599,12 +619,23 @@ def main() -> None:
         if args.write_scenario:
             print((HERE / "scenario.json").relative_to(REPO).as_posix())
             return
+        # The packages record the commit and whether the working tree differs from it. A
+        # published package must name a clean commit, so stop before the long computation.
+        changed = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True).stdout.strip()
+        if changed:
+            parser.error(
+                "the working tree differs from the last commit, so the packages would record uncommitted changes:\n"
+                + changed
+                + "\nCommit first. If validation/sites/scenario.json is listed, the scenario itself changed (for example its contract version after a merge): "
+                "commit it and publish again."
+            )
     else:
         out.mkdir(parents=True, exist_ok=True)
         (out / "scenario.json").write_text(json.dumps(scenario, indent=2) + "\n", encoding="utf-8", newline="\n")
     results = HERE / "results" if args.publish else out / "summary"
     t0 = time.perf_counter()
-    written = run_scenario(scenario, out, terrain)
+    jobs = args.jobs if args.jobs > 0 else max(1, min((os.cpu_count() or 2) // 2, 8))
+    written = run_scenario(scenario, out, terrain, jobs=jobs, terrain_factory=open_lola)
     elapsed = time.perf_counter() - t0
     for path in written:
         validate_package(path)
@@ -638,7 +669,7 @@ def main() -> None:
         sites_arg = Path(args.sites_file).as_posix()
         write_readme(PUBLISHED, published, scenario, summary, f"python -m validation.sites.run {sites_arg} --publish")
         out = PUBLISHED
-    print(f"{len(written)} packages, contract {summary['contract_version']}, in {elapsed:.1f} s -> {out}")
+    print(f"{len(written)} packages, contract {summary['contract_version']}, in {elapsed:.1f} s with {jobs} jobs -> {out}")
     for site in sites:
         row = site["per_height"][site["default_height_index"]]
         print(

@@ -17,8 +17,11 @@ from lsncore.contract import (
     validate_document,
     validate_package,
 )
+from lsncore.contract.io import CONTRACT_VERSION
 from lsncore.scenario import load_scenario
 from lsncore.synthetic import run_synthetic_scenario
+
+_NEWER_VERSION = "{}.{}".format(CONTRACT_VERSION.split(".")[0], int(CONTRACT_VERSION.split(".")[1]) + 1)
 
 SAMPLE = contract_dir() / "sample"
 
@@ -141,7 +144,8 @@ DAMAGE = {
     "site differs from request": (lambda d, m: _edit(d, lambda x: x["site"].update(lat_deg=10.0)), "site/lat_deg"),
     "synthetic notice removed": (lambda d, m: _edit(d, lambda x: x.pop("synthetic_notice")), "synthetic_notice"),
     "request edited": (lambda d, m: _edit(d, lambda x: x["request"]["site"].update(name="other")), "package_id"),
-    "other contract version": (lambda d, m: _edit(d, lambda x: x["contract"].update(version="0.9")), "contract/version"),
+    # a minor version newer than the one this code implements (written as a fixed "0.9" until the contract reached it)
+    "other contract version": (lambda d, m: _edit(d, lambda x: x["contract"].update(version=_NEWER_VERSION)), "contract/version"),
     "unknown top-level field": (lambda d, m: _edit(d, lambda x: x.update(surprise=1)), "surprise"),
     "synthetic flag cleared": (lambda d, m: _edit(d, lambda x: x.update(synthetic=False)), "not marked synthetic"),
 }

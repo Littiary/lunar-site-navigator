@@ -1,0 +1,7 @@
+{
+ "note": "Cylindrical mosaics that open_terrain(products='moon') may use. A mosaic is added here only after its tiles are complete, their SHA-256 matches a second source (or the mismatch is explained) and the checkpoints in thresholds_moon.json pass; a downloaded mosaic that is not listed is reported as present but not approved.",
+ "approved": {
+  "SLDEM2015_256": "6 tiles; second source matches (PDS); moon_report.json checkpoints 2, 3 and seams passed except the label-rounding item (moon_notes.md)",
+  "LDEM_128": "second-source mismatch explained (ldem128_second_source_note.md); checkpoints 2, 3 and seams passed"
+ }
+}

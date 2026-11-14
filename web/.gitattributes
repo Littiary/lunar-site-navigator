@@ -4,3 +4,5 @@
 *.i4 binary
 *.u1 binary
 tests/fixtures/** -text
+# Vendored third-party files are stored byte for byte (their SHA-256 is checked by a test).
+viewer/vendor/** -text

@@ -1,4 +1,4 @@
-# Package contract, version 0.6
+# Package contract, version 0.9
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -18,7 +18,7 @@ validator or a reader relies on.
 | Thing | File | Purpose |
 |---|---|---|
 | Scenario | one JSON file, `kind: "scenario"` | The single input of the tool: sites, time window, observer heights, thresholds, data versions |
-| Site package | directory, `kind: "site"` | Everything computed for one site: site geometry, 360° horizon, and (when computed) time series, events, windows, metrics |
+| Site package | directory, `kind: "site"` | Everything computed for one site: site geometry, 360° horizon, (when computed) time series, events, windows, metrics, and since 0.7 the ground around the site for drawing |
 | Direction-table package | directory, `kind: "direction_table"` | Sun and Earth positions over time, independent of any site |
 | Site-pairs package | directory, `kind: "site_pairs"` | Since 0.5. What every two sites of a scenario achieve together; written when a scenario has two or more sites with a timeline |
 | Index | `index.json`, `kind: "index"` | Lists the packages under a package root, so static pages need no directory listing |
@@ -29,8 +29,8 @@ refers to. Nothing else may be in the directory. The directory name is the packa
 ```
 <package root>/
   index.json
-  direction_table/<package_id>/manifest.json, positions_km.f8
-  site/<site_id>/<package_id>/manifest.json, horizon_*.f4|f8, series_*.f4
+  direction_table/<package_id>/manifest.json, positions_km.f8, earth_*.f4
+  site/<site_id>/<package_id>/manifest.json, horizon_*.f4|f8, series_*.f4, terrain_*_up_m.f4
   site_pairs/<package_id>/manifest.json
 ```
 
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.6"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.9"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -164,6 +164,7 @@ same package ids.
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
 | `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to. Three example requirements are in [`presets/requirements.json`](presets/README.md) |
 | `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg`, `dem_height_error_m` (since 0.6) and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
+| `terrain_patches[]` | Since 0.7, optional. Terrain patches for drawing, each `{id, half_width_m, spacing_m}`; if absent the three default patches are written, an empty list writes none; see 5.9 |
 | `mission_profile` | Reserved |
 | `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use. `dem_set_id: "any"` accepts the installed elevation products; a run on another set than the one named still happens and writes a warning. The package always records what was used |
 
@@ -174,7 +175,8 @@ same package ids.
 `request` echoes, in canonical form, the part of the scenario that concerns this site:
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
-`bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`).
+`bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`),
+and since 0.7 `terrain_patches` (the patches that were written, finest first; absent if there are none).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -211,6 +213,7 @@ same package ids.
 | `flags` | | `coverage_complete`, `truncated_at_data_edge`, `nodata_fraction` |
 | `obstacle_id` | `[H, A]` `<i4` | Since 0.2. For each observer height and azimuth, the index into `obstacles` of the obstacle that this azimuth belongs to; -1 where the horizon has no data |
 | `obstacles` | list | Since 0.2. One record per obstacle, see below. `obstacles[k].id` is `k` |
+| `terrain_source` | | Since 0.9. Which elevation product served the site and the horizon, and its resolution class; see below |
 
 Between azimuth samples, readers interpolate linearly (periodically). The obstacle point,
 its distance and its height can change abruptly from one azimuth to the next; they must
@@ -237,6 +240,23 @@ The outline of an obstacle in 3-D is the sequence of limiting points
 (`obstacle_lat_deg`, `obstacle_lon_deg`, `obstacle_height_m` at `[height_index, j]`) for
 the azimuth indices `j` of its run. Obstacles are geometric runs of the profile; they
 carry no names.
+
+**Terrain source** (since 0.9). `terrain_source` says which elevation product served the
+site, so that a viewer can tell the user how much detail the horizon can hold:
+
+| Field | Content |
+|---|---|
+| `at_site` | `product_id`, `pixel_m`, `projection` of the product the terrain height at the site was read from |
+| `resolution_class` | `fine` (pixel at the site up to 30 m), `medium` (up to 120 m) or `coarse` (larger). With the LOLA products: the 20 m polar products are fine, the 60 m polar products medium, the global 237 m product coarse |
+| `classes` | The definition of the classes in words |
+| `products[]` | Every product that set the horizon in at least one azimuth at the default observer height: `product_id`, `pixel_m`, `projection`, `azimuth_share` (share of the azimuths whose limiting terrain point was read from it) |
+| `method` | Method card id |
+
+The product is chosen per place by the data reader: a polar product where its square
+covers the place, the finest installed latitude-longitude product elsewhere. For a
+latitude-longitude product `pixel_m` is the north-south pixel. A package whose class is
+not `fine` carries a warning that names the pixel; relief narrower than about two pixels
+is not in its horizon, and obstacles of that size cannot be shown.
 
 Reserved optional arrays, same shape: `obstacle_dem_layer` (`|u1`), `elevation_sigma_deg`,
 `elevation_lower_deg`, `elevation_upper_deg` (uncertainty band).
@@ -476,6 +496,73 @@ sunlit complete lunar day of the calendar). Only the listed heights are computed
 viewer must not interpolate between them. For more heights, list them in the
 scenario's `observer_heights_m` (up to 16).
 
+### 5.9 Terrain patches for drawing (since 0.7)
+
+`terrain` holds the ground around the site on regular grids, so that a viewer draws the
+surface the horizon was computed from. **It is for drawing only.** Whether a body is
+visible, and when it rises or sets, always comes from `timeline`, which was computed on
+the finest elevation data. A viewer must not decide visibility by casting rays against a
+patch, and where the drawn surface and the horizon profile disagree, the profile is
+right.
+
+| Field | Content |
+|---|---|
+| `use` | Always `"drawing"` |
+| `notice` | The rule above in one sentence |
+| `frame` | The frame in words: local East/North/Up of the site (`site.enu`), origin at the ground point of the site (`site.position_km`), metres |
+| `method` | Method card id |
+| `patches[]` | Finest first |
+
+A patch is a square grid centred on the site:
+
+| Field | Content |
+|---|---|
+| `id` | `near`, `mid`, `far` for the default patches |
+| `spacing_m`, `half_width_m` | Grid spacing, and half the side of the square |
+| `count_east`, `count_north` | Nodes per axis, `2 * half_width_m / spacing_m + 1` |
+| `east_min_m`, `north_min_m` | Coordinates of element `[0][0]`; both are `-half_width_m` |
+| `up_m` | Array reference: float32, shape `[count_north, count_east]`, metres. NaN where the elevation data ends; such nodes must be left out of the mesh |
+| `up_min_m`, `up_max_m` | Range of the values (`null` if there is none) |
+| `sources[]` | Where the heights were read: `product_id`, `level` (0 is the elevation product itself, level k its block average over 2^k x 2^k pixels), `pixel_m`, `statistic`, `sha256` of the file read, `derived_from_sha256` (the product's data file, for a derived level), `node_share`. The products are listed in `inputs.dem.layers[]` with their source address. Empty in a synthetic package |
+
+Placing a vertex needs no projection and no correction for the curvature of the Moon,
+which is already in the values (on a smooth sphere `up` falls off as
+`-(east^2 + north^2) / (2 r)`: 0.3 m at 1 km, 18 m at 8 km, 295 m at 32 km):
+
+```
+east  = east_min_m  + j * spacing_m          j = 0 .. count_east - 1
+north = north_min_m + i * spacing_m          i = 0 .. count_north - 1
+up    = up_m[i][j]
+
+vertex, local, metres      (east, north, up)
+vertex, body-fixed, km     site.position_km + (east * enu.east + north * enu.north + up * enu.up) / 1000
+observer at height m       (0, 0, m)
+direction of azimuth A and elevation E (horizon, series)
+                           (sin A cos E, cos A cos E, sin E)
+```
+
+The default patches (a scenario may state others in `terrain_patches`: at most 8, at most
+1025 nodes per axis, `half_width_m` a multiple of `spacing_m`; an empty list writes none):
+
+| `id` | Side | Spacing | Nodes | Bytes | Read from |
+|---|---|---|---|---|---|
+| `near` | 4 km | 20 m | 201 x 201 | 161 604 | the finest product |
+| `mid` | 16 km | 80 m | 201 x 201 | 161 604 | its block average over 4 x 4 pixels |
+| `far` | 64 km | 320 m | 201 x 201 | 161 604 | its block average over 16 x 16 pixels |
+
+That is 0.49 MB per site, raw. Where patches overlap, draw the finest. Terrain beyond the
+largest patch is not in the package as a surface; its silhouette is
+`horizon.elevation_deg`, with `horizon.distance_m` saying how far away it is.
+
+How well the drawn surface matches the package horizon (measured on three site records,
+[method note](../method/terrain_patch.md)): its silhouette differs from
+`horizon.elevation_deg` by 0.03 to 0.04 degrees in the median, by 0.09 to 0.33 degrees at
+95 % of the azimuths and by 0.46 degrees at most, the largest differences being where
+terrain within 500 m of the site sets the horizon; it stands above the package horizon by
+0.02 degrees at most. The far patch alone matches to 0.22 degrees where the horizon is
+set by terrain beyond 8 km and is off by up to 3.3 degrees for nearer terrain. The Sun's
+disc is 0.53 degrees across: hence the rule at the top of this section.
+
 ## 6. Direction-table package (decision 3)
 
 One table serves every site. It stores positions relative to the **centre of the Moon**.
@@ -490,7 +577,9 @@ One table serves every site. It stores positions relative to the **centre of the
 | `positions_km` | `[N, B, 3]` `<f8`: time, body, x-y-z |
 | `body_radii_km` | Radius of each body used for its disc (quantity with method card) |
 | `interpolation` | `recommended` method between records, and the measured `max_error_km` and `max_error_arcsec` of that method (`null` if not measured) |
+| `earth_view` | Since 0.8, optional. The orientation of the Earth per record, for drawing it; see 6.1 |
 | `inputs.kernels[]` | `name`, `bytes`, `sha256`, `source_url`, `load_order` |
+| `inputs.earth_orientation_kernels[]` | Since 0.8, when `earth_view` is present: the kernels the Earth's orientation was read from, same fields |
 
 Reserved: `earth_rotation` (for ground-station windows).
 
@@ -503,6 +592,44 @@ az = atan2(d · east, d · north)      el = asin((d · up) / |d|)
 
 Viewers use this only to place the Sun and the Earth in a scene. Rise and set times,
 margins and visible fractions are read from the site package, never recomputed.
+
+### 6.1 Orientation of the Earth (since 0.8)
+
+`earth_view` lets a viewer turn a textured Earth the right way. It is present when the
+Earth-orientation kernels were installed (`request.earth_view` is then `true`);
+otherwise the table carries a warning and a viewer draws the Earth without detail. It is
+for drawing only.
+
+| Field | Content |
+|---|---|
+| `sub_lunar_lat_deg` | `[N]` `<f4`: latitude of the point of the Earth's surface at the centre of the disc seen from the centre of the Moon, as on a map (perpendicular to the reference ellipsoid) |
+| `sub_lunar_lon_deg` | `[N]` `<f4`: its east longitude, in (-180, 180] |
+| `north_pole_angle_deg` | `[N]` `<f4`: position angle of the Earth's north pole in the sky of that observer, counted from the Moon's north pole (+Z of `frame`, projected on the plane of the sky) counter-clockwise, towards east = +Z x (direction to the Earth) |
+| `earth_frame` | Earth-fixed frame of latitude and longitude (`ITRF93`) |
+| `flattening` | Flattening of the reference ellipsoid of the latitude |
+| `method` | Method card id |
+
+Between records: latitude and position angle linearly; longitude linearly **the short
+way round** (it wraps at 180 degrees and moves west by about 14.5 degrees per hour).
+
+From the three angles to the Earth's axes in the frame of the table (`g` is the unit
+vector from the centre of the Moon to the Earth, `positions_km[t, EARTH]` normalised):
+
+```
+east     = normalise(Z x g)              Z = (0, 0, 1)
+north    = g x east
+phi      = atan(tan(sub_lunar_lat) * (1 - flattening)^2)      (0.19 deg at most from sub_lunar_lat)
+pole     = sin(phi) * (-g) + cos(phi) * (cos(angle) * north + sin(angle) * east)
+meridian = normalise(-g - sin(phi) * pole)
+x_axis   = cos(lon) * meridian - sin(lon) * (pole x meridian)
+y_axis   = pole x x_axis
+```
+
+`pole` is the Earth's north pole and `x_axis` the direction of latitude 0, longitude 0;
+a texture in the usual latitude-longitude layout is mapped with these axes. In a site's
+local frame the same vectors are obtained by projecting on `site.enu`. Measured against
+JPL Horizons: latitude and longitude within 0.007 degrees, pole angle within 0.0002
+degrees ([method note](../method/earth_view.md)).
 
 ## 6a. Site-pairs package (since 0.5)
 
@@ -564,6 +691,31 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.9 (14 November 2026)
+
+Additive; nothing that existed in 0.8 changed its meaning, name, unit or layout.
+
+- Site package: `horizon.terrain_source`; method card `horizon.terrain_source`.
+- A site anywhere on the Moon gets a package when an elevation product covers it; `inputs.dem.layers[]` then lists the latitude-longitude products as well.
+- Packages of sites served by the polar products are unchanged apart from the new field.
+
+### 0.8 (14 November 2026)
+
+Additive; nothing that existed in 0.7 changed its meaning, name, unit or layout.
+
+- Direction table: `earth_view` with three arrays `earth_*.f4`, `request.earth_view`, method card `dirtab.earth_view`; section 6.1.
+- `inputs.earth_orientation_kernels[]` of a table with `earth_view` lists the kernels the Earth's orientation was read from. Such a table has a new package id, and so have the site packages computed from it.
+- The sample table holds an invented `earth_view`; the sample was regenerated (new ids).
+
+### 0.7 (14 November 2026)
+
+Additive; nothing that existed in 0.6 changed its meaning, name, unit or layout.
+
+- Site package: `terrain` with its patches and the arrays `terrain_<id>_up_m.f4`; method card `terrain.patch`; section 5.9.
+- Scenario: `terrain_patches`. Site request: `terrain_patches`.
+- The default patches are written for every site unless the scenario says otherwise. Because the request names them, a site computed again has a new package id.
+- The sample holds three small invented patches per site; it was regenerated (new ids).
 
 ### 0.6 (14 November 2026)
 

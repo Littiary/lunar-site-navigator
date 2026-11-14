@@ -44,6 +44,16 @@ def test_every_module_the_setup_script_runs_is_in_the_guide_and_exists():
         assert path.with_suffix(".py").exists() or (path / "__main__.py").exists(), name
 
 
+def test_pytest_started_at_the_repository_root_takes_the_repository_as_its_root(request):
+    """Otherwise the conftest.py at the repository root, which refuses the environment of another checkout, is not loaded."""
+    assert Path(request.config.rootpath).resolve() == REPO
+    assert request.config.inipath is not None and Path(request.config.inipath).name == "pytest.ini"
+    assert any(line.startswith("needs_data") for line in request.config.getini("markers"))
+    assert request.config.pluginmanager.has_plugin(str(REPO / "conftest.py"))
+    for folder in ("core/tests", "validation/tests", "data/tests"):
+        assert folder in (REPO / "pytest.ini").read_text(encoding="utf-8") and (REPO / folder).is_dir()
+
+
 def test_pinned_versions_cover_the_declared_dependencies():
     pinned = {line.split("==")[0].lower() for line in (REPO / "scripts" / "constraints.txt").read_text(encoding="utf-8").splitlines() if "==" in line}
     for package in ("core", "data"):

@@ -24,8 +24,9 @@ from .pairs import build_pairs_package
 from .trade import add_height_trade_to_timeline
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
+from .terrain_patch import DEFAULT_PATCHES, canonical_patches, compute_patches, patch_warnings
 from .timeline import IntervalSet, TimeGrid
-from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, horizon_error_profile, visibility_window
+from .uncertainty import add_uncertainty_to_timeline, band_from_windows, ellipse_points, horizon_error_profile, window_job
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -230,18 +231,18 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
     return cards
 
 
-def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings):
-    """Bands for a stated horizon error and windows at the sample points of a stated ellipse."""
-    from .ephem import directions as d
-    from .ephem import table as ephem_table
-    from .events import finder
+def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings, workers: int = 1):
+    """Bands for a stated horizon error and windows at the sample points of a stated ellipse.
 
-    table = ephem_table.load_table(table_dir)
+    workers: processes that share the event searches (two per body and height for the
+    band, one per body and sample point for the ellipse). The result is the same for any
+    number of them."""
     grid = TimeGrid.from_contract(timeline.time)
     domain = (grid.start_et_s, grid.end_et_s)
     heights = horizon.observer_heights_m
-    rules = {body: finder.threshold_from_contract(thresholds[body], "visible") for body in timeline.bodies}
     notes = []
+    tasks = []  # (what the window is for, arguments of window_job)
+    errors = None
 
     bands, applied = None, None
     if stated.get("horizon_error_deg") or stated.get("dem_height_error_m"):
@@ -251,12 +252,11 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
             for h in range(len(heights))
         ]
         applied = {"min": float(errors[hd].min()), "median": float(np.median(errors[hd])), "max": float(errors[hd].max())}
-        ground = d.Site(csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
+        here = (csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
         for body in timeline.bodies:
-            direction = finder.site_direction(ground, table, body)
             for h in range(len(heights)):
-                nominal = timeline.window(f"{body.lower()}_visible", h)
-                bands[(body, h)] = horizon_error_band(direction, horizon.elevation_deg[h], az_step, domain, rules[body], errors[h], nominal)
+                for sign in (1.0, -1.0):  # the horizon raised, then lowered
+                    tasks.append((("band", body, h, sign), (*here, str(table_dir), body, horizon.elevation_deg[h] + sign * errors[h], az_step, domain, thresholds[body])))
 
     ellipse = None
     spec = stated.get("landing_ellipse")
@@ -281,14 +281,125 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
                     sets[body].append(None)
                 continue
             ground_heights.append(ground_height)
-            place = d.Site(float(lon), float(lat), ground_height / 1000.0)
             for body in timeline.bodies:
                 if k == 0:
                     sets[body].append(timeline.window(f"{body.lower()}_visible", hd))
                 else:
-                    sets[body].append(visibility_window(finder.site_direction(place, table, body), profile, az_step, domain, rules[body]))
+                    sets[body].append(None)  # filled in below
+                    tasks.append((("point", body, len(sets[body]) - 1, 0.0), (float(lon), float(lat), ground_height / 1000.0, str(table_dir), body, profile, az_step, domain, thresholds[body])))
         ellipse = {"spec": spec, "height_index": hd, "points": points, "surface_height_m": ground_heights, "sets": sets}
+
+    # Every task is one event search over the whole range; they are independent of each other.
+    if workers > 1 and len(tasks) > 1:
+        from concurrent.futures import ProcessPoolExecutor
+
+        with ProcessPoolExecutor(max_workers=min(int(workers), len(tasks))) as pool:
+            found = list(pool.map(window_job, *zip(*(arguments for _, arguments in tasks))))
+    else:
+        found = [window_job(*arguments) for _, arguments in tasks]
+    raised = {}
+    for (kind, body, where, sign), intervals in zip((key for key, _ in tasks), found):
+        result = IntervalSet(intervals, domain)
+        if kind == "point":
+            sets[body][where] = result
+        elif sign > 0.0:
+            raised[(body, where)] = result
+        else:
+            bands[(body, where)] = band_from_windows(timeline.window(f"{body.lower()}_visible", where), raised[(body, where)], result, float(errors[where].max()))
     return bands, ellipse, notes, applied
+
+
+RESOLUTION_CLASSES = "fine: pixel at the site up to 30 m; medium: up to 120 m; coarse: larger"
+
+
+def resolution_class(pixel_m: float) -> str:
+    return "fine" if pixel_m <= 30.0 else "medium" if pixel_m <= 120.0 else "coarse"
+
+
+def terrain_source(terrain, csite: dict, horizon, height_index: int) -> tuple[dict | None, list[str]]:
+    """Which elevation product served the site and the horizon, and what its pixel allows.
+
+    Returns the block for the package and the warnings that go with it.
+    """
+    site_id, info = terrain.source_at(csite["lon_deg"], csite["lat_deg"])
+    site_id = str(np.asarray(site_id).ravel()[0])
+    if not site_id or horizon.obstacle_lat_deg is None:
+        return None, []
+    lat, lon = horizon.obstacle_lat_deg[height_index], horizon.obstacle_lon_deg[height_index]
+    known = np.isfinite(lat) & np.isfinite(lon)
+    ids, more = terrain.source_at(lon[known], lat[known])
+    info = {**more, **info}
+    products = []
+    for pid in sorted(set(ids.ravel()) - {""}):
+        products.append({"product_id": str(pid), "pixel_m": float(info[pid]["pixel_m"]), "projection": info[pid]["projection"], "azimuth_share": float(np.mean(ids == pid))})
+    products.sort(key=lambda p: -p["azimuth_share"])
+    pixel = float(info[site_id]["pixel_m"])
+    block = {
+        "at_site": {"product_id": site_id, "pixel_m": pixel, "projection": info[site_id]["projection"]},
+        "resolution_class": resolution_class(pixel),
+        "classes": RESOLUTION_CLASSES,
+        "products": products,
+    }
+    notes = []
+    if block["resolution_class"] != "fine":
+        notes.append(
+            f"terrain: the site is served by {site_id} with {pixel:.0f} m pixels (resolution class {block['resolution_class']}); "
+            f"relief narrower than about {2.0 * pixel:.0f} m is not in the horizon, and nearby obstacles of that size cannot be shown"
+        )
+    return block, notes
+
+
+def terrain_source_methods(dem_set_id: str) -> dict:
+    return {
+        pk.M_TERRAIN_SOURCE: pk.method_card(
+            "Elevation product that served the site",
+            "at_site: the product the terrain height at the site was read from, with its pixel size. resolution_class: fine (pixel up to 30 m), medium (up to 120 m) or coarse (larger). products: every product that set the horizon in at least one azimuth at the default observer height, with the share of the azimuths whose limiting terrain point was read from it.",
+            "The data reader names the product for a place: a polar product where its square covers the place, the finest installed simple-cylindrical mosaic elsewhere. Asked at the site and at the limiting terrain point of every azimuth.",
+            "none",
+            "none",
+            [dem_set_id],
+            {"classes": RESOLUTION_CLASSES},
+            "analytic-test-passed",
+            [
+                "core/tests/test_moon_terrain.py::test_a_site_outside_the_polar_products_gets_a_package_that_says_so",
+                "core/tests/test_moon_terrain.py::test_south_polar_sites_are_served_exactly_as_before",
+            ],
+            [
+                "The class describes the grid of the product, not its accuracy. Relief narrower than about two pixels is not in a horizon computed from it.",
+                "For a simple-cylindrical product pixel_m is the north-south pixel; the east-west pixel is smaller by the cosine of the latitude.",
+            ],
+        )
+    }
+
+
+def terrain_patch_methods(dem_set_id: str) -> dict:
+    """Method card of the terrain patches."""
+    return {
+        pk.M_TERRAIN_PATCH: pk.method_card(
+            "Terrain patch for drawing",
+            "up_m: the up coordinate, in the site's local East/North/Up frame and measured from the ground point of the site, of the surface point whose east and north coordinates are those of the grid node. The curvature of the sphere is in the values: on a smooth sphere they fall off as -(east^2 + north^2) / (2 r). NaN where the elevation data ends.",
+            "For every node the surface point is found whose position in the site frame has the node's east and north coordinates: its distance from the centre is the reference radius plus the terrain height at its latitude and longitude, settled by iteration to 0.1 mm. The terrain is read by bilinear interpolation from the block-average level of the elevation product whose pixel is the coarsest not larger than the grid spacing (sources lists product, level and checksum).",
+            "local East/North/Up at the site; up is the outward radial direction of the reference sphere; origin at the ground point of the site",
+            "none",
+            [dem_set_id],
+            {},
+            "analytic-test-passed",
+            [
+                "core/tests/test_terrain_patch.py::test_patch_of_a_smooth_sphere_is_the_spherical_cap (threshold 0.002 m)",
+                "core/tests/test_terrain_patch.py::test_patch_nodes_lie_on_the_surface: every node turned back into latitude, longitude and height with frame vectors written out in the test (threshold 0.05 m)",
+                "core/tests/test_terrain_patch.py::test_east_is_east_and_north_is_north: a hill at a known bearing and distance (threshold one grid spacing)",
+                "core/tests/test_terrain_patch.py::test_near_patch_reproduces_the_elevation_data and ::test_coarser_patches_reproduce_their_overview_level: on LOLA terrain at three site records against the data reader, 0.0002 m at the nodes (threshold 0.05 m)",
+                "core/tests/test_terrain_patch.py::test_horizon_drawn_from_the_patches_agrees_with_the_package_horizon: on LOLA terrain at three site records the horizon of the drawn surface is inside the tolerance (a height of 15 % of the grid spacing at the limiting terrain, plus 0.02 deg) at 99.9 to 100 % of the azimuths (required 95 %); in angle 0.03 to 0.04 deg in the median, 0.46 deg at most",
+                "NOT MET: core/tests/test_terrain_patch.py::test_near_patch_between_its_nodes_stays_within_half_a_metre asked for 0.5 m at 95 % of random places between the nodes of the near patch; measured 0.83, 0.55 and 0.49 m at the three site records (docs/method/terrain_patch.md, section 3)",
+            ],
+            [
+                "For drawing only. The horizon, the windows and the event times of the package are computed on the finest elevation data; a viewer must not derive visibility from this surface.",
+                "A coarse patch shows ground averaged over its grid cells: ridge crests are lower and narrow gaps are filled. Measured at three site records, the horizon of the drawn surface differs from the package horizon by up to 0.46 deg (terrain within 500 m of the site) and by up to 0.22 deg for terrain beyond 500 m; where they differ, the package horizon is right.",
+                "The grid is regular in the tangent plane of the site, not on the sphere: 32 km away a cell covers 0.02 % more ground than at the site. Overhangs cannot be represented.",
+                "Terrain beyond the largest patch is not in the package as a surface; its silhouette is in the horizon profile with the distance of the limiting terrain.",
+            ],
+        )
+    }
 
 
 def trade_methods(dem_set_id: str, direction_table_id: str) -> dict:
@@ -411,14 +522,33 @@ def _mark_synthetic(methods: dict) -> dict:
     return out
 
 
+def _site_job(scenario: dict, index: int, out_root: str, table_dir: str | None, terrain_factory, synthetic: bool, settings, inner: int = 1) -> str:
+    """One site of a scenario in a worker process: its own terrain, the shared direction table."""
+    one = {**scenario, "sites": [scenario["sites"][index]]}
+    paths = run_scenario(one, out_root, terrain_factory(), synthetic, settings, jobs=inner, _table_dir=table_dir or "", _finish=False)
+    return str(paths[-1])
+
+
 def run_scenario(
     scenario: dict,
     out_root: Path | str,
     terrain: Terrain | None = None,
     terrain_is_synthetic: bool = False,
     settings: HorizonSettings = HorizonSettings(),
+    *,
+    jobs: int = 1,
+    terrain_factory=None,
+    _table_dir: str | None = None,
+    _finish: bool = True,
 ) -> list[Path]:
-    """Compute every site of a scenario and write the packages. Returns their directories."""
+    """Compute every site of a scenario and write the packages. Returns their directories.
+
+    jobs: processes the run may use. Sites are computed side by side, each in its own
+    process; that needs terrain_factory, a picklable callable without arguments that
+    opens the terrain in a worker. What is left over is shared inside each site among the
+    event searches of the uncertainty band and the landing ellipse. The packages are the
+    same whatever the number of jobs.
+    """
     if scenario["synthetic"] and terrain is None:
         return run_synthetic_scenario(scenario, out_root)
     if terrain is None:
@@ -432,13 +562,12 @@ def run_scenario(
     max_range = float(scenario["horizon"]["max_range_m"])
     window = scenario.get("time_window")
     bodies = list(scenario["bodies"])
+    patch_specs = canonical_patches(scenario.get("terrain_patches", DEFAULT_PATCHES))
     written: list[Path] = []
     extra_warnings: list[str] = []
 
     wanted = scenario["data"]["dem_set_id"]
-    actual = terrain.describe()["dem_set_id"]
-    if wanted not in ("any", actual):
-        extra_warnings.append(f"data: the scenario asks for DEM set '{wanted}', the run used '{actual}'")
+    whole_terrain = terrain  # a terrain for any place hands each site the products that serve it
 
     # Direction table and timeline: provided by the ephemeris modules when present.
     table_dir = None
@@ -452,10 +581,13 @@ def run_scenario(
             from .synthetic import DEFAULT_THRESHOLDS
 
             thresholds = {**DEFAULT_THRESHOLDS, **scenario.get("thresholds", {})}
-            table_dir = ephem_table.write_direction_table(
-                out_root, window["start_utc"], window["end_utc"], scenario_id=scenario_id
-            )
-            written.append(Path(table_dir))
+            if _table_dir:  # a worker: the table was written by the process that started it
+                table_dir = Path(_table_dir)
+            else:
+                table_dir = ephem_table.write_direction_table(
+                    out_root, window["start_utc"], window["end_utc"], scenario_id=scenario_id
+                )
+                written.append(Path(table_dir))
             timeline_request = {
                 "start_utc": window["start_utc"],
                 "end_utc": window["end_utc"],
@@ -472,8 +604,22 @@ def run_scenario(
                 "timeline: the ephemeris modules are not installed; this package holds the horizon only"
             )
 
-    for site in scenario["sites"]:
+    sites = list(scenario["sites"])
+    if jobs > 1 and terrain_factory is not None and len(sites) > 1 and not (window is not None and table_dir is None):
+        from concurrent.futures import ProcessPoolExecutor
+
+        at_once = min(int(jobs), len(sites))
+        with ProcessPoolExecutor(max_workers=at_once) as pool:
+            futures = [
+                pool.submit(_site_job, scenario, k, str(out_root), str(table_dir) if table_dir else None, terrain_factory, synthetic, settings, int(jobs) // at_once)
+                for k in range(len(sites))
+            ]
+            written.extend(Path(future.result()) for future in futures)
+        sites = []
+
+    for site in sites:
         csite = canonical_site(site)
+        terrain = whole_terrain.for_site(csite["lat_deg"], csite["lon_deg"], max_range) if hasattr(whole_terrain, "for_site") else whole_terrain
         t0 = _time.perf_counter()
         horizon = compute_horizon(terrain, csite["lat_deg"], csite["lon_deg"], heights, az_step, max_range, settings)
         t1 = _time.perf_counter()
@@ -481,6 +627,15 @@ def run_scenario(
         timeline = None
         status = "ok"
         warnings = list(extra_warnings)
+        actual = terrain.describe()["dem_set_id"]
+        if wanted not in ("any", actual):
+            warnings.append(f"data: the scenario asks for DEM set '{wanted}', the run used '{actual}'")
+        default_index = int(np.argmin(np.abs(np.asarray(heights) - scenario.get("default_height_m", DEFAULT_HEIGHT_M))))
+        horizon.terrain_source, notes = terrain_source(terrain, csite, horizon, default_index)
+        warnings.extend(notes)
+        warnings.extend(getattr(terrain, "site_notes", []))
+        if horizon.terrain_source is not None:
+            methods.update(terrain_source_methods(actual))
         if window is not None and table_dir is None:
             status = "partial"
         if table_dir is not None:
@@ -498,7 +653,8 @@ def run_scenario(
                 default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
                 hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
                 bands, ellipse, notes, applied = _uncertainty_inputs(
-                    csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings
+                    csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings,
+                    workers=max(1, int(jobs)),
                 )
                 warnings.extend(notes)
                 add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied)
@@ -512,6 +668,12 @@ def run_scenario(
             add_height_trade_to_timeline(timeline, heights)
             methods.update(trade_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
         t2 = _time.perf_counter()
+        patches = None
+        if patch_specs:
+            patches = compute_patches(terrain, csite["lat_deg"], csite["lon_deg"], horizon.surface_height_m, patch_specs)
+            methods.update(terrain_patch_methods(terrain.describe()["dem_set_id"]))
+            warnings.extend(patch_warnings(patches))
+        t3 = _time.perf_counter()
         if not horizon.coverage_complete:
             status = "partial"
         if synthetic:
@@ -530,12 +692,16 @@ def run_scenario(
                 timeline_request={**timeline_request, "landing_utc": site.get("landing_utc")} if timeline is not None else None,
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
-                timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
+                timings_s={"horizon": t1 - t0, "timeline": t2 - t1, "terrain_patches": t3 - t2},
                 status=status,
                 warnings=warnings,
+                terrain_patches=patches,
             )
         )
-    pair_methods = trade_methods(terrain.describe()["dem_set_id"], "the direction table of the site packages")
+    if not _finish:
+        return written
+    dem_sets = sorted({read_package(p).manifest["inputs"]["dem"]["dem_set_id"] for p in written if p.name.startswith("site-")})
+    pair_methods = trade_methods(" and ".join(dem_sets), "the direction table of the site packages")
     pairs = build_pairs_package(
         out_root,
         written,  # it picks the site packages with a timeline

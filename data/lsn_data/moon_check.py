@@ -115,7 +115,9 @@ def _cyl_range(t: CylDEM) -> dict:
     lab_min, lab_max = float(t.label["MINIMUM"]), float(t.label["MAXIMUM"])
     return {"measured_min": mn, "measured_max": mx, "label_minimum": lab_min, "label_maximum": lab_max,
             "measured_min_m": mn * t.scale, "measured_max_m": mx * t.scale,
-            "passed": bool(lab_min - 1e-9 <= mn and mx <= lab_max + 1e-9)}
+            "passed": bool(lab_min - 1e-9 <= mn and mx <= lab_max + 1e-9),
+            "max_abs_difference_to_label_m": float(max(abs(mn - lab_min), abs(mx - lab_max)) * t.scale),
+            "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"}
 
 
 def _radius_ok(lab: dict) -> dict:
@@ -243,8 +245,9 @@ def run(root: Path | None = None) -> dict:
     north_ids = [p.product_id for t in moon.polar if t.pole > 0 for p in t.products]
     tile_ids = [t.product_id for c in moon.cylindrical for t in c.tiles]
     rep["checkpoint_1"] = checkpoint_1(root, north_ids + tile_ids + list(catalog.RDR_SAMPLE) + list(catalog.RDR_NORTH))
-    rep["deviation"] = ("north-polar products compared with LRO_SM_06 plus LRO_NO_08 returns, because LRO_SM_06 has none "
-                        "north of 80.5 N; criteria unchanged")
+    rep["deviation"] = ("north-polar products compared with LRO_SM_06 plus LRO_NO_08 returns, selected with the validity rule "
+                        "of LOLARDR.FMT (least significant byte of SHOT_FLAG = 0, bit 10 clear) instead of SHOT_FLAG = 0, "
+                        "which leaves no returns north of 80.5 N; criteria unchanged")
 
     c2 = {}
     try:
@@ -256,7 +259,7 @@ def run(root: Path | None = None) -> dict:
         for dem in north.products:
             band = crit["regions"].get(dem.product_id)
             if band:
-                r = ind.compare_rdr(dem, rdr_north, *band)
+                r = ind.compare_rdr(dem, rdr_north, *band, rule="documented")
                 r["judgement"] = ind._judge(r["stats"], r["fit"], r["mirror_rms_ratio"], crit["pass_if"])
                 c2[dem.product_id] = r
     crit_c = th["checkpoint_2_georeferencing"]["cylindrical"]["pass_if_in_pixels"]
