@@ -1,0 +1,30 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.3"
+  },
+  "kind": "index",
+  "generated_utc": "2026-11-14T11:54:07.666Z",
+  "scenario_id": "synthetic-sample",
+  "packages": [
+    {
+      "kind": "direction_table",
+      "package_id": "dirtab-d96af27ea88fdf07",
+      "path": "direction_table/dirtab-d96af27ea88fdf07",
+      "synthetic": true,
+      "status": "ok"
+    },
+    {
+      "kind": "site",
+      "package_id": "site-0c0ce671f55e8cb1",
+      "path": "site/synthetic-sample-site/site-0c0ce671f55e8cb1",
+      "synthetic": true,
+      "status": "ok",
+      "site_id": "synthetic-sample-site",
+      "name": "SYNTHETIC SAMPLE SITE (not a real place)",
+      "lat_deg": -88.0,
+      "lon_deg": 45.0,
+      "has_timeline": true
+    }
+  ]
+}
