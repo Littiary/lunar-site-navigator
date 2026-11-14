@@ -83,11 +83,78 @@ def horizon_error_profile(distance_m, common_deg: float | None = 0.0, dem_height
     """
     distance = np.asarray(distance_m, dtype=np.float64)
     error = np.full(distance.shape, float(common_deg or 0.0))
-    if dem_height_error_m:
+    if dem_height_error_m is not None and np.any(np.nan_to_num(np.asarray(dem_height_error_m, dtype=np.float64)) > 0.0):
+        height = np.broadcast_to(np.nan_to_num(np.asarray(dem_height_error_m, dtype=np.float64)), distance.shape)  # one value, or one per azimuth
         with np.errstate(invalid="ignore", divide="ignore"):
-            angle = np.degrees(np.arctan(float(dem_height_error_m) / distance))
+            angle = np.degrees(np.arctan(height / distance))
         error = error + np.where(np.isfinite(distance) & (distance > 0.0), angle, 0.0)
     return error
+
+
+def terrain_slope_deg(terrain, lon_deg, lat_deg, baseline_m) -> np.ndarray:
+    """Slope of the terrain at points, in degrees: central differences over one baseline
+    to the north and south and to the east and west of each point (the baseline is the
+    pixel of the product the point is read from, as in the data stream's slope classes)."""
+    lat = np.radians(np.atleast_1d(np.asarray(lat_deg, dtype=np.float64)))
+    lon = np.radians(np.atleast_1d(np.asarray(lon_deg, dtype=np.float64)))
+    base = np.broadcast_to(np.asarray(baseline_m, dtype=np.float64), lat.shape)
+    arc = base / float(terrain.reference_radius_m)
+    sl, cl, so, co = np.sin(lat), np.cos(lat), np.sin(lon), np.cos(lon)
+    up = np.stack([cl * co, cl * so, sl], axis=-1)
+    east = np.stack([-so, co, np.zeros_like(so)], axis=-1)
+    north = np.stack([-sl * co, -sl * so, cl], axis=-1)
+
+    def height(direction, sign):
+        p = np.cos(arc)[:, None] * up + sign * np.sin(arc)[:, None] * direction
+        return np.asarray(terrain.height_m(np.degrees(np.arctan2(p[:, 1], p[:, 0])), np.degrees(np.arctan2(p[:, 2], np.hypot(p[:, 0], p[:, 1])))), dtype=np.float64)
+
+    span = 2.0 * float(terrain.reference_radius_m) * np.sin(arc)
+    d_north = (height(north, 1.0) - height(north, -1.0)) / span
+    d_east = (height(east, 1.0) - height(east, -1.0)) / span
+    return np.degrees(np.arctan(np.hypot(d_north, d_east)))
+
+
+def height_error_for_points(model: dict, product_ids, rms_error_m, slope_deg) -> tuple[np.ndarray, np.ndarray]:
+    """Height error of terrain points after a stated model, and where each value came from.
+
+    The model is either {"constant_m": x} or {"rules": {pattern: rule}}; a pattern is a
+    product id with '*' as wildcard, the most specific pattern that fits a product applies.
+    A rule is {"rms_map_factor": f, "flat_m": x} (f times the product's error map at the
+    pixel, x where the map is empty) or {"slope_classes": [{"up_to_deg", "error_m"}, ...]}.
+    Returns the errors in metres (NaN where there is no terrain point) and the sources:
+    'rms_map', 'flat', 'slope_class' or 'constant'.
+    """
+    import fnmatch
+
+    ids = np.asarray(product_ids, dtype=object)
+    rms = np.broadcast_to(np.asarray(rms_error_m, dtype=np.float64), ids.shape)
+    slope = np.broadcast_to(np.asarray(slope_deg, dtype=np.float64), ids.shape)
+    error = np.full(ids.shape, np.nan)
+    source = np.full(ids.shape, "", dtype=object)
+    todo = ids != ""
+    if "constant_m" in model:
+        error[todo], source[todo] = float(model["constant_m"]), "constant"
+        return error, source
+    rules = model["rules"]
+    for pattern in sorted(rules, key=lambda text: (text == "*", -len(text))):
+        rule = rules[pattern]
+        fits = {pid: fnmatch.fnmatchcase(str(pid), pattern) for pid in set(ids.ravel())}
+        sel = todo & np.vectorize(fits.get, otypes=[bool])(ids)
+        if not sel.any():
+            continue
+        if "rms_map_factor" in rule:
+            mapped = sel & np.isfinite(rms)
+            error[mapped], source[mapped] = float(rule["rms_map_factor"]) * rms[mapped], "rms_map"
+            empty = sel & ~np.isfinite(rms)
+            error[empty], source[empty] = float(rule["flat_m"]), "flat"
+        else:
+            classes = sorted(rule["slope_classes"], key=lambda c: c["up_to_deg"])
+            value = np.full(ids.shape, float(classes[-1]["error_m"]))  # unknown slope: the steepest class
+            for c in reversed(classes):
+                value = np.where(slope <= c["up_to_deg"], float(c["error_m"]), value)
+            error[sel], source[sel] = value[sel], "slope_class"
+        todo &= ~sel
+    return error, source
 
 
 def horizon_error_band(direction, elevation_deg, step_deg: float, domain, rule, error_deg, nominal: IntervalSet | None = None) -> Band:
@@ -217,7 +284,9 @@ def horizon_error_assumption(stated: dict) -> str:
     parts = []
     if stated.get("horizon_error_deg"):
         parts.append(COMMON_SHIFT_ASSUMPTION)
-    if stated.get("dem_height_error_m"):
+    if stated.get("dem_height_error_model"):
+        parts.append(HEIGHT_ERROR_ASSUMPTION + " The height is taken from the stated model: " + str(stated["dem_height_error_model"].get("label", "")) + ".")
+    elif stated.get("dem_height_error_m"):
         parts.append(HEIGHT_ERROR_ASSUMPTION)
     if len(parts) == 2:
         parts.append("The two are added.")
@@ -228,7 +297,9 @@ def _error_words(stated: dict) -> str:
     words = []
     if stated.get("horizon_error_deg"):
         words.append(f"a horizon error of {stated['horizon_error_deg']:g} deg")
-    if stated.get("dem_height_error_m"):
+    if stated.get("dem_height_error_model"):
+        words.append(f"the terrain height error of the stated model ({stated['dem_height_error_model'].get('id', 'unnamed')})")
+    elif stated.get("dem_height_error_m"):
         words.append(f"a terrain height error of {stated['dem_height_error_m']:g} m")
     return " and ".join(words)
 
@@ -242,7 +313,8 @@ ELLIPSE_ASSUMPTION = (
 
 
 def add_uncertainty_to_timeline(
-    timeline: TimelineResult, stated: dict, bands: dict | None, ellipse: dict | None, et_to_utc, applied_error_deg: dict | None = None
+    timeline: TimelineResult, stated: dict, bands: dict | None, ellipse: dict | None, et_to_utc, applied_error_deg: dict | None = None,
+    quality: list | None = None, azimuth_step_deg: float | None = None, default_index: int = 0,
 ) -> None:
     """Write the band of a stated horizon error and the survey of a landing ellipse into a timeline.
 
@@ -271,8 +343,33 @@ def add_uncertainty_to_timeline(
         block = {}
         if stated.get("horizon_error_deg"):
             block["error_deg"] = float(stated["horizon_error_deg"])
-        if stated.get("dem_height_error_m"):
+        if stated.get("dem_height_error_model"):
+            model = stated["dem_height_error_model"]
+            block["dem_height_error_model"] = {key: str(model.get(key, "")) for key in ("id", "label", "source")}
+        elif stated.get("dem_height_error_m"):
             block["dem_height_error_m"] = float(stated["dem_height_error_m"])
+        if quality is not None:
+            # What fed the band: per event the limiting horizon sample at the event's azimuth,
+            # and over the whole profile at the default height.
+            pixel = {1: "constrained", 0: "interpolated"}
+            for event in timeline.events:
+                q = quality[event["height_index"]]
+                j = int(round(event["azimuth_deg"] / azimuth_step_deg)) % q["error_m"].size
+                value = float(q["error_m"][j])
+                event["terrain_quality"] = {
+                    "band_source": str(q["source"][j]) or "none",
+                    "height_error_m": value if np.isfinite(value) else None,
+                    "limiting_pixel": pixel.get(int(q["constrained"][j]), "unknown"),
+                    "product_id": str(q["product_id"][j]),
+                }
+            q = quality[default_index]
+            known = np.isfinite(q["error_m"])
+            if known.any():
+                block["applied_height_error_m"] = {"min": float(q["error_m"][known].min()), "median": float(np.median(q["error_m"][known])), "max": float(q["error_m"][known].max())}
+                shares = [(float(np.mean(q["source"][known] == name)), str(name)) for name in sorted(set(q["source"][known]))]
+                block["sources"] = [{"source": name, "azimuth_share": share} for share, name in sorted(shares, reverse=True)]
+                counted = q["constrained"][known]
+                block["limiting_pixels"] = {"constrained": float(np.mean(counted == 1)), "interpolated": float(np.mean(counted == 0)), "unknown": float(np.mean(counted < 0))}
         if applied_error_deg is not None:
             block["applied_error_deg"] = {key: float(applied_error_deg[key]) for key in ("min", "median", "max")}
         block["assumption"] = horizon_error_assumption(stated)

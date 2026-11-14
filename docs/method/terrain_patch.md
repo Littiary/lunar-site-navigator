@@ -141,6 +141,34 @@ What averaging costs in height (nodes against the finest data): mid patch median
 0.9 m, 95 % 2.3 to 3.4 m, largest 12 to 27 m; far patch median 2.3 to 2.5 m, 95 % 8.9 to
 9.3 m, largest 69 to 75 m.
 
+**With the 5 m near field** (`core/tests/test_near_field.py`, measured on 14 November
+2026 at the three site records). Since the data stream built overview levels for the 5 m
+site rasters, a patch is read from the raster the science used wherever that raster has
+a level with the pixel of the patch; the package names raster and level in `sources`.
+Tested: every such node within 0.05 m of that level (threshold fixed beforehand).
+
+| Patch | Shackleton record | de Gerlache record | Malapert record |
+|---|---|---|---|
+| near, 20 m | 5 m raster, 20 m block average, all nodes | the same | the same |
+| mid, 80 m | 5 m raster 80 %, 20 m product 20 % | 86 % and 14 % | 20 m product only: this raster has levels to 40 m |
+| far, 320 m | 5 m raster 6 %, 20 m product 94 % | the same | 20 m product only |
+| Centre node of the near patch against the ground point of the science | -0.20 m | -0.79 m | 0.00 m |
+| Near patch drawn between its nodes against the 5 m surface, 2000 places: median, 95 %, largest | 0.18, 0.85, 2.3 m | 0.14, 0.69, 3.3 m | 0.16, 0.76, 2.5 m |
+| ... within 100 m of the site | 0.17, 0.79, 1.8 m | 0.22, 1.42, 4.9 m | 0.09, 0.51, 1.2 m |
+
+So the drawn ground follows the surface of the science to a few decimetres in the
+median. It cannot follow it exactly: a 20 m grid of block averages does not hold 5 m
+relief. At the de Gerlache record, a crest with a hollow beside it, the drawn ground at
+the observer's feet is 0.8 m low and up to 4.9 m off within 100 m.
+
+A scenario can state a finer patch for that, and the core serves it today without any
+change: `{"id": "site", "half_width_m": 500, "spacing_m": 5}` in `terrain_patches`, next
+to the three defaults. Measured at the three records: read from the 5 m raster itself
+(level 0), centre node 0.000 m, drawn between nodes within 100 m of the site median
+0.003 to 0.006 m, 95 % 0.04 to 0.08 m, largest 0.4 to 0.8 m; 201 x 201 nodes, 161 604
+bytes. It is not written by default: the default set stays the three patches the
+viewers were written for.
+
 ## 5. Limits
 
 1. **For drawing only.** The horizon, the windows and the event times of a package are

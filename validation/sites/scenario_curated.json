@@ -1,0 +1,258 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.11"
+  },
+  "kind": "scenario",
+  "scenario_id": "curated-sites",
+  "title": "Curated list without the project sites: past landings and one representative Artemis III point, 24 months",
+  "description": "Site records of the data stream (data/sites/curated_sites.json): past landing sites at the lander positions measured on LROC images, and one representative point of an Artemis III candidate region. Real terrain from every installed elevation product, without the 5 m near field; SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission. No uncertainty is stated for these sites.",
+  "synthetic": false,
+  "sites": [
+    {
+      "site_id": "apollo-11",
+      "name": "Apollo 11 (Lunar Module Eagle descent stage)",
+      "lat_deg": 0.67416,
+      "lon_deg": 23.47314,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "apollo-12",
+      "name": "Apollo 12 (Lunar Module Intrepid descent stage)",
+      "lat_deg": -3.0128,
+      "lon_deg": 336.5781,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "apollo-14",
+      "name": "Apollo 14 (Lunar Module Antares descent stage)",
+      "lat_deg": -3.64589,
+      "lon_deg": 342.52806,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "apollo-15",
+      "name": "Apollo 15 (Lunar Module Falcon descent stage)",
+      "lat_deg": 26.13239,
+      "lon_deg": 3.6333,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "apollo-16",
+      "name": "Apollo 16 (Lunar Module Orion descent stage)",
+      "lat_deg": -8.9734,
+      "lon_deg": 15.5011,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "apollo-17",
+      "name": "Apollo 17 (Lunar Module Challenger descent stage)",
+      "lat_deg": 20.1911,
+      "lon_deg": 30.7723,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Apollo",
+      "category": "past landing"
+    },
+    {
+      "site_id": "surveyor-1",
+      "name": "Surveyor 1 lander",
+      "lat_deg": -2.4745,
+      "lon_deg": 316.6602,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Surveyor",
+      "category": "past landing"
+    },
+    {
+      "site_id": "change-3",
+      "name": "Chang'e 3 lander",
+      "lat_deg": 44.1214,
+      "lon_deg": 340.4883,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Chang'e",
+      "category": "past landing"
+    },
+    {
+      "site_id": "change-4",
+      "name": "Chang'e 4 lander",
+      "lat_deg": -45.4562,
+      "lon_deg": 177.5886,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Chang'e",
+      "category": "past landing"
+    },
+    {
+      "site_id": "change-5",
+      "name": "Chang'e 5 lander",
+      "lat_deg": 43.0576,
+      "lon_deg": 308.0839,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Chang'e",
+      "category": "past landing"
+    },
+    {
+      "site_id": "change-6",
+      "name": "Chang'e 6 lander",
+      "lat_deg": -41.6383,
+      "lon_deg": 206.0143,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Chang'e",
+      "category": "past landing"
+    },
+    {
+      "site_id": "chandrayaan-3",
+      "name": "Chandrayaan-3 Vikram lander",
+      "lat_deg": -69.374,
+      "lon_deg": 32.3187,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "Chandrayaan",
+      "category": "past landing"
+    },
+    {
+      "site_id": "slim",
+      "name": "SLIM lander",
+      "lat_deg": -13.316,
+      "lon_deg": 25.251,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "SLIM",
+      "category": "past landing"
+    },
+    {
+      "site_id": "im-1-odysseus",
+      "name": "IM-1 Odysseus lander (CLPS)",
+      "lat_deg": -80.1276,
+      "lon_deg": 1.4367,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "CLPS",
+      "category": "past landing"
+    },
+    {
+      "site_id": "blue-ghost-1",
+      "name": "Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)",
+      "lat_deg": 18.5622,
+      "lon_deg": 61.8102,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "CLPS",
+      "category": "past landing"
+    },
+    {
+      "site_id": "im-2-athena",
+      "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
+      "lat_deg": -84.7906,
+      "lon_deg": 29.19567,
+      "notes": "past landing site (position of the lander as measured on LROC images)",
+      "programme": "CLPS",
+      "category": "past landing"
+    },
+    {
+      "site_id": "artemis3-region-mons-mouton-representative",
+      "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
+      "lat_deg": -84.6,
+      "lon_deg": 31.0,
+      "notes": "REPRESENTATIVE point of a NASA candidate region, not a selected or published landing site; NASA published no coordinates (release of 2024-10-28 and LPSC 2026 abstract); whether this point lies inside NASA's region outline is unverified",
+      "programme": "Artemis",
+      "category": "candidate"
+    }
+  ],
+  "observer_heights_m": [
+    0.0,
+    2.0,
+    10.0
+  ],
+  "default_height_m": 2.0,
+  "horizon": {
+    "azimuth_step_deg": 0.25,
+    "max_range_m": 300000.0
+  },
+  "time_window": {
+    "start_utc": "2026-11-14T00:00:00.000Z",
+    "end_utc": "2028-11-14T00:00:00.000Z",
+    "step_s": 3600.0
+  },
+  "bodies": [
+    "SUN",
+    "EARTH"
+  ],
+  "thresholds": {
+    "SUN": {
+      "quantity": "visible_fraction",
+      "op": ">",
+      "value": 0.0
+    },
+    "EARTH": {
+      "quantity": "margin_deg",
+      "op": ">",
+      "value": 0.0
+    }
+  },
+  "mission_profile": null,
+  "data": {
+    "dem_set_id": "any",
+    "kernel_set_id": "bfe870fccfa5",
+    "direction_table_id": null
+  },
+  "requirements": [
+    {
+      "id": "example-standard",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 864000.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 864000.0
+        }
+      ]
+    },
+    {
+      "id": "example-strict",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
+      "mission_duration_s": 1209600.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 1209600.0
+        },
+        {
+          "window": "earth_visible",
+          "kind": "total_in_mission",
+          "min_s": 604800.0
+        }
+      ]
+    },
+    {
+      "id": "example-loose",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 432000.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 432000.0
+        }
+      ]
+    }
+  ]
+}

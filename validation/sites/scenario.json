@@ -1,12 +1,12 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.9"
+    "version": "0.11"
   },
   "kind": "scenario",
   "scenario_id": "south-polar-sites",
   "title": "Three south-polar candidate points, 24 months from the hackathon weekend",
-  "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission; the horizon error, the terrain height error, the landing ellipse and the planned landing time are stated assumptions chosen by the team to show what follows from them.",
+  "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission; the landing circle and the planned landing time are stated assumptions chosen by the team to show what follows from them; the terrain height error is the sourced default model of the contract. Computed with the 5 m near field.",
   "synthetic": false,
   "sites": [
     {
@@ -15,7 +15,9 @@
       "lat_deg": -89.80531,
       "lon_deg": 205.76891,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     },
     {
       "site_id": "de-gerlache-rim-crest",
@@ -23,7 +25,9 @@
       "lat_deg": -88.6641,
       "lon_deg": 291.58956,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     },
     {
       "site_id": "malapert-massif-summit",
@@ -31,7 +35,9 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     }
   ],
   "observer_heights_m": [
@@ -70,7 +76,7 @@
   },
   "mission_profile": null,
   "data": {
-    "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+    "dem_set_id": "any",
     "kernel_set_id": "bfe870fccfa5",
     "direction_table_id": null
   },
@@ -130,8 +136,29 @@
     }
   ],
   "uncertainty": {
-    "horizon_error_deg": 0.05,
-    "dem_height_error_m": 1.0,
+    "dem_height_error_model": {
+      "id": "lola-two-sigma-2026-11",
+      "label": "Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above",
+      "source": "Data stream, 14 November 2026: data/checkpoints/near_field_report.json (20 m product minus 5 m site rasters, 0.64 to 1.1 million points per site, by slope class) and data/checkpoints/height_error_report.json; RMS maps *_toterr of the 5 m site rasters of Barker et al. (2021), read through lsn_data sample_quality. The RMS maps are the producers' model estimate, not a test against independent data. Every product is built from LOLA returns: errors common to all LOLA products are not covered.",
+      "rules": {
+        "LOLA5MPP_*": {
+          "rms_map_factor": 2.0,
+          "flat_m": 1.0
+        },
+        "*": {
+          "slope_classes": [
+            {
+              "up_to_deg": 30.0,
+              "error_m": 5.0
+            },
+            {
+              "up_to_deg": 90.0,
+              "error_m": 7.0
+            }
+          ]
+        }
+      }
+    },
     "landing_ellipse": {
       "semi_major_m": 100.0,
       "semi_minor_m": 100.0,

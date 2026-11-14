@@ -163,7 +163,7 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     shape = [len(heights), az["count"]]
     for name in (
         "elevation_deg", "distance_m", "obstacle_height_m", "obstacle_lat_deg",
-        "obstacle_lon_deg", "obstacle_dem_layer", "elevation_sigma_deg",
+        "obstacle_lon_deg", "obstacle_dem_layer", "elevation_sigma_deg", "obstacle_height_error_m", "obstacle_constrained",
         "elevation_lower_deg", "elevation_upper_deg",
     ):
         _expect_shape(hz.get(name), shape, f"horizon/{name}", errors)
@@ -263,6 +263,16 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             prev_end = b
 
 
+def _check_countdowns(manifest: dict, errors: list[str]) -> None:
+    """Since 0.10 a metric counted from the reference instant says which instant that is."""
+    version = tuple(int(part) for part in manifest["contract"]["version"].split("."))
+    if version < (0, 10) or "timeline" not in manifest:
+        return
+    for metric in manifest["timeline"]["metrics"]:
+        if ("_time_to_" in metric["id"] or metric["id"].endswith("_at_reference")) and "reference" not in metric:
+            errors.append(f"timeline/metrics/{metric['id']}: a countdown metric must state its reference instant")
+
+
 def _check_terrain(manifest: dict, errors: list[str]) -> None:
     block = manifest.get("terrain")
     stated = manifest["request"].get("terrain_patches")
@@ -359,6 +369,7 @@ def validate_package(path: Path | str) -> dict:
     if manifest["kind"] == "site":
         _check_site(manifest, errors)
         _check_terrain(manifest, errors)
+        _check_countdowns(manifest, errors)
     elif manifest["kind"] == "site_pairs":
         _check_site_pairs(manifest, errors)
     else:

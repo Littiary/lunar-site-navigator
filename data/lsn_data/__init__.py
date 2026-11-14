@@ -110,8 +110,12 @@ def site_dems(root=None):
     return out
 
 
-def open_moon(root=None, near_field=False):
-    """Whole-Moon terrain from every product of the moon set that is present under the data root."""
+def open_moon(root=None, near_field=False, candidates=()):
+    """Whole-Moon terrain from every product of the moon set that is present under the data root.
+
+    ``candidates``: mosaic ids to open although they are not (yet) in approved_mosaics.json. Only for running the
+    checkpoints on a mosaic before it is approved; open_terrain never passes it.
+    """
     from . import catalog
     from .cylindrical import CylDEM, CylMosaic
     from .dem import PolarDEM, Terrain
@@ -149,7 +153,7 @@ def open_moon(root=None, near_field=False):
             img = raw_dir(root) / tid / f"{tid.lower()}.img"
             if lbl.exists() and img.exists():
                 tiles.append(CylDEM(lbl, pyramid_dir=derived_dir(root) / tid))
-        if tiles and len(tiles) == len(tile_ids) and mosaic_id not in approved:
+        if tiles and len(tiles) == len(tile_ids) and mosaic_id not in approved and mosaic_id not in candidates:
             missing.append(f"{mosaic_id} (present but not approved in data/manifest/approved_mosaics.json)")
         elif tiles and len(tiles) == len(tile_ids):
             cyl.append(CylMosaic(tiles, product_id=mosaic_id))

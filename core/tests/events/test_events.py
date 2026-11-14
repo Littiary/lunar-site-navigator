@@ -316,3 +316,70 @@ def test_scan_step_does_not_lose_events_on_a_rough_polar_horizon(loaded):
         short_pairs += len(missed) // 2
     # Measured on this profile: one pair (the whole disc clears the horizon for 12 s by 0.2 arcsec).
     assert short_pairs <= 1
+
+
+# ------------------------------------------------------------------ the fraction is computed only where a condition needs it
+
+
+def _rough_polar_case():
+    """A body circling low over an invented rough horizon: many events, the disc in contact with the terrain most of the time."""
+    step = 0.25
+    az_grid = np.arange(0.0, 360.0, step)
+    rng = np.random.default_rng(20261114)
+    profile = 0.6 * np.sin(np.radians(3.0 * az_grid)) + 0.25 * np.sin(np.radians(17.0 * az_grid + 40.0)) + 0.08 * rng.standard_normal(az_grid.size)
+    horizon = ev.Horizon(0.0, step, profile, 500.0 + 40.0 * np.arange(az_grid.size))
+    period = 29.5 * 86400.0
+
+    def direction(et):
+        et = np.asarray(et, dtype=np.float64)
+        return (360.0 * et / period) % 360.0, 0.1 + 0.15 * np.sin(2.0 * np.pi * et / (6.0 * 86400.0)), np.full(et.shape, 0.266)
+
+    return direction, horizon, 60.0 * 86400.0
+
+
+def _same_result(a, b):
+    assert a.initially_visible == b.initially_visible
+    assert len(a.events) == len(b.events) and len(a.events) > 20
+    for x, y in zip(a.events, b.events):
+        assert x == y  # every field of every event, bit for bit
+
+
+def test_events_do_not_change_when_the_unused_fraction_is_not_computed():
+    direction, horizon, span = _rough_polar_case()
+    rules = {
+        "visible": ev.threshold_from_contract({"quantity": "visible_fraction", "op": ">", "value": 0.0}, "visible"),
+        "centre": ev.threshold_from_contract({"quantity": "margin_deg", "op": ">", "value": 0.0}, "centre"),
+        "full_disc": ev.threshold_from_contract({"quantity": "visible_fraction", "op": ">=", "value": 1.0}, "full_disc"),
+    }
+    assert not ev.needs_fraction(rules)
+    fast = ev.find_events(direction, horizon, 0.0, span, thresholds=rules)
+    full = ev.find_events(direction, horizon, 0.0, span, thresholds=rules, always_compute_fraction=True)
+    _same_result(fast, full)
+    # The fraction reported with each event is still the computed one, not a placeholder.
+    assert all(np.isfinite(event.visible_fraction) and -1e-12 <= event.visible_fraction <= 1.0 + 1e-12 for event in fast.events)
+    assert any(0.0 < event.visible_fraction < 1.0 for event in fast.events if event.threshold == "centre")
+
+
+def test_conditions_on_the_fraction_still_compute_it():
+    direction, horizon, span = _rough_polar_case()
+    half = {"half": ev.threshold_from_contract({"quantity": "visible_fraction", "op": ">", "value": 0.5}, "half")}
+    assert ev.needs_fraction(half) and ev.needs_fraction({"half_disc": ev.ThresholdSignal("half_disc", "half_disc")})
+    fast = ev.find_events(direction, horizon, 0.0, span, thresholds=half)
+    full = ev.find_events(direction, horizon, 0.0, span, thresholds=half, always_compute_fraction=True)
+    _same_result(fast, full)
+    assert all(abs(event.visible_fraction - 0.5) < 0.01 for event in fast.events)
+    # The named thresholds of the module include 'half_disc', so the default call computes the fraction as before.
+    named_fast = ev.find_events(direction, horizon, 0.0, span)
+    named_full = ev.find_events(direction, horizon, 0.0, span, always_compute_fraction=True)
+    _same_result(named_fast, named_full)
+
+
+def test_signals_without_the_fraction_have_the_same_margins_and_no_fraction():
+    direction, horizon, span = _rough_polar_case()
+    et = np.linspace(0.0, span, 5000)
+    az, el, radius = direction(et)
+    full = ev.disc_signals(az, el, radius, horizon)
+    bare = ev.disc_signals(az, el, radius, horizon, with_fraction=False)
+    for name in ("center_margin_deg", "upper_margin_deg", "lower_margin_deg", "upper_azimuth_deg", "lower_azimuth_deg"):
+        assert np.array_equal(getattr(full, name), getattr(bare, name)), name
+    assert np.all(np.isnan(bare.visible_fraction)) and not np.any(np.isnan(full.visible_fraction))

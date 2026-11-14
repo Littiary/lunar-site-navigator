@@ -1,0 +1,208 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.11"
+  },
+  "kind": "site_pairs",
+  "package_id": "pairs-e2847d97406565b8",
+  "content_sha256": "dce70d637a8b8d05d1cb317e786cb8c3914be08f6b213f5ce06723b49f5efe65",
+  "status": "ok",
+  "synthetic": true,
+  "synthetic_notice": "SYNTHETIC SAMPLE DATA. This comparison was computed from site packages that hold invented numbers. It describes no real places. Do not use it, quote it or present it as a result.",
+  "warnings": [],
+  "request": {
+    "site_package_ids": [
+      "site-f1c146c44ab38509",
+      "site-c9a0531a0b71cf1f"
+    ],
+    "windows": [
+      "sun_visible",
+      "earth_visible",
+      "sun_and_earth_visible"
+    ]
+  },
+  "inputs": {
+    "science_version": 1,
+    "site_packages": [
+      {
+        "site_id": "synthetic-sample-site",
+        "package_id": "site-f1c146c44ab38509",
+        "content_sha256": "9e3329ea97211409d34bb2c18834b8aa5d82710a047acde4c78ab33fc8a55d49"
+      },
+      {
+        "site_id": "synthetic-sample-site-b",
+        "package_id": "site-c9a0531a0b71cf1f",
+        "content_sha256": "29fbffefaf638087443537e63cf3fdd1f40d8d347298096407a9c9d9c3ba8f59"
+      }
+    ]
+  },
+  "methods": {
+    "pairs.complementarity": {
+      "title": "SYNTHETIC - site pairs",
+      "definition": "What two sites achieve together: time with the body visible at one of them at least.",
+      "algorithm": "Invented closed-form formula in lsncore/synthetic.py. Not a computation from data.",
+      "frame": "local East/North/Up of the site; up is the sphere normal",
+      "time_scale": "TDB",
+      "data": [],
+      "parameters": {},
+      "validation": {
+        "status": "synthetic",
+        "evidence": []
+      },
+      "limits": [
+        "Synthetic sample value. Not valid for any use other than testing readers."
+      ]
+    }
+  },
+  "time": {
+    "scale": "TDB",
+    "epoch": "J2000",
+    "start_et_s": 847886400.0,
+    "step_s": 3600.0,
+    "count": 721,
+    "start_utc": "2026-11-14T00:00:00.000Z",
+    "end_utc": "2026-12-14T00:00:00.000Z",
+    "leap_seconds_in_range": 0
+  },
+  "sites": [
+    {
+      "site_id": "synthetic-sample-site",
+      "name": "SYNTHETIC SAMPLE SITE (not a real place)",
+      "lat_deg": -88.0,
+      "lon_deg": 45.0,
+      "package_id": "site-f1c146c44ab38509",
+      "observer_height_m": 2.0
+    },
+    {
+      "site_id": "synthetic-sample-site-b",
+      "name": "SYNTHETIC SAMPLE SITE B (not a real place)",
+      "lat_deg": -87.5,
+      "lon_deg": 60.0,
+      "package_id": "site-c9a0531a0b71cf1f",
+      "observer_height_m": 2.0
+    }
+  ],
+  "pairs": [
+    {
+      "site_a": "synthetic-sample-site",
+      "site_b": "synthetic-sample-site-b",
+      "distance_m": 22801.45774377861,
+      "windows": [
+        {
+          "window": "sun_visible",
+          "a_s": 672484.8175736666,
+          "b_s": 763804.7048435211,
+          "either_s": 853377.7076514959,
+          "both_s": 582911.8147656918,
+          "neither_s": 1738622.292348504,
+          "longest_neither_s": 1478815.8238693476,
+          "either_fraction": 0.32923522671739813,
+          "gain_over_better_s": 89573.00280797482,
+          "covered_share_of_better_outage": 0.048995314146844514,
+          "neither_intervals_et_s": [
+            [
+              847886400.0,
+              849365215.8238693
+            ],
+            [
+              850218593.5315208,
+              850478400.0
+            ]
+          ],
+          "neither_intervals_utc": [
+            [
+              "2026-11-14T00:00:00.000Z",
+              "2026-12-01T02:46:55.824Z"
+            ],
+            [
+              "2026-12-10T23:49:53.532Z",
+              "2026-12-14T00:00:00.000Z"
+            ]
+          ],
+          "method": "pairs.complementarity"
+        },
+        {
+          "window": "earth_visible",
+          "a_s": 1551688.139554143,
+          "b_s": 1424285.321976781,
+          "either_s": 1551688.139554143,
+          "both_s": 1424285.321976781,
+          "neither_s": 1040311.860445857,
+          "longest_neither_s": 1040311.860445857,
+          "either_fraction": 0.598645115568728,
+          "gain_over_better_s": 0.0,
+          "covered_share_of_better_outage": 0.0,
+          "neither_intervals_et_s": [
+            [
+              848603421.708207,
+              849643733.5686529
+            ]
+          ],
+          "neither_intervals_utc": [
+            [
+              "2026-11-22T07:10:21.708Z",
+              "2026-12-04T08:08:53.569Z"
+            ]
+          ],
+          "method": "pairs.complementarity"
+        },
+        {
+          "window": "sun_and_earth_visible",
+          "a_s": 520851.6602599621,
+          "b_s": 450888.67382586,
+          "either_s": 560955.8665636778,
+          "both_s": 410784.4675221443,
+          "neither_s": 2031044.1334363222,
+          "longest_neither_s": 1757333.5686528683,
+          "either_fraction": 0.21641815839648063,
+          "gain_over_better_s": 40104.206303715706,
+          "covered_share_of_better_outage": 0.019363270864871718,
+          "neither_intervals_et_s": [
+            [
+              847886400.0,
+              849643733.5686529
+            ],
+            [
+              849664227.7585827,
+              849678131.854887
+            ],
+            [
+              850218593.5315208,
+              850478400.0
+            ]
+          ],
+          "neither_intervals_utc": [
+            [
+              "2026-11-14T00:00:00.000Z",
+              "2026-12-04T08:08:53.569Z"
+            ],
+            [
+              "2026-12-04T13:50:27.759Z",
+              "2026-12-04T17:42:11.855Z"
+            ],
+            [
+              "2026-12-10T23:49:53.532Z",
+              "2026-12-14T00:00:00.000Z"
+            ]
+          ],
+          "method": "pairs.complementarity"
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "created_utc": "2026-11-14T17:14:54.782Z",
+    "scenario_id": "synthetic-sample",
+    "timings_s": {},
+    "software": {
+      "core_version": "0.1.0",
+      "science_version": "1",
+      "git_commit": "cfba9d74b6e29f89f542a5eedd05f9cd2eea15b4",
+      "git_dirty": true,
+      "python": "3.14.7",
+      "numpy": "2.5.4",
+      "os": "Windows 11",
+      "byteorder": "little"
+    }
+  }
+}
