@@ -53,6 +53,33 @@ python -m lsn_web.evidence <site package dir | index.json> [...] --card <validat
 
 The page loads nothing from the network: the charts are embedded as data URIs and the styles are inline. The same file is therefore the offline copy, and it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
 
+## Interactive viewer (`web/viewer/`)
+
+A static page that reads the packages in the browser (Tasks 7 and 8):
+
+- **Horizon and time:**
+  - pick a site, an observer height and a time sample (slider, ±1 h, ±1 day, play, jump to the previous or next package event);
+  - the SVG shows the terrain horizon (`horizon.elevation_deg`) and the Sun and the Earth at that sample (`timeline.series`);
+  - tables list the values at that sample, every window that contains it, and the events around it.
+- **3-D view (three.js 0.160.0 from jsDelivr):**
+  - the horizon profile is drawn on a sphere around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
+  - drag to look around, use the wheel or the buttons to zoom;
+  - a built-in check reads the drawn horizon line back and prints its largest difference from the package profile (about 2e-7° in elevation, which is float32 rounding).
+
+**No science in the browser.**
+- `js/package.js` checks every array against the byte length and SHA-256 in its manifest; Web Crypto needs https or localhost, and otherwise the footer says that checksums were not verified.
+- `js/viewer.js` only looks values up, compares times and maps them to screen positions. Time labels use `start_utc` + i × `step_s`, which SPEC 3.5 allows only without leap seconds; otherwise the page shows sample numbers.
+- `js/view3d.js` uses trigonometry only in its marked display transform.
+- `tests/test_viewer.py` enforces these rules in the source.
+
+The viewer needs a web server; `fetch` does not work from `file://`. The site build below copies it to `viewer/`, with the packages next to it in `packages/`. To try it locally:
+
+```
+cd web && python -m lsn_web.site && python -m http.server 8000 --directory dist/site
+```
+
+Then open http://localhost:8000/viewer/. A link with `?site=<site_id>&h=<height index>&i=<sample>` opens that selection.
+
 ## Public site (`lsn_web/site.py`)
 
 One command builds the hosted site from the packages published by the core stream in `packages/`:
@@ -62,7 +89,7 @@ cd web
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` (the evidence page), `charts/*.svg` (every chart as its own file, linked from the page) and `.nojekyll`. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` (the evidence page), `charts/*.svg` (every chart as its own file, linked from the page), `viewer/` (the interactive viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `notice.json` (the notice, for the viewer) and `.nojekyll`. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 

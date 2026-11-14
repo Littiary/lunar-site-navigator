@@ -9,6 +9,7 @@ Run from the repository root:  python -I -m unittest discover -s web/tests -t we
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,8 +36,11 @@ class SiteBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, "TEST NOTICE")
             names = sorted(str(p.relative_to(out)).replace("\\", "/") for p in out.rglob("*") if p.is_file())
-            self.assertEqual(names, [".nojekyll", "charts/horizon_panorama__synthetic-sample-site.svg",
-                                     "charts/window_strip.svg", "index.html"])
+            top = [n for n in names if not n.startswith(("viewer/", "packages/"))]
+            self.assertEqual(top, [".nojekyll", "charts/horizon_panorama__synthetic-sample-site.svg",
+                                   "charts/window_strip.svg", "index.html", "notice.json"])
+            self.assertIn("viewer/index.html", names)
+            self.assertIn("packages/index.json", names)
 
     def test_page_and_charts_equal_the_direct_builds(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -57,6 +61,40 @@ class SiteBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             html = (self.build(tmp, "  \n") / "index.html").read_text(encoding="utf-8")
             self.assertEqual(html, evidence.build_page(package.load_index(INDEX), CARD, None, chart_links=True))
+
+    def test_viewer_and_packages_are_copied_byte_for_byte(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp, "TEST NOTICE")
+            root = INDEX.parent
+            expected = {"index.json"}
+            for s in package.load_index(INDEX):
+                rel = s.path.relative_to(root)
+                expected.add(str(rel / "manifest.json").replace("\\", "/"))
+                expected |= {str(rel / r["file"]).replace("\\", "/") for r in package.array_refs(s.manifest)}
+            index = json.loads((root / "index.json").read_text(encoding="utf-8"))
+            for entry in index["packages"]:
+                if entry["kind"] != "site":
+                    d = root / entry["path"]
+                    m = json.loads((d / "manifest.json").read_text(encoding="utf-8"))
+                    expected.add(entry["path"] + "/manifest.json")
+                    expected |= {entry["path"] + "/" + r["file"] for r in package.array_refs(m)}
+            copied = {str(p.relative_to(out / "packages")).replace("\\", "/") for p in (out / "packages").rglob("*") if p.is_file()}
+            self.assertEqual(copied, expected)
+            for rel in expected:
+                self.assertEqual((out / "packages" / rel).read_bytes(), (root / rel).read_bytes(), rel)
+            viewer = Path(site.__file__).resolve().parent.parent / "viewer"
+            for src in viewer.rglob("*"):
+                if src.is_file():
+                    self.assertEqual((out / "viewer" / src.relative_to(viewer)).read_bytes(), src.read_bytes(), src.name)
+
+    def test_notice_json_carries_the_notice(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            self.assertEqual(json.loads((self.build(a, " A  B ") / "notice.json").read_text(encoding="utf-8")), {"notice": "A B"})
+            self.assertEqual(json.loads((self.build(b, "") / "notice.json").read_text(encoding="utf-8")), {"notice": None})
+
+    def test_page_links_the_viewer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIn('href="viewer/"', (self.build(tmp, "N") / "index.html").read_text(encoding="utf-8"))
 
     def test_rebuild_is_identical(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:

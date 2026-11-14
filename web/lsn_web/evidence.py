@@ -394,6 +394,8 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
     card = json.loads(Path(card_path).read_text(encoding="utf-8")) if card_path else None
     nav = [(f"#site-{slug(s.manifest['site']['site_id'])}", s.manifest["site"]["name"]) for s in sites]
     nav += [("#methods", "Methods"), ("#data", "Data")]
+    if chart_links:
+        nav.append(("viewer/", "Interactive viewer"))
     if card:
         nav.append(("#validation", "Validation"))
     banner = ""

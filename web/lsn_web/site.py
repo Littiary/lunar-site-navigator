@@ -4,6 +4,9 @@ Output folder (default ``web/dist/site``)::
 
     index.html          the evidence page (self-contained; charts embedded)
     charts/*.svg        the same charts as separate files, linked from the page
+    viewer/             the interactive viewer (copied from web/viewer)
+    packages/           the packages the viewer reads: index.json and exactly the files it lists
+    notice.json         the notice, for the viewer
     .nojekyll           serve the files as they are on GitHub Pages
 
 The notice shown on the page and on every chart is read from a text file (default
@@ -19,16 +22,18 @@ Usage (from ``web/``; every argument has a default)::
 from __future__ import annotations
 
 import argparse
+import json
+import shutil
 import sys
 from pathlib import Path
 
 if __package__ in (None, ""):  # allow `python web/lsn_web/site.py`
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from lsn_web import charts, evidence
-    from lsn_web.package import load_packages
+    from lsn_web.package import array_refs, load_packages
 else:
     from . import charts, evidence
-    from .package import load_packages
+    from .package import array_refs, load_packages
 
 WEB = Path(__file__).resolve().parent.parent
 REPO = WEB.parent
@@ -56,7 +61,45 @@ def build(packages: list[str], card: Path | None, notice: str | None, out: Path)
         write(out / "charts" / "window_strip.svg", charts.window_strip(sites, notice))
     write(out / "index.html", evidence.build_page(sites, card, notice, chart_links=True))
     write(out / ".nojekyll", "")
+    write(out / "notice.json", json.dumps({"notice": notice}) + "\n")
+    written += copy_viewer(out / "viewer")
+    indexes = [Path(p) for p in packages if Path(p).is_file()]
+    if len(indexes) == 1:
+        written += copy_packages(indexes[0], out / "packages")
     return written
+
+
+def copy_viewer(target: Path) -> list[Path]:
+    """Copy web/viewer as it is."""
+    source = WEB / "viewer"
+    copied = []
+    for path in sorted(source.rglob("*")):
+        if path.is_file():
+            dest = target / path.relative_to(source)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(path, dest)
+            copied.append(dest)
+    return copied
+
+
+def copy_packages(index_path: Path, target: Path) -> list[Path]:
+    """Copy index.json and exactly the manifest and array files of every package it lists,
+    byte for byte, keeping the layout (SPEC 1). Nothing else is copied."""
+    root = index_path.parent
+    files = ["index.json"]
+    for entry in json.loads(index_path.read_text(encoding="utf-8"))["packages"]:
+        manifest = json.loads((root / entry["path"] / "manifest.json").read_text(encoding="utf-8"))
+        files.append(f"{entry['path']}/manifest.json")
+        files += [f"{entry['path']}/{ref['file']}" for ref in array_refs(manifest)]
+    copied = []
+    for rel in sorted(set(files)):
+        dest = target / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / rel, dest)
+        if dest.read_bytes() != (root / rel).read_bytes():
+            raise OSError(f"copy of {rel} differs from the source")
+        copied.append(dest)
+    return copied
 
 
 def main(argv: list[str] | None = None) -> None:
