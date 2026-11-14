@@ -90,7 +90,7 @@ ROBBINS = Product(
     "ROBBINS_2018",
     "Robbins lunar crater database (USGS Astrogeology, 2018-08-15): hand-measured crater centres and diameters; "
     "used only as an independent position reference for the georeferencing check",
-    (FileSpec("data", "lunar_crater_database_robbins_2018.zip", ROBBINS_URL, None),),
+    (FileSpec("reference", "lunar_crater_database_robbins_2018.zip", ROBBINS_URL, None),),
     base="raw/catalogs",
 )
 
