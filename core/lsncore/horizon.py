@@ -64,6 +64,7 @@ class HorizonSettings:
     refine_rounds: int = 4
     refine_points: int = 9  # points per refinement round; the bracket shrinks 4x per round
     chunk_points: int = 3_000_000  # lattice points evaluated per batch (memory bound)
+    walk_growth: int = 2  # cells walked per azimuth: one in the first round, this many times more in every following round
 
 
 def _points(up, heading, gamma):
@@ -327,20 +328,24 @@ def compute_horizon(
             t_bound = t_ground[None] - heights[:, None, None] * per_metre[None]  # [H, A, K]
         t_bound = np.where(np.isfinite(t_bound), t_bound, -np.inf)
         pending = cell_has_data.copy()
-        per_ray = 1  # cells walked per azimuth in the first round; then everything that survives
+        # Cells are walked in rounds, the most promising of every azimuth first: what a round
+        # finds raises the lower bound, and the next round skips every cell whose upper
+        # bound no longer exceeds it. A cell is only ever skipped on that comparison, so
+        # the order of the rounds changes how much is walked, not what is found.
+        per_ray = 1
 
         while True:
             alive = pending & np.any(t_bound > best_t[:, :, None], axis=0)  # [A, K]
             if not alive.any():
                 break
-            if per_ray is not None:
+            if per_ray < n_cells:
                 # walk the most promising cells first: they raise the lower bound the most
                 score = np.where(alive, t_bound[ref], -np.inf)
                 top = np.argpartition(-score, min(per_ray, n_cells) - 1, axis=1)[:, :per_ray]
                 pick = np.zeros_like(alive)
                 pick[rows[:, None], top] = True
                 pick &= alive
-                per_ray = None
+                per_ray *= max(2, int(settings.walk_growth))
             else:
                 pick = alive
             pending &= ~pick

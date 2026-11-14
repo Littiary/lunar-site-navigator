@@ -68,8 +68,12 @@ rebuilt so that nothing is skipped without proof:
    block-maximum overview levels. From that bound follows the highest elevation anything
    in the cell could have. A cell is skipped only if this is below the horizon already
    found for every observer height; all other cells are walked lattice point by lattice
-   point on the finest data. The most promising cell of each azimuth is walked first, so
-   that the following comparison is as sharp as possible.
+   point on the finest data. The cells are walked in rounds, the most promising of each
+   azimuth first: one cell per azimuth, then two, four and so on. What a round finds
+   raises the horizon found so far, and the next round skips every cell whose bound no
+   longer exceeds it. A cell is only ever skipped on that comparison, so the order
+   changes how much is walked, not what is found (tested: elevation, distance and
+   height of the limiting point identical to the last bit for three orders).
 4. **Creases.** Between two lattice points a bilinear surface has creases where the ray
    crosses a line through pixel centres, and the highest point of a crest between
    lattice points usually lies on one. The terrain source reports these crossings and
@@ -84,7 +88,9 @@ size of it. The map scale of the polar stereographic projection is taken into ac
 when the neighbourhood size is chosen.
 
 On the LOLA products, 0.15 to 1.3 % of the lattice beyond the near zone has to be walked;
-the rest is excluded by the bound. All observer heights share the same terrain
+the rest is excluded by the bound (measured with one cell per azimuth first and then
+all remaining cells at once; with the rounds of step 3, in use since 14 November 2026,
+a quarter to a third fewer, [near_field.md](near_field.md), section 2). All observer heights share the same terrain
 evaluations. The size of the cells changes the cost, not the result: a cell is either
 proven irrelevant or walked completely.
 
