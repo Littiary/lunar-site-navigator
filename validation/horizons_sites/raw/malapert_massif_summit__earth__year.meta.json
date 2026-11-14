@@ -1,0 +1,31 @@
+{
+  "case_id": "malapert_massif_summit__earth__year",
+  "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40301%27&COORD_TYPE=%27GEODETIC%27&QUANTITIES=%274%2C13%2C20%2C30%27&ANG_FORMAT=%27DEG%27&TIME_DIGITS=%27SECONDS%27&CSV_FORMAT=%27YES%27&APPARENT=%27AIRLESS%27&COMMAND=%27399%27&SITE_COORD=%272.05767%2C-85.98795%2C5.1735%27&START_TIME=%272026-11-14%2000%3A00%27&STOP_TIME=%272027-11-14%2000%3A00%27&STEP_SIZE=%2725%20h%27",
+  "parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@301",
+    "COORD_TYPE": "GEODETIC",
+    "QUANTITIES": "4,13,20,30",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS",
+    "COMMAND": "399",
+    "SITE_COORD": "2.05767,-85.98795,5.1735",
+    "START_TIME": "2026-11-14 00:00",
+    "STOP_TIME": "2027-11-14 00:00",
+    "STEP_SIZE": "25 h"
+  },
+  "retrieved_utc": "2026-11-14T11:23:52Z",
+  "http_status": 200,
+  "bytes": 46664,
+  "sha256": "31c2d56f87bd043b4944547c70815be1b4e4d87aacae0a0292a21d2a89a6156e",
+  "api_signature": {
+    "version": "1.2",
+    "source": "NASA/JPL Horizons API"
+  },
+  "user_agent": "lunar-ephemeris-validation/0.1 (python-urllib; sequential, cached)"
+}

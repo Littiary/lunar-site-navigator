@@ -27,9 +27,18 @@ OBSERVER_HEIGHT_M = 2.0
 
 
 def load() -> tuple[dict, dict]:
+    """First batch of cases and the rules. The second batch (``load_second``) uses the same rules."""
     cases = json.loads((HERE / "cases.json").read_text(encoding="utf-8"))
     rules = json.loads((HERE / "thresholds.json").read_text(encoding="utf-8"))["rules"]
     return cases, rules
+
+
+def load_second() -> dict:
+    """Second batch: the four remaining Apollo landings, each with the same list of checks."""
+    batch = json.loads((HERE / "cases_second_batch.json").read_text(encoding="utf-8"))
+    for case in batch["cases"]:
+        case["checks"] = [{"id": f"{case['id']}_{check['suffix']}", "kind": check["kind"]} for check in batch["checks_for_every_case"]]
+    return batch
 
 
 def _published(case: dict, item: str):
@@ -96,11 +105,11 @@ def apollo(case: dict, rules: dict) -> list:
     real_site = d.Site(actual["lon_deg"], actual["lat_deg"], 0.0)
     sun_actual = d.topocentric_exact(real_site, et, "SUN")
     target = _published(case, "targeted_sun_angle")
-    if prefix == "apollo11":
-        out.append(_row("apollo11_sun_at_actual_site", "reported", "Sun elevation at the actual landing site and time, against the launch-window target", target, float(sun_actual.el_deg[0]), "deg",
+    if not any(p["id"] == "planned_landing_time" for p in case["published"]):
+        out.append(_row(f"{prefix}_sun_at_actual_site", "reported", "Sun elevation at the actual landing site and time, against the launch-window target", target, float(sun_actual.el_deg[0]), "deg",
                         difference=float(sun_actual.el_deg[0]) - target, note="The published value is a planned angle; it is not judged."))
         earth = d.topocentric_exact(real_site, et, "EARTH")
-        out.append(_row("apollo11_earth_topocentric", "reported", "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)", row["earth_alt_deg"], float(earth.el_deg[0]), "deg",
+        out.append(_row(f"{prefix}_earth_topocentric", "reported", "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)", row["earth_alt_deg"], float(earth.el_deg[0]), "deg",
                         difference=float(earth.el_deg[0]) - row["earth_alt_deg"], note="Shows the size of the parallax the source leaves out."))
     else:
         limit2 = rules["R2_targeted_sun_angle"]["threshold_deg"]
@@ -217,7 +226,8 @@ def chandrayaan3(case: dict, rules: dict) -> list:
 # --------------------------------------------------------------------------- report
 
 
-RUNNERS = {"apollo11": apollo, "apollo16": apollo, "blue_ghost_m1": blue_ghost, "chandrayaan3": chandrayaan3}
+RUNNERS = {"apollo11": apollo, "apollo12": apollo, "apollo14": apollo, "apollo15": apollo, "apollo16": apollo, "apollo17": apollo,
+           "blue_ghost_m1": blue_ghost, "chandrayaan3": chandrayaan3}
 
 
 def terrain_available() -> bool:
@@ -239,7 +249,7 @@ def run(include_terrain_case: bool | None = None) -> dict:
     if include_terrain_case is None:
         include_terrain_case = terrain_available()
     out = []
-    for case in cases["cases"]:
+    for case in cases["cases"] + load_second()["cases"]:
         if case["id"] == "chandrayaan3" and not include_terrain_case:
             stored = json.loads((RESULTS / "validation_table.json").read_text(encoding="utf-8"))
             kept = next(c for c in stored["cases"] if c["id"] == "chandrayaan3")
@@ -278,7 +288,7 @@ def to_markdown(report: dict, cases: dict) -> str:
         f"Generated {report['generated_utc']} by `validation/landers/compare.py`. Do not edit by hand.",
         "",
         f"**{s['passed']} of {s['pass_fail_checks']} pass/fail checks pass; {s['failed']} fail; {s['reported_without_verdict']} comparisons are reported without a verdict.**",
-        "Published values, sources, precision and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit eaf5634). The test is not blind: see the disclosure in `thresholds.json`.",
+        "Published values, sources, precision and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit eaf5634); the second batch of four Apollo landings is in `cases_second_batch.json` (commit af10faa), under the same rules. The test is not blind: see the disclosure in `thresholds.json`.",
         "",
     ]
     for case in report["cases"]:

@@ -4,8 +4,8 @@
     "version": "0.1"
   },
   "kind": "site",
-  "package_id": "site-3d084d7f181d1b64",
-  "content_sha256": "580cecab24ac6cb694e36559775ff0951b3039d7cf6611ad1a3d837c136a8b89",
+  "package_id": "site-1bb3ba58499d4530",
+  "content_sha256": "461eae7727ec2fa87a80b6e98932fe7511a0571104514be7f37eb8f89e2de3ab",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
@@ -59,8 +59,8 @@
           "layer_id": "LDEM_80S_20M",
           "product_id": "LDEM_80S_20M",
           "version": "V2.0",
-          "source_url": "",
-          "sha256": null,
+          "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG",
+          "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
           "pixel_m": 20.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         },
@@ -68,8 +68,8 @@
           "layer_id": "LDEM_60S_60M",
           "product_id": "LDEM_60S_60M",
           "version": "V2.0",
-          "source_url": "",
-          "sha256": null,
+          "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+          "sha256": "e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c",
           "pixel_m": 60.0,
           "projection": "polar stereographic on a sphere, true scale at the pole"
         }
@@ -314,7 +314,7 @@
       "limits": [
         "Numerical accuracy 0.25 s for the given inputs; two crossings closer together than 60 s can be missed.",
         "The accuracy of event times is set by the terrain horizon, not by the ephemeris: near the poles a horizon error of 0.01 deg can move an event by many minutes.",
-        "Not yet compared with published event times of real landers."
+        "No published sunrise or sunset clock time of a real lander was found to compare with; the operational records of two landers bound the computed events from one side only (validation/landers)."
       ]
     },
     "timeline.margin": {
@@ -444,6 +444,8 @@
         "status": "analytic-test-passed",
         "evidence": [
           "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+          "validation/pgda: the long-term share of time with any part of the Sun, and of the Earth, above the terrain horizon agrees with the published LOLA illumination maps at 100 points on terrain of the same 60 m resolution (median absolute difference 0.0006 and 0.0004; permanent shadow agrees at all 98 points compared). This checks long-term shares, not individual window edges.",
+          "validation/lro_images: sunlit or shadowed state against two dated LROC images. The shadowed state of the south pole on 18 May 2022 agrees. Along an image strip of 13 December 2010 the agreement is 89.3 % of 298 points against a registered criterion of 90 %: a failed check, in which every disagreement is ground this method calls sunlit at grazing incidence and the image rule reads as shadow.",
           "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts)."
         ]
       },
@@ -68324,16 +68326,16 @@
     ]
   },
   "provenance": {
-    "created_utc": "2026-11-14T12:07:02.723Z",
+    "created_utc": "2026-11-14T13:07:21.329Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {
-      "horizon": 2.627517,
-      "timeline": 147.551678
+      "horizon": 2.560361,
+      "timeline": 75.57922
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "0",
-      "git_commit": "d1af9e601e9c171fded70188e25fb4e1429ebe23",
+      "git_commit": "d8c2b3ea8c81680d0b14e5929c5e1f5e6eaed5f1",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",

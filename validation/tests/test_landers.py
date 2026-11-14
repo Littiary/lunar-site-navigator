@@ -18,9 +18,11 @@ def test_thresholds_are_the_committed_rules():
 
 def test_every_registered_check_is_computed_and_passes():
     cases, _ = compare.load()
+    registered_cases = cases["cases"] + compare.load_second()["cases"]
     report = compare.run()
-    assert report["summary"] == {"pass_fail_checks": 20, "passed": 20, "failed": 0, "reported_without_verdict": 5}
-    for case, result in zip(cases["cases"], report["cases"]):
+    assert len(report["cases"]) == 8
+    assert report["summary"] == {"pass_fail_checks": 52, "passed": 52, "failed": 0, "reported_without_verdict": 13}
+    for case, result in zip(registered_cases, report["cases"]):
         registered = {check["id"]: check["kind"] for check in case["checks"]}
         computed = {row["id"]: row["kind"] for row in result["rows"]}
         assert registered == computed, case["id"]

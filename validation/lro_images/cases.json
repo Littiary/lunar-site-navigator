@@ -1,0 +1,70 @@
+{
+  "description": "Direct checks of the terrain horizon against dated images of the Lunar Reconnaissance Orbiter Camera (LROC): is a given point sunlit or in shadow at the time of the image? Two cases, fixed before the image of case B was downloaded and before the core was run on either. Image times and geometry are those printed on the LROC data pages on 14 November 2026.",
+  "written_utc": "2026-11-14T12:34:02Z",
+  "rule": "Committed before any computation for these cases and before the image file of case B was downloaded. Not edited afterwards. If a check fails, the cause is looked for and reported; the criteria stay.",
+  "our_state": {
+    "definition": "At the point, on the surface (observer height 0 m), at the middle of the image exposure: 'sunlit' if at least half of the Sun's disc is above the terrain horizon (visible fraction >= 0.5), otherwise 'shadow'. Terrain: the LOLA products the tool uses (20 m near the pole), horizon to 300 km at 0.25 degree azimuth step.",
+    "why_half": "Between the first and the last light the surface brightens gradually; half of the disc is the middle of that transition and the natural place to cut it into two states.",
+    "also_reported": "visible fraction, margins of the upper limb and of the centre, azimuth of the Sun, elevation and distance of the terrain that limits it"
+  },
+  "sources": {
+    "lroc_featured_1276": {"title": "LROC featured image 'Where is the South Pole?', M. Robinson, 19 October 2022", "url": "https://lroc.im-ldi.com/images/1276", "retrieved_utc": "2026-11-14, between 12:27 and 12:34 UTC"},
+    "lroc_pds_M1407524099LE": {"title": "LROC data page of NAC image M1407524099LE", "url": "https://data.lroc.im-ldi.com/lroc/view_lroc/LRO-L-LROC-2-EDR-V1.0/M1407524099LE", "retrieved_utc": "2026-11-14, between 12:27 and 12:34 UTC"},
+    "lroc_pds_M146846913LE": {"title": "LROC data page of NAC image M146846913LE", "url": "https://data.lroc.im-ldi.com/lroc/view_lroc/LRO-L-LROC-2-EDR-V1.0/M146846913LE", "retrieved_utc": "2026-11-14, between 12:27 and 12:34 UTC"}
+  },
+  "cases": [
+    {
+      "id": "pole_in_shadow_2022",
+      "kind": "state documented by the camera team",
+      "image": "NAC M1407524099 (left and right frames), oblique view of the rim of Shackleton crater",
+      "published": {
+        "start_time_utc": "2022-05-18T14:40:31",
+        "stop_time_utc": "2022-05-18T14:41:07",
+        "sub_solar_latitude_deg": 0.15,
+        "sub_solar_longitude_deg": 327.22,
+        "statement": "The featured-image page marks the south pole (90 S, 0 E), just inside the rim of Shackleton crater, with an arrow and describes it as 'now in shadows' and 'just into the shadows'.",
+        "precision": "time to the second; sub-solar point printed to 0.01 degree; the state is a statement of the camera team, not a measurement by us",
+        "sources": ["lroc_featured_1276", "lroc_pds_M1407524099LE"]
+      },
+      "point": {"lat_deg": -90.0, "lon_deg": 0.0},
+      "checks": [
+        {"id": "pole_2022_state", "kind": "pass_fail", "criterion": "our state at the south pole at 2022-05-18T14:40:49 UTC is 'shadow'"},
+        {"id": "pole_2022_sub_solar_point", "kind": "pass_fail", "criterion": "our sub-solar latitude and longitude at that time differ from the printed values by less than 0.02 degree each (0.005 degree is the rounding of the printed values)"}
+      ]
+    },
+    {
+      "id": "nadir_strip_2010",
+      "kind": "state read from the image by a fixed rule",
+      "image": "NAC M146846913L, nadir view (emission angle 1.7 degrees) across the south pole, read from the calibrated browse pyramid M146846913LC_pyr.tif",
+      "published": {
+        "start_time_utc": "2010-12-13T02:34:06",
+        "stop_time_utc": "2010-12-13T02:34:45",
+        "sub_solar_latitude_deg": -0.35,
+        "sub_solar_longitude_deg": 95.26,
+        "incidence_angle_deg": 89.81,
+        "corners_lat_lon_deg": {"upper_left": [-89.6, 30.12], "upper_right": [-89.61, 16.79], "lower_left": [-88.32, 198.79], "lower_right": [-88.33, 201.96]},
+        "center_lat_lon_deg": [-89.36, 199.45],
+        "lines": 52224, "samples": 2532, "resolution_m": 1.153299689231098,
+        "browse_url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-3-CDR-V1.0/LROLRC_1005/EXTRAS/BROWSE/2010347/M146846913LC_pyr.tif",
+        "precision": "time to the second; corner coordinates printed to 0.01 degree, which is 300 m in latitude",
+        "sources": ["lroc_pds_M146846913LE", "lroc_featured_1276"]
+      },
+      "protocol": {
+        "georeferencing": "Image position (fraction of lines, fraction of samples) is mapped to polar stereographic x, y by bilinear interpolation between the four printed corners; 'upper' is the first line, 'left' the first sample. No camera model is used.",
+        "points": "Three rows along the strip: on the centre line and 700 m to either side of it, one point every 500 m from 1 km inside the first line to 1 km inside the last line.",
+        "image_state": "The browse image is averaged to about 20 m per pixel. The brightness threshold is Otsu's threshold of that reduced image. A point is 'sunlit' in the image if every reduced pixel within 300 m of it is above the threshold, 'shadow' if every one is below, and 'mixed' otherwise. Mixed points are not judged: with corners known to 300 m, a point near a shadow edge cannot be read.",
+        "our_state": "as defined above, at 2010-12-13T02:34:25 UTC"
+      },
+      "checks": [
+        {"id": "nadir_2010_agreement", "kind": "pass_fail", "criterion": "among the judged points, our state agrees with the image state for at least 90 percent; at least 30 points must be judged and both states must occur among them, otherwise the case is reported as not decided"},
+        {"id": "nadir_2010_sub_solar_point", "kind": "pass_fail", "criterion": "our sub-solar latitude and longitude at that time differ from the printed values by less than 0.02 degree each"}
+      ],
+      "why_90_percent": "Corners are known to 300 m and the transition from shadow to light is gradual; points within 300 m of an edge are already left out, so the remaining disagreements should be rare."
+    }
+  ],
+  "limits_known_in_advance": [
+    "Case A rests on the camera team's own reading of its image; the pole lies close to the edge of the shadow ('just into the shadows'), so a small error of the horizon can flip our state.",
+    "Case B reads a lossy browse product with corner-based georeferencing; it can only test broad sunlit and shadowed areas, not the position of a shadow edge.",
+    "Two images, both near Shackleton crater."
+  ]
+}

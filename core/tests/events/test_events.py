@@ -81,6 +81,15 @@ def test_margins_are_ordered_on_a_rough_horizon():
     assert np.all((signals.visible_fraction < 1.0) <= (signals.lower_margin_deg < 0.0))
 
 
+def test_limb_margins_alone_equal_those_of_the_disc_signals():
+    rng = np.random.default_rng(3)
+    horizon = ev.Horizon(0.0, 0.25, rng.normal(0.0, 0.8, 1440))
+    az, el, radius = rng.uniform(0.0, 360.0, 2000), rng.uniform(-3.0, 3.0, 2000), rng.uniform(0.25, 1.0, 2000)
+    upper, lower = ev.limb_margins(az, el, radius, horizon)
+    signals = ev.disc_signals(az, el, radius, horizon)
+    assert np.array_equal(upper, signals.upper_margin_deg) and np.array_equal(lower, signals.lower_margin_deg)
+
+
 # ------------------------------------------------------------------ analytic event cases
 
 

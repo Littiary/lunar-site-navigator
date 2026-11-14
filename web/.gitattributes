@@ -1,0 +1,6 @@
+# Package arrays and fixture files are stored byte for byte.
+*.f4 binary
+*.f8 binary
+*.i4 binary
+*.u1 binary
+tests/fixtures/** -text
