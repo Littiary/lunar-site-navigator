@@ -26,6 +26,7 @@ from lsncore.ephem import directions as d
 from lsncore.ephem import kernels
 from validation.horizons import compare as horizons
 from validation.horizons_rts import compare as horizons_rts
+from validation.eclipse import compare as eclipse_check
 from validation.landers import compare as landers
 
 HERE = Path(__file__).resolve().parent
@@ -245,6 +246,18 @@ def build() -> dict:
     recomputed = all(case.get("recomputed", True) for case in lander["cases"])
     stored_note = "" if recomputed else " (stored result: terrain data not present on this machine)"
 
+    ecl = eclipse_check.run()
+    ecl_rows = {row["id"]: row for row in ecl["rows"]}
+    ecl_rules = eclipse_check.load()[1]
+    ecl_where = "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+    ecl_how = (
+        "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts "
+        "with Horizons), so the thresholds follow fixed rules from the printed precision of each source"
+    )
+    ecl_evidence = "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py"
+    ecl_contacts = [ecl_rows[k] for k in ("eclipse_partial_start", "eclipse_totality_start", "eclipse_partial_end")]
+    ecl_nesting = [ecl_rows[k] for k in ("eclipse_c1_after_p1", "eclipse_c2_between_u1_and_u2", "eclipse_c3_between_u3_and_u4", "eclipse_c4_before_p4")]
+
     internal = _measure_internal_directions(t_dir)
     interpolation = _measure_interpolation()
     analytic = _measure_analytic_events(t_ev)
@@ -299,6 +312,26 @@ def build() -> dict:
                ["One-sided checks: they can show the core wrong, they do not confirm an event time.",
                 "Blue Ghost recorded 346 h of daylight, ending 2.3 h before smooth-sphere last light; local terrain is not in the project data for that site.",
                 "ISRO expected the wake-up about 1.8 days after the computed sunrise; ISRO published no sunrise time."], comparison="<="),
+        _check("eclipse_contact_times", "Published mission record",
+               "Eclipse of the Sun by the Earth on 14 March 2025 at the Blue Ghost landing point: start of the partial phase, start of totality, end of the partial phase",
+               "Contact times predicted by the operator, Firefly Aerospace, printed to the minute (https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/), retrieved 2026-11-14",
+               ecl_rules["E1_contact_time_at_the_site"]["threshold_minutes"], "min", ecl_how, ecl_where,
+               max(abs(row["difference"]) for row in ecl_contacts), ecl_evidence, "3 contact times at one site",
+               ["Opaque Earth without atmosphere; the real edge of the shadow is soft over about a minute.",
+                "The operator's times are predictions, not measurements; its images of the eclipse are timed only to about half an hour.",
+                "The operator labels the times CST; they are read as local Texas time (UTC-5), which the NASA chart confirms independently."]),
+        _check("eclipse_totality_duration", "Published mission record",
+               "Duration of totality at the Blue Ghost landing point, 14 March 2025 (the operator: approximately 2 hours and 16 minutes)",
+               "Firefly Aerospace, Blue Ghost Mission 1 live updates, retrieved 2026-11-14",
+               ecl_rules["E2_duration_of_totality"]["threshold_minutes"], "min", ecl_how, ecl_where,
+               abs(ecl_rows["eclipse_totality_duration"]["difference"]), ecl_evidence, "1 duration",
+               ["Called approximate by the source."]),
+        _check("eclipse_inside_whole_moon_contacts", "Independent source",
+               "Contacts at the site that fall outside the whole-Moon contacts of the same eclipse (a point of the Moon cannot enter the shadow before the Moon does or leave it after)",
+               "NASA GSFC eclipse chart, F. Espenak, 'Total Lunar Eclipse of 2025 Mar 14' (https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2025Mar14T.pdf), retrieved 2026-11-14",
+               0, "contacts outside", ecl_how, ecl_where,
+               sum(row["status"] != "PASS" for row in ecl_nesting), ecl_evidence, "4 inequalities, allowance 2 min for NASA's enlarged shadow",
+               ["One-sided: the margins are 9 to 63 min, so this only excludes gross errors."], comparison="<="),
         _check("projection_vs_azlcpo", "Independent implementation", "East-North-Up projection of the core against the SPICE routine azlcpo (same kernels, separate code)", "NAIF SPICE Toolkit N0067, routine azlcpo",
                t_dir.TOL_AZLCPO_DEG, "deg", WITH_TEST, "core/tests/ephem/test_directions.py (commit aa86a5a)",
                internal["azlcpo_deg"], "test core/tests/ephem/test_directions.py::test_exact_path_matches_azlcpo", f"{internal['rows']} rows: 7 points, Sun and Earth, 60 days", ["Checks the projection only; ephemeris and frame are shared."]),
@@ -335,7 +368,7 @@ def build() -> dict:
             {"item": "Event times and visibility shares on real terrain", "state": "unverified", "reason": "No independent illumination product or mission record has been compared yet. The terrain horizon has passed analytic tests of the core stream only (docs/method/horizon.md)."},
             {"item": "Exact rise and set times at a real lander", "state": "not available", "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."},
             {"item": "Earth rise and set against an independent source", "state": "not done", "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."},
-            {"item": "Eclipses of the Sun by the Earth", "state": "not modelled", "reason": "The visible fraction of the Sun does not include occultation by the Earth."},
+            {"item": "Sunlight during an eclipse", "state": "partly modelled", "reason": "Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared."},
         ],
         "limits": [
             "Every check on this card except the Chandrayaan-3 bound is terrain-free. Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes.",

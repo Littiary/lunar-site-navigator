@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T10:59:25Z",
+  "generated_utc": "2026-11-14T11:28:01Z",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2027-11-14T00:00:00.000Z",
@@ -20,7 +20,7 @@
   "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-250a3fe71759fa79",
-  "run_time_s": 65.96221320002223,
+  "run_time_s": 117.76392960001249,
   "status": "unverified against an independent illumination product or mission record",
   "sites": [
     {
@@ -30,7 +30,7 @@
       "lon_deg": -154.23109,
       "surface_height_m": 1701.0723774096787,
       "package_id": "site-3d084d7f181d1b64",
-      "content_sha256": "69a5d3730b131e70421bd4063b5cd04637b63f96d55634ce6ec5cb3269b87d0f",
+      "content_sha256": "290cc8e785ed0226f2e40ad10a679c3835b1bbcc12852c5cbd710e280d9cd156",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -42,8 +42,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 1.032998,
-        "timeline": 24.36058
+        "horizon": 1.22158,
+        "timeline": 49.746297
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -54,6 +54,19 @@
         6.409186363220215
       ],
       "default_height_index": 2,
+      "eclipses_of_the_sun_by_the_earth": {
+        "count": 1,
+        "total_at_the_site": 0,
+        "longest_totality_h": 0.0,
+        "max_covered_fraction": 0.4553723946488393,
+        "partial_intervals_utc": [
+          [
+            "2027-08-17T05:41:37.734Z",
+            "2027-08-17T08:53:54.609Z"
+          ]
+        ],
+        "total_intervals_utc": []
+      },
       "per_height": [
         {
           "observer_height_m": 0.0,
@@ -184,7 +197,7 @@
       "lon_deg": -68.41044,
       "surface_height_m": 1815.1855746334436,
       "package_id": "site-08105a0f3060aee8",
-      "content_sha256": "35d59ddef0eb36842df3116dd3c3e15649f7fba949077a464a352ed812a3af15",
+      "content_sha256": "7d5fb7e90c1d50ed8096d24cb9121dd4c39c2f2cef504835a59d1a6ea10594ca",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -196,8 +209,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 0.911742,
-        "timeline": 18.189675
+        "horizon": 3.44749,
+        "timeline": 43.727512
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -208,6 +221,19 @@
         7.220428943634033
       ],
       "default_height_index": 2,
+      "eclipses_of_the_sun_by_the_earth": {
+        "count": 1,
+        "total_at_the_site": 0,
+        "longest_totality_h": 0.0,
+        "max_covered_fraction": 0.456658187056459,
+        "partial_intervals_utc": [
+          [
+            "2027-08-17T05:40:53.672Z",
+            "2027-08-17T08:53:21.797Z"
+          ]
+        ],
+        "total_intervals_utc": []
+      },
       "per_height": [
         {
           "observer_height_m": 0.0,
@@ -338,7 +364,7 @@
       "lon_deg": 2.05767,
       "surface_height_m": 5173.498293993088,
       "package_id": "site-b425911bcc8e34f8",
-      "content_sha256": "62f18d082016dc6218af07fd16a43b7450b729b83010cfb845b4b09149e59c1f",
+      "content_sha256": "ad036c2a0ffdfb2cd532977792188dc5468682e12ea33d307d87805793f4e66a",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -350,8 +376,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 1.237124,
-        "timeline": 19.269681
+        "horizon": 1.323727,
+        "timeline": 17.127328
       },
       "sun_centre_elevation_range_deg": [
         -5.536576271057129,
@@ -362,6 +388,19 @@
         10.5300874710083
       ],
       "default_height_index": 2,
+      "eclipses_of_the_sun_by_the_earth": {
+        "count": 1,
+        "total_at_the_site": 0,
+        "longest_totality_h": 0.0,
+        "max_covered_fraction": 0.45442951871371595,
+        "partial_intervals_utc": [
+          [
+            "2027-08-17T05:41:50.859Z",
+            "2027-08-17T08:54:02.578Z"
+          ]
+        ],
+        "total_intervals_utc": []
+      },
       "per_height": [
         {
           "observer_height_m": 0.0,

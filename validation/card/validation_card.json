@@ -1,8 +1,8 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-14T11:13:57Z",
+  "generated_utc": "2026-11-14T11:28:22Z",
   "generated_from": {
-    "commit": "eaf5634",
+    "commit": "a8bbc5a",
     "uncommitted_changes": true
   },
   "core": {
@@ -19,8 +19,8 @@
     ]
   },
   "summary": {
-    "checks": 17,
-    "passed": 17,
+    "checks": 20,
+    "passed": 20,
     "failed": 0
   },
   "checks": [
@@ -279,6 +279,83 @@
       ]
     },
     {
+      "id": "eclipse_contact_times",
+      "group": "Published mission record",
+      "quantity": "Eclipse of the Sun by the Earth on 14 March 2025 at the Blue Ghost landing point: start of the partial phase, start of totality, end of the partial phase",
+      "compared_against": "Contact times predicted by the operator, Firefly Aerospace, printed to the minute (https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/), retrieved 2026-11-14",
+      "cases": "3 contact times at one site",
+      "threshold": {
+        "value": 2.0,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.8320313612620036,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Opaque Earth without atmosphere; the real edge of the shadow is soft over about a minute.",
+        "The operator's times are predictions, not measurements; its images of the eclipse are timed only to about half an hour.",
+        "The operator labels the times CST; they are read as local Texas time (UTC-5), which the NASA chart confirms independently."
+      ]
+    },
+    {
+      "id": "eclipse_totality_duration",
+      "group": "Published mission record",
+      "quantity": "Duration of totality at the Blue Ghost landing point, 14 March 2025 (the operator: approximately 2 hours and 16 minutes)",
+      "compared_against": "Firefly Aerospace, Blue Ghost Mission 1 live updates, retrieved 2026-11-14",
+      "cases": "1 duration",
+      "threshold": {
+        "value": 3.5,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 1.0234375,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Called approximate by the source."
+      ]
+    },
+    {
+      "id": "eclipse_inside_whole_moon_contacts",
+      "group": "Independent source",
+      "quantity": "Contacts at the site that fall outside the whole-Moon contacts of the same eclipse (a point of the Moon cannot enter the shadow before the Moon does or leave it after)",
+      "compared_against": "NASA GSFC eclipse chart, F. Espenak, 'Total Lunar Eclipse of 2025 Mar 14' (https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2025Mar14T.pdf), retrieved 2026-11-14",
+      "cases": "4 inequalities, allowance 2 min for NASA's enlarged shadow",
+      "threshold": {
+        "value": 0,
+        "unit": "contacts outside",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "contacts outside"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "One-sided: the margins are 9 to 63 min, so this only excludes gross errors."
+      ]
+    },
+    {
       "id": "projection_vs_azlcpo",
       "group": "Independent implementation",
       "quantity": "East-North-Up projection of the core against the SPICE routine azlcpo (same kernels, separate code)",
@@ -470,9 +547,9 @@
       "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."
     },
     {
-      "item": "Eclipses of the Sun by the Earth",
-      "state": "not modelled",
-      "reason": "The visible fraction of the Sun does not include occultation by the Earth."
+      "item": "Sunlight during an eclipse",
+      "state": "partly modelled",
+      "reason": "Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared."
     }
   ],
   "limits": [

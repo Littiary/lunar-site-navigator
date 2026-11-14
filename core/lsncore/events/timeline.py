@@ -18,7 +18,7 @@ from ..ephem import table as tb
 from ..results import BodySeries, HorizonResult, TimelineResult
 from ..scenario import canonical_site
 from ..timeline import IntervalSet, TimeGrid
-from . import finder
+from . import eclipse, finder
 
 DEFAULT_THRESHOLDS = {
     "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
@@ -51,7 +51,7 @@ def _window(wid: str, subject: str, h: int, definition: str, intervals: Interval
     return out
 
 
-def _metric(mid: str, label: str, value, unit: str, h: int) -> dict:
+def _metric(mid: str, label: str, value, unit: str, h: int | None) -> dict:
     return {"id": mid, "label": label, "value": None if value is None else float(value), "unit": unit, "height_index": h, "method": pk.M_METRICS}
 
 
@@ -115,6 +115,7 @@ def compute_timeline(
     windows: list[dict] = []
     metrics: list[dict] = []
     visible: dict[tuple[str, int], IntervalSet] = {}
+    any_part: dict[tuple[str, int], IntervalSet] = {}
 
     for body in bodies:
         name, tag = _NAMES[body], body.lower()
@@ -140,6 +141,7 @@ def compute_timeline(
                 found = finder.windows(result, label)
                 sets[label] = IntervalSet(found.intervals_et_s, domain)
             visible[(body, h)] = sets["visible"]
+            any_part[(body, h)] = sets["any_part"]
 
             windows.append(_window(f"{tag}_visible", body, h, f"{name} visible: {_describe(threshold)}", sets["visible"], threshold))
             windows.append(_window(f"{tag}_any_part_visible", body, h, f"Any part of the {name}'s disc is above the horizon", sets["any_part"], _ANY_PART))
@@ -193,6 +195,22 @@ def compute_timeline(
         for h in range(len(heights)):
             both = visible[("SUN", h)].intersection(visible[("EARTH", h)])
             windows.append(_window("sun_and_earth_visible", "COMBINED", h, "Sun visible and Earth visible at the same time", both, None))
+
+    if "SUN" in bodies:
+        # Eclipses of the Sun by the Earth: the same for every observer height.
+        found = eclipse.find_eclipses(eclipse.site_geometry(ground, table), domain[0], domain[1], scan_step_s, tol_s)
+        partial = IntervalSet([(e.partial_start_et_s, e.partial_end_et_s) for e in found], domain)
+        total = IntervalSet([(e.total_start_et_s, e.total_end_et_s) for e in found if e.total_start_et_s is not None], domain)
+        for h in range(len(heights)):
+            windows.append(_window("sun_eclipsed_by_earth", "SUN", h, "Part or all of the Sun's disc is hidden by the Earth (opaque Earth disc, no atmosphere), whether or not the Sun is above the terrain horizon", partial, None))
+            windows.append(_window("sun_totally_eclipsed_by_earth", "SUN", h, "The whole disc of the Sun is hidden by the Earth (opaque Earth disc, no atmosphere)", total, None))
+            lit = any_part[("SUN", h)].intersection(total.complement())
+            windows.append(_window("sun_lit", "SUN", h, "Some part of the Sun's disc is above the terrain horizon and the Sun is not totally eclipsed by the Earth", lit, None))
+        totals = [e.total_end_et_s - e.total_start_et_s for e in found if e.total_start_et_s is not None]
+        metrics.append(_metric("sun_eclipse_count", "Number of eclipses of the Sun by the Earth in the window (partial or total at the site)", len(found), "1", None))
+        metrics.append(_metric("sun_eclipse_total_count", "Number of those eclipses that are total at the site", len(totals), "1", None))
+        metrics.append(_metric("sun_eclipse_longest_totality_s", "Longest time with the whole Sun hidden by the Earth", max(totals) if totals else 0.0, "s", None))
+        metrics.append(_metric("sun_eclipse_max_covered_fraction", "Largest fraction of the Sun's disc hidden by the Earth in the window", max((e.max_covered_fraction for e in found), default=0.0), "1", None))
 
     events.sort(key=lambda event: (event["et_s"], event["body"], event["height_index"]))
     return TimelineResult(
@@ -277,7 +295,7 @@ def timeline_methods(
             parameters={"disc_strips": int(n_strips)},
             status="analytic-test-passed",
             evidence=["core/tests/events/test_events.py::test_visible_fraction_matches_closed_form_on_flat_horizon: within 0.002 of the closed form for a straight horizon (measured 0.00006)."],
-            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "Eclipses of the Sun by the Earth are not included."],
+            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "This fraction is cut by the terrain only. Eclipses of the Sun by the Earth are given as the windows 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth'."],
         ),
         pk.M_EVENTS: pk.method_card(
             title="Rise and set events",
@@ -300,19 +318,22 @@ def timeline_methods(
         ),
         pk.M_WINDOWS: pk.method_card(
             title="Visibility windows",
-            definition="Intervals during which the stated condition holds. '*_visible' uses the scenario threshold; '*_any_part_visible' and '*_full_disc_visible' bracket the partial phase: between them the disc is partly hidden and 'visible_fraction' says how much.",
-            algorithm="Built from the refined event times; 'sun_and_earth_visible' is the intersection of the two '*_visible' sets. A window that touches the start or the end of the computed range is marked clipped.",
+            definition="Intervals during which the stated condition holds. '*_visible' uses the scenario threshold; '*_any_part_visible' and '*_full_disc_visible' bracket the partial phase: between them the disc is partly hidden and 'visible_fraction' says how much. 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth' are eclipses of the Sun by the Earth seen from the site; 'sun_lit' is 'sun_any_part_visible' without the total eclipses.",
+            algorithm="Built from the refined event times; 'sun_and_earth_visible' is the intersection of the two '*_visible' sets. Eclipse contacts: the separation of the Sun and the Earth seen from the site equals the sum (partial) or the difference (total) of their angular radii; Earth as an opaque disc of its equatorial radius without atmosphere; located by bisection like the events. A window that touches the start or the end of the computed range is marked clipped.",
             frame=local,
             time_scale="TDB",
             data=data,
             parameters=params,
             status="analytic-test-passed",
-            evidence=["core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic)."],
-            limits=[terrain_limit],
+            evidence=[
+                "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+                "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts).",
+            ],
+            limits=[terrain_limit, "Eclipses: the Earth's atmosphere is not modelled; the real edge of the shadow is soft over about a minute and totality is dim, not black."],
         ),
         pk.M_METRICS: pk.method_card(
             title="Window statistics and countdowns",
-            definition="Share of the window, longest visibility and longest outage per body; time from the reference instant to the next set and the next rise. A countdown with its 'is_lower_bound' flag set to 1 means that no such event lies inside the computed range.",
+            definition="Share of the window, longest visibility and longest outage per body; time from the reference instant to the next set and the next rise. A countdown with its 'is_lower_bound' flag set to 1 means that no such event lies inside the computed range. 'sun_eclipse_*' count and measure the eclipses of the Sun by the Earth; they do not depend on the observer height.",
             algorithm="Derived from the visibility windows and the event list.",
             frame=local,
             time_scale="TDB",

@@ -100,6 +100,8 @@ def summarise(package_dir: Path) -> dict:
                 "share_of_horizon_set_closer_than_1km": float((distance[h] < NEAR_TERRAIN_M).mean()),
             }
         )
+    site_metrics = {x["id"]: x["value"] for x in timeline["metrics"] if x["height_index"] is None}
+    eclipse_windows = {w["id"]: w for w in timeline["windows"] if w["height_index"] == 0 and w["id"] in ("sun_eclipsed_by_earth", "sun_totally_eclipsed_by_earth")}
     sun = package.array(timeline["series"]["SUN"]["elevation_deg"])
     earth = package.array(timeline["series"]["EARTH"]["elevation_deg"])
     return {
@@ -119,6 +121,14 @@ def summarise(package_dir: Path) -> dict:
         "sun_centre_elevation_range_deg": [float(sun.min()), float(sun.max())],
         "earth_centre_elevation_range_deg": [float(earth.min()), float(earth.max())],
         "default_height_index": m["horizon"]["default_height_index"],
+        "eclipses_of_the_sun_by_the_earth": {
+            "count": int(site_metrics["sun_eclipse_count"]),
+            "total_at_the_site": int(site_metrics["sun_eclipse_total_count"]),
+            "longest_totality_h": site_metrics["sun_eclipse_longest_totality_s"] / 3600.0,
+            "max_covered_fraction": site_metrics["sun_eclipse_max_covered_fraction"],
+            "partial_intervals_utc": eclipse_windows["sun_eclipsed_by_earth"]["intervals_utc"],
+            "total_intervals_utc": eclipse_windows["sun_totally_eclipsed_by_earth"]["intervals_utc"],
+        },
         "per_height": per_height,
     }
 
@@ -158,6 +168,13 @@ def to_markdown(summary: dict) -> str:
                 f"{row['sun_events_set_by_terrain_closer_than_1km']} | {sun_to} | {100 * row['earth_visible_share']:.1f} % | {row['earth_longest_outage_h']:.1f} h | {earth_to} | "
                 f"{100 * row['share_of_horizon_set_closer_than_1km']:.0f} % |"
             )
+        e = site["eclipses_of_the_sun_by_the_earth"]
+        lines.append("")
+        if e["count"]:
+            spans = "; ".join(f"{a} to {b}" for a, b in e["partial_intervals_utc"])
+            lines.append(f"Eclipses of the Sun by the Earth in the window: {e['count']} ({e['total_at_the_site']} total at the site); largest covered fraction of the Sun {e['max_covered_fraction']:.3f}; {spans}.")
+        else:
+            lines.append("Eclipses of the Sun by the Earth in the window: none.")
         lines.append("")
     lines += [
         "## Limits",
@@ -166,7 +183,7 @@ def to_markdown(summary: dict) -> str:
         "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.",
         "- Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.",
         "- A countdown marked 'at least' has no set inside the computed window.",
-        "- Eclipses of the Sun by the Earth are not included.",
+        "- The shares of time above are cut by the terrain only. Eclipses of the Sun by the Earth are listed per site (opaque Earth, no atmosphere) and are in the package as the windows 'sun_eclipsed_by_earth', 'sun_totally_eclipsed_by_earth' and 'sun_lit'.",
     ]
     return "\n".join(lines) + "\n"
 

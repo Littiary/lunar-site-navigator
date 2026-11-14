@@ -31,6 +31,29 @@ Independent checks of the science core. Each check has a threshold file that is 
 * The reference frame of the LROC coordinates is not stated on the two LROC pages (unverified; assumed mean-Earth/polar-axis).
 * UTC before 1972 is handled by the leap-second kernel with a constant offset; the error is about one second, far below the thresholds.
 
+## `eclipse/` — eclipse of the Sun by the Earth, 14 March 2025
+
+**What is compared.** What the Earth sees as a lunar eclipse is, at a lunar site, an eclipse of the Sun by the Earth: solar power drops or stops although the Sun is high above the terrain. `core/lsncore/events/eclipse.py` computes the contacts at a site and the eclipse-aware power line (the fraction of the Sun's disc that is above the terrain horizon and not hidden by the Earth). It is checked on the eclipse of 14 March 2025 at the Blue Ghost Mission 1 landing point against (a) the contact times the operator predicted for its site, printed to the minute, and (b) the whole-Moon contacts of the NASA GSFC chart, which every point of the Moon must respect. Cases and thresholds were committed before the first run (commit a8bbc5a); the test is not blind (see `eclipse/thresholds.json`).
+
+**Result** (`eclipse/results/validation_table.md`): 8 of 8 pass/fail checks pass.
+
+| Contact at the site | Operator's prediction (UTC) | Core (UTC) | Difference |
+|---|---|---|---|
+| Partial eclipse begins (C1) | 05:00 | 05:00:42 | +0.7 min |
+| Totality begins (C2) | 06:18 | 06:17:23 | −0.6 min |
+| Totality ends (C3) | "approximately 2 hours and 16 minutes" later | 08:34:25 (137.0 min of totality) | +1.0 min in duration |
+| Partial eclipse ends (C4) | 09:52 | 09:51:10 | −0.8 min |
+
+Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie inside NASA's whole-Moon contacts with margins of 9 to 63 min. At the site the Sun is completely hidden for 2.28 h and partly hidden for 4.84 h; from the Earth, totality of the same eclipse lasts 65 min: the loss of sunlight depends on where on the Moon the lander stands.
+
+**Limits.**
+
+* The Earth is an opaque disc of its equatorial radius. Its atmosphere is not modelled: the real edge of the shadow is soft over about a minute, and during totality some red light still reaches the surface. The power line is therefore 0 in totality, where a real panel would see a very small, non-zero flux.
+* The operator's times are predictions; its images of the eclipse are timed to about half an hour, which is too coarse to test contacts. No measured power curve was found.
+* The operator labels its predicted times "CST". They are read as local Texas time on that date (UTC−5); read as UTC−6 the eclipse would end after the Moon has left the Earth's penumbra, which the NASA chart excludes.
+* One eclipse, one site.
+* The package does not yet carry the power line as a time series (a contract field is needed); it carries the eclipse windows and metrics.
+
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 
 **What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`core/lsncore/ephem/`) and by the JPL Horizons system (observer table, user-defined site on body 301).

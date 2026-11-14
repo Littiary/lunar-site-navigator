@@ -1,6 +1,6 @@
 # End-to-end results: three south-polar candidate points
 
-Generated 2026-11-14T10:59:25Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T11:28:01Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z (UTC). Countdowns count from the start of the window.
 - Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-250a3fe71759fa79`.
@@ -21,6 +21,8 @@ Generated 2026-11-14T10:59:25Z by `validation/sites/run.py`. Do not edit by hand
 | 10 m | 83.1 % | 133.7 h | 88 | 21 | 23.63 d | 51.0 % | 333.9 h | 16.43 d | 13 % |
 | 20 m | 86.3 % | 126.2 h | 82 | 15 | 54.17 d | 51.0 % | 333.8 h | 16.44 d | 10 % |
 
+Eclipses of the Sun by the Earth in the window: 1 (0 total at the site); largest covered fraction of the Sun 0.455; 2027-08-17T05:41:37.734Z to 2027-08-17T08:53:54.609Z.
+
 ## de Gerlache crater rim crest
 
 88.66410 deg S, -68.41044 deg E, terrain height 1815.2 m above the 1737.4 km sphere. Package `site-08105a0f3060aee8`, status `ok`. Sun centre elevation -2.85 to 2.84 deg; Earth centre elevation -6.77 to 7.22 deg.
@@ -33,6 +35,8 @@ Generated 2026-11-14T10:59:25Z by `validation/sites/run.py`. Do not edit by hand
 | 5 m | 86.3 % | 256.4 h | 42 | 1 | 87.42 d | 56.1 % | 304.3 h | 17.11 d | 9 % |
 | 10 m | 88.0 % | 135.2 h | 48 | 2 | 87.45 d | 56.1 % | 304.2 h | 17.11 d | 5 % |
 | 20 m | 88.4 % | 134.8 h | 52 | 0 | 87.48 d | 56.1 % | 304.0 h | 17.11 d | 0 % |
+
+Eclipses of the Sun by the Earth in the window: 1 (0 total at the site); largest covered fraction of the Sun 0.457; 2027-08-17T05:40:53.672Z to 2027-08-17T08:53:21.797Z.
 
 ## Mons Malapert (Malapert massif) summit
 
@@ -47,10 +51,12 @@ Generated 2026-11-14T10:59:25Z by `validation/sites/run.py`. Do not edit by hand
 | 10 m | 85.1 % | 267.2 h | 34 | 8 | 83.87 d | 90.4 % | 83.8 h | 21.98 d | 40 % |
 | 20 m | 86.0 % | 260.5 h | 30 | 2 | 83.88 d | 100.0 % | 0.0 h | at least 365.00 d | 8 % |
 
+Eclipses of the Sun by the Earth in the window: 1 (0 total at the site); largest covered fraction of the Sun 0.454; 2027-08-17T05:41:50.859Z to 2027-08-17T08:54:02.578Z.
+
 ## Limits
 
 - Shares and longest outages describe this twelve-month window only; they are not multi-year averages.
 - Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.
 - Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.
 - A countdown marked 'at least' has no set inside the computed window.
-- Eclipses of the Sun by the Earth are not included.
+- The shares of time above are cut by the terrain only. Eclipses of the Sun by the Earth are listed per site (opaque Earth, no atmosphere) and are in the package as the windows 'sun_eclipsed_by_earth', 'sun_totally_eclipsed_by_earth' and 'sun_lit'.

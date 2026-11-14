@@ -217,3 +217,36 @@ def test_site_package_with_real_timeline_is_valid(tmp_path, table_dir, horizon, 
     assert manifest["site"]["frame"] == "MOON_ME_DE440_ME421"
     assert manifest["methods"]["timeline.direction"]["validation"]["status"] == "externally-validated"
     assert manifest["methods"]["timeline.events"]["validation"]["status"] == "analytic-test-passed"
+
+
+# ------------------------------------------------------------------ eclipses in the timeline
+
+
+def test_window_without_eclipse_has_empty_eclipse_windows(timeline):
+    by_id = {(w["id"], w["height_index"]): w for w in timeline.windows}
+    metrics = {m["id"]: m for m in timeline.metrics if m["height_index"] is None}
+    for h in range(len(HEIGHTS)):
+        assert by_id[("sun_eclipsed_by_earth", h)]["intervals_et_s"] == []
+        assert by_id[("sun_totally_eclipsed_by_earth", h)]["intervals_et_s"] == []
+        assert by_id[("sun_lit", h)]["intervals_et_s"] == by_id[("sun_any_part_visible", h)]["intervals_et_s"]
+    assert metrics["sun_eclipse_count"]["value"] == 0.0 and metrics["sun_eclipse_max_covered_fraction"]["value"] == 0.0
+
+
+def test_eclipse_of_march_2025_appears_in_the_timeline(tmp_path):
+    window = {"start_utc": "2025-03-12T00:00:00.000Z", "end_utc": "2025-03-16T00:00:00.000Z", "step_s": 3600.0}
+    table_dir = tb.write_direction_table(tmp_path, window["start_utc"], window["end_utc"])
+    site = {"site_id": "test-near-side", "name": "Test point, near side", "lat_deg": 10.0, "lon_deg": -20.0}
+    horizon = smooth_sphere_horizon([2.0], azimuth_step_deg=1.0)
+    result = tl.compute_timeline(site, horizon, table_dir, window, ["SUN", "EARTH"], THRESHOLDS)
+    by_id = {w["id"]: w for w in result.windows}
+    (partial,) = by_id["sun_eclipsed_by_earth"]["intervals_et_s"]
+    (total,) = by_id["sun_totally_eclipsed_by_earth"]["intervals_et_s"]
+    assert partial[0] < total[0] < total[1] < partial[1]
+    assert 3.5 * 3600 < partial[1] - partial[0] < 6.5 * 3600 and 0.5 * 3600 < total[1] - total[0] < 3.0 * 3600
+    # The Sun is up at this site during the eclipse, so 'sun_lit' is the daylight window with totality removed.
+    lit = by_id["sun_lit"]["intervals_et_s"]
+    assert any(abs(b - total[0]) < 1e-6 for a, b in lit) and any(abs(a - total[1]) < 1e-6 for a, b in lit)
+    metrics = {m["id"]: m["value"] for m in result.metrics if m["height_index"] is None}
+    assert metrics["sun_eclipse_count"] == 1.0 and metrics["sun_eclipse_total_count"] == 1.0
+    assert metrics["sun_eclipse_max_covered_fraction"] == 1.0
+    assert abs(metrics["sun_eclipse_longest_totality_s"] - (total[1] - total[0])) < 1e-6
