@@ -1,12 +1,12 @@
 # End-to-end results: three south-polar candidate points
 
-Generated 2026-11-14T12:24:21Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T13:09:14Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z (UTC). Countdowns count from the start of the window.
 - Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-250a3fe71759fa79`.
 - Sun visible = any part of the disc above the terrain horizon. Earth visible = centre of the disc above the terrain horizon.
 - The points are project candidates derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.
-- **Status: unverified against an independent illumination product or mission record.** The ephemeris part is validated (see the validation card); the terrain horizon has passed analytic tests only.
+- **Status.** The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution (`validation/pgda`), and the ephemeris is validated (see the validation card). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. The numbers of these three sites themselves have no independent counterpart: they use the finer 20 m terrain, a twelve-month window and several observer heights, and no source gives rise and set times for these points.
 
 ## Shackleton crater rim crest
 

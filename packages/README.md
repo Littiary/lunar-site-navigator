@@ -9,8 +9,8 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Item | Value |
 |---|---|
 | Command | `python -m validation.sites.run data/sites/sites.json --publish` |
-| Code | commit `c68ae19` (clean working tree, as recorded in the provenance of every package) |
-| Generated | 2026-11-14T12:24:21Z |
+| Code | commit `d8c2b3e` (clean working tree, as recorded in the provenance of every package) |
+| Generated | 2026-11-14T13:09:14Z |
 | Scenario | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z, series step 3600 s |
 | Contract | `lsn-package` version 0.1 |
 | Terrain | `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0` |
@@ -39,7 +39,7 @@ Every site package holds the 360 degree terrain horizon for six observer heights
 ## What these numbers are
 
 - The sites are project candidate points derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.
-- **Unverified against an independent illumination product or mission record.** The ephemeris, the eclipse contacts and the ground-station geometry are validated (`validation/card/validation_card.md`); the terrain horizon has passed the core stream's own tests. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
+- The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution, and the ephemeris, the eclipse contacts and the ground-station geometry are validated against independent sources (`validation/card/validation_card.md`). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. **The numbers of these sites themselves have no independent counterpart**: they use the finer 20 m terrain, a twelve-month window and several observer heights, and no source gives rise and set times for these points. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
 - Where an event is set by terrain closer than about 1 km, the 20 m elevation grid limits its accuracy; the event carries `obstacle_distance_m`.
 - A summary per site and observer height is in `validation/sites/results/site_summary.md`.
 

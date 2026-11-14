@@ -485,7 +485,7 @@ def build() -> dict:
         "summary": {"checks": len(checks), "passed": sum(c["status"] == "PASS" for c in checks), "failed": len(failed), "failed_ids": [c["id"] for c in failed]},
         "checks": checks,
         "not_validated": [
-            {"item": "Individual rise and set times on real terrain", "state": "not validated", "reason": "The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution, and two dated images were checked, but no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy."},
+            {"item": "Individual rise and set times on real terrain", "state": "not validated", "reason": "The long-term shares of lit and Earth-visible time agree with the published LOLA maps on terrain of the same resolution; of the two checks against dated images one agrees and one fails its criterion; and no independent source gives the time of a sunrise or sunset at a point on real terrain. Where an event is set by terrain closer than about 1 km, the elevation grid limits its accuracy."},
             {"item": "The elevation model itself", "state": "not validated here", "reason": "Every terrain check on this card uses LOLA elevation data on both sides. The data stream checks the georeferencing of the LOLA files separately."},
             {"item": "Exact rise and set times at a real lander", "state": "not available", "reason": "No source examined for Blue Ghost Mission 1, Chandrayaan-3, SLIM, IM-1 or IM-2 prints a sunrise or sunset clock time for the landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."},
             {"item": "Direct-to-Earth windows", "state": "geometry validated, windows not", "reason": "Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source."},
@@ -495,7 +495,8 @@ def build() -> dict:
         "limits": [
             "Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes. The terrain checks on this card test long-term shares and two dated images, not event times.",
             "The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.",
-            "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; only the Horizons thresholds have a commit of their own that predates the data.",
+            "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; the thresholds of the comparisons with external sources have commits of their own that predate the data or the computation, as listed above.",
+            "The lander and eclipse comparisons are not blind: earlier research had compared some of the published values with Horizons.",
         ],
     }
 

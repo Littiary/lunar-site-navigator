@@ -5,7 +5,7 @@
   },
   "kind": "site",
   "package_id": "site-1e8bb8bfac94b02e",
-  "content_sha256": "5d2d776194b099a1f90be95bae971ed57fb3db7fb57ee708a6875cd6a2bd6f77",
+  "content_sha256": "618d7c65e0ecca7e1aaeedb9a67327469ac5fcbea922e3f3504cbce77d6faa28",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
@@ -314,7 +314,7 @@
       "limits": [
         "Numerical accuracy 0.25 s for the given inputs; two crossings closer together than 60 s can be missed.",
         "The accuracy of event times is set by the terrain horizon, not by the ephemeris: near the poles a horizon error of 0.01 deg can move an event by many minutes.",
-        "Not yet compared with published event times of real landers."
+        "No published sunrise or sunset clock time of a real lander was found to compare with; the operational records of two landers bound the computed events from one side only (validation/landers)."
       ]
     },
     "timeline.margin": {
@@ -444,6 +444,8 @@
         "status": "analytic-test-passed",
         "evidence": [
           "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+          "validation/pgda: the long-term share of time with any part of the Sun, and of the Earth, above the terrain horizon agrees with the published LOLA illumination maps at 100 points on terrain of the same 60 m resolution (median absolute difference 0.0006 and 0.0004; permanent shadow agrees at all 98 points compared). This checks long-term shares, not individual window edges.",
+          "validation/lro_images: sunlit or shadowed state against two dated LROC images. The shadowed state of the south pole on 18 May 2022 agrees. Along an image strip of 13 December 2010 the agreement is 89.3 % of 298 points against a registered criterion of 90 %: a failed check, in which every disagreement is ground this method calls sunlit at grazing incidence and the image rule reads as shadow.",
           "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts)."
         ]
       },
@@ -82663,16 +82665,16 @@
     ]
   },
   "provenance": {
-    "created_utc": "2026-11-14T12:24:19.663Z",
+    "created_utc": "2026-11-14T13:09:12.615Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {
-      "horizon": 2.36043,
-      "timeline": 35.166201
+      "horizon": 2.904864,
+      "timeline": 47.943509
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "0",
-      "git_commit": "c68ae199899429f69221c61b2f07297d0fdba1a4",
+      "git_commit": "d8c2b3ea8c81680d0b14e5929c5e1f5e6eaed5f1",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",
