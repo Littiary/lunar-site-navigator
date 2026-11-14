@@ -1,4 +1,4 @@
-# Tests a stand-alone build by running it: every bundled site alone and the first two side
+﻿# Tests a stand-alone build by running it: every bundled site alone and the first two side
 # by side. For each run the program is started with -LsnShot (it renders, saves one frame
 # and quits) and this script records whether the frame was written, the largest GPU memory
 # in use while it ran (nvidia-smi, whole GPU, minus the value before the start) and the
@@ -32,7 +32,7 @@ function Run([string]$name, [string[]]$arguments) {
     $png = Join-Path $Out "$name.png"
     if (Test-Path $png) { Remove-Item $png }
     $before = Get-GpuMb
-    $all = @("-windowed", "-ResX=$ResX", "-ResY=$ResY", "-LsnShot=`"$png`"") + $arguments
+    $all = @("-windowed", "-ResX=$ResX", "-ResY=$ResY", "-ForceRes", "-LsnShot=`"$png`"") + $arguments
     $watch = [System.Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath $exe -ArgumentList $all -PassThru
     $peak = $before

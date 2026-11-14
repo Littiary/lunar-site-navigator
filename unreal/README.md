@@ -75,7 +75,17 @@ Scripts\capture.ps1 -Out <png> -Time 2092 -Yaw 211 -Pitch -3 -Fov 40
 Scripts\record.ps1 -Out <mp4> -Site <site_id> -From 2088 -To 2100 -Seconds 25   # needs ffmpeg
 Scripts\package.ps1 -Out <folder>               # stand-alone Windows program
 Scripts\pitch.ps1                               # pitch clip and six stills -> docs\unreal\pitch (needs ffmpeg)
+Scripts\test_build.ps1 -Build <folder>\Windows  # run the stand-alone program: every site, and two side by side
+Scripts\bench.ps1 -Build <folder>\Windows       # frame time of the stand-alone program
+Scripts\after_packages.ps1                      # all of the above in order, after new packages are on main
 ```
+
+`after_packages.ps1` is the one command for the day the packages are regenerated: it merges
+`origin/main`, samples the terrain for the new package ids, builds, runs the tests, makes
+the pitch clip and stills, builds the stand-alone program, runs it and measures it. It
+stops at the first failure and commits nothing. `pitch.ps1 -PackageRoot <root> -Out <folder
+outside the repository>` rehearses the same views on other packages; such output is marked
+as a rehearsal and is not for the repository.
 
 The scene reads the published packages from `packages/` at the root of the repository,
 which the science core regenerates; it keeps no copy of its own. Any contract version
@@ -99,6 +109,13 @@ another direction at each site; `F` switches to a common azimuth. If the instant
 outside the time range of the right package, that half says so and keeps its nearest
 sample.
 
+The main actions are buttons along the bottom of the left (or only) view; a lit button is
+switched on. The pointer is visible: click a button, drag on a time strip to choose the
+time, hold the right mouse button to look round, turn the wheel to zoom. Every button and
+its key carry out the same named action (`ALsnObserverPawn::DoAction`). `KEYS.md` is the
+one-page list for a first-time user (copied into the stand-alone program as `KEYS.txt`);
+it also names what is on keys only.
+
 | Keys | |
 |---|---|
 | `1` .. `9` | show that site of the package root (`Shift`: in the right half, side by side) |
@@ -107,13 +124,16 @@ sample.
 | `U` | uncertainty page: the stated horizon error and the survey of the stated landing ellipse (small map of its sample points) |
 | `M` | mast-height trade and site pairs |
 | `R` | next requirement of the package |
-| mouse, arrow keys | look (while following the Sun: turn away from it) |
+| right mouse button held, arrow keys | look (while following the Sun: turn away from it) |
+| mouse wheel | zoom |
 | `Q` / `E` | one sample back / forward (`Shift`: 24 samples) |
 | `,` / `.` | one day back / forward |
 | `B` / `N` | previous / next rise or set of the Sun in the package (`Shift`: of the Earth) |
 | `Home` / `End` | first / last sample |
 | `Space`, `[`, `]` | play and pause, halve and double the playing speed |
-| `Tab` | mouse cursor, to drag the two time strips |
+| `Tab` | hide the pointer and look with the mouse alone |
+| `G` | lower drawing quality |
+| `F1` | list of keys on screen |
 | `F` | keep the view on the Sun's azimuth |
 | `PageUp` / `PageDown` | observer height |
 | `Z` / `X` | zoom |
@@ -126,7 +146,36 @@ Command line: `-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with in
 `-LsnYaw=` (while following the Sun: the offset from its azimuth), `-LsnPitch=`, `-LsnFov=`,
 `-LsnFollowSun`, `-LsnHorizonLine`, `-LsnNoFillLight`, `-LsnNoObstacle`, `-LsnShot=<png>`,
 `-LsnPlayFrom= -LsnPlayTo=` (or `-LsnPlayFromUtc= -LsnPlayToUtc=`) `-LsnPlaySeconds= -LsnMovieDir=`,
-`-LsnCameraUp=<m> -LsnCameraBack=<m>`, `-LsnNoHud`.
+`-LsnCameraUp=<m> -LsnCameraBack=<m>`, `-LsnNoHud`, `-LsnLowQuality`,
+`-LsnDo=<action>,<action>` (named actions carried out at the start),
+`-LsnBench=<txt> -LsnBenchSeconds=<s>` (measure the frame time, write it and quit),
+`-LsnClickLog=<txt>` (write down every click and what it did).
+
+### Frame time
+
+Measured by the stand-alone program itself (`Scripts\bench.ps1`): 1920 x 1080 window, no
+vertical sync, timeline playing so that the shadows move in every frame, 20 s after a
+6 s warm-up, on an NVIDIA GeForce RTX 5090 (2026-11-14, real packages of contract 0.1):
+
+| View | Quality | Mean | 99 % of frames under | GPU memory in use |
+|---|---|---|---|---|
+| one site | normal | 1.8 ms | 2.1 ms | 1.5 GB |
+| one site | low | 1.5 ms | 1.9 ms | 1.3 GB |
+| two sites side by side | normal | 2.8 ms | 3.9 ms | 1.6 GB |
+| two sites side by side | low | 2.3 ms | 3.3 ms | 1.5 GB |
+
+Low quality (`G`, button, or `-LsnLowQuality`) draws the scene at two thirds of the
+resolution and the shadows with coarser pages and fewer rays; it changes how finely the
+picture is drawn, not what is shown. On this machine it saves about a fifth of the frame time.
+
+Not measured: any other graphics card. An estimate for a laptop card with 8 GB of memory,
+by scaling only: such cards are roughly five to eight times slower than this one at this
+resolution, which would put two sites side by side at 14 to 22 ms per frame (45 to 70
+frames per second) at normal quality and one site at 9 to 15 ms. Memory is not the limit
+(1.6 GB of 8). The estimate is weakest for the shadows: the virtual shadow maps reach to the
+far terrain, and their cost may grow faster on a slower card than the factor assumes. Run
+`bench.ps1` on the backup laptop before the demo; if side by side is slow there, start with
+`-LsnLowQuality`, and if it still is, show one site at a time.
 
 `Scripts\pitch.ps1` makes everything under `docs/unreal/pitch/` from the published
 packages and writes `README.txt` there: which package, site and time each file shows. A
@@ -156,6 +205,8 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Package.BlockerRecipe`, `ObstaclesOfTheSample` | The viewer recipe of SPEC 5.5 on a hand-made package and on the sample: limiting azimuth, obstacle, cost; runs carry their obstacle id; blockers are sorted and name existing obstacles; wording of the sentences | exact; shares <= 1 + 1e-6 |
 | `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
 | `Acceptance.SecondSceneAwayFromOrigin` | The second scene of a comparison stands 20 000 km from the world origin and is the same scene: eye, Sun disc, light and silhouette as the package says; the two scenes are lit on separate lighting channels | 0.001 deg; 1e-6 cm |
+| `Planner.ButtonsOnScreen` | At six view sizes (full views from 1280 x 720 to 3840 x 2160, half views of a comparison): every button on screen, at least 22 x 60 px, no overlap with another button or a time strip, strips above the buttons, each main action has exactly one button | exact |
+| `Planner.ButtonsDoWhatKeysDo` | Named actions step by one sample and one day exactly, stop at the ends, go round the observer heights, switch play and the obstacle view; an unknown name is refused | exact |
 | `Planner.LinkedTimeEventsAndMetrics` | Both halves show the same TDB instant or say that they cannot; jumps go to package events only; the summary numbers are the package metrics with units converted; site list; panorama mapping | 1e-9 samples; exact |
 | `Planner.LandingSlipAndPanels`, `Package.PlanningFieldsOfTheSample` | Slip of a selected landing time from the landing windows (hand-made: exact; at the planned landing: equal to the package's slip report); calendar periods without gaps; certain inside visible inside possible at every sample; event bands contain their event; ellipse points inside the stated ellipse; mast and pair tables; nothing is shown without the fields | 1e-9 s; 1e-3 s; 0 violations |
 | `Real.PlanningFieldsOnlyWhenPublished` | States for every published site package which planning fields it carries, and checks its slip reports where it has them | 1e-3 s |
@@ -193,8 +244,13 @@ without the LOLA files.
 - A page whose fields the package lacks says so in one line and shows nothing else. The
   published packages decide what can be shown: `Real.PlanningFieldsOnlyWhenPublished`
   prints, per site, which fields they carry.
-- The split screen, the keys and the mouse are not covered by automated tests; they were
-  checked on real captures (`docs/unreal/pitch/`).
+- The layout of the buttons and what each named action does are covered by tests
+  (`Planner.ButtonsOnScreen`, `Planner.ButtonsDoWhatKeysDo`), and the actions were run in
+  the stand-alone program through `-LsnDo`. That a click of the real mouse reaches a button
+  has not been checked: the session that built this cannot move the pointer of the desktop.
+  `Scripts\click_test.ps1`, run from an ordinary terminal, does it with real clicks and
+  prints what the program received. Keys and split screen were checked on real captures.
+- The right half of a comparison has no buttons; the left half's buttons act on both.
 - `-LsnCameraUp=<m> -LsnCameraBack=<m>` lifts the camera above the observer for overview
   stills; the read-out then says that this is not the observer's view, and the markers
   that only make sense from the site are not drawn. `-LsnNoHud` leaves a caption line

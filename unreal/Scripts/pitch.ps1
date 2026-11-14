@@ -8,6 +8,10 @@
 #
 #   unreal\Scripts\pitch.ps1                     # everything
 #   unreal\Scripts\pitch.ps1 -Only stills        # or: -Only clip
+#
+# Rehearsal: -PackageRoot <other package root> -Out <folder outside the repository> runs
+# the same views on other packages, to check the script before the published ones carry a
+# field. Such output is marked as a rehearsal and must not be put into the repository.
 param(
     [string]$Out = "",
     [ValidateSet("all", "clip", "stills")][string]$Only = "all",
@@ -20,7 +24,8 @@ param(
     [double]$ClipSeconds = 26,
     [string]$HiddenUtc = "2027-07-29T06:00:00Z",
     [string]$BandUtc = "2027-07-28T17:00:00Z",
-    [string]$WideUtc = "2027-09-19T13:00:00Z"
+    [string]$WideUtc = "2027-09-19T13:00:00Z",
+    [string]$PackageRoot = ""
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -33,6 +38,13 @@ $record = Join-Path $PSScriptRoot "record.ps1"
 
 # What the published packages carry decides what can be shown.
 $packages = Join-Path $repo "packages"
+$rehearsal = $PackageRoot -ne ""
+$rootArgument = ""
+if ($rehearsal) {
+    $packages = [System.IO.Path]::GetFullPath($PackageRoot)
+    if ($Out.StartsWith($repo, [System.StringComparison]::OrdinalIgnoreCase)) { throw "A rehearsal on packages that are not the published ones must be written outside the repository (-Out)." }
+    $rootArgument = " -LsnPackageRoot=`"$packages`""
+}
 $index = Get-Content (Join-Path $packages "index.json") -Raw | ConvertFrom-Json
 function Get-Site([string]$siteId) {
     $entry = $index.packages | Where-Object { $_.kind -eq "site" -and $_.site_id -eq $siteId } | Select-Object -First 1
@@ -50,6 +62,7 @@ $b = Get-Site $SiteB
 if ($a.Synthetic -or $b.Synthetic) { throw "The published packages are synthetic; pitch material is made from real packages only." }
 $commit = (git -C $repo rev-parse --short HEAD).Trim()
 $notes = New-Object System.Collections.Generic.List[string]
+if ($rehearsal) { $notes.Add("REHEARSAL on $packages - NOT the published packages. Not for the repository, not for the pitch."); $notes.Add("") }
 $notes.Add("Pitch material of the Unreal planner view. Every file is a real render of the running scene")
 $notes.Add("from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1")
 $notes.Add("at repository commit $commit on $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC.")
@@ -69,7 +82,7 @@ function Skip([string]$file, [string]$what) {
     Remove-Old $file
     Add-Note "$file  -  NOT PRODUCED" "$what is not in the published packages (contract $($a.Contract)). Run this script again once packages/ carries it."
 }
-$compare = "-LsnCompare=$SiteA,$SiteB"
+$compare = "-LsnCompare=$SiteA,$SiteB$rootArgument"
 
 if ($Only -ne "stills") {
     $file = "pitch_two_sites_sunset_1080p60.mp4"
@@ -81,16 +94,16 @@ if ($Only -ne "stills") {
 if ($Only -ne "clip") {
     Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: countdowns, time strips, horizon panorama and the summary numbers of the whole window." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = $compare }
     if ($a.Obstacles) {
-        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun" }
+        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun$rootArgument" }
     } else { Skip "still_2_obstacle_highlight.png" "The obstacle that hides the Sun and the hours it costs (contract 0.2, SPEC 5.5)" }
     if ($a.Calendar) {
         Still "still_3_calendar.png" "$($a.Name) and $($b.Name) at ${HiddenUtc}: lunar-day calendar of both sites on one time axis, landing windows of the example requirement and the slip of a landing at that time." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPage=calendar" }
     } else { Skip "still_3_calendar.png" "The lunar-day calendar and the landing windows (contract 0.3, SPEC 5.6)" }
     if ($a.Band) {
-        Still "still_4_uncertainty_band.png" "$($a.Name) at $BandUtc, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPage=uncertainty" }
+        Still "still_4_uncertainty_band.png" "$($a.Name) at $BandUtc, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPage=uncertainty$rootArgument" }
     } else { Skip "still_4_uncertainty_band.png" "The band for a stated horizon error and the landing-ellipse survey (contract 0.4, SPEC 5.7)" }
-    Still "still_5_south_pole_wide.png" "The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud" }
-    Still "still_6_astronaut_height.png" "$($a.Name) at $WideUtc from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = 3; Fov = 62; Extra = "-LsnNoHud" }
+    Still "still_5_south_pole_wide.png" "The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud$rootArgument" }
+    Still "still_6_astronaut_height.png" "$($a.Name) at $WideUtc from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = 3; Fov = 62; Extra = "-LsnNoHud$rootArgument" }
 }
 $notes.Add("Not in any of these: textures, an atmosphere, stars or a map of the Earth. The ground is LOLA elevation data sampled on 320")
 $notes.Add("rings per azimuth; surface shading, exposure and the weak fill light are display choices (see unreal/README.md).")

@@ -1,4 +1,4 @@
-# Measures the frame time of a stand-alone build by running it: one site and two sites side
+﻿# Measures the frame time of a stand-alone build by running it: one site and two sites side
 # by side, each at normal and at low quality, with the timeline playing (the shadows move in
 # every frame). The program measures itself (-LsnBench): it waits six seconds, records the
 # time of every frame for the given number of seconds, without vertical sync and without a
@@ -32,7 +32,7 @@ function Run([string]$name, [string[]]$arguments) {
     if (Test-Path $file) { Remove-Item $file }
     $before = Get-GpuMb
     # The timeline plays through 400 samples while the frames are measured.
-    $all = @("-windowed", "-ResX=$ResX", "-ResY=$ResY", "-LsnBench=`"$file`"", "-LsnBenchSeconds=$Seconds", "-LsnPlayFrom=24", "-LsnPlayTo=424", "-LsnPlaySeconds=$($Seconds + 8)") + $arguments
+    $all = @("-windowed", "-ResX=$ResX", "-ResY=$ResY", "-ForceRes", "-LsnBench=`"$file`"", "-LsnBenchSeconds=$Seconds", "-LsnPlayFrom=24", "-LsnPlayTo=424", "-LsnPlaySeconds=$($Seconds + 8)") + $arguments
     $process = Start-Process -FilePath $exe -ArgumentList $all -PassThru
     $peak = $before
     $watch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -58,3 +58,5 @@ if ($sites.Count -ge 2) {
     Run "two_sites_low" @($two, "-LsnLowQuality")
 }
 Write-Host "Results in $Out"
+
+exit 0

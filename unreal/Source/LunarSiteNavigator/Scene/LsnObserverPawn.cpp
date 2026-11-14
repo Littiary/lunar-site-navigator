@@ -5,6 +5,8 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
+#include "HAL/FileManager.h"
 #include "Planner/LsnPlanner.h"
 #include "ProceduralMeshComponent.h"
 #include "Scene/LsnHud.h"
@@ -376,6 +378,13 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 			if (!Clicked.IsNone())
 			{
 				DoAction(Clicked);
+			}
+			// -LsnClickLog=<file>: every click and what it did, for checking a build with real clicks.
+			FString ClickLog;
+			if (FParse::Value(FCommandLine::Get(), TEXT("LsnClickLog="), ClickLog))
+			{
+				FFileHelper::SaveStringToFile(FString::Printf(TEXT("click at %.0f,%.0f of %d x %d: %s; sample position %.3f\n"), CursorX, CursorY, SizeX, SizeY,
+					Clicked.IsNone() ? TEXT("no button") : *Clicked.ToString(), Scene->GetTimePosition()), *ClickLog, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 			}
 		}
 		double Position = 0.0;
