@@ -212,27 +212,29 @@ FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing, b
 	// The bar: two rows of ten, each under a line of group labels. Ten cells between 6 % and
 	// 94 % of the window, so that no button lies across the middle of a side-by-side window.
 	struct FEntry { const TCHAR* Action; const TCHAR* Label; const TCHAR* Group; };
-	static const FEntry Rows[2][10] = {
+	static const FEntry Rows[2][12] = {
 		{ { TEXT("play"), TEXT("Play / pause"), TEXT("TIME") }, { TEXT("slower"), TEXT("Slower"), TEXT("TIME") }, { TEXT("faster"), TEXT("Faster"), TEXT("TIME") },
 		  { TEXT("sample_back"), TEXT("< Step"), TEXT("TIME") }, { TEXT("sample_forward"), TEXT("Step >"), TEXT("TIME") }, { TEXT("day_back"), TEXT("< Day"), TEXT("TIME") },
 		  { TEXT("day_forward"), TEXT("Day >"), TEXT("TIME") }, { TEXT("sun_event_back"), TEXT("< Sunrise / set"), TEXT("TIME") }, { TEXT("sun_event_forward"), TEXT("Sunrise / set >"), TEXT("TIME") },
-		  { TEXT("height_next"), TEXT("Observer height"), TEXT("OBSERVER") } },
+		  { TEXT("first_day"), TEXT("First lunar day"), TEXT("MISSION") }, { TEXT("arrival"), TEXT("Arrival view"), TEXT("MISSION") }, { TEXT("height_next"), TEXT("Observer height"), TEXT("OBSERVER") } },
 		{ { TEXT("page_sites"), TEXT("Sites ..."), TEXT("SITE") }, { TEXT("page_calendar"), TEXT("Calendar"), TEXT("PLAN") }, { TEXT("page_uncertainty"), TEXT("Uncertainty"), TEXT("PLAN") },
-		  { TEXT("page_trade"), TEXT("Mast / pairs"), TEXT("PLAN") }, { TEXT("follow_sun"), TEXT("Follow Sun"), TEXT("VIEW") }, { TEXT("scale_objects"), TEXT("Scale objects"), TEXT("VIEW") },
-		  { TEXT("fill_light"), TEXT("Night fill light"), TEXT("VIEW") }, { TEXT("quality"), TEXT("Low quality"), TEXT("VIEW") }, { TEXT("details"), TEXT("Details"), TEXT("INFO") },
-		  { TEXT("help"), TEXT("Help (F1)"), TEXT("INFO") } },
+		  { TEXT("page_trade"), TEXT("Mast / pairs"), TEXT("PLAN") }, { TEXT("camera"), TEXT("Camera"), TEXT("VIEW") }, { TEXT("follow_sun"), TEXT("Follow Sun"), TEXT("VIEW") },
+		  { TEXT("scale_objects"), TEXT("Scale objects"), TEXT("VIEW") }, { TEXT("fill_light"), TEXT("Night fill light"), TEXT("VIEW") }, { TEXT("quality"), TEXT("Low quality"), TEXT("VIEW") },
+		  { TEXT("details"), TEXT("Details"), TEXT("INFO") }, { TEXT("help"), TEXT("Help (F1)"), TEXT("INFO") }, { TEXT("controls"), TEXT("Less"), TEXT("INFO") } },
 	};
 	const float ButtonHeight = FMath::Max(0.036f * H, 23.0f), LabelHeight = 0.021f * H, Gap = 0.004f * H;
-	const float Left = 0.06f * W, Cell = 0.088f * W, Pad = 0.0025f * W;
-	// The one button that opens and closes everything else, in the corner beside the bar.
+	// Twelve cells between 1.2 % and 98.8 % of the window: the sixth ends at the middle.
+	const float Left = 0.012f * W, Cell = (0.976f / 12.0f) * W, Pad = 0.002f * W;
+	// The clean view: the one button that opens everything else, where the last cell of the bar is.
+	if (!bAllControls)
 	{
-		const float RowTop = Toolbar.Top + LabelHeight + (ButtonHeight + LabelHeight + Gap);
-		Toolbar.Buttons.Add({ TEXT("controls"), bAllControls ? TEXT("Less") : TEXT("More"), FBox2D(FVector2D(0.943f * W, RowTop), FVector2D(0.997f * W, RowTop + ButtonHeight)), ELsnButtonStyle::Bar, TEXT("VIEW") });
+		const float RowTop = Toolbar.Top + LabelHeight + (ButtonHeight + LabelHeight + Gap), X0 = Left + Cell * 11;
+		Toolbar.Buttons.Add({ TEXT("controls"), TEXT("More"), FBox2D(FVector2D(X0 + Pad, RowTop), FVector2D(X0 + Cell - Pad, RowTop + ButtonHeight)), ELsnButtonStyle::Bar, TEXT("INFO") });
 	}
 	for (int32 Row = 0; Row < 2 && bAllControls; ++Row)
 	{
 		const float RowTop = Toolbar.Top + LabelHeight + Row * (ButtonHeight + LabelHeight + Gap);
-		for (int32 Column = 0; Column < 10; ++Column)
+		for (int32 Column = 0; Column < 12; ++Column)
 		{
 			const FEntry& Entry = Rows[Row][Column];
 			const float X0 = Left + Cell * Column;
@@ -797,7 +799,7 @@ void ALsnHud::DrawHUD()
 	};
 	if (bOverview)
 	{
-		Notice(FString::Printf(TEXT("Camera %.0f m above the observer: not the observer's view. Horizon, countdowns and obstacle refer to the observer at the site."), Pawn->GetCameraUpM()));
+		Notice(Pawn->GetCameraNote());
 	}
 	if (Scene->GetSkippedHorizonSamples() > 0)
 	{
@@ -806,6 +808,17 @@ void ALsnHud::DrawHUD()
 	if (bComparing && View == 1 && GameMode && !GameMode->IsRightViewInRange())
 	{
 		Notice(TEXT("The selected instant is outside this package's time range: this half shows its nearest sample."));
+	}
+	if (View == 0 && LeftPawn && LeftPawn->IsFirstDayPlaying() && P.Calendar.bPresent)
+	{
+		// What is being played, in one line: the dates and lengths are the package's.
+		const FLsnOpportunity* WithLanding = P.Opportunities.FindByPredicate([](const FLsnOpportunity& O) { return O.Planned.bPresent; });
+		const FLsnCalendarPeriod* FullDay = P.Calendar.Periods.FindByPredicate([](const FLsnCalendarPeriod& Day) { return Day.bComplete; });
+		if (WithLanding && FullDay)
+		{
+			Y = DrawWrapped(FString::Printf(TEXT("The first lunar day after the planned landing of %s UTC, played fast: %.1f days of what this site gives the mission."), *WithLanding->Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
+				(FullDay->EndEtS - FullDay->StartEtS) / 86400.0), SunColor, Margin, Y, ColumnWidth, TypeL) + 6.0f * Scale;
+		}
 	}
 	for (const FString& Warning : P.Warnings)
 	{
@@ -1161,7 +1174,9 @@ void ALsnHud::DrawToolbar(const FLsnToolbar& Toolbar, float ViewX0, const ALsnSi
 			|| (A == TEXT("page_trade") && Page == ELsnPlannerPage::Trade) || (A == TEXT("page_sites") && Page == ELsnPlannerPage::Sites) || (A == TEXT("obstacle") && Scene.IsObstacleViewEnabled())
 			|| (A == TEXT("follow_sun") && Pawn && Pawn->IsFollowingSun()) || (A == TEXT("quality") && GameMode && GameMode->IsLowQuality())
 			|| (A == TEXT("scale_objects") && Scene.AreScaleObjectsVisible()) || (A == TEXT("fill_light") && Scene.IsFillLightVisible())
-			|| (A == TEXT("details") && Pawn && Pawn->AreDetailsShown()) || (A == TEXT("help") && Pawn && Pawn->IsHelpShown());
+			|| (A == TEXT("details") && Pawn && Pawn->AreDetailsShown()) || (A == TEXT("help") && Pawn && Pawn->IsHelpShown())
+			|| (A == TEXT("camera") && Pawn && Pawn->GetCameraView() != ELsnCameraView::Observer) || (A == TEXT("arrival") && Pawn && Pawn->IsArrivalRunning())
+			|| (A == TEXT("first_day") && Pawn && Pawn->IsFirstDayPlaying());
 		const bool bHover = Button.Box.IsInside(Mouse);
 		const float X0 = Button.Box.Min.X - ViewX0, Y0 = Button.Box.Min.Y;
 		const float Width = Button.Box.Max.X - Button.Box.Min.X, Height = Button.Box.Max.Y - Button.Box.Min.Y;
@@ -1328,6 +1343,7 @@ void ALsnHud::DrawHelp(float SizeX, float SizeY, float Scale)
 		TEXT("  K  calendar and landing windows      U  uncertainty      M  mast-height trade and site pairs      R  next requirement"),
 		TEXT("  O  obstacle view      F  keep the view on the Sun      PageUp / PageDown  observer height"),
 		TEXT("  H  horizon line of the package      L  fill light while the Sun is down (a display aid)      G  lower drawing quality"),
+		TEXT("  V  camera: observer, near the lander, wide      A  arrival camera move      D  play the first lunar day after the planned landing"),
 		TEXT("  T  all controls on and off      I  details: package, frame, contract, test status      P  scale objects (lander, boulders)"),
 		TEXT("  S  site list, pinning two sites, custom coordinates"),
 		TEXT("  F1  this list      Esc  quit"),

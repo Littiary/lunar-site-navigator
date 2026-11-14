@@ -8,6 +8,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Mesh/LsnProps.h"
 #include "Sky/LsnEarthView.h"
+#include "Scene/LsnLook.h"
 #include "Misc/Paths.h"
 #include "ProceduralMeshComponent.h"
 
@@ -172,6 +173,13 @@ void ALsnSiteScene::UpdateLook()
 	// How the scene is drawn follows one package value: the share of the Sun's disc that is
 	// visible at the selected sample. Nothing here changes a number or a position.
 	const double SunShare = GetSunVisibleFraction();
+	SunLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread());
+	FillLight->SetIntensity(LsnLook::FillLux.GetValueOnGameThread());
+	if (RegolithMaterial)
+	{
+		RegolithMaterial->SetScalarParameterValue(TEXT("CraterStrength"), LsnLook::CraterStrength.GetValueOnGameThread());
+		RegolithMaterial->SetScalarParameterValue(TEXT("NoiseStrength"), LsnLook::NoiseStrength.GetValueOnGameThread());
+	}
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
 	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
 	// Without a timeline there is no Sun to light the terrain: the fill keeps it readable.
@@ -490,6 +498,7 @@ bool ALsnSiteScene::GroundPointUnreal(double AzimuthDeg, double DistanceM, FVect
 void ALsnSiteScene::RebuildScaleObjects()
 {
 	bHasScaleObjects = false;
+	bHasLander = false;
 	ScaleObjects->ClearAllMeshSections();
 	Mast->ClearAllMeshSections();
 	if (bHasRealTerrain)
@@ -522,6 +531,11 @@ void ALsnSiteScene::RebuildScaleObjects()
 			FVector Ground;
 			if (GroundPointUnreal(Item.AzimuthDeg, Item.DistanceM, Ground))
 			{
+				if (FCString::Strcmp(Item.Model, TEXT("lander")) == 0)
+				{
+					bHasLander = true;
+					LanderRelative = Ground;
+				}
 				// Boulders are of the ground's own material and are shaded like it; the lander is not.
 				LsnProps::Append(*Model, FVector(Item.Scale), Item.YawDeg, Ground, FString(Item.Model).StartsWith(TEXT("boulder")) ? Rocks : All);
 			}

@@ -115,6 +115,11 @@ public:
 	 * 0 without elevation samples or while the package gives the Sun as hidden.
 	 */
 	double GetNearGroundShadeShare() const { return NearGroundShadeShare; }
+	/** Where the lander stands on the ground, world centimetres; false if there is none (no elevation samples). */
+	bool GetLanderUnreal(FVector& OutLocation) const { OutLocation = GetActorLocation() + LanderRelative; return bHasLander; }
+	/** Applies the display choices (lsn.Look.*) again; called every frame so that they can be tried while the scene runs. */
+	void RefreshLook() { UpdateLook(); }
+
 	/** The fill light on whatever the Sun does: for overview stills, labelled as a viewing aid. */
 	bool IsFillForced() const { return bForceFill; }
 
@@ -260,6 +265,8 @@ private:
 	bool bFillLightWanted = true;
 	bool bForceFill = false;
 	double NearGroundShadeShare = 0.0;
+	bool bHasLander = false;
+	FVector LanderRelative = FVector::ZeroVector;
 	bool bHasSky = false;
 	/** The direction table of the package, kept for the orientation of the Earth. */
 	FLsnDirectionTable DirectionTable;

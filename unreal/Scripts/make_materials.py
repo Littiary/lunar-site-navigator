@@ -18,7 +18,8 @@ M_LsnSurface   lit, fully rough, no specular, two-sided (the terrain is an open 
                photometric function.
                Detail below the resolution of the elevation data: the shading normal is
                tilted by a procedural height field (two scales of roughness and two sizes
-               of small craters, computed in the shader from the position on the ground),
+               of small craters, many small and few large, computed in the shader from the
+               position on the ground; scalars "CraterStrength" and "NoiseStrength"),
                and the grey value varies by a few per cent. Positions are not changed, so
                the outline of the terrain, its shadows and the horizon stay those of the
                data. The detail is illustrative: it is not measured and stands for the
@@ -67,7 +68,7 @@ struct FLsnDetail
         return float3(du.x * (k1 + k4 * u.y), du.y * (k2 + k4 * u.x), a + k1 * u.x + k2 * u.y + k4 * u.x * u.y);
     }
     // Slope (dh/dx, dh/dy) of a field of bowl-shaped craters with raised rims; Cell = size of a grid cell in metres.
-    float2 Craters(float2 p, float Cell)
+    float2 Craters(float2 p, float Cell, float Share)
     {
         float2 g = p / Cell, base = floor(g), slope = 0;
         for (int y = -1; y <= 1; y++)
@@ -76,13 +77,13 @@ struct FLsnDetail
             {
                 float2 cell = base + float2(x, y);
                 float2 r = Hash2(cell);
-                if (Hash(cell + 17.0) > 0.36) { continue; }           // about one cell in three has a crater
-                float2 centre = cell + 0.25 + 0.5 * r;
-                float radius = 0.10 + 0.20 * Hash(cell + 5.0);        // in cells
+                if (Hash(cell + 17.0) > Share) { continue; }           // only some cells have a crater
+                float2 centre = cell + 0.12 + 0.76 * r;                // anywhere in the cell: no grid shows
+                float radius = 0.07 + 0.25 * pow(Hash(cell + 5.0), 2.0); // in cells; most are small, a few large
                 float2 d = g - centre;
                 float rho = length(d) / radius;
                 if (rho >= 1.6 || rho < 1e-4) { continue; }
-                float depth = 0.085 * radius;                          // shallow, worn craters
+                float depth = (0.04 + 0.05 * Hash(cell + 9.0)) * radius; // shallow and worn, each to its own degree
                 // Inside: a bowl (height falls towards the centre). Outside: the rim falls away. Blended, so the rim is rounded.
                 float edge = smoothstep(0.70, 1.05, rho);
                 float dh = lerp(2.0 * depth * rho, -1.2 * depth * (1.6 - rho) / 0.6, edge);
@@ -96,13 +97,19 @@ FLsnDetail L;
 float2 p = P.xy * 0.01;                 // centimetres to metres
 float metres = D * 0.01;
 float fine = saturate(1.0 - metres / 45.0), medium = saturate(1.0 - metres / 260.0);
-float small = saturate(1.0 - metres / 320.0), large = saturate(1.0 - metres / 1100.0);
+float small = saturate(1.0 - metres / 120.0), middle = saturate(1.0 - metres / 420.0), large = saturate(1.0 - metres / 1400.0);
 float2 slope = 0;
-slope += 0.050 * fine * L.Noise(p * 4.1).xy;
-slope += 0.060 * fine * L.Noise(p * 1.3 + 7.7).xy;
-slope += 0.070 * medium * L.Noise(p * 0.37 + 3.1).xy;
-slope += small * L.Craters(p + 11.3, 3.7);
-slope += large * L.Craters(p + 41.9, 14.0);
+// Roughness: supports the relief of the elevation data, does not cover it.
+slope += NS * 0.030 * fine * L.Noise(p * 4.1).xy;
+slope += NS * 0.035 * fine * L.Noise(p * 1.3 + 7.7).xy;
+slope += NS * 0.040 * medium * L.Noise(p * 0.37 + 3.1).xy;
+// Craters in three sizes: many small ones, fewer of the middle size, a few large. The grids are
+// turned against each other so that no direction repeats.
+float2 q = float2(0.8829 * p.x - 0.4695 * p.y, 0.4695 * p.x + 0.8829 * p.y);
+float2 w = float2(0.5446 * p.x + 0.8387 * p.y, -0.8387 * p.x + 0.5446 * p.y);
+slope += CS * small * L.Craters(p + 11.3, 2.3, 0.22);
+slope += CS * middle * float2(0.8829, -0.4695) * 0.0 + CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 8.5, 0.15));
+slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 31.0, 0.10));
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
 float mottle = 1.0 + S * 0.10 * medium * (L.Noise(p * 0.11 + 19.0).z - 0.5);
 return float4(n, mottle);
@@ -191,7 +198,9 @@ def make_surface():
     link(position, distance, "A")
     link(camera, distance, "B")
     strength = _scalar(material, "DetailStrength", 0.0, -2300, 700)
-    detail = _custom(material, DETAIL_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT4, ["P", "N", "D", "S"], -1900, 450)
+    detail = _custom(material, DETAIL_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT4, ["P", "N", "D", "S", "CS", "NS"], -1900, 450)
+    link(_scalar(material, "CraterStrength", 1.0, -2300, 800), detail, "CS")
+    link(_scalar(material, "NoiseStrength", 1.0, -2300, 900), detail, "NS")
     link(position, detail, "P")
     link(vertex_normal, detail, "N")
     link(distance, detail, "D")

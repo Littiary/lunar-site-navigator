@@ -10,6 +10,7 @@
 #include "Planner/LsnPlanner.h"
 #include "ProceduralMeshComponent.h"
 #include "Scene/LsnHud.h"
+#include "Scene/LsnLook.h"
 #include "Scene/LsnSiteScene.h"
 #include "Scene/LsnViewGameMode.h"
 
@@ -57,7 +58,7 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
 		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("next_sunset"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
 		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("page_sites"), TEXT("next_requirement"),
-		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("controls"), TEXT("look_at_sun"), TEXT("help"), TEXT("quit"),
+		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("controls"), TEXT("look_at_sun"), TEXT("camera"), TEXT("arrival"), TEXT("first_day"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
 }
@@ -94,11 +95,100 @@ void ALsnObserverPawn::ApplyView()
 	{
 		if (const ALsnSiteScene* Scene = FindScene())
 		{
-			const FVector Back = FLsnSiteFrame::AzElToUnrealDir(AzimuthDeg, 0.0) * (-CameraBackM * FLsnSiteFrame::CmPerM);
-			SetActorLocation(Scene->GetEyeUnreal() + Back + FVector(0.0, 0.0, CameraUpM * FLsnSiteFrame::CmPerM));
+			FVector Composed;
+			if (ComposedLocation(*Scene, CameraView, Composed))
+			{
+				if (bArrival)
+				{
+					// From 9 km above and 26 km behind the site down to the composed position: the distance
+					// shrinks by a constant factor per unit of eased time, so the move slows as it nears.
+					const double Eased = FMath::InterpEaseInOut(0.0, 1.0, FMath::Clamp(ArrivalElapsedS / FMath::Max(ArrivalSeconds, 0.1), 0.0, 1.0), 2.0);
+					const FVector Start = Scene->GetActorLocation() + FLsnSiteFrame::AzElToUnrealDir(AzimuthDeg, 0.0) * (-26000.0 * FLsnSiteFrame::CmPerM) + FVector(0.0, 0.0, 9000.0 * FLsnSiteFrame::CmPerM);
+					const FVector Offset = Start - Composed;
+					const double Distance = FMath::Exp(FMath::Lerp(FMath::Loge(Offset.Size()), FMath::Loge(50.0), Eased)) - 50.0 * Eased;
+					Composed += Offset.GetSafeNormal() * FMath::Max(Distance, 0.0);
+					SetActorRotation(FRotator(FMath::Lerp(-19.0, ElevationDeg, Eased), AzimuthDeg, 0.0));
+				}
+				SetActorLocation(Composed);
+			}
+			else
+			{
+				const FVector Back = FLsnSiteFrame::AzElToUnrealDir(AzimuthDeg, 0.0) * (-CameraBackM * FLsnSiteFrame::CmPerM);
+				SetActorLocation(Scene->GetEyeUnreal() + Back + FVector(0.0, 0.0, CameraUpM * FLsnSiteFrame::CmPerM));
+			}
 		}
 	}
+
+	// Display choices, read every frame so that they can be tried while the scene runs.
+	FPostProcessSettings& Post = Camera->PostProcessSettings;
+	Post.AutoExposureBias = LsnLook::ExposureBias.GetValueOnGameThread();
+	Post.BloomIntensity = LsnLook::BloomIntensity.GetValueOnGameThread();
+	Post.BloomThreshold = LsnLook::BloomThreshold.GetValueOnGameThread();
+	Post.bOverride_FilmSlope = true;
+	Post.FilmSlope = LsnLook::FilmSlope.GetValueOnGameThread();
+	Post.bOverride_FilmToe = true;
+	Post.FilmToe = LsnLook::FilmToe.GetValueOnGameThread();
 	Camera->SetFieldOfView(static_cast<float>(FovDeg));
+}
+
+void ALsnObserverPawn::SetCameraView(ELsnCameraView NewView)
+{
+	CameraView = NewView;
+	// Each position comes with its own direction and field of view; the view keeps to the Sun's azimuth.
+	bFollowSun = true;
+	switch (NewView)
+	{
+	case ELsnCameraView::Hero: FollowOffsetDeg = -7.0; ElevationDeg = -5.0; FovDeg = 52.0; break;
+	case ELsnCameraView::Wide: FollowOffsetDeg = 0.0; ElevationDeg = -10.0; FovDeg = 58.0; break;
+	default: FollowOffsetDeg = 0.0; ElevationDeg = 0.5; FovDeg = 60.0; break;
+	}
+}
+
+bool ALsnObserverPawn::ComposedLocation(const ALsnSiteScene& Scene, ELsnCameraView View, FVector& OutLocation) const
+{
+	// The positions are composed about the Sun's azimuth of the package: "behind" is away from the Sun.
+	FLsnBodyAtTime Sun;
+	const double SunAzimuthDeg = Scene.SampleBody(TEXT("SUN"), Scene.GetTimePosition(), Sun) ? Sun.AzimuthDeg : AzimuthDeg - FollowOffsetDeg;
+	const FVector TowardsSun = FLsnSiteFrame::AzElToUnrealDir(SunAzimuthDeg, 0.0), Right = FLsnSiteFrame::AzElToUnrealDir(SunAzimuthDeg + 90.0, 0.0), Up(0.0, 0.0, 1.0);
+	const double M = FLsnSiteFrame::CmPerM;
+	if (View == ELsnCameraView::Hero)
+	{
+		FVector Lander;
+		if (!Scene.GetLanderUnreal(Lander))
+		{
+			Lander = Scene.GetActorLocation();
+		}
+		// A little above and behind the lander, to its right, so that the lander stands left of the Sun.
+		OutLocation = Lander - TowardsSun * (12.0 * M) + Right * (3.5 * M) + Up * (4.4 * M);
+		return true;
+	}
+	if (View == ELsnCameraView::Wide)
+	{
+		OutLocation = Scene.GetActorLocation() - TowardsSun * (240.0 * M) + Up * (62.0 * M);
+		return true;
+	}
+	return false;
+}
+
+FString ALsnObserverPawn::GetCameraNote() const
+{
+	if (bArrival)
+	{
+		return TEXT("Camera move from high above down to the site. A camera move only: no descent is simulated.");
+	}
+	if (CameraView == ELsnCameraView::Hero)
+	{
+		return TEXT("Camera near the lander, not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
+	}
+	if (CameraView == ELsnCameraView::Wide)
+	{
+		return TEXT("Wide view from behind the site, not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
+	}
+	if (IsOverview())
+	{
+		return FString::Printf(TEXT("Camera %.0f m above the observer: not the observer's view. Horizon, countdowns and obstacle refer to the observer at the site."), CameraUpM);
+	}
+	return FString();
 }
 
 void ALsnObserverPawn::FollowLeftView(const ALsnObserverPawn& Left)
@@ -156,6 +246,11 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	const int32 SamplesPerDay = Package.Time.StepS > 0.0 ? FMath::Max(FMath::RoundToInt32(86400.0 / Package.Time.StepS), 1) : 1;
 	const int32 NumSites = GameMode ? GameMode->GetSites().Num() : 0;
 
+	// Anything but playing on ends the first-day play as such.
+	if (Action != TEXT("first_day") && Action != TEXT("camera") && Action != TEXT("arrival") && Action != TEXT("controls") && Action != TEXT("details") && Action != TEXT("help"))
+	{
+		bFirstDay = false;
+	}
 	if (Action == TEXT("play")) { bPlaying = !bPlaying; PlayTo = -1.0; }
 	else if (Action == TEXT("slower")) { PlayRate = FMath::Max(PlayRate * 0.5, 0.125); }
 	else if (Action == TEXT("faster")) { PlayRate = FMath::Min(PlayRate * 2.0, 768.0); }
@@ -225,6 +320,36 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("quality")) { if (GameMode) { GameMode->SetLowQuality(!GameMode->IsLowQuality()); } }
 	else if (Action == TEXT("details")) { bShowDetails = !bShowDetails; }
 	else if (Action == TEXT("controls")) { bShowControls = !bShowControls; }
+	else if (Action == TEXT("camera"))
+	{
+		bArrival = false;
+		SetCameraView(CameraView == ELsnCameraView::Observer ? ELsnCameraView::Hero : CameraView == ELsnCameraView::Hero ? ELsnCameraView::Wide : ELsnCameraView::Observer);
+	}
+	else if (Action == TEXT("arrival"))
+	{
+		// A camera move from high above down to the view near the lander. No descent is simulated.
+		SetCameraView(ELsnCameraView::Hero);
+		bArrival = true;
+		ArrivalElapsedS = 0.0;
+	}
+	else if (Action == TEXT("first_day"))
+	{
+		// From the planned landing of the package (its slip report), one lunar day of its calendar, played fast.
+		const FLsnOpportunity* WithLanding = Package.Opportunities.FindByPredicate([](const FLsnOpportunity& O) { return O.Planned.bPresent; });
+		const FLsnCalendarPeriod* FullDay = Package.Calendar.bPresent ? Package.Calendar.Periods.FindByPredicate([](const FLsnCalendarPeriod& Day) { return Day.bComplete; }) : nullptr;
+		if (WithLanding && FullDay && Package.bHasTimeline && Package.Time.StepS > 0.0)
+		{
+			const double Last = FMath::Max(Package.Time.Count - 1, 0);
+			const double From = FMath::Clamp((WithLanding->Planned.EtS - Package.Time.StartEtS) / Package.Time.StepS, 0.0, Last);
+			PlayTo = FMath::Clamp(From + (FullDay->EndEtS - FullDay->StartEtS) / Package.Time.StepS, 0.0, Last);
+			double Seconds = 25.0;
+			FParse::Value(FCommandLine::Get(), TEXT("LsnFirstDaySeconds="), Seconds);
+			Scene->SetTimePosition(From);
+			PlayRate = FMath::Max(PlayTo - From, 1.0) / FMath::Max(Seconds, 1.0);
+			bPlaying = true;
+			bFirstDay = true;
+		}
+	}
 	else if (Action == TEXT("look_at_sun")) { bFollowSun = true; FollowOffsetDeg = 0.0; ElevationDeg = 0.5; }
 	else if (Action == TEXT("help")) { bShowHelp = !bShowHelp; }
 	else if (Action == TEXT("quit"))
@@ -256,6 +381,15 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 	const bool bRightView = GameMode && GameMode->GetViewIndexOf(GetController()) == 1;
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
+	if (bArrival)
+	{
+		ArrivalElapsedS += DeltaSeconds;
+		if (ArrivalElapsedS >= ArrivalSeconds)
+		{
+			bArrival = false;
+		}
+	}
+	Scene->RefreshLook();
 	// The mast carries the observer: only a camera that stands elsewhere can see it.
 	Scene->SetMastVisible(IsOverview());
 	if (IsOverview() && Scene->GetMoonSphereComponent()->IsVisible())
@@ -279,6 +413,12 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		double Unused = 0.0;
 		bFollowSun = FParse::Param(FCommandLine::Get(), TEXT("LsnFollowSun")) || (GameMode && GameMode->IsComparing()) || !FParse::Value(FCommandLine::Get(), TEXT("LsnYaw="), Unused);
 		bShowControls = FParse::Param(FCommandLine::Get(), TEXT("LsnControls"));
+		FParse::Value(FCommandLine::Get(), TEXT("LsnArrivalSeconds="), ArrivalSeconds);
+		FString ViewName;
+		if (FParse::Value(FCommandLine::Get(), TEXT("LsnView="), ViewName))
+		{
+			SetCameraView(ViewName == TEXT("hero") ? ELsnCameraView::Hero : ViewName == TEXT("wide") ? ELsnCameraView::Wide : ELsnCameraView::Observer);
+		}
 		FParse::Value(FCommandLine::Get(), TEXT("LsnPitch="), ElevationDeg);
 		if (bFollowSun)
 		{
@@ -505,7 +645,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::S, TEXT("page_sites"), TEXT("page_sites") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
 		{ EKeys::O, TEXT("obstacle"), TEXT("obstacle") }, { EKeys::H, TEXT("horizon_line"), TEXT("horizon_line") }, { EKeys::L, TEXT("fill_light"), TEXT("fill_light") },
 		{ EKeys::F, TEXT("follow_sun"), TEXT("follow_sun") }, { EKeys::PageUp, TEXT("height_up"), TEXT("height_up") }, { EKeys::PageDown, TEXT("height_down"), TEXT("height_down") },
-		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::T, TEXT("controls"), TEXT("controls") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
+		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::T, TEXT("controls"), TEXT("controls") }, { EKeys::V, TEXT("camera"), TEXT("camera") }, { EKeys::A, TEXT("arrival"), TEXT("arrival") }, { EKeys::D, TEXT("first_day"), TEXT("first_day") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
 	const bool bTyping = GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites;
 	if (bTyping && PC->WasInputKeyJustPressed(EKeys::Period)) { GameMode->TypeCustom(TEXT('.')); }
@@ -560,6 +700,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		if (Next >= End)
 		{
 			bPlaying = false;
+			bFirstDay = false;
 			bCommandLinePlayDone = PlayTo >= 0.0;
 		}
 	}

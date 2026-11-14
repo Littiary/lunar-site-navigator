@@ -26,6 +26,9 @@
 //       criteria 1 to 7 hold for that layout too. The box of "look at the Sun", shown while
 //       the Sun is outside the frame, lies in the window, in the left half side by side, and
 //       overlaps no button and no time strip in either layout.
+//    9. (Added on 2026-11-14, before its first run.) With all controls open there are also
+//       buttons for the composed camera positions, for playing the first lunar day after
+//       the planned landing, and for the arrival camera move.
 //    The actions a planner needs first must have a button (with all controls open): play, a step and a day in both
 //    directions, the next and previous rise or set of the Sun, the site list (it replaced
 //    "next site" on 2026-11-14, when the list of sites grew), the three planner pages, the
@@ -36,6 +39,14 @@
 //    by one day exactly, land on the first and last sample, and go round the observer heights
 //    of the package; the next sunset is the package's next "set" event of the Sun, exactly
 //    (1e-6 s); the details open and close. An unknown name is refused.
+//    (Added on 2026-11-14, before its first run.) "camera" goes round the observer's view,
+//    the view near the lander and the wide view, and only the first is the observer's view.
+//    "first_day" puts the time on the planned landing of the package (its slip report) and
+//    plays one lunar day of the package's calendar from there: the time is the landing
+//    within 1e-6 s, the timeline is playing, and it stops within one sample of the landing
+//    plus the length of the first complete calendar period. Without a planned landing or a
+//    calendar nothing happens. "arrival" starts the camera move and marks the view as not
+//    the observer's.
 
 #include "Tests/LsnTestSupport.h"
 #include "Engine/Engine.h"
@@ -154,7 +165,8 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 				TestFalse(Where + TEXT(": 'look at the Sun' overlaps no time strip"), LookBox.Intersect(Strip));
 			}
 			for (const TCHAR* Needed : { TEXT("play"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"), TEXT("sun_event_back"), TEXT("sun_event_forward"),
-				TEXT("page_sites"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help") })
+				TEXT("page_sites"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help"),
+				TEXT("camera"), TEXT("first_day"), TEXT("arrival") })
 			{
 				TestTrue(Where + TEXT(": there is a button for ") + Needed, !bControls || Seen.Contains(Needed));
 			}
@@ -236,6 +248,41 @@ bool FLsnNamedActionsTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("no set event in the package: the time stays"), Scene->GetTimePosition(), 0.0);
 		}
+		// Composed cameras.
+		TestTrue(TEXT("the observer's view at first"), Pawn->GetCameraView() == ELsnCameraView::Observer && !Pawn->IsOverview());
+		Pawn->DoAction(TEXT("camera"));
+		TestTrue(TEXT("camera: the view near the lander, not the observer's"), Pawn->GetCameraView() == ELsnCameraView::Hero && Pawn->IsOverview());
+		Pawn->DoAction(TEXT("camera"));
+		TestTrue(TEXT("camera: the wide view"), Pawn->GetCameraView() == ELsnCameraView::Wide && Pawn->IsOverview());
+		Pawn->DoAction(TEXT("camera"));
+		TestTrue(TEXT("camera: back to the observer"), Pawn->GetCameraView() == ELsnCameraView::Observer && !Pawn->IsOverview());
+		Pawn->DoAction(TEXT("arrival"));
+		TestTrue(TEXT("arrival: a camera move, not the observer's view"), Pawn->IsArrivalRunning() && Pawn->IsOverview());
+		Pawn->DoAction(TEXT("camera"));
+		TestFalse(TEXT("choosing a camera ends the move"), Pawn->IsArrivalRunning());
+		while (Pawn->GetCameraView() != ELsnCameraView::Observer)
+		{
+			Pawn->DoAction(TEXT("camera"));
+		}
+		// The first lunar day after the planned landing.
+		const FLsnOpportunity* WithLanding = P.Opportunities.FindByPredicate([](const FLsnOpportunity& O) { return O.Planned.bPresent; });
+		const FLsnCalendarPeriod* FullDay = P.Calendar.Periods.FindByPredicate([](const FLsnCalendarPeriod& Day) { return Day.bComplete; });
+		Scene->SetTimeIndex(3);
+		Pawn->DoAction(TEXT("first_day"));
+		if (WithLanding && FullDay && P.Calendar.bPresent)
+		{
+			TestEqual(TEXT("first day: the time is the planned landing of the package"), P.EtOfPosition(Scene->GetTimePosition()), FMath::Clamp(WithLanding->Planned.EtS, P.Time.StartEtS, P.EtOfPosition(P.Time.Count - 1)), 1e-6);
+			TestTrue(TEXT("first day: the timeline plays"), Pawn->IsPlaying() && Pawn->IsFirstDayPlaying());
+			const double EndEtS = FMath::Min(WithLanding->Planned.EtS + (FullDay->EndEtS - FullDay->StartEtS), P.EtOfPosition(P.Time.Count - 1));
+			TestEqual(TEXT("first day: it stops one lunar day of the calendar later"), P.EtOfPosition(Pawn->GetPlayToPosition()), EndEtS, P.Time.StepS);
+		}
+		else
+		{
+			TestFalse(TEXT("no planned landing or calendar: nothing plays"), Pawn->IsPlaying());
+			TestEqual(TEXT("no planned landing or calendar: the time stays"), Scene->GetTimeIndex(), 3);
+		}
+		Pawn->DoAction(TEXT("sample_forward"));
+		TestFalse(TEXT("a step ends the first-day play"), Pawn->IsFirstDayPlaying());
 		TestFalse(TEXT("the clean view at first"), Pawn->AreControlsShown());
 		Pawn->DoAction(TEXT("controls"));
 		TestTrue(TEXT("all controls open"), Pawn->AreControlsShown());
