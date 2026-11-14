@@ -183,21 +183,18 @@ without the LOLA files.
   a shadow edge is not a computed quantity; the package's `visible_fraction` is.
 - "This ridge costs N h" is the package's `lost_s`: time the body would be visible over a
   smooth sphere through the site but is not over the terrain, in the computed window
-  (here twelve months), split between obstacles to the step of the series. At a site on a
-  crest the terrain mostly lies below the smooth horizon and gives time instead: the
-  de Gerlache and Malapert packages have almost no blockers, the Shackleton rim has 38.
+  split between obstacles to the step of the series. At a site on a crest the terrain
+  mostly lies below the smooth horizon and gives time instead, so such a package can have
+  few blockers or none.
 - An obstacle within 1 km is marked "depends on single pixels of the elevation model", as
-  the contract asks. Four of the five costliest Sun obstacles of the Shackleton rim site
-  at 2 m are of that kind (191 h, 120 h, 107 h, 61 h); the far ridge shown in
-  `docs/unreal/obstacle_shackleton_ridge_2027-07-28.mp4` (52 h, 10.4 km away) is not.
+  the contract asks.
 - The obstacle view uses the values of the sample the time position belongs to; it does
   not interpolate which obstacle is the limiting one.
 - A page whose fields the package lacks says so in one line and shows nothing else. The
   published packages decide what can be shown: `Real.PlanningFieldsOnlyWhenPublished`
   prints, per site, which fields they carry.
 - The split screen, the keys and the mouse are not covered by automated tests; they were
-  checked on real captures (`docs/unreal/planner_*.png`, `compare_*.mp4`). Sites are
-  selected with the number keys; there is no mouse menu.
+  checked on real captures (`docs/unreal/pitch/`).
 - `-LsnCameraUp=<m> -LsnCameraBack=<m>` lifts the camera above the observer for overview
   stills; the read-out then says that this is not the observer's view, and the markers
   that only make sense from the site are not drawn. `-LsnNoHud` leaves a caption line
