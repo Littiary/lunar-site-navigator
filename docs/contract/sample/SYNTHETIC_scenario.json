@@ -1,7 +1,7 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.5"
+    "version": "0.6"
   },
   "kind": "scenario",
   "scenario_id": "synthetic-sample",
@@ -90,7 +90,8 @@
       "semi_minor_m": 1000.0,
       "azimuth_deg": 30.0,
       "points": 9
-    }
+    },
+    "dem_height_error_m": 1.0
   },
   "data": {
     "dem_set_id": "SYNTHETIC-no-terrain-data",

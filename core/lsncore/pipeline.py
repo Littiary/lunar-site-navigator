@@ -25,7 +25,7 @@ from .trade import add_height_trade_to_timeline
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
 from .timeline import IntervalSet, TimeGrid
-from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, visibility_window
+from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, horizon_error_profile, visibility_window
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -139,7 +139,8 @@ def blocking_methods(dem_set_id: str, azimuth_step_deg: float, series_step_s: fl
         "core/tests/test_obstacles.py::test_hours_lost_to_a_ridge_against_the_closed_form: lost time 0.9 s off the closed-form value of 45.7 h (threshold 5 s)",
         "core/tests/test_obstacles.py::test_lost_time_is_split_between_obstacles_without_loss: the shares add up to the lost time (threshold 1e-6 s)",
         "core/tests/test_obstacles.py::test_limiting_azimuth_on_a_sloping_horizon",
-        "Not yet compared with an independent computation on real terrain.",
+        "core/tests/test_brute_force_lola.py::test_limiting_terrain_point_of_the_sun_against_brute_force: on LOLA terrain, 24 instants at one site, the limiting terrain point recomputed straight from the elevation data without a stored profile; horizon elevation on the named ray within 0.003 deg (tolerance -0.002 to +0.02 deg), limiting azimuth within 0.13 deg (tolerance 0.25 deg), hidden or visible the same at all 24.",
+        "That check compares the code with the elevation model. It does not compare the elevation model with the Moon, and the lost time has not been compared with a published product.",
     ]
     return {
         pk.M_SMOOTH_SPHERE: pk.method_card(
@@ -169,6 +170,7 @@ def blocking_methods(dem_set_id: str, azimuth_step_deg: float, series_step_s: fl
                 "One obstacle is named per instant: the one at the limiting azimuth. Other terrain under the disc may hide parts of it at the same time.",
                 "Obstacles are runs of the horizon profile, not named terrain features; see the obstacle card.",
                 "The horizon limits of docs/method/horizon.md apply: near terrain depends on single DEM pixels.",
+                "Time lost to obstacles closer than about 1 km (flagged near_field) is bounded by the 20 m pixel of the elevation model: at a 2 m observer height a shift of the site by one pixel changed the Sun-visible time of a 30-day window by up to 82 h at one site record. Such a number supports an order of magnitude, not its digits; docs/method/obstacles.md, section 4.",
             ],
         ),
     }
@@ -182,23 +184,26 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
         "core/tests/test_uncertainty.py::test_band_of_a_rising_body_against_the_closed_form: band edges against delta / rate (threshold 2 s)",
         "core/tests/test_uncertainty.py::test_window_of_a_displaced_point_follows_from_its_own_local_frame: window edges of nine displaced points against a 1 s brute-force scan (threshold 2 s)",
         "core/tests/test_uncertainty.py::test_ellipse_points_fill_the_ellipse_evenly (threshold 0.5 m)",
+        "core/tests/test_uncertainty.py::test_horizon_error_from_a_terrain_height_error: per-azimuth error against atan(error / distance)",
+        "core/tests/test_brute_force_lola.py::test_extreme_points_of_the_de_gerlache_ellipse_against_brute_force: the best and the worst point of one surveyed ellipse on LOLA terrain recomputed straight from the elevation data; horizon within 0.013 deg (tolerance -0.002 to +0.02 deg), Sun-visible time 721 of 721 and 0 of 721 hourly samples against 720.0 h and 0.0 h (tolerance 2 h).",
         "The stated error and the stated ellipse are inputs. Whether they describe the real elevation model or the real landing accuracy has not been checked.",
     ]
     cards = {}
-    if "horizon_error_deg" in stated:
+    if "horizon_error_deg" in stated or "dem_height_error_m" in stated:
         cards[pk.M_HORIZON_ERROR] = pk.method_card(
             "Band for a stated horizon error",
             "visible_certain: the times at which the body is visible even if the terrain horizon is higher than computed by the stated angle. visible_possible: the times at which it is visible if the horizon is lower by that angle. visible_uncertain: possible and not certain. For every rise and set, earliest and latest give the interval of the uncertain set that contains the event.",
-            "The event finder is run on the horizon profile raised and lowered by the stated angle (one common shift of the whole profile). Raising a horizon can only hide and lowering it can only reveal, so certain lies inside the nominal window and the nominal window inside possible.",
+            "The event finder is run on the horizon profile raised and lowered by the stated error: a common angle at every azimuth (horizon_error_deg), and/or atan(dem_height_error_m / distance of the limiting terrain) per azimuth, which is wide for near terrain and narrow for far terrain. Raising a horizon can only hide and lowering it can only reveal, so certain lies inside the nominal window and the nominal window inside possible.",
             local,
             "TDB",
             data,
-            {"horizon_error_deg": stated["horizon_error_deg"]},
+            {key: stated[key] for key in ("horizon_error_deg", "dem_height_error_m") if key in stated},
             "analytic-test-passed",
             evidence,
             [
-                "One common shift is assumed. Real horizon errors differ from azimuth to azimuth and with the distance of the limiting terrain (a height error of the elevation model matters more for near terrain); the band does not model that.",
-                "The stated angle is an input, not an estimate of the elevation model's accuracy.",
+                "The same sign is assumed at every azimuth. Real errors differ from azimuth to azimuth; the band is the unfavourable case for one event and says little about how errors along the profile combine.",
+                "The height error applies to the limiting terrain point as the elevation model has it. Terrain the model does not contain at all (relief smaller than its pixels) is outside any band.",
+                "The stated numbers are inputs, not estimates of the elevation model's accuracy.",
                 "Ephemeris, landing position and observer height are not in this band.",
                 "Where the body grazes the horizon, a small angle moves an event by many hours; events can appear or disappear inside the band, and then the nominal event keeps its own time as both bounds.",
             ],
@@ -219,6 +224,7 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
                 "Computed for the default observer height only.",
                 "Not combined with the horizon error.",
                 "Each point's horizon has the limits of docs/method/horizon.md; neighbouring points can differ strongly where near terrain sets the horizon.",
+                "A spread that comes from points whose horizon is set by terrain a few pixels away is a statement about the resolution of the 20 m elevation model, not about the site: at one site record a point 82 m from the centre had no Sun in 30 days at 2 m and the Sun throughout at 20 m; docs/method/uncertainty.md, section 4.",
             ],
         )
     return cards
@@ -237,16 +243,20 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
     rules = {body: finder.threshold_from_contract(thresholds[body], "visible") for body in timeline.bodies}
     notes = []
 
-    bands = None
-    error_deg = stated.get("horizon_error_deg")
-    if error_deg:
+    bands, applied = None, None
+    if stated.get("horizon_error_deg") or stated.get("dem_height_error_m"):
         bands = {}
+        errors = [
+            horizon_error_profile(horizon.distance_m[h], stated.get("horizon_error_deg"), stated.get("dem_height_error_m"))
+            for h in range(len(heights))
+        ]
+        applied = {"min": float(errors[hd].min()), "median": float(np.median(errors[hd])), "max": float(errors[hd].max())}
         ground = d.Site(csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
         for body in timeline.bodies:
             direction = finder.site_direction(ground, table, body)
             for h in range(len(heights)):
                 nominal = timeline.window(f"{body.lower()}_visible", h)
-                bands[(body, h)] = horizon_error_band(direction, horizon.elevation_deg[h], az_step, domain, rules[body], error_deg, nominal)
+                bands[(body, h)] = horizon_error_band(direction, horizon.elevation_deg[h], az_step, domain, rules[body], errors[h], nominal)
 
     ellipse = None
     spec = stated.get("landing_ellipse")
@@ -278,7 +288,7 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
                 else:
                     sets[body].append(visibility_window(finder.site_direction(place, table, body), profile, az_step, domain, rules[body]))
         ellipse = {"spec": spec, "height_index": hd, "points": points, "surface_height_m": ground_heights, "sets": sets}
-    return bands, ellipse, notes
+    return bands, ellipse, notes, applied
 
 
 def trade_methods(dem_set_id: str, direction_table_id: str) -> dict:
@@ -487,11 +497,11 @@ def run_scenario(
             if stated:
                 default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
                 hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
-                bands, ellipse, notes = _uncertainty_inputs(
+                bands, ellipse, notes, applied = _uncertainty_inputs(
                     csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings
                 )
                 warnings.extend(notes)
-                add_uncertainty_to_timeline(timeline, stated.get("horizon_error_deg"), bands, ellipse, ephem_directions.et_to_utc_z)
+                add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied)
                 methods.update(uncertainty_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id, stated))
             landing = site.get("landing_utc")
             add_calendar_to_timeline(

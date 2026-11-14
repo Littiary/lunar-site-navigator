@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from .contract import ContractError, contract_dir, contract_header, validate_document, validate_package, write_json
-from .scenario import DEFAULT_HEIGHT_M, DEFAULT_OBSERVER_HEIGHTS_M, load_scenario, single_site_scenario
+from .scenario import DEFAULT_HEIGHT_M, DEFAULT_OBSERVER_HEIGHTS_M, load_scenario, requirement_presets, single_site_scenario
 from .synthetic import SYNTHETIC_DEM_SET_ID
 
 
@@ -91,11 +91,23 @@ def cmd_scenario(args: argparse.Namespace) -> int:
         "bodies": ["SUN", "EARTH"],
         "data": {"dem_set_id": "any", "kernel_set_id": None},
     }
+    requirements = []
+    if args.preset:
+        presets = requirement_presets()
+        wanted = list(presets) if "all" in args.preset else args.preset
+        unknown = [name for name in wanted if name not in presets]
+        if unknown:
+            raise ValueError(f"unknown requirement preset {unknown}; available: {sorted(presets)}")
+        requirements += [presets[name] for name in wanted]
     if args.requirements:
-        scenario["requirements"] = json.loads(Path(args.requirements).read_text(encoding="utf-8"))
+        requirements += json.loads(Path(args.requirements).read_text(encoding="utf-8"))
+    if requirements:
+        scenario["requirements"] = requirements
     uncertainty = {}
     if args.horizon_error_deg:
         uncertainty["horizon_error_deg"] = args.horizon_error_deg
+    if args.dem_height_error_m:
+        uncertainty["dem_height_error_m"] = args.dem_height_error_m
     if args.ellipse:
         major, minor, azimuth, points = args.ellipse
         uncertainty["landing_ellipse"] = {"semi_major_m": major, "semi_minor_m": minor, "azimuth_deg": azimuth, "points": int(points)}
@@ -168,8 +180,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--azimuth-step", type=float, default=0.25)
     p.add_argument("--max-range-km", type=float, default=300.0)
     p.add_argument("--landing-utc", help="planned landing, used for the slip tolerance")
+    p.add_argument("--preset", action="append", help="example requirement from docs/contract/presets (repeatable; 'all' for every preset)")
     p.add_argument("--requirements", help="JSON file with a list of requirements (SPEC 5.6)")
-    p.add_argument("--horizon-error-deg", type=float, help="stated horizon error for the uncertainty band")
+    p.add_argument("--horizon-error-deg", type=float, help="stated horizon error for the uncertainty band (common to all azimuths)")
+    p.add_argument("--dem-height-error-m", type=float, help="stated height error of the limiting terrain; widens the band for near terrain")
     p.add_argument("--ellipse", type=float, nargs=4, metavar=("SEMI_MAJOR_M", "SEMI_MINOR_M", "AZIMUTH_DEG", "POINTS"), help="stated landing ellipse")
     p.add_argument("--out", required=True, help="scenario file to write")
     p.set_defaults(func=cmd_scenario)

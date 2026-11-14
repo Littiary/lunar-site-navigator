@@ -1,0 +1,34 @@
+{
+  "description": "Example requirements on the landing time, for the landing windows and the slip tolerance (docs/contract/SPEC.md, section 5.6).",
+  "notice": "EXAMPLES chosen by the team to show the mechanism. They are not requirements of NASA or of any mission. A requirement is an input of a scenario: a user may state any other one, and a viewer must show the label of the requirement next to every number derived from it.",
+  "requirements": [
+    {
+      "id": "example-standard",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 864000.0,
+      "conditions": [
+        {"window": "earth_visible", "kind": "visible_at_landing"},
+        {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": 864000.0}
+      ]
+    },
+    {
+      "id": "example-strict",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
+      "mission_duration_s": 1209600.0,
+      "conditions": [
+        {"window": "earth_visible", "kind": "visible_at_landing"},
+        {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": 1209600.0},
+        {"window": "earth_visible", "kind": "total_in_mission", "min_s": 604800.0}
+      ]
+    },
+    {
+      "id": "example-loose",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 432000.0,
+      "conditions": [
+        {"window": "earth_visible", "kind": "visible_at_landing"},
+        {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": 432000.0}
+      ]
+    }
+  ]
+}

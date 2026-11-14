@@ -18,7 +18,7 @@ import numpy as np
 from . import packaging as pk
 from .blocking import add_blocking_to_timeline
 from .calendar import add_calendar_to_timeline
-from .uncertainty import Band, add_uncertainty_to_timeline, ellipse_points
+from .uncertainty import Band, add_uncertainty_to_timeline, ellipse_points, horizon_error_profile
 from .contract import format_utc, read_package, write_index
 from .obstacles import segment_obstacles
 from .pairs import build_pairs_package
@@ -245,7 +245,11 @@ def synthetic_timeline(
     visible: dict[tuple[str, int], IntervalSet] = {}
     visible_smooth: dict[tuple[str, int], IntervalSet] = {}
     uncertainty = uncertainty or {}
-    error_deg = uncertainty.get("horizon_error_deg")
+    has_band = bool(uncertainty.get("horizon_error_deg") or uncertainty.get("dem_height_error_m"))
+    error_profile = [
+        horizon_error_profile(horizon.distance_m[h], uncertainty.get("horizon_error_deg"), uncertainty.get("dem_height_error_m"))
+        for h in range(len(heights))
+    ]
     bands: dict[tuple[str, int], Band] = {}
     spec = uncertainty.get("landing_ellipse")
     ellipse = None
@@ -282,10 +286,11 @@ def synthetic_timeline(
             visible[(body, h)] = iv
             # the same condition over a smooth sphere: the horizon is flat, dip[h] below horizontal
             visible_smooth[(body, h)] = IntervalSet.from_samples(grid, signal[h] - margin[h] + el + dip[h], level)
-            if error_deg:
-                certain = IntervalSet.from_samples(grid, signal[h] - error_deg, level).intersection(iv)
-                possible = IntervalSet.from_samples(grid, signal[h] + error_deg, level).union(iv)
-                bands[(body, h)] = Band(iv, certain, possible, possible.intersection(certain.complement()), error_deg)
+            if has_band:
+                error = np.interp(az, az_grid, error_profile[h], period=360.0)  # at the azimuth of the body
+                certain = IntervalSet.from_samples(grid, signal[h] - error, level).intersection(iv)
+                possible = IntervalSet.from_samples(grid, signal[h] + error, level).union(iv)
+                bands[(body, h)] = Band(iv, certain, possible, possible.intersection(certain.complement()), float(error_profile[h].max()))
             windows.append(_window(f"{body.lower()}_visible", body, h, f"{body} visible: {threshold['quantity']} {threshold['op']} {threshold['value']}", iv, clock, threshold))
             for a, e in iv.intervals:
                 for kind, when in (("rise", a), ("set", e)):
@@ -341,7 +346,11 @@ def synthetic_timeline(
     )
     add_blocking_to_timeline(result, horizon, visible_smooth, clock.et_to_utc)
     if bands or ellipse:
-        add_uncertainty_to_timeline(result, error_deg, bands, ellipse, clock.et_to_utc)
+        applied = error_profile[default_height_index]
+        add_uncertainty_to_timeline(
+            result, uncertainty, bands, ellipse, clock.et_to_utc,
+            {"min": applied.min(), "median": np.median(applied), "max": applied.max()} if has_band else None,
+        )
     return result
 
 

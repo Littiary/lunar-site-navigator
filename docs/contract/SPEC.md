@@ -1,4 +1,4 @@
-# Package contract, version 0.5
+# Package contract, version 0.6
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.5"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.6"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -162,8 +162,8 @@ same package ids.
 | `time_window` | `start_utc`, `end_utc`, `step_s`, or `null` for horizon only |
 | `bodies` | `SUN`, `EARTH` |
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
-| `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to |
-| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg` and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
+| `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to. Three example requirements are in [`presets/requirements.json`](presets/README.md) |
+| `uncertainty` | Since 0.4, optional. Stated assumptions: `horizon_error_deg`, `dem_height_error_m` (since 0.6) and/or `landing_ellipse` (`semi_major_m`, `semi_minor_m`, `azimuth_deg` of the major axis, `points`); see 5.7 |
 | `mission_profile` | Reserved |
 | `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use. `dem_set_id: "any"` accepts the installed elevation products; a run on another set than the one named still happens and writes a warning. The package always records what was used |
 
@@ -379,6 +379,13 @@ has the eclipse-aware window `sun_lit`.
    {"window": "earth_visible", "kind": "total_in_mission", "min_s": 216000}]}
 ```
 
+A requirement is always an input of the scenario. Three examples, chosen by the team and
+labelled as such (they are not requirements of NASA or of any mission), are shipped in
+[`presets/requirements.json`](presets/requirements.json): `example-standard` (Earth in
+view at landing, 10 Earth days of unbroken sunlight), `example-strict` and
+`example-loose`. Viewers read that file to offer presets and must show the `label` of
+the requirement with every number derived from it.
+
 `window` is the id of any window of the timeline. `visible_at_landing`: the window's
 condition holds at the landing time. `continuous_from_landing`: it holds without
 interruption for `min_s` from landing. `total_in_mission`: it holds for at least `min_s`
@@ -415,9 +422,12 @@ requirement is the scenario's; the package cannot tell whether it is the right o
 Both are answers to "what if" questions with a stated assumption. Neither is an error
 estimate of the result, and they are not combined.
 
-**Stated horizon error** (`uncertainty.horizon_error_deg` in the scenario). The whole
-horizon profile is shifted up and down by the stated angle, the same at every azimuth.
-Per body and observer height:
+**Stated horizon error.** Two assumptions can be stated, alone or together (they are
+added): `uncertainty.horizon_error_deg`, a shift of the whole profile by the same angle
+at every azimuth; and, since 0.6, `uncertainty.dem_height_error_m`, a height error of
+the terrain point that sets the horizon, which moves the horizon in that azimuth by
+`atan(height error / distance)`: much for near terrain, little for far terrain. The
+profile is raised and lowered by the resulting error. Per body and observer height:
 
 | Window id | Meaning |
 |---|---|
@@ -443,8 +453,10 @@ own local vertical. Computed for the default observer height only.
 | `uncertainty.landing_ellipse.points[]` | `lat_deg`, `lon_deg`, `surface_height_m`, `visible_s` per body (`null` if the point has no complete horizon). The first point is the site |
 | `uncertainty.landing_ellipse.visible_s.<BODY>` | `centre_s`, `min_s`, `median_s`, `max_s` over the points |
 
-`timeline.uncertainty.horizon_error` and `.landing_ellipse` repeat the stated numbers and
-carry an `assumption` sentence that a viewer must show with the band. The share of
+`timeline.uncertainty.horizon_error` (`error_deg` and/or `dem_height_error_m`, and since
+0.6 `applied_error_deg` with the least, median and largest error used at the default
+observer height) and `.landing_ellipse` repeat the stated numbers and carry an
+`assumption` sentence that a viewer must show with the band. The share of
 points is a survey of the ellipse, not a probability.
 
 ### 5.8 Mast-height trade (since 0.5)
@@ -552,6 +564,18 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.6 (14 November 2026)
+
+Additive, with one relaxation; nothing that existed in 0.5 changed its meaning, name,
+unit or layout, and a scenario that states only what 0.5 knew gives a package with every
+field of 0.5.
+
+- Scenario and site request: `uncertainty.dem_height_error_m`.
+- `timeline.uncertainty.horizon_error`: `dem_height_error_m`, `applied_error_deg`.
+- Relaxation: `timeline.uncertainty.horizon_error.error_deg` is present only if a common shift was stated. In 0.5 it was always present, because a common shift was the only horizon error that could be stated. A reader must not assume it when `dem_height_error_m` is there.
+- Requirement presets in `docs/contract/presets/requirements.json` (a documented file next to the contract; not part of a package).
+- The sample scenario states an invented terrain height error in addition; the sample was regenerated (new ids).
 
 ### 0.5 (14 November 2026)
 

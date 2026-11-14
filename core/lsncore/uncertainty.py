@@ -73,20 +73,41 @@ def visibility_window(direction, elevation_deg, step_deg: float, domain, rule) -
     return IntervalSet(finder.windows(result, "visible").intervals_et_s, (float(domain[0]), float(domain[1])))
 
 
-def horizon_error_band(direction, elevation_deg, step_deg: float, domain, rule, error_deg: float, nominal: IntervalSet | None = None) -> Band:
-    """Windows for the profile as given, raised by error_deg and lowered by error_deg."""
+def horizon_error_profile(distance_m, common_deg: float | None = 0.0, dem_height_error_m: float | None = None) -> np.ndarray:
+    """Horizon error per azimuth from the stated assumptions.
+
+    common_deg is added at every azimuth. dem_height_error_m is a height error of the
+    terrain point that sets the horizon: seen from the site it is atan(error / distance),
+    large for near terrain and small for far terrain. Azimuths without a known limiting
+    point get the common part only.
+    """
+    distance = np.asarray(distance_m, dtype=np.float64)
+    error = np.full(distance.shape, float(common_deg or 0.0))
+    if dem_height_error_m:
+        with np.errstate(invalid="ignore", divide="ignore"):
+            angle = np.degrees(np.arctan(float(dem_height_error_m) / distance))
+        error = error + np.where(np.isfinite(distance) & (distance > 0.0), angle, 0.0)
+    return error
+
+
+def horizon_error_band(direction, elevation_deg, step_deg: float, domain, rule, error_deg, nominal: IntervalSet | None = None) -> Band:
+    """Windows for the profile as given, raised by error_deg and lowered by error_deg.
+
+    error_deg is one number or one value per azimuth of the profile.
+    """
     elevation = np.asarray(elevation_deg, dtype=np.float64)
     if nominal is None:
         nominal = visibility_window(direction, elevation, step_deg, domain, rule)
-    if error_deg <= 0.0:
+    error = np.asarray(error_deg, dtype=np.float64)
+    if not np.any(error > 0.0):
         return Band(nominal, nominal, nominal, IntervalSet.empty(nominal.domain), 0.0)
-    certain = visibility_window(direction, elevation + error_deg, step_deg, domain, rule)
-    possible = visibility_window(direction, elevation - error_deg, step_deg, domain, rule)
+    certain = visibility_window(direction, elevation + error, step_deg, domain, rule)
+    possible = visibility_window(direction, elevation - error, step_deg, domain, rule)
     # Raising a horizon can only hide, lowering it can only reveal. Event times are located
     # to a fraction of a second, so the three sets are made consistent to that level.
     certain = certain.intersection(nominal)
     possible = possible.union(nominal)
-    return Band(nominal, certain, possible, possible.intersection(certain.complement()), float(error_deg))
+    return Band(nominal, certain, possible, possible.intersection(certain.complement()), float(error.max()))
 
 
 def event_time_bounds(event_times, band: Band) -> list[tuple[float, float]]:
@@ -146,12 +167,43 @@ def ellipse_summary(sets: list[IntervalSet], grid: TimeGrid) -> dict:
     }
 
 
-HORIZON_ERROR_ASSUMPTION = (
+COMMON_SHIFT_ASSUMPTION = (
     "The whole horizon profile is shifted up or down by the stated angle, the same at every "
-    "azimuth and for every observer height. 'Certain' holds even with the horizon that much "
-    "higher than computed; 'possible' needs it that much lower. Other error sources (ephemeris, "
-    "landing position, observer height) are not in this band."
+    "azimuth and for every observer height."
 )
+HEIGHT_ERROR_ASSUMPTION = (
+    "The terrain point that sets the horizon in each azimuth may be higher or lower than the "
+    "elevation model says by the stated height; seen from the site that is atan(height error / "
+    "distance), so near terrain gets a wide band and far terrain a narrow one. The same sign is "
+    "assumed at every azimuth."
+)
+BAND_READING = (
+    "'Certain' holds even with the horizon that much higher than computed; 'possible' needs it "
+    "that much lower. Other error sources (ephemeris, landing position, observer height) are not "
+    "in this band."
+)
+
+
+def horizon_error_assumption(stated: dict) -> str:
+    parts = []
+    if stated.get("horizon_error_deg"):
+        parts.append(COMMON_SHIFT_ASSUMPTION)
+    if stated.get("dem_height_error_m"):
+        parts.append(HEIGHT_ERROR_ASSUMPTION)
+    if len(parts) == 2:
+        parts.append("The two are added.")
+    return " ".join(parts + [BAND_READING])
+
+
+def _error_words(stated: dict) -> str:
+    words = []
+    if stated.get("horizon_error_deg"):
+        words.append(f"a horizon error of {stated['horizon_error_deg']:g} deg")
+    if stated.get("dem_height_error_m"):
+        words.append(f"a terrain height error of {stated['dem_height_error_m']:g} m")
+    return " and ".join(words)
+
+
 ELLIPSE_ASSUMPTION = (
     "The landing point may be anywhere inside the stated ellipse on the reference sphere. The "
     "sample points fill the ellipse evenly in area (sunflower pattern, the centre first). Every "
@@ -160,29 +212,43 @@ ELLIPSE_ASSUMPTION = (
 )
 
 
-def add_uncertainty_to_timeline(timeline: TimelineResult, error_deg: float | None, bands: dict | None, ellipse: dict | None, et_to_utc) -> None:
+def add_uncertainty_to_timeline(
+    timeline: TimelineResult, stated: dict, bands: dict | None, ellipse: dict | None, et_to_utc, applied_error_deg: dict | None = None
+) -> None:
     """Write the band of a stated horizon error and the survey of a landing ellipse into a timeline.
 
-    bands maps (body, height index) to a Band. ellipse is
+    stated is the scenario's uncertainty object. bands maps (body, height index) to a Band.
+    applied_error_deg gives the least, median and largest horizon error used at the default
+    observer height. ellipse is
     {"spec": the stated ellipse, "height_index": int, "points": [K, 2] latitude and longitude,
      "surface_height_m": [K], "sets": {body: [IntervalSet per point]}}.
     """
     grid = TimeGrid.from_contract(timeline.time)
     out = {}
     if bands:
+        what = _error_words(stated)
         for (body, h), band in sorted(bands.items()):
             tag = body.lower()
-            timeline.windows.append(pk.window_record(f"{tag}_visible_certain", body, h, f"{body} visible even if the terrain horizon is {error_deg:g} deg higher than computed", band.certain, et_to_utc, pk.M_HORIZON_ERROR))
-            timeline.windows.append(pk.window_record(f"{tag}_visible_possible", body, h, f"{body} visible if the terrain horizon is {error_deg:g} deg lower than computed", band.possible, et_to_utc, pk.M_HORIZON_ERROR))
-            timeline.windows.append(pk.window_record(f"{tag}_visible_uncertain", body, h, f"{body} visible or not, depending on a horizon error of up to {error_deg:g} deg", band.uncertain, et_to_utc, pk.M_HORIZON_ERROR))
-            timeline.metrics.append(pk.metric_record(f"{tag}_visible_certain_s", f"Time with {body} visible even if the horizon is {error_deg:g} deg higher", band.certain.total_s(), "s", h, pk.M_HORIZON_ERROR))
-            timeline.metrics.append(pk.metric_record(f"{tag}_visible_possible_s", f"Time with {body} visible if the horizon is {error_deg:g} deg lower", band.possible.total_s(), "s", h, pk.M_HORIZON_ERROR))
-            timeline.metrics.append(pk.metric_record(f"{tag}_visible_uncertain_s", f"Time in which a horizon error of {error_deg:g} deg decides whether {body} is visible", band.uncertain.total_s(), "s", h, pk.M_HORIZON_ERROR))
+            timeline.windows.append(pk.window_record(f"{tag}_visible_certain", body, h, f"{body} visible even if the terrain horizon is higher than computed by {what}", band.certain, et_to_utc, pk.M_HORIZON_ERROR))
+            timeline.windows.append(pk.window_record(f"{tag}_visible_possible", body, h, f"{body} visible if the terrain horizon is lower than computed by {what}", band.possible, et_to_utc, pk.M_HORIZON_ERROR))
+            timeline.windows.append(pk.window_record(f"{tag}_visible_uncertain", body, h, f"{body} visible or not, depending on {what}", band.uncertain, et_to_utc, pk.M_HORIZON_ERROR))
+            timeline.metrics.append(pk.metric_record(f"{tag}_visible_certain_s", f"Time with {body} visible even with the horizon higher by {what}", band.certain.total_s(), "s", h, pk.M_HORIZON_ERROR))
+            timeline.metrics.append(pk.metric_record(f"{tag}_visible_possible_s", f"Time with {body} visible with the horizon lower by {what}", band.possible.total_s(), "s", h, pk.M_HORIZON_ERROR))
+            timeline.metrics.append(pk.metric_record(f"{tag}_visible_uncertain_s", f"Time in which {what} decides whether {body} is visible", band.uncertain.total_s(), "s", h, pk.M_HORIZON_ERROR))
             mine = [event for event in timeline.events if event["body"] == body and event["height_index"] == h]
             for event, (a, b) in zip(mine, event_time_bounds([event["et_s"] for event in mine], band)):
                 a, b = min(a, event["et_s"]), max(b, event["et_s"])
                 event.update(earliest_et_s=a, latest_et_s=b, earliest_utc=et_to_utc(a), latest_utc=et_to_utc(b))
-        out["horizon_error"] = {"error_deg": float(error_deg), "assumption": HORIZON_ERROR_ASSUMPTION, "method": pk.M_HORIZON_ERROR}
+        block = {}
+        if stated.get("horizon_error_deg"):
+            block["error_deg"] = float(stated["horizon_error_deg"])
+        if stated.get("dem_height_error_m"):
+            block["dem_height_error_m"] = float(stated["dem_height_error_m"])
+        if applied_error_deg is not None:
+            block["applied_error_deg"] = {key: float(applied_error_deg[key]) for key in ("min", "median", "max")}
+        block["assumption"] = horizon_error_assumption(stated)
+        block["method"] = pk.M_HORIZON_ERROR
+        out["horizon_error"] = block
     if ellipse:
         h = int(ellipse["height_index"])
         stats, per_point = {}, {}

@@ -186,3 +186,40 @@ def test_window_of_a_displaced_point_follows_from_its_own_local_frame():
     # the points differ: the displacement moves the window edges by more than the tolerance
     starts = [s.as_list()[0][0] if not s.clipped_start else s.as_list()[1][0] for s in sets]
     assert max(starts) - min(starts) > 600.0
+
+
+# -- horizon error that follows from a height error of the terrain ------------------------------
+
+def test_horizon_error_from_a_terrain_height_error():
+    from lsncore.uncertainty import horizon_error_profile
+
+    distance = np.array([100.0, 1000.0, 10_000.0, np.nan])
+    profile = horizon_error_profile(distance, 0.0, 1.0)
+    # a point 1 m higher at distance d stands atan(1 / d) higher in the sky
+    assert profile[:3] == pytest.approx([math.degrees(math.atan(1.0 / x)) for x in (100.0, 1000.0, 10_000.0)], abs=1e-12)
+    assert profile[0] == pytest.approx(0.573, abs=1e-3) and profile[2] == pytest.approx(0.00573, abs=1e-5)
+    assert profile[3] == 0.0  # no limiting terrain known in that azimuth
+    assert horizon_error_profile(distance, 0.05, None).tolist() == [0.05] * 4
+    both = horizon_error_profile(distance, 0.05, 1.0)
+    assert both[:3] == pytest.approx(profile[:3] + 0.05, abs=1e-12)
+
+
+def test_band_with_an_error_that_depends_on_azimuth():
+    """Only the error at the azimuth of the body matters for its event."""
+    finder = pytest.importorskip("lsncore.events.finder")
+    rate = 0.05 / HOUR
+    e0, horizon_deg, delta = -1.0, 0.3, 0.05
+    domain = (0.0, 60.0 * HOUR)
+
+    def direction(et):
+        et = np.asarray(et, dtype=np.float64)
+        return np.full(et.shape, 120.0), e0 + rate * et, np.full(et.shape, 0.27)
+
+    rule = finder.threshold_from_contract({"quantity": "margin_deg", "op": ">", "value": 0.0})
+    error = np.full(360, 0.5)
+    error[100:141] = delta
+    band = horizon_error_band(direction, np.full(360, horizon_deg), 1.0, domain, rule, error)
+    t0, shift = (horizon_deg - e0) / rate, delta / rate
+    assert band.possible.as_list()[0][0] == pytest.approx(t0 - shift, abs=TOL_BAND_EDGE_S)
+    assert band.certain.as_list()[0][0] == pytest.approx(t0 + shift, abs=TOL_BAND_EDGE_S)
+    assert band.error_deg == 0.5

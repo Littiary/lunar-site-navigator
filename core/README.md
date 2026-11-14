@@ -30,9 +30,11 @@ python -m lsncore sample                                  # regenerate docs/cont
 `site` computes the terrain horizon of one point (options: `--heights`, `--azimuth-step`,
 `--max-range-km`). `scenario` writes a scenario file from the site records of the data
 stream; options state what else is wanted: `--landing-utc` (planned landing),
-`--requirements <file>` (mission requirements on the landing time), `--horizon-error-deg`
-and `--ellipse` (assumptions for the uncertainty band and the landing-ellipse survey),
-`--heights` (mast heights to compare). `run` computes every site of a scenario file. With
+`--preset <id>` (an example requirement from
+[`docs/contract/presets`](../docs/contract/presets/README.md); repeatable, `all` for every
+one) or `--requirements <file>` (your own requirements on the landing time),
+`--horizon-error-deg`, `--dem-height-error-m` and `--ellipse` (assumptions for the
+uncertainty band and the landing-ellipse survey), `--heights` (mast heights to compare). `run` computes every site of a scenario file. With
 a time window and the ephemeris modules installed, a site package then holds:
 
 | Part | From |

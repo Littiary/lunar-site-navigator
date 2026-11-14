@@ -5,9 +5,10 @@ Code: `core/lsncore/obstacles.py`, `core/lsncore/blocking.py`, wiring in
 `core/tests/test_contract_v02.py`. Package fields: contract 0.2,
 [`docs/contract/SPEC.md`](../contract/SPEC.md) section 5.5.
 
-Status on 14 November 2026: checked against closed-form cases. **Not compared with an
-independent computation on real terrain.** The numbers for real sites below are outputs,
-not validated results.
+Status on 14 November 2026: checked against closed-form cases, and on LOLA terrain against
+a brute-force recomputation straight from the elevation data (section 2). That
+recomputation checks the code against the elevation model; it does not check the model
+against the Moon. The numbers for real sites below are outputs, not validated results.
 
 ## 1. Definitions
 
@@ -58,6 +59,19 @@ Thresholds were fixed in the test file before the code was written.
 | Limiting sample on a sloping horizon against the closed-form offset `-r s / sqrt(1 + s^2)` | one azimuth step | passes |
 | Balance `terrain = smooth - lost + gained` and consistency of list and arrays in a written package | 1e-6 s | passes |
 
+**Brute force on LOLA terrain** (`core/tests/test_brute_force_lola.py`; tolerances fixed
+before the first run). For the Shackleton site record and 24 instants of the 30-day
+window, the terrain point that limits the Sun was recomputed from the data with no
+stored profile and no obstacle grouping: rays every 0.01 deg under the Sun's disc, the
+finest data in 0.1 m steps near the observer, the unrearranged triangle formula.
+
+| Quantity | Tolerance | Measured |
+|---|---|---|
+| Horizon elevation on the ray the package names, core minus brute force | -0.002 to +0.02 deg | 0 to +0.003 deg |
+| Distance of the limiting terrain point on that ray | 10 % or 50 m | median difference 3.3 m (largest 62 m, where two terrain points reach the same elevation within 0.05 deg) |
+| Limiting azimuth under the disc, package against brute force | one profile step (0.25 deg) | at most 0.13 deg, 24 of 24 |
+| Sun hidden or not | same answer | 22 visible, 2 hidden, all agree |
+
 ## 3. First outputs on LOLA terrain
 
 Three site records of the data stream (`data/sites/sites.json` on the data branch),
@@ -88,9 +102,19 @@ beyond.
 2. **Obstacles are runs of the profile, not named features.** The rule looks at distance
    only. A long ridge can be split where the limiting point jumps along it, and two
    features at the same distance can be joined.
-3. **Near-field obstacles are fragile.** They depend on single pixels of the elevation
-   model and on the observer height; a different observer height can remove them. The
-   package flags them, and the horizon note explains why.
+3. **Near-field obstacles are bounded by the 20 m pixel.** The three obstacles that cost
+   52 h at the Shackleton record are 0.4 to 0.7 km away, 20 to 35 pixels, and stand 2.8
+   to 3.1 deg high: about 20 to 40 m of relief. The model holds relief of that size, but
+   its crest height rests on a few posts, and 1 m of height error there is 0.08 to 0.14
+   deg of horizon. Measured on the model: moving the site by one pixel changes the
+   Sun-visible time of the window from 667.7 h to between 585 and 669 h (at 2 m), and
+   raising the observer to 10 m gives 681 to 689 h at all nine positions. A stated
+   terrain height error of 1 m gives a band of 4.7 h, 2 m gives 18 h. What can be claimed
+   for a 2 m observer is therefore the order of magnitude (tens of hours lost to
+   terrain within a kilometre), not the number 52.3 and not the identity of the three
+   obstacles. Relief narrower than about two pixels (40 m) is not in the model at all.
+   The package flags these obstacles as `near_field`; the terrain-height band and the
+   ellipse survey (uncertainty.md) quantify the dependence for any site.
 4. **Resolution of the split.** Totals are as accurate as the event times; the moment at
    which the blocker changes from one obstacle to the next is known to the series step.
 5. **The smooth sphere is a yardstick.** "Lost" and "gained" compare with a Moon without

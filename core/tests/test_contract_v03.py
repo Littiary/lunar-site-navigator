@@ -143,3 +143,35 @@ def test_validator_rejects_broken_0_3_fields(site, tmp_path, case, change, expec
     with pytest.raises(ContractError) as info:
         validate_package(dst)
     assert expected in str(info.value)
+
+
+def test_requirement_presets_are_valid_and_labelled_as_examples(tmp_path, scenario):
+    """The presets are the one documented place viewers read example requirements from."""
+    from lsncore import cli
+    from lsncore.contract import contract_dir
+    from lsncore.scenario import requirement_presets
+
+    presets = requirement_presets()
+    raw = json.loads((contract_dir() / "presets" / "requirements.json").read_text(encoding="utf-8"))
+    assert "not requirements of NASA" in raw["notice"]
+    assert list(presets) == ["example-standard", "example-strict", "example-loose"]
+    for preset in presets.values():
+        assert preset["label"].startswith("EXAMPLE chosen by the team, not a NASA requirement")
+        candidate = copy.deepcopy(scenario)
+        candidate["requirements"] = [preset]
+        validate_document(candidate)  # the schema of a requirement
+        assert {c["window"] for c in preset["conditions"]} <= {"sun_visible", "earth_visible"}
+    # the stricter one asks for more of the same, the looser one for less
+    need = {name: next(c["min_s"] for c in p["conditions"] if c["kind"] == "continuous_from_landing") for name, p in presets.items()}
+    assert need["example-loose"] < need["example-standard"] < need["example-strict"]
+    assert need["example-standard"] == 10 * 86400.0
+
+    records = {"sites": [{"site_id": "a", "name": "A", "lon_deg_east": 10.0, "lat_deg": -89.0}]}
+    (tmp_path / "sites.json").write_text(json.dumps(records))
+    out = tmp_path / "scenario.json"
+    args = ["scenario", "--sites", str(tmp_path / "sites.json"), "--id", "one", "--start", "2026-11-14T00:00:00.000Z", "--end", "2027-11-14T00:00:00.000Z", "--out", str(out)]
+    assert cli.main(args + ["--preset", "all"]) == 0
+    assert [r["id"] for r in json.loads(out.read_text())["requirements"]] == list(presets)
+    assert cli.main(args + ["--preset", "example-loose"]) == 0
+    assert [r["id"] for r in json.loads(out.read_text())["requirements"]] == ["example-loose"]
+    assert cli.main(args + ["--preset", "no-such-preset"]) == 2
