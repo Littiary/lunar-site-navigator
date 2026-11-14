@@ -1,6 +1,6 @@
 # Lunar Site Navigator
 
-Team **Kestro Aerospace** — NASA Space Apps Challenge 2026, Aachen.
+Team **Kestro Aerospace** (Kaan Eşrefoğlu, Barkın Kocatepe) — NASA Space Apps Challenge 2026, Aachen.
 Challenge: *Lunar Landing Site Navigator*.
 
 For a chosen point on the Moon, the tool computes the local 360° terrain horizon from NASA LOLA elevation data and reports when the Sun and the Earth are above that horizon: the lighting and direct-to-Earth communication windows a mission planner needs when comparing landing sites and dates.
