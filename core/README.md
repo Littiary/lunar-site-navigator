@@ -2,7 +2,8 @@
 
 Python package `lsncore`. It computes every number of the project and writes it to
 versioned packages; see [the contract](../docs/contract/SPEC.md). The horizon method, its
-checks and its limits are in [docs/method/horizon.md](../docs/method/horizon.md).
+checks and its limits are in [docs/method/horizon.md](../docs/method/horizon.md); the obstacle
+report in [docs/method/obstacles.md](../docs/method/obstacles.md).
 
 ## Setup
 
@@ -41,6 +42,7 @@ computation and writes invented numbers (the walking skeleton behind the contrac
 | `lsncore/horizon.py` | Terrain horizon on a sphere, several observer heights in one pass, far-field bound | A |
 | `lsncore/dem.py` | Terrain interface; adapter for the data stream's reader; analytic terrain for tests | A |
 | `lsncore/pipeline.py` | Scenario in, packages out; method cards of the horizon | A |
+| `lsncore/obstacles.py`, `lsncore/blocking.py` | Obstacles of the horizon; which one limits a body; time lost to terrain against a smooth sphere | A |
 | `lsncore/timeline.py` | `TimeGrid`, `IntervalSet` (window algebra) | A |
 | `lsncore/geometry.py` | Site frame, great-circle steps, topocentric direction | A |
 | `lsncore/scenario.py` | Scenario file | A |
