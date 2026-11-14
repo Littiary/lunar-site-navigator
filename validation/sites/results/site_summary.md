@@ -1,6 +1,6 @@
 # End-to-end results: the three project sites, and the curated list
 
-Generated 2026-11-14T17:42:17Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T19:54:43Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z (UTC). Countdowns count from the planned landing time of the scenario, 2027-01-10T00:00:00.000Z.
 - **Inputs chosen by the team, not properties of the data or of a mission**: the three example requirements on the landing time (`docs/contract/presets/requirements.json`; they are not requirements of NASA or of any mission), a landing circle of 100 m radius sampled at 13 points, and the planned landing time. The numbers that follow from them say what would hold if they were true.
@@ -13,7 +13,7 @@ Generated 2026-11-14T17:42:17Z by `validation/sites/run.py`. Do not edit by hand
 
 ## Shackleton crater rim crest
 
-89.80531 deg S, -154.23109 deg E, terrain height 1701.0 m above the 1737.4 km sphere. Package `site-e3810b35dcfa4777`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE04 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 78.1 % of the azimuths, LOLA5MPP_SITE04 (5 m) in 21.9 % of the azimuths. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.44 deg.
+89.80531 deg S, -154.23109 deg E, terrain height 1701.0 m above the 1737.4 km sphere. Package `site-38037e9b701a7d2d`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE04 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 78.1 % of the azimuths, LOLA5MPP_SITE04 (5 m) in 21.9 % of the azimuths. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.44 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -68,7 +68,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## de Gerlache crater rim crest
 
-88.66410 deg S, -68.41044 deg E, terrain height 1815.3 m above the 1737.4 km sphere. Package `site-66887386ea4fc6ea`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE11 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 79.1 % of the azimuths, LOLA5MPP_SITE11 (5 m) in 20.9 % of the azimuths. Sun centre elevation -2.85 to 2.88 deg; Earth centre elevation -6.77 to 7.23 deg.
+88.66410 deg S, -68.41044 deg E, terrain height 1815.3 m above the 1737.4 km sphere. Package `site-61a82bfea156b494`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE11 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 79.1 % of the azimuths, LOLA5MPP_SITE11 (5 m) in 20.9 % of the azimuths. Sun centre elevation -2.85 to 2.88 deg; Earth centre elevation -6.77 to 7.23 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -117,7 +117,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## Mons Malapert (Malapert massif) summit
 
-85.98795 deg S, 2.05767 deg E, terrain height 5172.9 m above the 1737.4 km sphere. Package `site-3c901dfc80efc5b8`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE23 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LOLA5MPP_SITE23 (5 m) in 84.5 % of the azimuths, LDEM_80S_20M (20 m) in 15.5 % of the azimuths. Sun centre elevation -5.56 to 5.59 deg; Earth centre elevation -3.10 to 10.59 deg.
+85.98795 deg S, 2.05767 deg E, terrain height 5172.9 m above the 1737.4 km sphere. Package `site-1c04d3ed1ebd94ec`, status `ok`. Terrain: the height at the site is read from LOLA5MPP_SITE23 (5 m pixels, resolution class fine); the horizon at the default observer height is set by LOLA5MPP_SITE23 (5 m) in 84.5 % of the azimuths, LDEM_80S_20M (20 m) in 15.5 % of the azimuths. Sun centre elevation -5.56 to 5.59 deg; Earth centre elevation -3.10 to 10.59 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -166,7 +166,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## Two sites together
 
-Package `pairs-c6ab3aaa46a3aa80`. Each site at its default observer height. 'Either' is the share of the window in which at least one of the two sites sees the body.
+Package `pairs-3e732d6996294120`. Each site at its default observer height. 'Either' is the share of the window in which at least one of the two sites sees the body.
 
 | Sites | Distance | Sun: each alone | Sun: either | Longest time with the Sun at neither | What the second site adds | Earth: either | Longest time with the Earth at neither |
 |---|---|---|---|---|---|---|---|
@@ -202,36 +202,40 @@ A difference is not an error of one side that the other corrects: the two elevat
 
 ## All published sites
 
-20 site packages, 106.8 MB with the direction table and the site pairs. Every package holds the horizon with its obstacles and terrain source, events, windows, countdowns, eclipses and the lit fraction of the Sun, ground-station windows, what the terrain costs, the lunar-day calendar, landing windows for the three example requirements, the height trade over its observer heights and three terrain patches. The columns say what differs.
+20 site packages, 85.1 MB with the direction table and the site pairs. Every package holds the horizon with its obstacles and terrain source, events, windows, countdowns, eclipses and the lit fraction of the Sun, ground-station windows, what the terrain costs, the lunar-day calendar, landing windows for the three example requirements, the height trade over its observer heights and three terrain patches. The columns say what differs.
 
 | Site | Kind | Height at the site read from | Class | Horizon at 2 m set by | Near field | Observer heights | Uncertainty band | Landing-circle survey | Planned landing | Size |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Shackleton crater rim crest (`shackleton-rim-crest`) | Project sites: project site | LOLA5MPP_SITE04 (5 m) | fine | LDEM_80S_20M (20 m) 78 %, LOLA5MPP_SITE04 (5 m) 22 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 9.6 MB |
-| de Gerlache crater rim crest (`de-gerlache-rim-crest`) | Project sites: project site | LOLA5MPP_SITE11 (5 m) | fine | LDEM_80S_20M (20 m) 79 %, LOLA5MPP_SITE11 (5 m) 21 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 8.6 MB |
-| Mons Malapert (Malapert massif) summit (`malapert-massif-summit`) | Project sites: project site | LOLA5MPP_SITE23 (5 m) | fine | LOLA5MPP_SITE23 (5 m) 85 %, LDEM_80S_20M (20 m) 15 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 9.5 MB |
-| Apollo 11 (Lunar Module Eagle descent stage) (`apollo-11`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 12 (Lunar Module Intrepid descent stage) (`apollo-12`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 14 (Lunar Module Antares descent stage) (`apollo-14`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 15 (Lunar Module Falcon descent stage) (`apollo-15`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.7 MB |
-| Apollo 16 (Lunar Module Orion descent stage) (`apollo-16`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 17 (Lunar Module Challenger descent stage) (`apollo-17`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Surveyor 1 lander (`surveyor-1`) | Surveyor: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Chang'e 3 lander (`change-3`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Chang'e 4 lander (`change-4`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.0 MB |
-| Chang'e 5 lander (`change-5`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Chang'e 6 lander (`change-6`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.1 MB |
-| Chandrayaan-3 Vikram lander (`chandrayaan-3`) | Chandrayaan: past landing | LDEM_60S_60M (60 m) | medium | LDEM_60S_60M (60 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| SLIM lander (`slim`) | SLIM: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.7 MB |
-| IM-1 Odysseus lander (CLPS) (`im-1-odysseus`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 93 %, LDEM_60S_60M (60 m) 7 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) (`blue-ghost-1`) | CLPS: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (`im-2-athena`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (`artemis3-region-mons-mouton-representative`) | Artemis: candidate | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.5 MB |
+| Shackleton crater rim crest (`shackleton-rim-crest`) | Project sites: project site | LOLA5MPP_SITE04 (5 m) | fine | LDEM_80S_20M (20 m) 78 %, LOLA5MPP_SITE04 (5 m) 22 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 7.5 MB |
+| de Gerlache crater rim crest (`de-gerlache-rim-crest`) | Project sites: project site | LOLA5MPP_SITE11 (5 m) | fine | LDEM_80S_20M (20 m) 79 %, LOLA5MPP_SITE11 (5 m) 21 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 6.9 MB |
+| Mons Malapert (Malapert massif) summit (`malapert-massif-summit`) | Project sites: project site | LOLA5MPP_SITE23 (5 m) | fine | LOLA5MPP_SITE23 (5 m) 85 %, LDEM_80S_20M (20 m) 15 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 7.3 MB |
+| Chandrayaan-3 Vikram lander (`chandrayaan-3`) | Chandrayaan: past landing | LDEM_60S_60M (60 m) | medium | LDEM_60S_60M (60 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.9 MB |
+| IM-1 Odysseus lander (CLPS) (`im-1-odysseus`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 93 %, LDEM_60S_60M (60 m) 7 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.9 MB |
+| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (`im-2-athena`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 4.0 MB |
+| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (`artemis3-region-mons-mouton-representative`) | Artemis: candidate | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.8 MB |
+| Apollo 11 (Lunar Module Eagle descent stage) (`apollo-11`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 12 (Lunar Module Intrepid descent stage) (`apollo-12`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Apollo 14 (Lunar Module Antares descent stage) (`apollo-14`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 15 (Lunar Module Falcon descent stage) (`apollo-15`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 16 (Lunar Module Orion descent stage) (`apollo-16`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 17 (Lunar Module Challenger descent stage) (`apollo-17`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Surveyor 1 lander (`surveyor-1`) | Surveyor: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 3 lander (`change-3`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 4 lander (`change-4`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 2.8 MB |
+| Chang'e 5 lander (`change-5`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 6 lander (`change-6`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 2.9 MB |
+| SLIM lander (`slim`) | SLIM: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) (`blue-ghost-1`) | CLPS: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
 
 | Site | Sun visible at 2 m | Longest time without the Sun | Sun-visible hours per complete lunar day: least, median, most | Earth visible at 2 m | Landing windows for `example-standard`: number, share of the judged range | Warnings in the package |
 |---|---|---|---|---|---|---|
 | Shackleton crater rim crest | 76.9 % | 192 h | 353, 555, 657 h | 52.4 % | 15, 19.6 % | none |
 | de Gerlache crater rim crest | 84.7 % | 257 h | 418, 663, 711 h | 57.3 % | 21, 33.2 % | none |
 | Mons Malapert (Malapert massif) summit | 68.7 % | 340 h | 368, 445, 625 h | 80.9 % | 27, 28.6 % | none |
+| Chandrayaan-3 Vikram lander | 48.8 % | 382 h | 326, 340, 357 h | 100.0 % | 25, 14.6 % | terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown |
+| IM-1 Odysseus lander (CLPS) | 40.5 % | 450 h | 258, 278, 309 h | 100.0 % | 25, 6.3 % | none |
+| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) | 47.7 % | 412 h | 272, 328, 380 h | 82.1 % | 23, 10.7 % | none |
+| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) | 34.0 % | 549 h | 110, 257, 298 h | 58.5 % | 12, 2.9 % | none |
 | Apollo 11 (Lunar Module Eagle descent stage) | 50.5 % | 355 h | 353, 354, 355 h | 100.0 % | 25, 16.3 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
 | Apollo 12 (Lunar Module Intrepid descent stage) | 50.7 % | 354 h | 355, 356, 357 h | 100.0 % | 25, 16.5 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
 | Apollo 14 (Lunar Module Antares descent stage) | 49.8 % | 360 h | 348, 349, 351 h | 100.0 % | 25, 15.6 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
@@ -243,19 +247,15 @@ A difference is not an error of one side that the other corrects: the two elevat
 | Chang'e 4 lander | 49.0 % | 364 h | 344, 350, 357 h | 0.0 % | 0, 0.0 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
 | Chang'e 5 lander | 50.7 % | 359 h | 351, 357, 362 h | 100.0 % | 25, 16.5 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
 | Chang'e 6 lander | 49.5 % | 360 h | 348, 353, 360 h | 0.0 % | 0, 0.0 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
-| Chandrayaan-3 Vikram lander | 48.8 % | 382 h | 326, 340, 357 h | 100.0 % | 25, 14.6 % | terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown |
 | SLIM lander | 48.4 % | 370 h | 338, 339, 342 h | 100.0 % | 25, 14.2 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
-| IM-1 Odysseus lander (CLPS) | 40.5 % | 450 h | 258, 278, 309 h | 100.0 % | 25, 6.3 % | none |
 | Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) | 50.2 % | 357 h | 352, 354, 356 h | 100.0 % | 25, 16.0 % | terrain: the site is served by SLDEM2015_256 with 118 m pixels (resolution class medium); relief narrower than about 237 m is not in the horizon, and nearby obstacles of that size cannot be shown |
-| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) | 47.7 % | 412 h | 272, 328, 380 h | 82.1 % | 23, 10.7 % | none |
-| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) | 34.0 % | 549 h | 110, 257, 298 h | 58.5 % | 12, 2.9 % | none |
 
 ## Limits
 
 - Shares and longest outages describe this 24-month window only; they are not multi-year averages.
 - Landing windows hold for the stated example requirements only; the tool reports when a stated requirement holds, it does not know what a mission needs. Landings later than the end of the window minus the mission duration cannot be judged.
 - The uncertainty band shows what follows from the stated height-error model: per azimuth the horizon is raised and lowered by the angle that height error spans at the distance of the limiting terrain. Every elevation product is built from LOLA returns, so an error common to all of them is in no band. The landing-circle survey over 13 points is not a probability.
-- The sites of the curated list other than the project sites carry no uncertainty band: the height-error model was measured on the polar products, and where a site is served by the 118 m product it is unresolved relief, not height error, that limits the horizon. Their packages carry the core's resolution warning.
+- The uncertainty band and `terrain_quality` are written for the sites that a LOLA polar product serves, because the height-error model was measured on those products. The sites served by the latitude-longitude product carry neither: no height error has been measured for it, and there unresolved relief, not height error, limits the horizon. Their packages carry the core's resolution warning.
 - The site pairs say when at least one of two sites sees the body; they do not say that power or data can be moved between the sites.
 - Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.
 - Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.

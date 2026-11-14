@@ -299,8 +299,9 @@ def test_other_sites_carry_the_stated_reduced_set_and_the_resolution_warning():
     # The README says which sites have no terrain_quality and why.
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert f"The other {len(without_band)} (" in readme and "No band and no `terrain_quality` is written for them" in readme
+    (remark,) = [line for line in readme.splitlines() if f"The other {len(without_band)} (" in line]
     for site_id in without_band:
-        assert sites[site_id]["site"]["name"] in readme.split(f"The other {len(without_band)} (", 1)[1].split(")", 1)[0], site_id
+        assert sites[site_id]["site"]["name"] in remark, site_id
 
 
 def test_direction_table_holds_the_orientation_of_the_earth():
