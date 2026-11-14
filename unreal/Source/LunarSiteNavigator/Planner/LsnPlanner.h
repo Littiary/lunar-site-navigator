@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Frame/LsnSiteFrame.h"
 #include "Package/LsnPackage.h"
 
 /**
@@ -22,8 +23,46 @@ struct LUNARSITENAVIGATOR_API FLsnPanorama
 	FVector2D Point(double AzimuthDeg, double ElevationDeg) const;
 };
 
+/** Whether a landing at a selected time meets a requirement, read from the landing windows of the package. */
+struct FLsnLandingCheck
+{
+	/** False after latest_landing: the stay would run past the computed range and nothing can be said. */
+	bool bJudgeable = false;
+	bool bFeasible = false;
+	/** While feasible: the landing can be delayed, or advanced, by this much. */
+	double SlipS = 0.0;
+	double EarlyS = 0.0;
+	/** The window is cut by the end of what can be judged: the true slip is at least SlipS. */
+	bool bSlipIsLowerBound = false;
+	/** From the end of the current window to the next; 0 if there is none. */
+	double WaitAfterWindowS = 0.0;
+	/** While not feasible: the next landing window, if the computed range has one. */
+	bool bHasNextWindow = false;
+	double WaitS = 0.0;
+	FString NextWindowStartUtc;
+	double NextWindowLengthS = 0.0;
+};
+
 namespace LsnPlanner
 {
+	/** True if an interval set of the package holds at a time (interval closed at its start, open at its end). */
+	LUNARSITENAVIGATOR_API bool WindowHoldsAt(const FLsnWindow& Window, double EtS);
+
+	/** Reads the landing windows of an opportunity at a selected landing time (SPEC 5.6). */
+	LUNARSITENAVIGATOR_API FLsnLandingCheck LandingAt(const FLsnOpportunity& Opportunity, double EtS);
+
+	/** The package event a countdown runs to (same body and height, within one second of its end); null for a lower bound. */
+	LUNARSITENAVIGATOR_API const FLsnEvent* EventEndingCountdown(const FLsnSitePackage& Package, const FString& Body, int32 HeightIndex, double EtS, const FLsnCountdown& Countdown);
+
+	/** Offset of a sample point of the landing ellipse from the site, metres east and north (for the small map). */
+	LUNARSITENAVIGATOR_API FVector2D EllipsePointEastNorthM(const FLsnSiteFrame& Frame, const FLsnEllipsePoint& Point);
+
+	/** The mast-height trade of a package as a small table; no lines if the package has none. */
+	LUNARSITENAVIGATOR_API void BuildHeightTradeLines(const FLsnSitePackage& Package, TArray<FString>& OutLines);
+
+	/** What two sites achieve together, one line per compared window. */
+	LUNARSITENAVIGATOR_API void BuildPairLines(const FLsnSitePair& Pair, TArray<FString>& OutLines);
+
 	/**
 	 * Where the second scene of a comparison stands in the world, centimetres. Far enough
 	 * that neither terrain, shadows nor the Moon sphere of one scene reach the other.

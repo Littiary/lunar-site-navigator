@@ -21,6 +21,8 @@ class UCameraComponent;
  *   Tab                   mouse cursor, to drag the time strips
  *   1 .. 9                show that site of the list (Shift: in the right view, side by side)
  *   C                     comparison of two sites on and off
+ *   K, U, M               calendar and landing windows; uncertainty; mast-height trade and site pairs
+ *   R                     next requirement of the package
  *   F                     keep the view on the Sun's azimuth
  *   PageUp / PageDown     observer height
  *   Z / X                 zoom

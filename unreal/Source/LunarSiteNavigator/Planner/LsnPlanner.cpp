@@ -1,5 +1,6 @@
 #include "Planner/LsnPlanner.h"
 
+#include "Frame/LsnSiteFrame.h"
 #include "Misc/Paths.h"
 
 FVector2D FLsnPanorama::Point(double AzimuthDeg, double ElevationDeg) const
@@ -150,4 +151,114 @@ void LsnPlanner::PanoramaRange(const FLsnSitePackage& Package, int32 HeightIndex
 	}
 	OutMinDeg = FMath::FloorToDouble(Min - 0.5);
 	OutMaxDeg = FMath::CeilToDouble(Max + 0.5);
+}
+
+bool LsnPlanner::WindowHoldsAt(const FLsnWindow& Window, double EtS)
+{
+	const int32 Num = Window.StartsEtS.Num();
+	for (int32 I = 0; I < Num; ++I)
+	{
+		if (EtS < Window.StartsEtS[I])
+		{
+			return false;
+		}
+		// A last interval cut off by the end of the computed range still holds at its very end.
+		if (EtS < Window.EndsEtS[I] || (I == Num - 1 && Window.bClippedEnd && EtS <= Window.EndsEtS[I]))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+FLsnLandingCheck LsnPlanner::LandingAt(const FLsnOpportunity& O, double EtS)
+{
+	FLsnLandingCheck Out;
+	if (EtS > O.LatestLandingEtS)
+	{
+		return Out;
+	}
+	Out.bJudgeable = true;
+	const int32 Num = O.StartsEtS.Num();
+	for (int32 I = 0; I < Num; ++I)
+	{
+		if (EtS < O.StartsEtS[I])
+		{
+			Out.bHasNextWindow = true;
+			Out.WaitS = O.StartsEtS[I] - EtS;
+			Out.NextWindowStartUtc = O.StartsUtc.IsValidIndex(I) ? O.StartsUtc[I] : FString();
+			Out.NextWindowLengthS = O.EndsEtS[I] - O.StartsEtS[I];
+			return Out;
+		}
+		if (EtS <= O.EndsEtS[I])
+		{
+			Out.bFeasible = true;
+			Out.SlipS = O.EndsEtS[I] - EtS;
+			Out.EarlyS = EtS - O.StartsEtS[I];
+			Out.bSlipIsLowerBound = (I == Num - 1) && O.bClippedEnd;
+			if (I + 1 < Num)
+			{
+				Out.WaitAfterWindowS = O.StartsEtS[I + 1] - O.EndsEtS[I];
+			}
+			return Out;
+		}
+	}
+	return Out;
+}
+
+const FLsnEvent* LsnPlanner::EventEndingCountdown(const FLsnSitePackage& Package, const FString& Body, int32 HeightIndex, double EtS, const FLsnCountdown& Countdown)
+{
+	if (!Countdown.bAvailable || Countdown.bLowerBound)
+	{
+		return nullptr;
+	}
+	const double Target = EtS + Countdown.SecondsToChange;
+	return Package.Events.FindByPredicate([&](const FLsnEvent& Event)
+	{
+		return Event.HeightIndex == HeightIndex && Event.Body == Body && FMath::Abs(Event.EtS - Target) < 1.0;
+	});
+}
+
+FVector2D LsnPlanner::EllipsePointEastNorthM(const FLsnSiteFrame& Frame, const FLsnEllipsePoint& Point)
+{
+	const FVector Body = FLsnSiteFrame::LatLonToBodyDir(Point.LatDeg, Point.LonDeg) * (Frame.SphereRadiusM + Point.SurfaceHeightM);
+	const FVector Unreal = Frame.BodyPointMToUnreal(Body);
+	// Unreal +X is north, +Y is east, centimetres.
+	return FVector2D(Unreal.Y / FLsnSiteFrame::CmPerM, Unreal.X / FLsnSiteFrame::CmPerM);
+}
+
+void LsnPlanner::BuildHeightTradeLines(const FLsnSitePackage& Package, TArray<FString>& OutLines)
+{
+	OutLines.Reset();
+	const FLsnHeightTrade& Trade = Package.HeightTrade;
+	const FLsnHeightTradeQuantity* Sun = Trade.bPresent ? Trade.Find(TEXT("sun_visible_s")) : nullptr;
+	const FLsnHeightTradeQuantity* Outage = Trade.bPresent ? Trade.Find(TEXT("sun_longest_outage_s")) : nullptr;
+	if (!Sun || !Outage)
+	{
+		return;
+	}
+	OutLines.Add(TEXT("mast-height trade: only the listed heights, nothing between them"));
+	for (int32 H = 0; H < Trade.HeightsM.Num(); ++H)
+	{
+		auto Change = [H](const FLsnHeightTradeQuantity& Q) { return H == 0 ? FString() : FString::Printf(TEXT(" (%+.1f)"), Q.ChangeS[H] / 3600.0); };
+		const FString SunChange = Change(*Sun).RightPad(8);
+		OutLines.Add(FString::Printf(TEXT("%4.0f m   Sun %.1f h%s  longest outage %.1f h%s"), Trade.HeightsM[H], Sun->Values[H] / 3600.0, *SunChange, Outage->Values[H] / 3600.0, *Change(*Outage)));
+	}
+}
+
+void LsnPlanner::BuildPairLines(const FLsnSitePair& Pair, TArray<FString>& OutLines)
+{
+	OutLines.Reset();
+	OutLines.Add(Pair.DistanceM < 1000.0 ? FString::Printf(TEXT("%.0f m apart"), Pair.DistanceM) : FString::Printf(TEXT("%.1f km apart"), Pair.DistanceM / 1000.0));
+	for (const FLsnPairWindow& W : Pair.Windows)
+	{
+		const TCHAR* Name = W.Window == TEXT("sun_visible") ? TEXT("Sun") : W.Window == TEXT("earth_visible") ? TEXT("Earth") : W.Window == TEXT("sun_and_earth_visible") ? TEXT("Sun and Earth together") : nullptr;
+		if (!Name)
+		{
+			continue;
+		}
+		const FString Covered = W.bHasCoveredShare ? FString::Printf(TEXT(", %.0f %% of its outage"), 100.0 * W.CoveredShareOfBetterOutage) : FString();
+		OutLines.Add(FString::Printf(TEXT("%s at one site at least %.1f %% of the window (+%.1f h over the better site%s); longest joint outage %.1f h"),
+			Name, 100.0 * W.EitherFraction, W.GainOverBetterS / 3600.0, *Covered, W.LongestNeitherS / 3600.0));
+	}
 }

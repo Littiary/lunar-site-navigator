@@ -89,6 +89,30 @@ void LsnHudText::BlockerSentences(const TCHAR* BodyLabel, const FLsnSitePackage&
 	}
 }
 
+FString LsnHudText::LandingSentence(const FLsnLandingCheck& Check)
+{
+	if (!Check.bJudgeable)
+	{
+		return TEXT("landing now cannot be judged: the stay would run past the end of the computed range");
+	}
+	if (Check.bFeasible)
+	{
+		return FString::Printf(TEXT("landing now meets the requirement; it can slip by %s%s (earlier: %s)"), Check.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""),
+			*FormatDuration(Check.SlipS), *FormatDuration(Check.EarlyS));
+	}
+	if (Check.bHasNextWindow)
+	{
+		return FString::Printf(TEXT("landing now does not meet the requirement; next landing window in %s (%s long)"), *FormatDuration(Check.WaitS), *FormatDuration(Check.NextWindowLengthS));
+	}
+	return TEXT("landing now does not meet the requirement; no further landing window in the computed range");
+}
+
+FString LsnHudText::CountdownBandSentence(const FLsnSitePackage& Package, double EtS, const FLsnEvent& Event)
+{
+	return FString::Printf(TEXT("for a stated horizon error of %.2f deg: %s to %s"), Package.Uncertainty.HorizonErrorDeg,
+		*FormatDuration(Event.EarliestEtS - EtS), *FormatDuration(Event.LatestEtS - EtS));
+}
+
 void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double TimePosition, TArray<FLsnHudLine>& OutLines, const FString& GroundNote)
 {
 	OutLines.Reset();
@@ -194,15 +218,27 @@ void ALsnHud::DrawStrip(const FBox2D& Box, const FLsnSitePackage& P, int32 H, do
 	const FRow Rows[] = { { TEXT("sun_visible"), SunColor, 0.08f }, { TEXT("earth_visible"), EarthColor, 0.54f } };
 	for (const FRow& Row : Rows)
 	{
-		const FLsnWindow* Window = P.FindWindow(Row.WindowId, H);
-		for (int32 I = 0; Window && I < Window->StartsEtS.Num(); ++I)
+		// With a stated horizon error (SPEC 5.7) the edges are bands, not lines: pale where the
+		// body is visible only if the horizon is lower than computed, full where it is visible
+		// even if the horizon is higher.
+		const FLsnWindow* Possible = P.FindWindow(FString(Row.WindowId) + TEXT("_possible"), H);
+		const FLsnWindow* Certain = P.FindWindow(FString(Row.WindowId) + TEXT("_certain"), H);
+		const bool bBand = Possible && Certain;
+		struct FTone { const FLsnWindow* Window; float Alpha; };
+		const FTone Tones[] = { { bBand ? Possible : nullptr, 0.30f }, { P.FindWindow(Row.WindowId, H), bBand ? 0.55f : 1.0f }, { bBand ? Certain : nullptr, 1.0f } };
+		for (const FTone& Tone : Tones)
 		{
-			if (Window->EndsEtS[I] < FromEt || Window->StartsEtS[I] > ToEt)
+			for (int32 I = 0; Tone.Window && I < Tone.Window->StartsEtS.Num(); ++I)
 			{
-				continue;
+				if (Tone.Window->EndsEtS[I] < FromEt || Tone.Window->StartsEtS[I] > ToEt)
+				{
+					continue;
+				}
+				const float X0 = X(Tone.Window->StartsEtS[I]), X1 = X(Tone.Window->EndsEtS[I]);
+				// Opaque tones over the dark strip, so that a pale band does not add up with what lies on it.
+				const FLinearColor Color(Row.Color.R * Tone.Alpha, Row.Color.G * Tone.Alpha, Row.Color.B * Tone.Alpha, 1.0f);
+				DrawRect(Color, X0, Box.Min.Y + Row.Top * Height, FMath::Max(X1 - X0, 1.0f), 0.38f * Height);
 			}
-			const float X0 = X(Window->StartsEtS[I]), X1 = X(Window->EndsEtS[I]);
-			DrawRect(Row.Color, X0, Box.Min.Y + Row.Top * Height, FMath::Max(X1 - X0, 1.0f), 0.38f * Height);
 		}
 	}
 	const float Cursor = X(P.EtOfPosition(CurrentPosition));
@@ -349,9 +385,12 @@ void ALsnHud::DrawHUD()
 	const ALsnObserverPawn* Pawn = Cast<ALsnObserverPawn>(GetOwningPawn());
 
 	// --- read-out, top left ------------------------------------------------------------
+	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
+	// The calendar needs the middle of the screen: the read-out is then as short as side by side.
+	const bool bCompact = bComparing || Page == ELsnPlannerPage::Calendar;
 	TArray<FLsnHudLine> Lines;
 	LsnHudText::BuildStatusLines(P, H, Position, Lines, Scene->GetGroundNote());
-	if (bComparing)
+	if (bCompact)
 	{
 		// Side by side there is room for the marker, the site and the package only;
 		// the full read-out is in the single view (key C).
@@ -368,7 +407,7 @@ void ALsnHud::DrawHUD()
 	{
 		Line(L.Text, L.Color, L.Size);
 	}
-	if (Pawn && !bComparing)
+	if (Pawn && !bCompact)
 	{
 		Line(FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
 			Pawn->IsFollowingSun() ? TEXT("   view follows the Sun's azimuth (F)") : TEXT("")), Dim);
@@ -401,30 +440,42 @@ void ALsnHud::DrawHUD()
 	}
 	DrawPanorama(Pano, *Scene, Pawn, Scale);
 
-	TArray<FString> Metrics;
-	LsnPlanner::BuildMetricLines(P, H, Metrics);
-	if (Metrics.Num() > 0 && P.bHasTimeline)
+	const float RightWidth = (bComparing ? SizeX - X : SizeX - 16.0f * Scale) - RightX;
+	if (Page == ELsnPlannerPage::Uncertainty)
 	{
-		const FLsnMetric* Any = P.Metrics.Num() > 0 ? &P.Metrics[0] : nullptr;
-		DrawText(FString::Printf(TEXT("whole computed window, %s to %s, observer %.1f m   [%s]"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10), P.ObserverHeightsM[H],
-			Any ? *P.ValidationStatusOf(Any->Method) : TEXT("unknown")), Dim, RightX, RightY, Font, Scale * 0.9f);
-		RightY += 17.0f * Scale;
-		for (const FString& Metric : Metrics)
-		{
-			DrawText(Metric, White, RightX, RightY, Font, Scale * 1.15f);
-			RightY += 21.0f * Scale;
-		}
+		RightY = DrawUncertainty(*Scene, RightX, RightY, RightWidth, Scale);
 	}
-	if (GameMode && !bComparing && GameMode->GetSites().Num() > 0)
+	else if (Page == ELsnPlannerPage::Trade && GameMode)
 	{
-		RightY += 8.0f * Scale;
-		DrawText(TEXT("sites of the package root (keys 1-9; Shift: side by side on the right; C: comparison)"), Dim, RightX, RightY, Font, Scale * 0.9f);
-		RightY += 17.0f * Scale;
-		for (int32 I = 0; I < GameMode->GetSites().Num() && I < 9; ++I)
+		RightY = DrawTrade(*Scene, *GameMode, RightX, RightY, RightWidth, Scale);
+	}
+	else if (Page != ELsnPlannerPage::Calendar)
+	{
+		TArray<FString> Metrics;
+		LsnPlanner::BuildMetricLines(P, H, Metrics);
+		if (Metrics.Num() > 0 && P.bHasTimeline)
 		{
-			const bool bSelected = GameMode->GetSelectedSite(0) == I;
-			DrawText(FString::Printf(TEXT("%s %d  %s"), bSelected ? TEXT(">") : TEXT("  "), I + 1, *GameMode->GetSites()[I].Name), bSelected ? White : Dim, RightX, RightY, Font, Scale * 1.1f);
-			RightY += 20.0f * Scale;
+			const FLsnMetric* Any = P.Metrics.Num() > 0 ? &P.Metrics[0] : nullptr;
+			DrawText(FString::Printf(TEXT("whole computed window, %s to %s, observer %.1f m   [%s]"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10), P.ObserverHeightsM[H],
+				Any ? *P.ValidationStatusOf(Any->Method) : TEXT("unknown")), Dim, RightX, RightY, Font, Scale * 0.9f);
+			RightY += 17.0f * Scale;
+			for (const FString& Metric : Metrics)
+			{
+				DrawText(Metric, White, RightX, RightY, Font, Scale * 1.15f);
+				RightY += 21.0f * Scale;
+			}
+		}
+		if (GameMode && !bComparing && GameMode->GetSites().Num() > 0)
+		{
+			RightY += 8.0f * Scale;
+			DrawText(TEXT("sites of the package root (keys 1-9; Shift: side by side on the right; C: comparison)"), Dim, RightX, RightY, Font, Scale * 0.9f);
+			RightY += 17.0f * Scale;
+			for (int32 I = 0; I < GameMode->GetSites().Num() && I < 9; ++I)
+			{
+				const bool bSelected = GameMode->GetSelectedSite(0) == I;
+				DrawText(FString::Printf(TEXT("%s %d  %s"), bSelected ? TEXT(">") : TEXT("  "), I + 1, *GameMode->GetSites()[I].Name), bSelected ? White : Dim, RightX, RightY, Font, Scale * 1.1f);
+				RightY += 20.0f * Scale;
+			}
 		}
 	}
 	if (!P.bHasTimeline)
@@ -448,6 +499,12 @@ void ALsnHud::DrawHUD()
 		if (Countdown.bAvailable)
 		{
 			Panel.Add({ LsnHudText::CountdownSentence(Body, Countdown), Countdown.bVisibleNow ? Color : Lost, 1.6f });
+			// With a stated horizon error the event is a range, not an instant.
+			const FLsnEvent* Event = LsnPlanner::EventEndingCountdown(P, Body, H, EtS, Countdown);
+			if (Event && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS && P.Uncertainty.bHasHorizonError)
+			{
+				Panel.Add({ TEXT("    ") + LsnHudText::CountdownBandSentence(P, EtS, *Event) + FString::Printf(TEXT("   [%s]"), *P.ValidationStatusOf(P.Uncertainty.HorizonMethod)), Color, 1.0f });
+			}
 		}
 		FLsnBlocking Blocking;
 		TArray<FString> Sentences;
@@ -466,6 +523,17 @@ void ALsnHud::DrawHUD()
 	};
 	AddBody(TEXT("SUN"), Sun, SunColor, FLinearColor(1.0f, 0.45f, 0.2f));
 	AddBody(TEXT("EARTH"), Earth, EarthColor, FLinearColor(0.3f, 0.85f, 1.0f));
+	// Landing at the selected time, for the chosen requirement of the package.
+	if (P.Requirements.Num() > 0)
+	{
+		const FLsnRequirement& Requirement = P.Requirements[(GameMode ? GameMode->GetRequirementIndex() : 0) % P.Requirements.Num()];
+		if (const FLsnOpportunity* Opportunity = P.FindOpportunity(Requirement.Id, H))
+		{
+			const FLsnLandingCheck Check = LsnPlanner::LandingAt(*Opportunity, EtS);
+			Panel.Add({ LsnHudText::LandingSentence(Check), !Check.bJudgeable ? Dim : Check.bFeasible ? Good : Lost, 1.3f });
+			Panel.Add({ FString::Printf(TEXT("    requirement '%s': an example chosen by the team (K: calendar)   [%s]"), *Requirement.Id, *P.ValidationStatusOf(Opportunity->Method)), Dim, 0.9f });
+		}
+	}
 	if (Sun.bAvailable || Earth.bAvailable)
 	{
 		const FString Method = Sun.bAvailable ? Sun.Method : Earth.Method;
@@ -478,6 +546,7 @@ void ALsnHud::DrawHUD()
 	}
 	const float PanelX = Layout.Zoom.Min.X;
 	float PanelY = Layout.Zoom.Min.Y - PanelHeight - 10.0f * Scale;
+	const float PanelTop = PanelY;
 	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.55f), PanelX - 8.0f * Scale, PanelY - 6.0f * Scale, (bComparing ? 0.88f : 0.62f) * SizeX, PanelHeight + 10.0f * Scale);
 	for (int32 I = 0; I < Panel.Num(); ++I)
 	{
@@ -570,4 +639,291 @@ void ALsnHud::DrawHUD()
 	DrawText(FString::Printf(TEXT("%.0f days around the selected time   yellow: Sun visible   blue: Earth visible"), 2.0 * Layout.ZoomHalfWidthSamples * P.Time.StepS / 86400.0),
 		Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, Scale * 0.9f);
 	DrawText(FString::Printf(TEXT("%s   to   %s"), *P.Time.StartUtc, *P.Time.EndUtc), Dim, Layout.WholeRange.Min.X, Layout.WholeRange.Max.Y + 2.0f * Scale, Font, Scale * 0.9f);
+
+	// Calendar page: the lunar days of this site, and of the other site of a comparison, on one time axis.
+	if (Page == ELsnPlannerPage::Calendar && GameMode)
+	{
+		TArray<const ALsnSiteScene*> Rows;
+		Rows.Add(Scene);
+		if (bComparing)
+		{
+			const ALsnSiteScene* Other = GameMode->GetSceneOfView(1 - View);
+			if (Other && Other->HasPackage())
+			{
+				Rows.Add(Other);
+			}
+		}
+		const float Top = FMath::Max(RightY, Y) + 10.0f * Scale;
+		DrawCalendar(FBox2D(FVector2D(Layout.Zoom.Min.X, Top), FVector2D(Layout.Zoom.Max.X, PanelTop - 14.0f * Scale)), Rows, GameMode->GetRequirementIndex(), Scale);
+	}
+}
+
+float ALsnHud::DrawWrapped(const FString& Text, const FLinearColor& Color, float X, float Y, float MaxWidth, float TextScale)
+{
+	UFont* Font = GEngine->GetMediumFont();
+	FString Rest = Text;
+	while (!Rest.IsEmpty())
+	{
+		FString Part = Rest;
+		float Width = 0.0f, Height = 0.0f;
+		GetTextSize(Part, Width, Height, Font, TextScale);
+		while (Width > MaxWidth)
+		{
+			int32 Space = INDEX_NONE;
+			if (!Part.FindLastChar(TEXT(' '), Space) || Space <= 0)
+			{
+				break;
+			}
+			Part.LeftInline(Space);
+			GetTextSize(Part, Width, Height, Font, TextScale);
+		}
+		DrawText(Part, Color, X, Y, Font, TextScale);
+		Y += 18.0f * TextScale;
+		Rest = Part.Len() < Rest.Len() ? Rest.Mid(Part.Len()).TrimStart() : FString();
+	}
+	return Y;
+}
+
+void ALsnHud::DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>& Rows, int32 RequirementIndex, float Scale)
+{
+	UFont* Font = GEngine->GetMediumFont();
+	const float Width = Box.Max.X - Box.Min.X;
+	if (Rows.Num() == 0 || Box.Max.Y - Box.Min.Y < 60.0f * Scale)
+	{
+		return;
+	}
+	const FLsnSitePackage& First = Rows[0]->GetPackage();
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.82f), Box.Min.X - 8.0f * Scale, Box.Min.Y - 6.0f * Scale, Width + 16.0f * Scale, Box.Max.Y - Box.Min.Y + 8.0f * Scale);
+	float Y = Box.Min.Y;
+	if (!First.Calendar.bPresent)
+	{
+		// The field is absent: say so once instead of drawing an empty chart.
+		DrawWrapped(FString::Printf(TEXT("The package of this site (contract %s) has no lunar-day calendar; there is nothing to show here."), *First.ContractVersion), Dim, Box.Min.X, Y, Width, Scale * 1.1f);
+		return;
+	}
+	// One time axis for all rows: that of the first package. The lunar days do not depend on the site.
+	const double AxisStart = First.EtOfPosition(0.0), AxisEnd = First.EtOfPosition(First.Time.Count - 1);
+	auto X = [&](double EtS) { return Box.Min.X + Width * static_cast<float>(FMath::Clamp((EtS - AxisStart) / (AxisEnd - AxisStart), 0.0, 1.0)); };
+
+	const FLsnRequirement* Requirement = First.Requirements.Num() > 0 ? &First.Requirements[RequirementIndex % First.Requirements.Num()] : nullptr;
+	Y = DrawWrapped(FString::Printf(TEXT("Lunar-day calendar, %s to %s: share of each lunar day with the Sun visible (yellow) and with the Earth visible (blue line)   [%s]"),
+		*First.Time.StartUtc.Left(10), *First.Time.EndUtc.Left(10), *First.ValidationStatusOf(First.Calendar.Method)), White, Box.Min.X, Y, Width, Scale * 1.15f);
+	if (Requirement)
+	{
+		Y = DrawWrapped(FString::Printf(TEXT("Green: landing times that meet the requirement '%s' - %s"), *Requirement->Id, *Requirement->Label), Good, Box.Min.X, Y, Width, Scale);
+		Y = DrawWrapped(TEXT("This requirement is an example chosen by the team, not a mission requirement; the package cannot tell whether it is the right one. R: next requirement."), Dim, Box.Min.X, Y, Width, Scale * 0.9f);
+	}
+	Y += 6.0f * Scale;
+
+	const float TextBlock = 90.0f * Scale;
+	const float RowHeight = FMath::Clamp((Box.Max.Y - Y) / Rows.Num() - TextBlock, 34.0f * Scale, 120.0f * Scale);
+	for (const ALsnSiteScene* Row : Rows)
+	{
+		const FLsnSitePackage& P = Row->GetPackage();
+		const int32 H = Row->GetHeightIndex();
+		DrawText(FString::Printf(TEXT("%s, observer %.1f m"), *P.SiteName, P.ObserverHeightsM[H]), White, Box.Min.X, Y, Font, Scale * 1.2f);
+		Y += 22.0f * Scale;
+		const FLsnCalendarQuantity* SunQ = P.Calendar.bPresent ? P.Calendar.Find(TEXT("sun_visible_s")) : nullptr;
+		const FLsnCalendarQuantity* EarthQ = P.Calendar.bPresent ? P.Calendar.Find(TEXT("earth_visible_s")) : nullptr;
+		if (!SunQ)
+		{
+			DrawText(TEXT("no calendar in this package"), Dim, Box.Min.X, Y, Font, Scale);
+			Y += RowHeight + TextBlock - 22.0f * Scale;
+			continue;
+		}
+		const float BarTop = Y, BarBottom = Y + RowHeight;
+		for (int32 Period = 0; Period < P.Calendar.Periods.Num(); ++Period)
+		{
+			const FLsnCalendarPeriod& Day = P.Calendar.Periods[Period];
+			const double Length = Day.EndEtS - Day.StartEtS;
+			if (!(Length > 0.0))
+			{
+				continue;
+			}
+			const float X0 = X(Day.StartEtS), X1 = FMath::Max(X(Day.EndEtS) - 1.0f, X0 + 1.0f);
+			// A lunar day cut by the ends of the range is drawn dimmer: its total is not that of a full day.
+			const float Tone = Day.bComplete ? 1.0f : 0.45f;
+			DrawRect(FLinearColor(0.10f, 0.10f, 0.12f, 1.0f), X0, BarTop, X1 - X0, RowHeight);
+			const double SunShare = FMath::Clamp(P.Calendar.Value(*SunQ, H, Period) / Length, 0.0, 1.0);
+			DrawRect(FLinearColor(SunColor.R * Tone, SunColor.G * Tone, SunColor.B * Tone, 1.0f), X0, BarBottom - RowHeight * static_cast<float>(SunShare), X1 - X0, RowHeight * static_cast<float>(SunShare));
+			if (EarthQ)
+			{
+				const double EarthShare = FMath::Clamp(P.Calendar.Value(*EarthQ, H, Period) / Length, 0.0, 1.0);
+				DrawRect(FLinearColor(EarthColor.R * Tone, EarthColor.G * Tone, EarthColor.B * Tone, 1.0f), X0, BarBottom - RowHeight * static_cast<float>(EarthShare) - 1.5f * Scale, X1 - X0, 3.0f * Scale);
+			}
+			if (Period % 3 == 0 && Row == Rows[0])
+			{
+				DrawText(Day.StartUtc.Left(7), Dim, X0, BarBottom + 9.0f * Scale, Font, Scale * 0.8f);
+			}
+		}
+		// Landing windows of the requirement, the planned landing and the selected time, on the same axis.
+		const FLsnRequirement* Mine = P.Requirements.Num() > 0 ? &P.Requirements[RequirementIndex % P.Requirements.Num()] : nullptr;
+		const FLsnOpportunity* Opportunity = Mine ? P.FindOpportunity(Mine->Id, H) : nullptr;
+		const double NowEt = P.EtOfPosition(Row->GetTimePosition());
+		if (Opportunity)
+		{
+			for (int32 I = 0; I < Opportunity->StartsEtS.Num(); ++I)
+			{
+				const float X0 = X(Opportunity->StartsEtS[I]), X1 = X(Opportunity->EndsEtS[I]);
+				DrawRect(Good, X0, BarBottom + 2.0f * Scale, FMath::Max(X1 - X0, 2.0f), 6.0f * Scale);
+			}
+			// Beyond latest_landing nothing can be judged.
+			DrawRect(FLinearColor(0.3f, 0.3f, 0.3f, 0.6f), X(Opportunity->LatestLandingEtS), BarBottom + 2.0f * Scale, Box.Max.X - X(Opportunity->LatestLandingEtS), 6.0f * Scale);
+			if (Opportunity->Planned.bPresent)
+			{
+				const float PlannedX = X(Opportunity->Planned.EtS);
+				DrawLine(PlannedX, BarTop - 4.0f * Scale, PlannedX, BarBottom + 9.0f * Scale, FLinearColor(0.3f, 1.0f, 0.5f), 2.0f * Scale);
+			}
+		}
+		const float NowX = X(NowEt);
+		DrawRect(FLinearColor::White, NowX - Scale, BarTop - 4.0f * Scale, 2.0f * Scale, RowHeight + 14.0f * Scale);
+		Y = BarBottom + 24.0f * Scale;
+		if (Opportunity)
+		{
+			const FLsnLandingCheck Check = LsnPlanner::LandingAt(*Opportunity, NowEt);
+			DrawText(FString::Printf(TEXT("%s: %s"), *LsnHudText::UtcLabelOfPosition(P, Row->GetTimePosition()), *LsnHudText::LandingSentence(Check)),
+				!Check.bJudgeable ? Dim : Check.bFeasible ? Good : Lost, Box.Min.X, Y, Font, Scale * 1.15f);
+			Y += 21.0f * Scale;
+			FString Summary = FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged (%d windows, longest %s)"), 100.0 * Opportunity->FeasibleFraction,
+				Opportunity->WindowCount, *LsnHudText::FormatDuration(Opportunity->LongestWindowS));
+			if (Opportunity->Planned.bPresent)
+			{
+				// The slip report of the scenario's planned landing, as the package gives it.
+				const FLsnSlipReport& Planned = Opportunity->Planned;
+				Summary += FString::Printf(TEXT("; planned landing %s (green line): %s"), *Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
+					Planned.bFeasible ? *FString::Printf(TEXT("meets it, can slip %s%s"), Planned.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Planned.SlipToleranceS))
+					: Planned.bHasWait ? *FString::Printf(TEXT("does not meet it, next window after %s"), *LsnHudText::FormatDuration(Planned.WaitS)) : TEXT("does not meet it, no window left"));
+			}
+			DrawText(Summary + FString::Printf(TEXT("   [%s]"), *P.ValidationStatusOf(Opportunity->Method)), Dim, Box.Min.X, Y, Font, Scale * 0.9f);
+			Y += 18.0f * Scale;
+		}
+		else
+		{
+			DrawText(TEXT("this package states no requirement: no landing windows"), Dim, Box.Min.X, Y, Font, Scale * 0.9f);
+			Y += 39.0f * Scale;
+		}
+	}
+}
+
+float ALsnHud::DrawUncertainty(const ALsnSiteScene& Scene, float X, float Y, float Width, float Scale)
+{
+	UFont* Font = GEngine->GetMediumFont();
+	const FLsnSitePackage& P = Scene.GetPackage();
+	const FLsnUncertainty& U = P.Uncertainty;
+	if (!U.bHasHorizonError && !U.bHasEllipse)
+	{
+		return DrawWrapped(FString::Printf(TEXT("The package of this site (contract %s) states no horizon error and no landing ellipse; there is no band to show."), *P.ContractVersion), Dim, X, Y, Width, Scale);
+	}
+	if (U.bHasHorizonError)
+	{
+		Y = DrawWrapped(FString::Printf(TEXT("Stated horizon error %.2f deg: the pale edges of the time strips and the ranges under the countdowns   [%s]"), U.HorizonErrorDeg, *P.ValidationStatusOf(U.HorizonMethod)), White, X, Y, Width, Scale * 1.1f);
+		Y = DrawWrapped(U.HorizonAssumption, Dim, X, Y, Width, Scale * 0.85f);
+		Y += 8.0f * Scale;
+	}
+	if (U.bHasEllipse)
+	{
+		const FLsnEllipseStats* Stats = U.EllipseStats.Find(TEXT("SUN"));
+		Y = DrawWrapped(FString::Printf(TEXT("Stated landing ellipse %.1f x %.1f km, major axis towards azimuth %.0f deg, %d sample points, observer %.1f m   [%s]"), 2.0 * U.SemiMajorM / 1000.0, 2.0 * U.SemiMinorM / 1000.0,
+			U.AzimuthDeg, U.Points.Num(), P.ObserverHeightsM.IsValidIndex(U.EllipseHeightIndex) ? P.ObserverHeightsM[U.EllipseHeightIndex] : 0.0, *P.ValidationStatusOf(U.EllipseMethod)), White, X, Y, Width, Scale * 1.1f);
+		// Small map: the sample points east and north of the site, coloured by their Sun-visible time.
+		const float Side = FMath::Min(Width * 0.42f, 190.0f * Scale);
+		const FVector2D Centre(X + 0.5f * Side, Y + 0.5f * Side + 4.0f * Scale);
+		DrawRect(FLinearColor(0.03f, 0.03f, 0.04f, 0.9f), Centre.X - 0.5f * Side, Centre.Y - 0.5f * Side, Side, Side);
+		const FLsnSiteFrame& Frame = Scene.GetFrame();
+		const float MetresToPixels = U.SemiMajorM > 0.0 ? 0.44f * Side / static_cast<float>(U.SemiMajorM) : 0.0f;
+		for (const FLsnEllipsePoint& Point : U.Points)
+		{
+			const FVector2D EastNorth = LsnPlanner::EllipsePointEastNorthM(Frame, Point);
+			const double* Seconds = Point.VisibleS.Find(TEXT("SUN"));
+			FLinearColor Color(0.35f, 0.35f, 0.35f);  // a point without a complete horizon has no value
+			if (Seconds && Stats && Stats->MaxS > Stats->MinS)
+			{
+				const float T = static_cast<float>((*Seconds - Stats->MinS) / (Stats->MaxS - Stats->MinS));
+				Color = FLinearColor(0.25f + 0.75f * T, 0.2f + 0.62f * T, 0.45f - 0.2f * T);
+			}
+			else if (Seconds)
+			{
+				Color = SunColor;
+			}
+			const float Half = 4.0f * Scale;
+			DrawRect(Color, Centre.X + static_cast<float>(EastNorth.X) * MetresToPixels - Half, Centre.Y - static_cast<float>(EastNorth.Y) * MetresToPixels - Half, 2.0f * Half, 2.0f * Half);
+		}
+		DrawText(TEXT("N"), Dim, Centre.X - 4.0f * Scale, Centre.Y - 0.5f * Side + 1.0f * Scale, Font, Scale * 0.8f);
+		float TextY = Centre.Y - 0.5f * Side;
+		const float TextX = X + Side + 10.0f * Scale, TextWidth = Width - Side - 10.0f * Scale;
+		if (Stats)
+		{
+			TextY = DrawWrapped(TEXT("Sun-visible time over the computed window at the sample points (dark: least, bright: most):"), Dim, TextX, TextY, TextWidth, Scale * 0.9f);
+			TextY = DrawWrapped(FString::Printf(TEXT("site %.0f h"), Stats->CentreS / 3600.0), White, TextX, TextY, TextWidth, Scale * 1.2f);
+			TextY = DrawWrapped(FString::Printf(TEXT("least %.0f h   median %.0f h   most %.0f h"), Stats->MinS / 3600.0, Stats->MedianS / 3600.0, Stats->MaxS / 3600.0), White, TextX, TextY, TextWidth, Scale * 1.2f);
+		}
+		const FLsnBodySeries* Sun = P.FindSeries(TEXT("SUN"));
+		if (Sun && Sun->EllipseVisibleShare.IsValidIndex(Scene.GetTimeIndex()))
+		{
+			TextY = DrawWrapped(FString::Printf(TEXT("at sample %d the Sun is visible at %.0f %% of the points"), Scene.GetTimeIndex(), 100.0f * Sun->EllipseVisibleShare[Scene.GetTimeIndex()]), SunColor, TextX, TextY, TextWidth, Scale * 1.1f);
+		}
+		TextY = DrawWrapped(TEXT("A survey of the ellipse, not a probability."), Dim, TextX, TextY, TextWidth, Scale * 0.9f);
+		Y = FMath::Max(TextY, Centre.Y + 0.5f * Side) + 6.0f * Scale;
+		Y = DrawWrapped(U.EllipseAssumption, Dim, X, Y, Width, Scale * 0.85f);
+	}
+	return Y;
+}
+
+float ALsnHud::DrawTrade(const ALsnSiteScene& Scene, const ALsnViewGameMode& GameMode, float X, float Y, float Width, float Scale)
+{
+	const FLsnSitePackage& P = Scene.GetPackage();
+	TArray<FString> Lines;
+	LsnPlanner::BuildHeightTradeLines(P, Lines);
+	if (Lines.Num() > 0)
+	{
+		const FLsnHeightTradeQuantity* Sun = P.HeightTrade.Find(TEXT("sun_visible_s"));
+		Y = DrawWrapped(Lines[0] + FString::Printf(TEXT("   [%s]"), Sun ? *P.ValidationStatusOf(Sun->Method) : TEXT("unknown")), Dim, X, Y, Width, Scale * 0.9f);
+		for (int32 I = 1; I < Lines.Num(); ++I)
+		{
+			// The height the view is drawn for is marked.
+			const bool bShown = I - 1 == Scene.GetHeightIndex();
+			Y = DrawWrapped((bShown ? TEXT("> ") : TEXT("   ")) + Lines[I].TrimStart(), bShown ? White : FLinearColor(0.8f, 0.8f, 0.8f), X, Y, Width, Scale * 1.1f);
+		}
+		Y = DrawWrapped(TEXT("Sun-visible time and longest time without Sun over the computed window; in brackets the change against the lowest height, hours."), Dim, X, Y, Width, Scale * 0.85f);
+	}
+	else
+	{
+		Y = DrawWrapped(FString::Printf(TEXT("The package of this site (contract %s) has no mast-height trade."), *P.ContractVersion), Dim, X, Y, Width, Scale);
+	}
+	Y += 10.0f * Scale;
+
+	const FLsnSitePairs* Pairs = GameMode.GetSitePairs();
+	if (!Pairs)
+	{
+		return DrawWrapped(TEXT("The package root has no site-pairs package."), Dim, X, Y, Width, Scale);
+	}
+	// Pairs are shown only for the very site packages they were computed from.
+	const FString* Mine = Pairs->SitePackageIds.Find(P.SiteId);
+	if (!Mine || *Mine != P.PackageId)
+	{
+		return DrawWrapped(TEXT("The site-pairs package of the root was computed from another package of this site; it is not shown."), Alert, X, Y, Width, Scale);
+	}
+	const FString* Status = Pairs->MethodStatus.Find(TEXT("pairs.complementarity"));
+	Y = DrawWrapped(FString::Printf(TEXT("site pairs: when at least one of two sites sees the body (not: that power or data can be moved between them)   [%s]"), Status ? **Status : TEXT("unknown")), Dim, X, Y, Width, Scale * 0.9f);
+	const ALsnSiteScene* Other = GameMode.IsComparing() ? GameMode.GetSceneOfView(1 - Scene.GetSceneSlot()) : nullptr;
+	for (const FLsnSitePair& Pair : Pairs->Pairs)
+	{
+		if (Pair.SiteA != P.SiteId && Pair.SiteB != P.SiteId)
+		{
+			continue;
+		}
+		const FString& Partner = Pair.SiteA == P.SiteId ? Pair.SiteB : Pair.SiteA;
+		// Side by side, only the pair on screen; alone, every pair of this site.
+		if (Other && Other->HasPackage() && Other->GetPackage().SiteId != Partner)
+		{
+			continue;
+		}
+		LsnPlanner::BuildPairLines(Pair, Lines);
+		Y = DrawWrapped(FString::Printf(TEXT("with %s, %s"), *Partner, Lines.Num() > 0 ? *Lines[0] : TEXT("")), White, X, Y, Width, Scale * 1.1f);
+		for (int32 I = 1; I < Lines.Num(); ++I)
+		{
+			Y = DrawWrapped(TEXT("   ") + Lines[I], FLinearColor(0.85f, 0.85f, 0.85f), X, Y, Width, Scale);
+		}
+	}
+	return Y;
 }

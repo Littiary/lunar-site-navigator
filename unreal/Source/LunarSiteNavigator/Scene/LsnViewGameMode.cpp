@@ -207,6 +207,19 @@ void ALsnViewGameMode::StartPlay()
 		PackageRoot = ResolvePackageRoot(LoadError);
 		if (!PackageRoot.IsEmpty() && LsnPlanner::ListSites(PackageRoot, Sites, LoadError))
 		{
+			// The site-pairs package of the root, if the science core wrote one.
+			TArray<FLsnIndexEntry> Entries;
+			FString Ignored;
+			if (LsnPackageIO::LoadIndex(PackageRoot, Entries, Ignored))
+			{
+				for (const FLsnIndexEntry& Entry : Entries)
+				{
+					if (Entry.Kind == TEXT("site_pairs") && !bHasPairs)
+					{
+						bHasPairs = LsnPackageIO::LoadSitePairs(FPaths::Combine(PackageRoot, Entry.Path), Pairs, Ignored);
+					}
+				}
+			}
 			FString Wanted, CompareWith;
 			FParse::Value(FCommandLine::Get(), TEXT("LsnSite="), Wanted);
 			FString Compare;
@@ -258,6 +271,14 @@ void ALsnViewGameMode::StartPlay()
 			Scenes[0]->SetTimeIndex(Index);
 		}
 	}
+
+	FString PageName;
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnPage="), PageName))
+	{
+		Page = PageName == TEXT("calendar") ? ELsnPlannerPage::Calendar : PageName == TEXT("uncertainty") ? ELsnPlannerPage::Uncertainty
+			: PageName == TEXT("trade") ? ELsnPlannerPage::Trade : ELsnPlannerPage::Summary;
+	}
+	FParse::Value(FCommandLine::Get(), TEXT("LsnRequirement="), RequirementIndex);
 
 	if (FParse::Value(FCommandLine::Get(), TEXT("LsnMovieDir="), MovieDir))
 	{

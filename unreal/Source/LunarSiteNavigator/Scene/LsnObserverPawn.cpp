@@ -285,6 +285,10 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 				}
 			}
 		}
+		if (PC->WasInputKeyJustPressed(EKeys::K)) { GameMode->TogglePage(ELsnPlannerPage::Calendar); }
+		if (PC->WasInputKeyJustPressed(EKeys::U)) { GameMode->TogglePage(ELsnPlannerPage::Uncertainty); }
+		if (PC->WasInputKeyJustPressed(EKeys::M)) { GameMode->TogglePage(ELsnPlannerPage::Trade); }
+		if (PC->WasInputKeyJustPressed(EKeys::R)) { GameMode->NextRequirement(); }
 		if (PC->WasInputKeyJustPressed(EKeys::C))
 		{
 			GameMode->SetComparing(!GameMode->IsComparing());

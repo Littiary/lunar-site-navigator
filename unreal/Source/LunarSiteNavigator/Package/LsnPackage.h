@@ -1,6 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Package/LsnPlanningTypes.h"
+
+class FJsonObject;
 
 /**
  * Reader for packages written by the science core (docs/contract/SPEC.md,
@@ -41,6 +44,8 @@ struct FLsnBodySeries
 	TArray<int32> BlockerAzimuthIndex;
 	/** [H, N] since 0.2, optional; empty when absent. Fraction of the disc above the horizon and not hidden by another body. */
 	TArray<float> LitFraction;
+	/** [N] since 0.4, optional; empty when absent. Share of the sample points of the stated landing ellipse at which the body is visible. */
+	TArray<float> EllipseVisibleShare;
 };
 
 /** A rise or set event (SPEC 5.4). */
@@ -55,6 +60,12 @@ struct FLsnEvent
 	double HorizonElevationDeg = 0.0;
 	double ObstacleDistanceM = 0.0;
 	FString Method;
+	/** Since 0.4: range of the event time for the stated horizon error (SPEC 5.7); false when absent. */
+	bool bHasBand = false;
+	double EarliestEtS = 0.0;
+	double LatestEtS = 0.0;
+	FString EarliestUtc;
+	FString LatestUtc;
 };
 
 /** The part of a method card the viewer shows next to a number (SPEC 3.2). */
@@ -245,6 +256,18 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	TArray<FLsnBlocker> Blockers;
 	FString BlockingMethod;
 
+	// --- planning fields since 0.3 (SPEC 5.6 to 5.8); all optional ---
+	TArray<FLsnRequirement> Requirements;
+	/** The scenario's planned landing the slip reports refer to; empty if none. */
+	FString PlannedLandingUtc;
+	FLsnCalendar Calendar;
+	TArray<FLsnOpportunity> Opportunities;
+	FLsnUncertainty Uncertainty;
+	FLsnHeightTrade HeightTrade;
+
+	/** Landing windows of a requirement for an observer height; null if the package has none. */
+	const FLsnOpportunity* FindOpportunity(const FString& RequirementId, int32 InHeightIndex) const;
+
 	/** True if the package carries the obstacle fields of contract 0.2. */
 	bool HasObstacles() const { return Obstacles.Num() > 0 && ObstacleId.Num() == NumHeights() * AzimuthCount; }
 
@@ -319,6 +342,8 @@ struct FLsnIndexEntry
 	FString Name;
 	bool bSynthetic = false;
 	bool bHasTimeline = false;
+	/** Since 0.5, for kind "site_pairs": the sites the package compares. */
+	TArray<FString> SiteIds;
 };
 
 namespace LsnPackageIO
@@ -327,6 +352,12 @@ namespace LsnPackageIO
 	LUNARSITENAVIGATOR_API bool LoadSitePackage(const FString& PackageDirectory, FLsnSitePackage& OutPackage, FString& OutError);
 
 	LUNARSITENAVIGATOR_API bool LoadDirectionTable(const FString& PackageDirectory, FLsnDirectionTable& OutTable, FString& OutError);
+
+	/** Loads a site-pairs package directory (SPEC 6a, since 0.5). */
+	LUNARSITENAVIGATOR_API bool LoadSitePairs(const FString& PackageDirectory, FLsnSitePairs& OutPairs, FString& OutError);
+
+	/** Fills the optional planning fields of a site package from its manifest. Never fails: what is absent stays empty. */
+	void ReadPlanningFields(const TSharedPtr<FJsonObject>& Manifest, FLsnSitePackage& InOutPackage);
 
 	/** Loads index.json of a package root. */
 	LUNARSITENAVIGATOR_API bool LoadIndex(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutEntries, FString& OutError);

@@ -647,6 +647,10 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 			{
 				ReadArray<float>(Ctx, BodyObject, TEXT("lit_fraction"), PerHeightAndSample, TEXT("1"), S.LitFraction);
 			}
+			if (!Ctx.Failed() && BodyObject->HasField(TEXT("ellipse_visible_share")))
+			{
+				ReadArray<float>(Ctx, BodyObject, TEXT("ellipse_visible_share"), PerSample, TEXT("1"), S.EllipseVisibleShare);
+			}
 		}
 		const TArray<TSharedPtr<FJsonValue>>* Events = nullptr;
 		if (!Ctx.Failed() && Timeline->TryGetArrayField(TEXT("events"), Events) && Events)
@@ -777,6 +781,11 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 		}
 	}
 
+	if (!Ctx.Failed())
+	{
+		ReadPlanningFields(Root, P);
+	}
+
 	if (Ctx.Failed())
 	{
 		OutError = FString::Printf(TEXT("%s: %s"), *PackageDirectory, *Ctx.Error);
@@ -852,6 +861,7 @@ bool LsnPackageIO::LoadIndex(const FString& PackageRoot, TArray<FLsnIndexEntry>&
 		(*Object)->TryGetStringField(TEXT("name"), Entry.Name);
 		(*Object)->TryGetBoolField(TEXT("synthetic"), Entry.bSynthetic);
 		(*Object)->TryGetBoolField(TEXT("has_timeline"), Entry.bHasTimeline);
+		(*Object)->TryGetStringArrayField(TEXT("site_ids"), Entry.SiteIds);
 		OutEntries.Add(Entry);
 	}
 	return true;

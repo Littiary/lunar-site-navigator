@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "Package/LsnPackage.h"
+#include "Planner/LsnPlanner.h"
 #include "LsnHud.generated.h"
 
 class ALsnSiteScene;
@@ -41,6 +42,12 @@ namespace LsnHudText
 	 */
 	LUNARSITENAVIGATOR_API void BlockerSentences(const TCHAR* BodyLabel, const FLsnSitePackage& Package, const FLsnBlocking& Blocking, TArray<FString>& OutLines);
 
+	/** What a landing at the selected time means for the chosen requirement, from the landing windows of the package. */
+	LUNARSITENAVIGATOR_API FString LandingSentence(const FLsnLandingCheck& Check);
+
+	/** The range of a countdown for the stated horizon error: the package's earliest and latest time of the event. */
+	LUNARSITENAVIGATOR_API FString CountdownBandSentence(const FLsnSitePackage& Package, double EtS, const FLsnEvent& Event);
+
 	/** The text read-out, top to bottom. The first line is the synthetic marker if and only if the package is synthetic. */
 	LUNARSITENAVIGATOR_API void BuildStatusLines(const FLsnSitePackage& Package, int32 HeightIndex, double TimePosition, TArray<FLsnHudLine>& OutLines,
 		const FString& GroundNote = FString());
@@ -76,6 +83,11 @@ public:
 	virtual void DrawHUD() override;
 
 private:
-	void DrawPanorama(const struct FLsnPanorama& Panorama, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, float Scale);
+	/** Draws text that continues on further lines when wider than MaxWidth; returns the Y below it. */
+	float DrawWrapped(const FString& Text, const FLinearColor& Color, float X, float Y, float MaxWidth, float TextScale);
+	void DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>& Rows, int32 RequirementIndex, float Scale);
+	float DrawUncertainty(const ALsnSiteScene& Scene, float X, float Y, float Width, float Scale);
+	float DrawTrade(const ALsnSiteScene& Scene, const class ALsnViewGameMode& GameMode, float X, float Y, float Width, float Scale);
+	void DrawPanorama(const FLsnPanorama& Panorama, const ALsnSiteScene& Scene, const class ALsnObserverPawn* Pawn, float Scale);
 	void DrawStrip(const FBox2D& Box, const FLsnSitePackage& Package, int32 HeightIndex, double FromPosition, double ToPosition, double CurrentPosition, float Scale);
 };

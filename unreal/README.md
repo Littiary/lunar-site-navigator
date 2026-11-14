@@ -48,6 +48,10 @@ with Git LFS: run `git lfs install` once per machine).
 | Panorama (top right): horizon all round, Sun and Earth marks, the highlighted obstacle | package: `horizon.elevation_deg`, the series at the selected time, the obstacle run |
 | Summary numbers under the panorama | package: metrics `sun_visible_fraction_of_time`, `sun_longest_outage_s`, `earth_visible_fraction_of_time`, `earth_longest_outage_s`, `sun_lost_to_terrain_s`, `sun_gained_from_terrain_s`, with units converted |
 | "Sun 121 deg to the right" at the lower right | package: direction of the body at the selected time, when it is outside the view |
+| Calendar page | package (since 0.3, SPEC 5.6): `timeline.calendar`, `request.timeline.requirements`, `timeline.opportunities`. "Landing now meets the requirement; it can slip by ..." is the distance from the selected time to the end of the landing window it lies in; for the scenario's planned landing the package's own slip report is printed. The requirement is named and marked as an example chosen by the team |
+| Pale edges of the time strips, "for a stated horizon error of ..." under a countdown | package (since 0.4, SPEC 5.7): windows `<body>_visible_certain` / `_possible`, `earliest_et_s` / `latest_et_s` of the event |
+| Uncertainty page: ellipse map and its hours | package: `timeline.uncertainty.landing_ellipse` (points, statistics), `series.SUN.ellipse_visible_share` |
+| Mast-height trade, site pairs | package (since 0.5, SPEC 5.8, 6a): `timeline.height_trade`; the `site_pairs` package of the root, shown only if it was computed from the very site package on screen |
 | Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
 | Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
 
@@ -95,6 +99,10 @@ sample.
 |---|---|
 | `1` .. `9` | show that site of the package root (`Shift`: in the right half, side by side) |
 | `C` | comparison of two sites on and off |
+| `K` | calendar page: lunar-day calendar on one time axis for the site (side by side: for both sites), landing windows of the chosen requirement, slip of a landing at the selected time and of the scenario's planned landing |
+| `U` | uncertainty page: the stated horizon error and the survey of the stated landing ellipse (small map of its sample points) |
+| `M` | mast-height trade and site pairs |
+| `R` | next requirement of the package |
 | mouse, arrow keys | look (while following the Sun: turn away from it) |
 | `Q` / `E` | one sample back / forward (`Shift`: 24 samples) |
 | `,` / `.` | one day back / forward |
@@ -138,6 +146,8 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
 | `Acceptance.SecondSceneAwayFromOrigin` | The second scene of a comparison stands 20 000 km from the world origin and is the same scene: eye, Sun disc, light and silhouette as the package says; the two scenes are lit on separate lighting channels | 0.001 deg; 1e-6 cm |
 | `Planner.LinkedTimeEventsAndMetrics` | Both halves show the same TDB instant or say that they cannot; jumps go to package events only; the summary numbers are the package metrics with units converted; site list; panorama mapping | 1e-9 samples; exact |
+| `Planner.LandingSlipAndPanels`, `Package.PlanningFieldsOfTheSample` | Slip of a selected landing time from the landing windows (hand-made: exact; at the planned landing: equal to the package's slip report); calendar periods without gaps; certain inside visible inside possible at every sample; event bands contain their event; ellipse points inside the stated ellipse; mast and pair tables; nothing is shown without the fields | 1e-9 s; 1e-3 s; 0 violations |
+| `Real.PlanningFieldsOnlyWhenPublished` | States for every published site package which planning fields it carries, and checks its slip reports where it has them | 1e-3 s |
 | `Hud.TextAndSyntheticMarker` | Synthetic marker for synthetic packages only; countdown wording, "at least" for lower bounds; UTC labels | exact |
 | `Real.ImportedPackages` | On every imported real package: not synthetic, countdown at the start equals the package's own metric, obstacle points, scene silhouette, direction table against series | 1e-3 s; 0.05; 0.001; 0.0002 deg |
 | `Real.TerrainAgainstHorizon` | No LOLA sample (from the start of the package's horizon search outwards) stands above the package horizon of its azimuth; mesh silhouette with real ground | 0.001 deg |
@@ -171,6 +181,9 @@ without the LOLA files.
   `docs/unreal/obstacle_shackleton_ridge_2027-07-28.mp4` (52 h, 10.4 km away) is not.
 - The obstacle view uses the values of the sample the time position belongs to; it does
   not interpolate which obstacle is the limiting one.
+- A page whose fields the package lacks says so in one line and shows nothing else. The
+  published packages decide what can be shown: `Real.PlanningFieldsOnlyWhenPublished`
+  prints, per site, which fields they carry.
 - The split screen, the keys and the mouse are not covered by automated tests; they were
   checked on real captures (`docs/unreal/planner_*.png`, `compare_*.mp4`). Sites are
   selected with the number keys; there is no mouse menu.

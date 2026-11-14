@@ -7,6 +7,15 @@
 
 class ALsnSiteScene;
 
+/** What the planner shows beside the view. */
+enum class ELsnPlannerPage : uint8
+{
+	Summary,      // summary numbers and the site list
+	Calendar,     // lunar-day calendar, landing windows and slip of a requirement
+	Uncertainty,  // stated horizon error and landing ellipse
+	Trade,        // mast-height trade and site pairs
+};
+
 /**
  * The planner view: one site, or two sites side by side at the same instant. The scenes
  * are built in code; the project has no map asset of its own.
@@ -18,6 +27,8 @@ class ALsnSiteScene;
  *   -LsnCompare=<site_id>,<site_id>        (start with these two sites side by side)
  *   -LsnTime=<timeline sample index>   -LsnHeight=<observer height index>
  *   -LsnYaw=<azimuth, deg>  -LsnPitch=<elevation, deg>  -LsnFov=<horizontal field of view, deg>
+ *   -LsnPage=calendar|uncertainty|trade    (the planner page shown; default: summary)
+ *   -LsnRequirement=<index>                (which requirement of the package the landing windows are shown for)
  *   -LsnFollowSun                          (keep the view on the Sun's azimuth; default when comparing)
  *   -LsnHorizonLine                        (draw the package horizon as a line)
  *   -LsnNoFillLight  -LsnNoObstacle        (switch the fill light or the obstacle view off)
@@ -75,6 +86,18 @@ public:
 	/** False while the right view shows a clamped time because the instant of the left view is outside its package. */
 	bool IsRightViewInRange() const { return bRightViewInRange; }
 
+	// --- planner pages -----------------------------------------------------
+
+	ELsnPlannerPage GetPage() const { return Page; }
+	/** Shows a page; asking for the page that is shown goes back to the summary. */
+	void TogglePage(ELsnPlannerPage NewPage) { Page = (Page == NewPage) ? ELsnPlannerPage::Summary : NewPage; }
+	/** Which of the package's requirements the landing windows are shown for. */
+	int32 GetRequirementIndex() const { return RequirementIndex; }
+	void NextRequirement() { ++RequirementIndex; }
+	/** The site-pairs package of the package root, if it has one (contract 0.5). */
+	const FLsnSitePairs* GetSitePairs() const { return bHasPairs ? &Pairs : nullptr; }
+	ALsnSiteScene* GetSceneOfView(int32 ViewIndex) const { return Scenes.IsValidIndex(ViewIndex) ? Scenes[ViewIndex] : nullptr; }
+
 	/** Finds the package root: command line first, then the imported packages, the contract sample, the pinned copy. */
 	static FString ResolvePackageRoot(FString& OutError);
 
@@ -92,6 +115,10 @@ private:
 	int32 SelectedSite[2] = { -1, -1 };
 	bool bComparing = false;
 	bool bRightViewInRange = true;
+	ELsnPlannerPage Page = ELsnPlannerPage::Summary;
+	int32 RequirementIndex = 0;
+	FLsnSitePairs Pairs;
+	bool bHasPairs = false;
 
 	FString LoadError;
 	FString ShotPath;
