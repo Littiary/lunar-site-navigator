@@ -1,0 +1,22 @@
+{
+  "title": "Acceptance thresholds: orientation of the Earth as seen from the Moon, science core versus JPL Horizons",
+  "written_utc": "2026-11-14T13:57:00Z",
+  "rule": "Written and committed before any Horizons response of this check was requested. This file is not edited afterwards. If a comparison exceeds a threshold, the cause is found and reported; the threshold stays.",
+  "applies_to": "Every query in cases.json, every row.",
+  "thresholds": {
+    "sub_lunar_latitude_deg_max": {
+      "value": 0.05,
+      "definition": "Largest absolute difference between the core's latitude of the sub-lunar point on the Earth and the sub-observer latitude printed by Horizons (quantity 14, target Earth, observer at the centre of the Moon)."
+    },
+    "sub_lunar_longitude_deg_max": {
+      "value": 0.05,
+      "definition": "Largest absolute difference, taken the short way round, between the core's east longitude of the sub-lunar point and the sub-observer longitude printed by Horizons (quantity 14, same query)."
+    },
+    "north_pole_angle_deg_max": {
+      "value": 0.1,
+      "definition": "Largest absolute difference, taken the short way round, between the core's position angle of the Earth's north pole relative to the Moon's north pole, seen from the Moon, and the position angle of the Moon's north pole relative to celestial north, seen from the centre of the Earth, printed by Horizons (quantity 17, target Moon, observer at the centre of the Earth). The two angles are the same angle between the same two projected poles, seen from the two ends of one line."
+    }
+  },
+  "expected_definitions_of_the_reference": "Quantity 14: apparent planetodetic longitude (east positive for the Earth) and latitude of the centre of the target disc seen by the observer. Quantity 17: position angle of the target's north pole, counter-clockwise from the direction of the celestial north pole. Whether that pole is the pole of date or the pole of the ICRF is read from the header of the stored response before the comparison is run, and the comparison uses the pole the header names; the choice is reported with the result.",
+  "known_resolution_of_the_reference": "Horizons prints these angles in degrees with a fixed number of decimals; the rounding of the reference is reported with the results and is not subtracted from the differences."
+}
