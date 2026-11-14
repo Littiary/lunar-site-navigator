@@ -477,7 +477,7 @@ def to_markdown(summary: dict) -> str:
         "- Shares and longest outages describe this 24-month window only; they are not multi-year averages.",
         "- Landing windows hold for the stated example requirements only; the tool reports when a stated requirement holds, it does not know what a mission needs. Landings later than the end of the window minus the mission duration cannot be judged.",
         "- The uncertainty band shows what follows from the stated height-error model: per azimuth the horizon is raised and lowered by the angle that height error spans at the distance of the limiting terrain. Every elevation product is built from LOLA returns, so an error common to all of them is in no band. The landing-circle survey over 13 points is not a probability.",
-        "- The sites of the curated list other than the project sites carry no uncertainty band: the height-error model was measured on the polar products, and where a site is served by the 118 m product it is unresolved relief, not height error, that limits the horizon. Their packages carry the core's resolution warning.",
+        "- The sites of the curated list other than the project sites carry no uncertainty band: the height-error model was measured on the polar products, and where a site is served by a latitude-longitude product it is unresolved relief, not height error, that limits the horizon. Their packages carry the core's resolution warning.",
         "- The site pairs say when at least one of two sites sees the body; they do not say that power or data can be moved between the sites.",
         "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.",
         "- Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.",
@@ -845,8 +845,8 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         "",
         "- **Near field on** means: inside the 5 m site raster of the data stream the terrain is read from it, elsewhere from the 20 m and 60 m products. The 5 m rasters exist for the three project sites only.",
         "- **Class** is the resolution class the core writes (`horizon.terrain_source.resolution_class`: fine up to 30 m pixels at the site, medium up to 120 m, coarse above). A package whose class is not fine carries a warning that names the pixel: "
-        "relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m) and calls the 118 m product coarse.",
-        "- **Uncertainty band** and **landing-circle survey** are in the project sites only. The height-error model was measured on the polar products; it is not applied to sites served by the 118 m product, "
+        "relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m)" + _class_note(summary["all_sites"]) + ".",
+        "- **Uncertainty band** and **landing-circle survey** are in the project sites only. The height-error model was measured on the polar products; it is not applied to sites served by a latitude-longitude product" + _not_fine_products(summary["all_sites"]) + ", "
         "where unresolved relief, not height error, limits the horizon.",
         "- The terrain patches are for drawing only. **A viewer selects a patch by its `id`, not by its position in the list**: " + _patch_sentence(sites),
         "- The direction table holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
@@ -898,6 +898,22 @@ def _file_bytes(path: Path) -> int:
     if path.suffix == ".json":
         return len(path.read_bytes().replace(b"\r\n", b"\n"))
     return path.stat().st_size
+
+
+def _not_fine(sites: list) -> list:
+    """Products that serve a published site and are not of class fine: (pixel in whole metres, product id), coarsest last."""
+    return sorted({(round(s["terrain_at_site"]["pixel_m"]), s["terrain_at_site"]["product_id"]) for s in sites if s["resolution_class"] != "fine"})
+
+
+def _not_fine_products(sites: list) -> str:
+    cylindrical = [f"{name}, {pixel} m" for pixel, name in _not_fine(sites) if not name.startswith("LDEM_") or name in ("LDEM_128", "LDEM_16")]
+    return f" ({'; '.join(cylindrical)})" if cylindrical else ""
+
+
+def _class_note(sites: list) -> str:
+    """Where the class names of the core and of the data stream's site list differ for a published site."""
+    differing = [f"the {pixel} m product {name}" for pixel, name in _not_fine(sites) if 60 < pixel <= 120]
+    return f" and calls {' and '.join(differing)} coarse where the core says medium" if differing else ""
 
 
 def _patch_sentence(sites: list) -> str:
