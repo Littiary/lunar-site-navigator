@@ -35,6 +35,7 @@ def main(argv: list[str] | None = None) -> int:
 
     x = sub.add_parser("cross-check", help="hash each file again from its other source and compare")
     x.add_argument("paths", nargs="*")
+    x.add_argument("--workers", type=int, default=3, help="files hashed in parallel (one connection each)")
 
     pp = sub.add_parser("pyramid", help="build overview levels (polar, cylindrical tiles, 5 m site GeoTIFFs)")
     pp.add_argument("products", nargs="*", default=["LDEM_80S_20M", "LDEM_60S_60M"])
@@ -97,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "cross-check":
         from .fetch import cross_check
 
-        bad = cross_check(root, a.paths or None)
+        bad = cross_check(root, a.paths or None, workers=a.workers)
         return 1 if bad else 0
     return 2
 
