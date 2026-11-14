@@ -71,6 +71,11 @@ def single_site_scenario(
     return scenario
 
 
+def height_error_presets() -> dict:
+    """The stated height-error models shipped with the contract: {"default": id, "models": {id: model}}."""
+    return json.loads((contract_dir() / "presets" / "terrain_height_error.json").read_text(encoding="utf-8"))
+
+
 def requirement_presets() -> dict:
     """The example requirements shipped with the contract, by id.
 

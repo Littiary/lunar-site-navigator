@@ -215,6 +215,9 @@ def build_site_package(
             name: _quantity(value, unit, method)
             for name, (value, unit, method) in horizon.error_bounds.items()
         }
+    if horizon.obstacle_height_error_m is not None:
+        horizon_block["obstacle_height_error_m"] = writer.array("horizon_obstacle_height_error_m", horizon.obstacle_height_error_m, "<f4", "m", M_HORIZON_ERROR)
+        horizon_block["obstacle_constrained"] = writer.array("horizon_obstacle_constrained", horizon.obstacle_constrained, "<i4", "1", M_HORIZON_ERROR)
     if horizon.terrain_source is not None:
         horizon_block["terrain_source"] = {**horizon.terrain_source, "method": M_TERRAIN_SOURCE}
     horizon_block["flags"] = {

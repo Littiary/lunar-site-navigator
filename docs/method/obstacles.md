@@ -115,6 +115,10 @@ beyond.
    obstacles. Relief narrower than about two pixels (40 m) is not in the model at all.
    The package flags these obstacles as `near_field`; the terrain-height band and the
    ellipse survey (uncertainty.md) quantify the dependence for any site.
+   On the 5 m site raster (near_field.md, section 3) the lost time at this record is
+   again 52.3 h and comes from the same stretch of terrain 0.3 to 0.7 km away, split
+   among more obstacles (19.4, 10.0, 7.0, 4.0 h and smaller); a move of 5 m changes the
+   Sun-visible time by up to 19 h. The wording above holds.
 4. **Resolution of the split.** Totals are as accurate as the event times; the moment at
    which the blocker changes from one obstacle to the next is known to the series step.
 5. **The smooth sphere is a yardstick.** "Lost" and "gained" compare with a Moon without

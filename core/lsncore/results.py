@@ -41,6 +41,9 @@ class HorizonResult:
     obstacles: list | None = None
     # which elevation product served the site and the horizon (lsncore.pipeline.terrain_source)
     terrain_source: dict | None = None
+    # stated height error of the limiting terrain point and whether its pixel holds a laser return, [H, A]
+    obstacle_height_error_m: np.ndarray | None = None
+    obstacle_constrained: np.ndarray | None = None
 
 
 @dataclass

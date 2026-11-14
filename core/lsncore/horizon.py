@@ -97,7 +97,7 @@ def _tan_upper(bound_m, g_a, g_b, radius_m, ground_m, observer_m):
     return _tan_elevation(bound_m, g, radius_m, ground_m, observer_m)
 
 
-def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings):
+def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings, start_m: float | None = None):
     """The lattice along every ray and its grouping into cells.
 
     Returns (first, fine, n_near, cell_first, cell_count): lattice point i is at
@@ -105,7 +105,7 @@ def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings):
     grouped into cells given by the index of their first point and their number of points.
     """
     p = terrain.finest_pixel_m
-    first = min(p * settings.first_sample_px, settings.first_sample_max_m)
+    first = float(start_m) if start_m is not None else min(p * settings.first_sample_px, settings.first_sample_max_m)
     fine = p * settings.fine_step_px
     if max_range_m <= first:
         raise ValueError("max_range_m must exceed the first sample distance")
@@ -119,6 +119,8 @@ def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings):
     while i < n_lattice:
         s = first + i * fine
         n = int(min(cap, max(1, math.floor(settings.cell_growth * s / fine)), n_lattice - i))
+        if i == 0:
+            n = 1  # the first point is always evaluated on its own (it is, anyway, when the search starts at the site)
         firsts.append(i)
         counts.append(n)
         i += n
@@ -126,6 +128,58 @@ def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings):
     counts = np.asarray(counts, dtype=np.int64)
     n_near = int(np.argmax(counts > 1)) if np.any(counts > 1) else counts.size
     return first, fine, n_near, firsts[n_near:], counts[n_near:]
+
+
+def _merge_zones(near: HorizonResult, far: HorizonResult, switch_m: float) -> HorizonResult:
+    """One horizon from two searches of the same rays: out to switch_m on the terrain with
+    the near-field refinement, from switch_m on without it. Per azimuth and height the
+    higher of the two is the horizon, with the obstacle of the search that found it."""
+    with np.errstate(invalid="ignore"):
+        take_far = np.isfinite(far.elevation_deg) & ~(near.elevation_deg >= far.elevation_deg)
+    pick = lambda a, b: np.where(take_far, b, a)  # noqa: E731
+    elevation = pick(near.elevation_deg, far.elevation_deg)
+    # What terrain beyond the reach could add was computed against the far search; restate it
+    # against the merged horizon.
+    with np.errstate(invalid="ignore"):
+        beyond = np.maximum(0.0, far.elevation_deg + far.far_field_bound_deg - elevation)
+    far_bound = np.where(np.isfinite(elevation), np.nan_to_num(beyond, nan=0.0), np.nan)
+    bounds = dict(far.error_bounds)
+    bounds["far_field_max_deg"] = (float(np.nanmax(far_bound)), "deg", M_FAR_FIELD)
+    bounds["far_field_open_azimuth_fraction"] = (float(np.mean(np.nanmax(far_bound, axis=0) > 0.0)), "1", M_FAR_FIELD)
+    share = switch_m / far.max_range_m
+    nodata = share * near.nodata_fraction + (1.0 - share) * far.nodata_fraction
+    result = HorizonResult(
+        azimuth_step_deg=near.azimuth_step_deg,
+        observer_heights_m=near.observer_heights_m,
+        max_range_m=far.max_range_m,
+        reference_radius_m=near.reference_radius_m,
+        surface_height_m=near.surface_height_m,
+        elevation_deg=elevation,
+        distance_m=pick(near.distance_m, far.distance_m),
+        obstacle_height_m=pick(near.obstacle_height_m, far.obstacle_height_m),
+        obstacle_lat_deg=pick(near.obstacle_lat_deg, far.obstacle_lat_deg),
+        obstacle_lon_deg=pick(near.obstacle_lon_deg, far.obstacle_lon_deg),
+        coverage_complete=nodata == 0.0,
+        truncated_at_data_edge=far.truncated_at_data_edge,
+        nodata_fraction=float(nodata),
+        error_bounds=bounds,
+        far_field_bound_deg=far_bound,
+        warnings=[w for w in near.warnings if not w.startswith(("coverage: terrain data ends", "far field:"))] + list(far.warnings),
+        search_stats={
+            "zones": 2,
+            "switch_m": float(switch_m),
+            "near_points_per_ray": near.search_stats["near_points_per_ray"],
+            "cells_per_ray": near.search_stats["cells_per_ray"] + far.search_stats["cells_per_ray"],
+            "lattice_points_beyond_near_zone": near.search_stats["lattice_points_beyond_near_zone"] + far.search_stats["lattice_points_beyond_near_zone"],
+            "lattice_points_walked": near.search_stats["lattice_points_walked"] + far.search_stats["lattice_points_walked"],
+            "walked_fraction": (near.search_stats["lattice_points_walked"] + far.search_stats["lattice_points_walked"])
+            / max(1, near.search_stats["lattice_points_beyond_near_zone"] + far.search_stats["lattice_points_beyond_near_zone"]),
+            "crease_points": near.search_stats["crease_points"] + far.search_stats["crease_points"],
+        },
+    )
+    grouping = segment_obstacles(result)
+    result.obstacle_id, result.obstacles = grouping.obstacle_id, grouping.obstacles
+    return result
 
 
 def compute_horizon(
@@ -136,8 +190,22 @@ def compute_horizon(
     azimuth_step_deg: float = 0.25,
     max_range_m: float = 300_000.0,
     settings: HorizonSettings = HorizonSettings(),
+    start_m: float | None = None,
+    ground_m: float | None = None,
 ) -> HorizonResult:
-    """Horizon elevation and obstacle location for every azimuth and observer height."""
+    """Horizon elevation and obstacle location for every azimuth and observer height.
+
+    A terrain with a near-field refinement around the site (it has far_terrain and
+    switch_m) is searched in two zones: out to switch_m with the refinement and its finer
+    lattice, beyond it on far_terrain with the lattice of the wide products. start_m and
+    ground_m serve that second search: where the rays begin, and the terrain height at
+    the site that the first search used.
+    """
+    far_terrain = getattr(terrain, "far_terrain", None)
+    if far_terrain is not None and start_m is None and max_range_m > terrain.switch_m + 2.0 * far_terrain.finest_pixel_m:
+        near = compute_horizon(terrain.near_terrain, lat_deg, lon_deg, heights_m, azimuth_step_deg, terrain.switch_m, settings)
+        far = compute_horizon(far_terrain, lat_deg, lon_deg, heights_m, azimuth_step_deg, max_range_m, settings, start_m=terrain.switch_m, ground_m=near.surface_height_m)
+        return _merge_zones(near, far, terrain.switch_m)
     heights = np.asarray([float(h) for h in heights_m], dtype=np.float64)
     if heights.size == 0 or np.any(heights < 0) or np.any(np.diff(heights) <= 0):
         raise ValueError("observer heights must be non-negative and strictly increasing")
@@ -146,7 +214,7 @@ def compute_horizon(
         raise ValueError("azimuth_step_deg must divide 360")
 
     radius = float(terrain.reference_radius_m)
-    ground = float(np.asarray(terrain.height_m(lon_deg, lat_deg)))
+    ground = float(ground_m) if ground_m is not None else float(np.asarray(terrain.height_m(lon_deg, lat_deg)))
     if not math.isfinite(ground):
         raise ValueError(f"no terrain data at the site (lat {lat_deg}, lon {lon_deg})")
 
@@ -157,7 +225,7 @@ def compute_horizon(
     ref = n_h // 2  # observer height used to rank cells
     rows = np.arange(n_az)
 
-    first, fine, n_lat_near, cell_first, cell_count = _layout(terrain, max_range_m, settings)
+    first, fine, n_lat_near, cell_first, cell_count = _layout(terrain, max_range_m, settings, start_m)
     n_cells = cell_first.size
     # Near zone: its lattice points and, as the last point, the boundary to the first cell.
     s_near = first + np.arange(n_lat_near) * fine

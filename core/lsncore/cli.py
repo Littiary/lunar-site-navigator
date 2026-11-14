@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from .contract import ContractError, contract_dir, contract_header, validate_document, validate_package, write_json
-from .scenario import DEFAULT_HEIGHT_M, DEFAULT_OBSERVER_HEIGHTS_M, load_scenario, requirement_presets, single_site_scenario
+from .scenario import DEFAULT_HEIGHT_M, DEFAULT_OBSERVER_HEIGHTS_M, height_error_presets, load_scenario, requirement_presets, single_site_scenario
 from .synthetic import SYNTHETIC_DEM_SET_ID
 
 
@@ -20,15 +20,16 @@ def _slug(text: str) -> str:
 
 def _terrain(args: argparse.Namespace):
     """Terrain source selected on the command line: (terrain, is_synthetic)."""
-    terrain = _open_terrain(args.dem_label)
+    terrain = _open_terrain(args.dem_label, getattr(args, "near_field", False))
     return terrain, terrain.is_synthetic
 
 
-def _open_terrain(labels=None):
-    """Named labels: those products. Otherwise every installed product, for a site anywhere."""
+def _open_terrain(labels=None, near_field: bool = False):
+    """Named labels: those products. Otherwise every installed product, for a site anywhere;
+    near_field adds the 5 m site rasters where the data stream has them."""
     from .dem import open_lola, open_moon
 
-    return open_lola(label_paths=labels) if labels else open_moon()
+    return open_lola(label_paths=labels) if labels else open_moon(near_field=near_field)
 
 
 def _jobs(requested: int, scenario: dict) -> int:
@@ -58,7 +59,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     import functools
 
     terrain, synthetic = _terrain(args)
-    factory = functools.partial(_open_terrain, args.dem_label)
+    factory = functools.partial(_open_terrain, args.dem_label, args.near_field)
     return _run(scenario, Path(args.out), terrain, synthetic, jobs=_jobs(args.jobs, scenario), terrain_factory=factory)
 
 
@@ -124,8 +125,16 @@ def cmd_scenario(args: argparse.Namespace) -> int:
     uncertainty = {}
     if args.horizon_error_deg:
         uncertainty["horizon_error_deg"] = args.horizon_error_deg
+    if args.dem_height_error_m and args.height_error_preset:
+        raise ValueError("state the terrain height error either as a number or as a preset, not both")
     if args.dem_height_error_m:
         uncertainty["dem_height_error_m"] = args.dem_height_error_m
+    if args.height_error_preset:
+        presets = height_error_presets()
+        name = presets["default"] if args.height_error_preset == "default" else args.height_error_preset
+        if name not in presets["models"]:
+            raise ValueError(f"unknown height-error preset '{name}'; available: {sorted(presets['models'])}")
+        uncertainty["dem_height_error_model"] = presets["models"][name]
     if args.ellipse:
         major, minor, azimuth, points = args.ellipse
         uncertainty["landing_ellipse"] = {"semi_major_m": major, "semi_minor_m": minor, "azimuth_deg": azimuth, "points": int(points)}
@@ -172,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("scenario")
     p.add_argument("--out", required=True, help="package root directory")
     p.add_argument("--dem-label", action="append", help=dem_help)
+    p.add_argument("--near-field", action="store_true", help="use the 5 m site rasters inside the polar products where they are installed")
     p.add_argument("--jobs", type=int, default=0, help="processes the run may use (default: half the processors, at most 8); sites are computed side by side")
     p.set_defaults(func=cmd_run)
 
@@ -182,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--site-id")
     p.add_argument("--out", required=True, help="package root directory")
     p.add_argument("--dem-label", action="append", help=dem_help)
+    p.add_argument("--near-field", action="store_true", help="use the 5 m site rasters inside the polar products where they are installed")
     p.add_argument("--heights", type=float, nargs="+", help="observer heights in metres (default 0 1 2 5 10 20)")
     p.add_argument("--azimuth-step", type=float, default=0.25, help="degrees (default 0.25)")
     p.add_argument("--max-range-km", type=float, default=300.0, help="search radius (default 300)")
@@ -202,7 +213,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--preset", action="append", help="example requirement from docs/contract/presets (repeatable; 'all' for every preset)")
     p.add_argument("--requirements", help="JSON file with a list of requirements (SPEC 5.6)")
     p.add_argument("--horizon-error-deg", type=float, help="stated horizon error for the uncertainty band (common to all azimuths)")
-    p.add_argument("--dem-height-error-m", type=float, help="stated height error of the limiting terrain; widens the band for near terrain")
+    p.add_argument("--dem-height-error-m", type=float, help="stated height error of the limiting terrain as one number; widens the band for near terrain")
+    p.add_argument("--height-error-preset", help="stated height-error model from docs/contract/presets/terrain_height_error.json ('default' for the sourced one)")
     p.add_argument("--ellipse", type=float, nargs=4, metavar=("SEMI_MAJOR_M", "SEMI_MINOR_M", "AZIMUTH_DEG", "POINTS"), help="stated landing ellipse")
     p.add_argument("--out", required=True, help="scenario file to write")
     p.set_defaults(func=cmd_scenario)

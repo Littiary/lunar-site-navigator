@@ -8,7 +8,8 @@ report in [docs/method/obstacles.md](../docs/method/obstacles.md); the calendar 
 [docs/method/uncertainty.md](../docs/method/uncertainty.md); the mast-height trade and site pairs in
 [docs/method/trade_pairs.md](../docs/method/trade_pairs.md); the terrain patches for drawing in
 [docs/method/terrain_patch.md](../docs/method/terrain_patch.md); the orientation of the Earth for drawing it in
-[docs/method/earth_view.md](../docs/method/earth_view.md).
+[docs/method/earth_view.md](../docs/method/earth_view.md); the 5 m near field and the band fed by the products' errors in
+[docs/method/near_field.md](../docs/method/near_field.md).
 
 ## Setup
 
@@ -35,9 +36,11 @@ stream; options state what else is wanted: `--landing-utc` (planned landing),
 `--preset <id>` (an example requirement from
 [`docs/contract/presets`](../docs/contract/presets/README.md); repeatable, `all` for every
 one) or `--requirements <file>` (your own requirements on the landing time),
-`--horizon-error-deg`, `--dem-height-error-m` and `--ellipse` (assumptions for the
+`--horizon-error-deg`, `--height-error-preset default` (the measured height-error model;
+`--dem-height-error-m` for a single number) and `--ellipse` (assumptions for the
 uncertainty band and the landing-ellipse survey), `--heights` (mast heights to compare). `run` computes every site of a scenario file
-(`--jobs N`: processes it may use, see run times below). With
+(`--jobs N`: processes it may use, see run times below; `--near-field`: use the 5 m site
+rasters where a site lies on one, [near_field.md](../docs/method/near_field.md)). With
 a time window and the ephemeris modules installed, a site package then holds:
 
 | Part | From |
