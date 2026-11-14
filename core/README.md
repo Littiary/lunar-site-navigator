@@ -23,7 +23,8 @@ python -m venv .venv
 ## Commands
 
 ```
-python -m lsncore site --lat -89.5 --lon 200 --name "Test" --out <package root>
+python -m lsncore custom --lat -89.5 --lon 200 --start 2026-11-14 --out <package root>   # complete package, see below
+python -m lsncore site --lat -89.5 --lon 200 --name "Test" --out <package root>          # horizon only
 python -m lsncore scenario --sites data/sites/sites.json --id three-sites --start 2026-11-14T00:00:00.000Z --end 2028-11-14T00:00:00.000Z --out scenario.json
 python -m lsncore run <scenario.json> --out <package root>
 python -m lsncore validate <package dir | json file> ...
@@ -63,6 +64,106 @@ format, for example the synthetic test raster `data/fixtures/synth_s90_100m.lbl`
 package computed from a synthetic surface is flagged `synthetic`. `--synthetic` skips the
 computation and writes invented numbers (the walking skeleton behind the contract sample).
 
+## One command for a custom coordinate
+
+```
+python -m lsncore custom --lat 26.1 --lon 3.6 --start 2026-11-14 --out <package root>
+```
+
+For a latitude, an east longitude (degrees) and a start date (UTC, `2026-11-14` or
+`2026-11-14T06:00Z`) this writes a complete site package: the horizon and its obstacles,
+the terrain patches, the Sun and Earth series over 30 days with events, windows and
+countdowns, the lunar-day calendar, the landing windows and slip tolerance of the three
+example requirements, the uncertainty band of the default height-error model and the
+mast-height trade. There is no landing ellipse. The countdowns count from the start of
+the window, or from `--landing-utc` if that lies inside it; each says which
+(`reference`, contract 5.4). The package root has the layout every root has (direction
+table, site package, `index.json`), so a viewer reads it like any other.
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--days` | 30 | Length of the window |
+| `--name`, `--site-id` | `Custom site 26.1000 N, 3.6000 E`, `custom-26-1000n-3-6000e` | How the site is called |
+| `--landing-utc` | none | Planned landing: reference of the countdowns and of the slip tolerance |
+| `--preset <id>` | all three | Example requirements to state (repeatable; `none` for no landing windows) |
+| `--no-band` | band on | Leave out the uncertainty band |
+| `--near-field` | off | Use the 5 m site rasters where the site lies on one, as `run --near-field` does |
+| `--tables <root>` | none | Another package root to look in for a direction table (repeatable) |
+| `--step`, `--heights`, `--azimuth-step`, `--max-range-km`, `--jobs`, `--dem-label` | as for `run` and `site` | |
+
+**Direction table.** A table already in the package root, or in a root named with
+`--tables`, is used instead of computing one if it reaches one record beyond the window
+on both sides, was computed from the kernel set installed here and passes the contract
+validator; a table found elsewhere is copied into the package root so that the root stays
+complete. Events on a reused table agree with those on a table of the window within 1 s
+(`core/tests/test_custom_site.py`). Computing the table of a month takes under a second,
+so reuse matters for long windows only.
+
+**What it prints.** On standard output, one line per stage as the stage begins, then the
+directories written and, last, the index:
+
+```
+progress 1/6 checking the kernels and opening the terrain
+progress 2/6 Sun and Earth directions: computing them for the window
+progress 3/6 terrain horizon: 1440 azimuths out to 300 km
+progress 4/6 Sun and Earth visibility, events, countdowns and landing windows: 30 days from 2026-11-14T00:00:00.000Z
+progress 5/6 uncertainty band
+progress 6/6 terrain patches and package files
+<package root>/direction_table/dirtab-8b0176a10b9b3c9b
+<package root>/site/custom-26-1000n-3-6000e/site-43b399bf78b6c900
+<package root>/index.json
+```
+
+A line that starts with `progress ` is `progress <k>/<n> <text>`: `k` counts from 1 to
+`n` (5 with `--no-band`), and the text is for showing. Every line is written as soon as
+it is known. Errors go to standard error as `error: <what>: <sentence>`.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | The packages are written and passed the validator |
+| 2 | The request cannot be carried out as stated (a date that is not UTC, a latitude outside -90 to 90, an unknown preset); nothing is written |
+| 3 | Something that must be installed on this machine is missing; one `error:` line for each thing, nothing is written |
+
+**What must be installed** ([docs/setup.md](../docs/setup.md) does all of it):
+
+1. Python 3.11 or newer with the two packages of the repository:
+   `pip install -e "core[test]" -e data` (numpy, jsonschema, spiceypy).
+2. The SPICE kernels, 79 MB, once: `python -m lsncore.ephem.fetch_kernels`. Five files
+   are needed; with the four optional ones the direction table also holds the orientation
+   of the Earth and the package the ground-station windows.
+3. Elevation products that cover the site, under the data root (`LSN_DATA_ROOT`, default
+   `C:\lsn-data` on Windows, `~/lsn-data` elsewhere): `python -m lsn_data fetch` and
+   `python -m lsn_data pyramid` install the south-polar pair (3.7 GB and 2.4 GB of
+   overview levels). A site elsewhere needs the north-polar pair or a global product;
+   `python -m lsn_data fetch --help` lists them, [data/README.md](../data/README.md)
+   describes them.
+
+**What it prints when something is missing** (exit code 3, on standard error; folder
+names are those of the machine):
+
+```
+error: kernels: 5 of 5 kernel files are missing in C:\lsn-data\kernels (naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf). Download them once with: python -m lsncore.ephem.fetch_kernels (docs/setup.md)
+error: terrain: no elevation product is installed. Data root: C:\lsn-data. Install the elevation products with: python -m lsn_data fetch, then python -m lsn_data pyramid (docs/setup.md)
+```
+
+If products are installed but none reaches the site, the terrain line says so instead and
+names the products that are not installed:
+`error: terrain: no elevation data within 300 km of latitude 26.1, longitude 3.6; products not installed: […]`.
+Both lines appear together when both are missing.
+
+**Time**, the whole process from its start to validated packages, 30 days, defaults, on
+the laptop of the run times below (14 November 2026):
+
+| Site | Processors at 3 % load | At about 30 % load from other work |
+|---|---|---|
+| 26.1 N, 3.6 E (global product, 118 m) | 12.3 s | 20.1 to 21.2 s |
+| Shackleton rim record (20 m product) | 12.9 s (13.8 s with `--jobs 1`) | 25.3 to 26.9 s |
+
+With `--near-field` on a 5 m raster one run each was measured, while other work was
+running: 23.7 s at the Shackleton record and 32.6 s near Mons Malapert (11 s of it the
+horizon). These two are not idle-machine figures. The test limit is 30 s without the
+near field, best of three on a machine that is doing nothing else.
+
 ## Run times
 
 Measured on 14 November 2026 on one laptop (20 logical processors, Windows 11), each as a
@@ -73,6 +174,7 @@ LOLA products, hourly series, six observer heights, default `--jobs` (8 here).
 |---|---|
 | One custom site, horizon and terrain patches, no dates (`lsncore site`) | 3.5 to 4.4 s |
 | One site, 30 days, calendar and mast trade | 11 s |
+| One custom coordinate, 30 days, three presets and uncertainty band, no ellipse (`lsncore custom`) | 12.3 to 12.9 s |
 | One site, 30 days, three presets, uncertainty band and landing ellipse of 13 points | 31 s (35 s in one process) |
 | One site, 24 months, the same | 3.7 min (223 s) |
 | Three sites, 24 months, calendar and mast trade | 2.7 min (159 s) |

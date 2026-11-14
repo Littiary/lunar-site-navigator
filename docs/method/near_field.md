@@ -39,7 +39,15 @@ Thresholds were fixed before the first run; the first is the one of
 | The neighbourhood bound across the edge of the finer raster, 150 discs of 3 m to 1.2 km against 3000 sampled points each | never below | holds |
 | The adapter's surface against the data reader's at 5000 points on both rasters | 1e-9 m | passes |
 | Three site records on their 5 m rasters, 8 azimuths at 2 m, 300 km, against a 1 m scan of the same surface | 0.002 deg | nothing missed |
-| Runtime of one site with the near field (six heights, 1440 azimuths, 300 km), best of three | 15 s | 9 to 11 s measured alone; passes |
+| Runtime of one site with the near field (six heights, 1440 azimuths, 300 km), best of three, on a machine that is doing nothing else | 15 s | 4.6 s (de Gerlache record) to 9.7 s (Malapert record) measured alone; passes |
+
+What the runtime limit means: the time of one site on an otherwise idle machine, taken
+as the best of three runs. The best of three removes a short disturbance; it does not
+remove a loaded machine. In one of two runs of the whole test suite on 14 November the
+laptop was slowed by the long run itself, and two sites took 15.5 s and 18.1 s (best
+of three each); alone, minutes later, the same two took 4.6 s and 9.7 s, and the second
+run of the whole suite passed. The limit was not changed. The Malapert record has the
+least margin.
 
 The runtime criterion was not met by the first design: one search with the 2.5 m lattice
 along the whole 300 km took 38 s at the Shackleton record and 96 s at the Malapert

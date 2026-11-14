@@ -20,7 +20,7 @@ import numpy as np
 from .. import SCIENCE_VERSION, __version__
 
 CONTRACT_NAME = "lsn-package"
-CONTRACT_VERSION = "0.10"
+CONTRACT_VERSION = "0.11"
 CONTRACT_MAJOR = 0
 
 _ID_PREFIX = {"site": "site", "direction_table": "dirtab", "site_pairs": "pairs"}
@@ -271,6 +271,8 @@ def write_index(root: Path | str, scenario_id: str | None = None) -> Path:
                 lon_deg=m["site"]["lon_deg"],
                 has_timeline="timeline" in m,
             )
+            # descriptive labels, for the site list of a viewer
+            entry.update({label: m["site"][label] for label in ("programme", "category") if label in m["site"]})
         elif m["kind"] == "site_pairs":
             entry["site_ids"] = [s["site_id"] for s in m["sites"]]
         entries.append(entry)

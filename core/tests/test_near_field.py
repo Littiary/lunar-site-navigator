@@ -32,7 +32,8 @@ from test_horizon import _assert_complete, _best_of_three
 # --------------------------------------------------------------------------------------
 TOL_BOUND_M = 1e-6            # a neighbourhood bound may not lie below any sampled point of the neighbourhood
 TOL_SAME_SURFACE_M = 1e-9     # the adapter's surface against the data reader's
-MAX_RUNTIME_NEAR_FIELD_S = 15.0  # one site with the 5 m near field: three times the 5 s of the 20 m data (the lattice is four times finer)
+MAX_RUNTIME_NEAR_FIELD_S = 15.0  # one site with the 5 m near field: three times the 5 s of the 20 m data (the lattice is four times finer).
+#                                  It is the time of one site on a machine that is doing nothing else, taken as the best of three runs.
 TOL_SLOPE_DEG = 0.1           # slope of a tilted plane from the terrain
 # --------------------------------------------------------------------------------------
 
@@ -225,6 +226,15 @@ def near_field():
 
 @pytest.mark.parametrize("name", SITES)
 def test_site_records_on_the_5_m_near_field(near_field, name, tmp_path):
+    """Nothing missed against a 1 m scan, the package names the 5 m raster, and the runtime.
+
+    The runtime limit is for one site on an otherwise idle machine and is compared with the
+    best of three runs. The best of three removes a short disturbance, not a loaded
+    machine: in one run of the whole suite on 14 November, with the laptop slowed by the
+    long run, two sites took 15.5 s and 18.1 s; alone, minutes later, 4.6 s and 9.7 s. A
+    failure here while other work is running says nothing about the search; it is to be
+    reported with the load, and the limit is not to be changed.
+    """
     reader, adapter, sites = near_field
     lat, lon = sites[name]["lat_deg"], (sites[name]["lon_deg_east"] + 180.0) % 360.0 - 180.0
     terrain = adapter.for_site(lat, lon, 300_000.0)
@@ -235,7 +245,7 @@ def test_site_records_on_the_5_m_near_field(near_field, name, tmp_path):
     surface = type(reader)([p for p in reader.products if p.product_id == own or p.grid0.pixel_m >= 20.0])
     _assert_complete(terrain, surface, lat, lon, 300_000.0, azimuths=np.arange(0.0, 360.0, 45.0), heights=(2.0,))
     elapsed = _best_of_three(lambda: compute_horizon(terrain, lat, lon, [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]))
-    assert elapsed <= MAX_RUNTIME_NEAR_FIELD_S, f"{elapsed:.2f} s"
+    assert elapsed <= MAX_RUNTIME_NEAR_FIELD_S, f"{elapsed:.2f} s, best of three (the limit holds on a machine that is doing nothing else)"
     scenario = single_site_scenario(name.replace("_", "-"), sites[name]["name"], lat, lon, dem_set_id="any", synthetic=False)
     (path,) = run_scenario(scenario, tmp_path, terrain)
     source = validate_package(path)["horizon"]["terrain_source"]
