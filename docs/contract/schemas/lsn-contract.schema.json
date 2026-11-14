@@ -1,0 +1,640 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
+  "title": "Lunar Site Navigator package contract, version 0.1",
+  "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
+  "type": "object",
+  "required": ["contract", "kind"],
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "site"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/site"}},
+    {"if": {"properties": {"kind": {"const": "direction_table"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/direction_table"}},
+    {"if": {"properties": {"kind": {"const": "scenario"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/scenario"}},
+    {"if": {"properties": {"kind": {"const": "index"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/index"}}
+  ],
+  "properties": {
+    "kind": {"enum": ["site", "direction_table", "scenario", "index"]}
+  },
+
+  "$defs": {
+
+    "contract": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"const": "lsn-package"},
+        "version": {"type": "string", "pattern": "^0\\.[0-9]+$"}
+      }
+    },
+
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "utc": {
+      "description": "UTC instant, ISO 8601, millisecond resolution, always with the Z suffix.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
+    "method_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,95}$"},
+    "body": {"enum": ["SUN", "EARTH"]},
+    "vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+
+    "array_ref": {
+      "description": "A raw little-endian binary array stored next to the manifest. C order (last index varies fastest).",
+      "type": "object",
+      "required": ["file", "dtype", "shape", "unit", "method", "sha256", "nan_count"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {"type": "string", "pattern": "^[a-z0-9_]+\\.(f4|f8|i4|u1)$"},
+        "dtype": {"enum": ["<f4", "<f8", "<i4", "|u1"]},
+        "shape": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 1, "maxItems": 4},
+        "unit": {"type": "string", "minLength": 1},
+        "method": {"$ref": "#/$defs/method_id"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "nan_count": {"type": "integer", "minimum": 0}
+      }
+    },
+
+    "quantity": {
+      "description": "A single number with its unit and its method card.",
+      "type": "object",
+      "required": ["value", "unit", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string", "minLength": 1},
+        "method": {"$ref": "#/$defs/method_id"}
+      }
+    },
+
+    "method_card": {
+      "description": "What a number means, how it was computed, from which data, and how far it has been checked.",
+      "type": "object",
+      "required": ["title", "definition", "algorithm", "frame", "time_scale", "data", "parameters", "validation", "limits"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "definition": {"type": "string", "minLength": 1},
+        "algorithm": {"type": "string", "minLength": 1},
+        "frame": {"type": "string", "minLength": 1},
+        "time_scale": {"enum": ["TDB", "UTC", "none"]},
+        "data": {"type": "array", "items": {"type": "string"}},
+        "parameters": {"type": "object"},
+        "validation": {
+          "type": "object",
+          "required": ["status", "evidence"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {"enum": ["synthetic", "unverified", "analytic-test-passed", "externally-validated"]},
+            "evidence": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "limits": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+
+    "methods": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/method_id"},
+      "additionalProperties": {"$ref": "#/$defs/method_card"}
+    },
+
+    "time_grid": {
+      "description": "Uniform time axis. Sample i is at start_et_s + i * step_s, in TDB seconds past J2000.",
+      "type": "object",
+      "required": ["scale", "epoch", "start_et_s", "step_s", "count", "start_utc", "end_utc", "leap_seconds_in_range"],
+      "additionalProperties": false,
+      "properties": {
+        "scale": {"const": "TDB"},
+        "epoch": {"const": "J2000"},
+        "start_et_s": {"type": "number"},
+        "step_s": {"type": "number", "exclusiveMinimum": 0},
+        "count": {"type": "integer", "minimum": 1},
+        "start_utc": {"$ref": "#/$defs/utc"},
+        "end_utc": {"$ref": "#/$defs/utc"},
+        "leap_seconds_in_range": {"type": "integer", "minimum": 0}
+      }
+    },
+
+    "provenance": {
+      "description": "Volatile record of how and when the package was produced. Not part of package_id or content_sha256.",
+      "type": "object",
+      "required": ["created_utc", "software"],
+      "additionalProperties": false,
+      "properties": {
+        "created_utc": {"$ref": "#/$defs/utc"},
+        "scenario_id": {"type": ["string", "null"]},
+        "machine_class": {"type": "string"},
+        "timings_s": {"type": "object", "additionalProperties": {"type": "number"}},
+        "software": {
+          "type": "object",
+          "required": ["core_version", "git_commit", "git_dirty"],
+          "additionalProperties": {"type": ["string", "boolean", "null"]},
+          "properties": {
+            "core_version": {"type": "string"},
+            "git_commit": {"type": ["string", "null"]},
+            "git_dirty": {"type": ["boolean", "null"]}
+          }
+        }
+      }
+    },
+
+    "package_header": {
+      "type": "object",
+      "required": ["contract", "kind", "package_id", "content_sha256", "status", "synthetic", "warnings", "request", "inputs", "methods", "provenance"],
+      "properties": {
+        "contract": {"$ref": "#/$defs/contract"},
+        "package_id": {"type": "string", "pattern": "^(site|dirtab)-[0-9a-f]{16}$"},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "status": {"enum": ["ok", "partial", "error"]},
+        "synthetic": {"type": "boolean"},
+        "synthetic_notice": {"type": "string", "minLength": 1},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "request": {"type": "object"},
+        "inputs": {
+          "type": "object",
+          "required": ["science_version"],
+          "properties": {"science_version": {"type": "integer", "minimum": 0}}
+        },
+        "methods": {"$ref": "#/$defs/methods"},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "if": {"properties": {"synthetic": {"const": true}}},
+      "then": {"required": ["synthetic_notice"]}
+    },
+
+    "dem_layer": {
+      "type": "object",
+      "required": ["layer_id", "product_id", "version", "source_url", "sha256", "pixel_m", "projection"],
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {"type": "string"},
+        "product_id": {"type": "string"},
+        "version": {"type": "string"},
+        "source_url": {"type": "string"},
+        "sha256": {"type": ["string", "null"]},
+        "pixel_m": {"type": "number", "exclusiveMinimum": 0},
+        "projection": {"type": "string"}
+      }
+    },
+
+    "azimuth_grid": {
+      "description": "Uniform azimuth axis covering the full circle. Sample j is at start_deg + j * step_deg; count * step_deg = 360.",
+      "type": "object",
+      "required": ["start_deg", "step_deg", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "start_deg": {"const": 0},
+        "step_deg": {"type": "number", "exclusiveMinimum": 0, "maximum": 5},
+        "count": {"type": "integer", "minimum": 72}
+      }
+    },
+
+    "threshold": {
+      "type": "object",
+      "required": ["quantity", "op", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "quantity": {"enum": ["visible_fraction", "margin_deg"]},
+        "op": {"enum": [">", ">="]},
+        "value": {"type": "number"}
+      }
+    },
+
+    "site_request": {
+      "type": "object",
+      "required": ["site", "observer_heights_m", "horizon", "timeline"],
+      "additionalProperties": false,
+      "properties": {
+        "site": {
+          "type": "object",
+          "required": ["site_id", "name", "lat_deg", "lon_deg"],
+          "additionalProperties": false,
+          "properties": {
+            "site_id": {"$ref": "#/$defs/slug"},
+            "name": {"type": "string", "minLength": 1},
+            "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon_deg": {"type": "number", "exclusiveMinimum": -180, "maximum": 180}
+          }
+        },
+        "observer_heights_m": {
+          "type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16
+        },
+        "horizon": {
+          "type": "object",
+          "required": ["azimuth_step_deg", "max_range_m"],
+          "additionalProperties": false,
+          "properties": {
+            "azimuth_step_deg": {"type": "number", "exclusiveMinimum": 0},
+            "max_range_m": {"type": "number", "exclusiveMinimum": 0}
+          }
+        },
+        "timeline": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["start_utc", "end_utc", "step_s", "bodies"],
+              "additionalProperties": false,
+              "properties": {
+                "start_utc": {"$ref": "#/$defs/utc"},
+                "end_utc": {"$ref": "#/$defs/utc"},
+                "step_s": {"type": "number", "exclusiveMinimum": 0},
+                "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+                "thresholds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/threshold"}}
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    "site_block": {
+      "type": "object",
+      "required": ["site_id", "name", "body", "lat_deg", "lon_deg", "frame", "reference_radius_m", "surface_height_m", "radius_m", "position_km", "enu"],
+      "additionalProperties": false,
+      "properties": {
+        "site_id": {"$ref": "#/$defs/slug"},
+        "name": {"type": "string", "minLength": 1},
+        "body": {"const": "MOON"},
+        "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
+        "lon_deg": {"type": "number", "exclusiveMinimum": -180, "maximum": 180},
+        "frame": {"type": "string", "minLength": 1},
+        "reference_radius_m": {"$ref": "#/$defs/quantity"},
+        "surface_height_m": {"$ref": "#/$defs/quantity"},
+        "radius_m": {"$ref": "#/$defs/quantity"},
+        "position_km": {"$ref": "#/$defs/vec3"},
+        "enu": {
+          "type": "object",
+          "required": ["east", "north", "up"],
+          "additionalProperties": false,
+          "properties": {
+            "east": {"$ref": "#/$defs/vec3"},
+            "north": {"$ref": "#/$defs/vec3"},
+            "up": {"$ref": "#/$defs/vec3"}
+          }
+        },
+        "dem_pixel": {
+          "type": "object",
+          "required": ["layer_id", "row", "col"],
+          "additionalProperties": false,
+          "properties": {
+            "layer_id": {"type": "string"},
+            "row": {"type": "number"},
+            "col": {"type": "number"}
+          }
+        },
+        "slope_deg": {"$ref": "#/$defs/quantity"}
+      }
+    },
+
+    "horizon_block": {
+      "type": "object",
+      "required": ["azimuth", "observer_heights_m", "default_height_index", "max_range_m", "elevation_deg", "distance_m", "flags"],
+      "additionalProperties": false,
+      "properties": {
+        "azimuth": {"$ref": "#/$defs/azimuth_grid"},
+        "observer_heights_m": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16},
+        "default_height_index": {"type": "integer", "minimum": 0},
+        "max_range_m": {"$ref": "#/$defs/quantity"},
+        "elevation_deg": {"$ref": "#/$defs/array_ref"},
+        "distance_m": {"$ref": "#/$defs/array_ref"},
+        "obstacle_height_m": {"$ref": "#/$defs/array_ref"},
+        "obstacle_lat_deg": {"$ref": "#/$defs/array_ref"},
+        "obstacle_lon_deg": {"$ref": "#/$defs/array_ref"},
+        "obstacle_dem_layer": {"$ref": "#/$defs/array_ref"},
+        "elevation_sigma_deg": {"$ref": "#/$defs/array_ref"},
+        "elevation_lower_deg": {"$ref": "#/$defs/array_ref"},
+        "elevation_upper_deg": {"$ref": "#/$defs/array_ref"},
+        "error_bounds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/quantity"}},
+        "flags": {
+          "type": "object",
+          "required": ["coverage_complete", "truncated_at_data_edge", "nodata_fraction"],
+          "additionalProperties": false,
+          "properties": {
+            "coverage_complete": {"type": "boolean"},
+            "truncated_at_data_edge": {"type": "boolean"},
+            "nodata_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
+
+    "event": {
+      "type": "object",
+      "required": ["type", "body", "height_index", "et_s", "utc", "azimuth_deg", "horizon_elevation_deg", "obstacle_distance_m", "threshold", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {"enum": ["rise", "set"]},
+        "body": {"$ref": "#/$defs/body"},
+        "height_index": {"type": "integer", "minimum": 0},
+        "et_s": {"type": "number"},
+        "utc": {"$ref": "#/$defs/utc"},
+        "azimuth_deg": {"type": "number", "minimum": 0, "exclusiveMaximum": 360},
+        "horizon_elevation_deg": {"type": "number"},
+        "obstacle_distance_m": {"type": ["number", "null"]},
+        "obstacle_lat_deg": {"type": ["number", "null"]},
+        "obstacle_lon_deg": {"type": ["number", "null"]},
+        "threshold": {"$ref": "#/$defs/threshold"},
+        "method": {"$ref": "#/$defs/method_id"},
+        "sigma_s": {"type": ["number", "null"]},
+        "closing_rate_deg_per_h": {"type": ["number", "null"]},
+        "grazing": {"type": "boolean"}
+      }
+    },
+
+    "window": {
+      "description": "An interval set: the times at which a stated condition holds.",
+      "type": "object",
+      "required": ["id", "subject", "height_index", "definition", "intervals_et_s", "intervals_utc", "clipped_start", "clipped_end", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/method_id"},
+        "subject": {"enum": ["SUN", "EARTH", "COMBINED"]},
+        "height_index": {"type": "integer", "minimum": 0},
+        "definition": {"type": "string", "minLength": 1},
+        "threshold": {"$ref": "#/$defs/threshold"},
+        "intervals_et_s": {
+          "type": "array",
+          "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+        },
+        "intervals_utc": {
+          "type": "array",
+          "items": {"type": "array", "items": {"$ref": "#/$defs/utc"}, "minItems": 2, "maxItems": 2}
+        },
+        "clipped_start": {"type": "boolean"},
+        "clipped_end": {"type": "boolean"},
+        "method": {"$ref": "#/$defs/method_id"}
+      }
+    },
+
+    "metric": {
+      "type": "object",
+      "required": ["id", "label", "value", "unit", "height_index", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/method_id"},
+        "label": {"type": "string", "minLength": 1},
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string", "minLength": 1},
+        "height_index": {"type": ["integer", "null"], "minimum": 0},
+        "method": {"$ref": "#/$defs/method_id"}
+      }
+    },
+
+    "body_series": {
+      "type": "object",
+      "required": ["azimuth_deg", "elevation_deg", "margin_deg", "visible_fraction"],
+      "additionalProperties": false,
+      "properties": {
+        "azimuth_deg": {"$ref": "#/$defs/array_ref"},
+        "elevation_deg": {"$ref": "#/$defs/array_ref"},
+        "angular_radius_deg": {"$ref": "#/$defs/array_ref"},
+        "margin_deg": {"$ref": "#/$defs/array_ref"},
+        "visible_fraction": {"$ref": "#/$defs/array_ref"}
+      }
+    },
+
+    "timeline_block": {
+      "type": "object",
+      "required": ["direction_table_id", "time", "bodies", "series", "events", "windows", "metrics"],
+      "additionalProperties": false,
+      "properties": {
+        "direction_table_id": {"type": "string", "pattern": "^dirtab-[0-9a-f]{16}$"},
+        "time": {"$ref": "#/$defs/time_grid"},
+        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+        "series": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "SUN": {"$ref": "#/$defs/body_series"},
+            "EARTH": {"$ref": "#/$defs/body_series"}
+          }
+        },
+        "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+        "windows": {"type": "array", "items": {"$ref": "#/$defs/window"}},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}}
+      }
+    },
+
+    "site": {
+      "allOf": [{"$ref": "#/$defs/package_header"}],
+      "required": ["site", "horizon"],
+      "properties": {
+        "kind": {"const": "site"},
+        "package_id": {"type": "string", "pattern": "^site-"},
+        "request": {"$ref": "#/$defs/site_request"},
+        "inputs": {
+          "type": "object",
+          "required": ["science_version", "dem", "direction_table"],
+          "additionalProperties": false,
+          "properties": {
+            "science_version": {"type": "integer", "minimum": 0},
+            "dem": {
+              "type": "object",
+              "required": ["dem_set_id", "layers"],
+              "additionalProperties": false,
+              "properties": {
+                "dem_set_id": {"type": "string", "minLength": 1},
+                "layers": {"type": "array", "items": {"$ref": "#/$defs/dem_layer"}}
+              }
+            },
+            "direction_table": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "required": ["package_id", "content_sha256"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "package_id": {"type": "string", "pattern": "^dirtab-[0-9a-f]{16}$"},
+                    "content_sha256": {"$ref": "#/$defs/sha256"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "site": {"$ref": "#/$defs/site_block"},
+        "horizon": {"$ref": "#/$defs/horizon_block"},
+        "timeline": {"$ref": "#/$defs/timeline_block"}
+      },
+      "unevaluatedProperties": false
+    },
+
+    "kernel": {
+      "type": "object",
+      "required": ["name", "bytes", "sha256", "source_url", "load_order"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "source_url": {"type": "string"},
+        "load_order": {"type": "integer", "minimum": 0}
+      }
+    },
+
+    "direction_table": {
+      "allOf": [{"$ref": "#/$defs/package_header"}],
+      "required": ["frame", "center", "aberration_correction", "bodies", "time", "positions_km", "body_radii_km", "interpolation"],
+      "properties": {
+        "kind": {"const": "direction_table"},
+        "package_id": {"type": "string", "pattern": "^dirtab-"},
+        "request": {
+          "type": "object",
+          "required": ["start_et_s", "step_s", "count", "bodies", "frame", "center", "aberration_correction"],
+          "additionalProperties": false,
+          "properties": {
+            "start_et_s": {"type": "number"},
+            "step_s": {"type": "number", "exclusiveMinimum": 0},
+            "count": {"type": "integer", "minimum": 4},
+            "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+            "frame": {"type": "string", "minLength": 1},
+            "center": {"const": "MOON"},
+            "aberration_correction": {"type": "string", "minLength": 1}
+          }
+        },
+        "inputs": {
+          "type": "object",
+          "required": ["science_version", "kernel_set_id", "kernels"],
+          "additionalProperties": false,
+          "properties": {
+            "science_version": {"type": "integer", "minimum": 0},
+            "kernel_set_id": {"type": "string", "minLength": 1},
+            "kernels": {"type": "array", "items": {"$ref": "#/$defs/kernel"}}
+          }
+        },
+        "frame": {"type": "string", "minLength": 1},
+        "center": {"const": "MOON"},
+        "aberration_correction": {"type": "string", "minLength": 1},
+        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+        "time": {"$ref": "#/$defs/time_grid"},
+        "positions_km": {"$ref": "#/$defs/array_ref"},
+        "body_radii_km": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "SUN": {"$ref": "#/$defs/quantity"},
+            "EARTH": {"$ref": "#/$defs/quantity"}
+          }
+        },
+        "interpolation": {
+          "type": "object",
+          "required": ["recommended", "max_error_km", "max_error_arcsec"],
+          "additionalProperties": false,
+          "properties": {
+            "recommended": {"type": "string", "minLength": 1},
+            "max_error_km": {"$ref": "#/$defs/quantity"},
+            "max_error_arcsec": {"$ref": "#/$defs/quantity"}
+          }
+        },
+        "earth_rotation": {"$ref": "#/$defs/array_ref"}
+      },
+      "unevaluatedProperties": false
+    },
+
+    "scenario": {
+      "description": "The single input file of the tool (decision 5).",
+      "type": "object",
+      "required": ["contract", "kind", "scenario_id", "title", "synthetic", "sites", "observer_heights_m", "horizon", "time_window", "bodies", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "contract": {"$ref": "#/$defs/contract"},
+        "kind": {"const": "scenario"},
+        "scenario_id": {"$ref": "#/$defs/slug"},
+        "title": {"type": "string", "minLength": 1},
+        "description": {"type": "string"},
+        "synthetic": {"type": "boolean"},
+        "sites": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["site_id", "name", "lat_deg", "lon_deg"],
+            "additionalProperties": false,
+            "properties": {
+              "site_id": {"$ref": "#/$defs/slug"},
+              "name": {"type": "string", "minLength": 1},
+              "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
+              "lon_deg": {"type": "number", "minimum": -180, "maximum": 360},
+              "landing_utc": {"$ref": "#/$defs/utc"},
+              "notes": {"type": "string"}
+            }
+          }
+        },
+        "observer_heights_m": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16},
+        "default_height_m": {"type": "number", "minimum": 0},
+        "horizon": {
+          "type": "object",
+          "required": ["azimuth_step_deg", "max_range_m"],
+          "additionalProperties": false,
+          "properties": {
+            "azimuth_step_deg": {"type": "number", "exclusiveMinimum": 0},
+            "max_range_m": {"type": "number", "exclusiveMinimum": 0}
+          }
+        },
+        "time_window": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["start_utc", "end_utc", "step_s"],
+              "additionalProperties": false,
+              "properties": {
+                "start_utc": {"$ref": "#/$defs/utc"},
+                "end_utc": {"$ref": "#/$defs/utc"},
+                "step_s": {"type": "number", "exclusiveMinimum": 0}
+              }
+            }
+          ]
+        },
+        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+        "thresholds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/threshold"}},
+        "mission_profile": {"type": ["string", "null"]},
+        "data": {
+          "type": "object",
+          "required": ["dem_set_id", "kernel_set_id"],
+          "additionalProperties": false,
+          "properties": {
+            "dem_set_id": {"type": "string", "minLength": 1},
+            "kernel_set_id": {"type": ["string", "null"]},
+            "direction_table_id": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+
+    "index": {
+      "description": "List of the packages under one package root, so that static readers need no directory listing.",
+      "type": "object",
+      "required": ["contract", "kind", "generated_utc", "packages"],
+      "additionalProperties": false,
+      "properties": {
+        "contract": {"$ref": "#/$defs/contract"},
+        "kind": {"const": "index"},
+        "generated_utc": {"$ref": "#/$defs/utc"},
+        "scenario_id": {"type": ["string", "null"]},
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "package_id", "path", "synthetic", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {"enum": ["site", "direction_table"]},
+              "package_id": {"type": "string"},
+              "path": {"type": "string", "pattern": "^[A-Za-z0-9_./-]+$"},
+              "synthetic": {"type": "boolean"},
+              "status": {"enum": ["ok", "partial", "error"]},
+              "site_id": {"type": "string"},
+              "name": {"type": "string"},
+              "lat_deg": {"type": "number"},
+              "lon_deg": {"type": "number"},
+              "has_timeline": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
