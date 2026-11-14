@@ -1,0 +1,31 @@
+{
+  "case_id": "de_gerlache_rim_crest__sun__weekend",
+  "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40301%27&COORD_TYPE=%27GEODETIC%27&QUANTITIES=%274%2C13%2C20%2C30%27&ANG_FORMAT=%27DEG%27&TIME_DIGITS=%27SECONDS%27&CSV_FORMAT=%27YES%27&APPARENT=%27AIRLESS%27&COMMAND=%2710%27&SITE_COORD=%27291.58956%2C-88.6641%2C1.8152%27&START_TIME=%272026-11-14%2000%3A00%27&STOP_TIME=%272026-11-16%2000%3A00%27&STEP_SIZE=%2710%20m%27",
+  "parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@301",
+    "COORD_TYPE": "GEODETIC",
+    "QUANTITIES": "4,13,20,30",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS",
+    "COMMAND": "10",
+    "SITE_COORD": "291.58956,-88.6641,1.8152",
+    "START_TIME": "2026-11-14 00:00",
+    "STOP_TIME": "2026-11-16 00:00",
+    "STEP_SIZE": "10 m"
+  },
+  "retrieved_utc": "2026-11-14T11:23:28Z",
+  "http_status": 200,
+  "bytes": 40423,
+  "sha256": "4ccecc73c11b411377b47aedbd453fc73fc005f97118d1c178b3bb3a269f33ad",
+  "api_signature": {
+    "version": "1.2",
+    "source": "NASA/JPL Horizons API"
+  },
+  "user_agent": "lunar-ephemeris-validation/0.1 (python-urllib; sequential, cached)"
+}
