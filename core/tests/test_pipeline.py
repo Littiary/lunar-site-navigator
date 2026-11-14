@@ -175,3 +175,31 @@ def test_event_searches_shared_among_processes_give_the_same_package(tmp_path):
     ma, mb = validate_package(a), validate_package(b)
     assert ma["package_id"] == mb["package_id"] and ma["content_sha256"] == mb["content_sha256"]
     assert any(w["id"] == "sun_visible_certain" for w in ma["timeline"]["windows"]) and "landing_ellipse" in ma["timeline"]["uncertainty"]
+
+
+def test_countdown_metrics_state_the_instant_they_count_from(tmp_path):
+    """Planned landing if the scenario states one inside the window, else the first sample."""
+    pytest.importorskip("spiceypy")
+    from lsncore.ephem import kernels
+
+    try:
+        kernels.load()
+    except FileNotFoundError as missing:
+        pytest.skip(f"kernels are not on this machine: {missing}")
+    scenario = single_site_scenario("ridge-a", "Analytic ridge site A", -86.0, 20.0, dem_set_id="any", synthetic=False, heights_m=[2.0], azimuth_step_deg=1.0, max_range_m=50_000.0)
+    scenario["time_window"] = {"start_utc": "2026-11-14T00:00:00.000Z", "end_utc": "2026-11-24T00:00:00.000Z", "step_s": 3600.0}
+    for landing, expected, what in (
+        (None, "2026-11-14T00:00:00.000Z", "start of the time window"),
+        ("2026-11-18T06:00:00.000Z", "2026-11-18T06:00:00.000Z", "planned landing of the site"),
+        ("2030-01-01T00:00:00.000Z", "2026-11-14T00:00:00.000Z", "start of the time window"),  # outside the window
+    ):
+        scenario["sites"][0].pop("landing_utc", None)
+        if landing:
+            scenario["sites"][0]["landing_utc"] = landing
+        manifest = validate_package(run_scenario(scenario, tmp_path / (landing or "none")[:10], _ridge_terrain())[-1])
+        counted = [m for m in manifest["timeline"]["metrics"] if "_time_to_" in m["id"] or m["id"].endswith("_at_reference")]
+        assert len(counted) >= 8 and all(m["reference"]["utc"] == expected and m["reference"]["is"] == what and m["reference"]["time_scale"] == "TDB" for m in counted)
+        others = [m for m in manifest["timeline"]["metrics"] if m not in counted]
+        assert others and not any("reference" in m for m in others)
+        # the label still says it in words
+        assert all(expected in m["label"] for m in counted if m["id"].endswith(("_time_to_set_s", "_at_reference")))

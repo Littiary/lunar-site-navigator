@@ -438,3 +438,48 @@ def test_site_far_from_the_pole_on_lola_data():
     terrain = LolaTerrain(reader)
     res = _assert_complete(terrain, reader, -82.0, -45.0, 300_000.0, azimuths=np.arange(0.0, 360.0, 45.0), heights=(2.0,))
     assert np.isfinite(res.elevation_deg).all() and res.coverage_complete
+
+
+# -- the order in which cells are walked ----------------------------------------------------
+#
+# Cells beyond the near zone are walked in rounds, one cell per azimuth first and twice as
+# many in every following round; a cell is skipped once its upper bound no longer exceeds
+# what has been found. Fixed before the first run: the order may change how many lattice
+# points are walked, never the horizon. Compared with one cell per azimuth and then
+# everything that survives at once (the schedule until 14 November 2026): elevation,
+# distance and height of the limiting point identical, to the last bit.
+
+def _assert_same_horizon_whatever_the_order(terrain, lat, lon, max_range_m):
+    from dataclasses import replace
+
+    from lsncore.horizon import HorizonSettings
+
+    heights = [0.0, 2.0, 20.0]
+    at_once = compute_horizon(terrain, lat, lon, heights, 0.5, max_range_m, replace(HorizonSettings(), walk_growth=10**9))
+    for growth in (2, 4):
+        rounds = compute_horizon(terrain, lat, lon, heights, 0.5, max_range_m, replace(HorizonSettings(), walk_growth=growth))
+        for name in ("elevation_deg", "distance_m", "obstacle_height_m"):
+            assert np.array_equal(getattr(rounds, name), getattr(at_once, name), equal_nan=True), (growth, name)
+        assert rounds.search_stats["lattice_points_walked"] <= at_once.search_stats["lattice_points_walked"]
+    return at_once, rounds
+
+
+def test_order_of_the_rounds_does_not_change_the_horizon_on_a_rough_gridded_surface(rough_raster):
+    from lsncore.dem import LolaTerrain
+
+    terrain = LolaTerrain(rough_raster)
+    for lat, lon in [(-89.7, 40.0), (-89.4, -110.0)]:
+        _assert_same_horizon_whatever_the_order(terrain, lat, lon, 20_000.0)
+
+
+def test_order_of_the_rounds_does_not_change_the_horizon_on_lola_data():
+    lsn_data = pytest.importorskip("lsn_data")
+    from lsncore.dem import LolaTerrain
+
+    try:
+        reader = lsn_data.open_terrain()
+    except FileNotFoundError:
+        pytest.skip("LOLA products are not on this machine")
+    at_once, rounds = _assert_same_horizon_whatever_the_order(LolaTerrain(reader), -89.5, 137.0, 300_000.0)
+    # and it is worth it: fewer lattice points for the same horizon
+    assert rounds.search_stats["lattice_points_walked"] < at_once.search_stats["lattice_points_walked"]

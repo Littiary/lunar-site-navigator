@@ -10,7 +10,7 @@ from . import SCIENCE_VERSION
 from .contract import PackageWriter
 from .geometry import site_frame
 from .results import HorizonResult, TimelineResult
-from .scenario import canonical_heights, canonical_site
+from .scenario import canonical_heights, canonical_site, site_labels
 from .terrain_patch import FRAME as PATCH_FRAME
 from .terrain_patch import NOTICE as PATCH_NOTICE
 
@@ -186,6 +186,7 @@ def build_site_package(
     }
     if horizon.dem_pixel is not None:
         site_block["dem_pixel"] = horizon.dem_pixel
+    site_block.update(site_labels(site))  # descriptive only; not part of the request
 
     default_index = 0
     if default_height_m is not None:
@@ -215,6 +216,9 @@ def build_site_package(
             name: _quantity(value, unit, method)
             for name, (value, unit, method) in horizon.error_bounds.items()
         }
+    if horizon.obstacle_height_error_m is not None:
+        horizon_block["obstacle_height_error_m"] = writer.array("horizon_obstacle_height_error_m", horizon.obstacle_height_error_m, "<f4", "m", M_HORIZON_ERROR)
+        horizon_block["obstacle_constrained"] = writer.array("horizon_obstacle_constrained", horizon.obstacle_constrained, "<i4", "1", M_HORIZON_ERROR)
     if horizon.terrain_source is not None:
         horizon_block["terrain_source"] = {**horizon.terrain_source, "method": M_TERRAIN_SOURCE}
     horizon_block["flags"] = {

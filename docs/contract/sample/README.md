@@ -27,6 +27,9 @@ rises above that horizon, and it touches it in the 252 of 1440 azimuths whose in
 limiting distance lies inside the patches (0.02 degrees below in the median, up to 1
 degree at the invented cliffs, where the invented distance jumps).
 
+Both invented sites state a `programme` and a `category` (invented as well), so that a
+site list grouped by them can be written against the index.
+
 The direction table also holds an invented `earth_view` (an Earth that turns once in
 24.8 hours), so that a viewer can be written against the three arrays.
 

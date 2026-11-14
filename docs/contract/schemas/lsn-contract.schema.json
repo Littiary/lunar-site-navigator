@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.9",
+  "title": "Lunar Site Navigator package contract, version 0.11",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
   "required": [
@@ -819,6 +819,16 @@
         },
         "slope_deg": {
           "$ref": "#/$defs/quantity"
+        },
+        "programme": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Since 0.11. Descriptive only: the programme the site belongs to, for grouping a site list (for example Apollo). Passed through unchanged from the site record; no number depends on it."
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Since 0.11. Descriptive only: what kind of entry the site is in a site list (for example past landing, candidate, project site). Passed through unchanged from the site record; no number depends on it."
         }
       }
     },
@@ -1005,6 +1015,12 @@
               "$ref": "#/$defs/method_id"
             }
           }
+        },
+        "obstacle_height_error_m": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacle_constrained": {
+          "$ref": "#/$defs/array_ref"
         }
       }
     },
@@ -1101,6 +1117,44 @@
         },
         "latest_utc": {
           "$ref": "#/$defs/utc"
+        },
+        "terrain_quality": {
+          "description": "Since 0.10. What fed the uncertainty band of this event.",
+          "type": "object",
+          "required": [
+            "band_source",
+            "height_error_m",
+            "limiting_pixel",
+            "product_id"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "band_source": {
+              "enum": [
+                "rms_map",
+                "flat",
+                "slope_class",
+                "constant",
+                "none"
+              ]
+            },
+            "height_error_m": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "limiting_pixel": {
+              "enum": [
+                "constrained",
+                "interpolated",
+                "unknown"
+              ]
+            },
+            "product_id": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -1212,6 +1266,35 @@
         },
         "method": {
           "$ref": "#/$defs/method_id"
+        },
+        "reference": {
+          "description": "Since 0.10. The instant a countdown metric is counted from.",
+          "type": "object",
+          "required": [
+            "utc",
+            "et_s",
+            "time_scale",
+            "is"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "utc": {
+              "$ref": "#/$defs/utc"
+            },
+            "et_s": {
+              "type": "number"
+            },
+            "time_scale": {
+              "const": "TDB"
+            },
+            "is": {
+              "enum": [
+                "planned landing of the site",
+                "start of the time window",
+                "stated reference time"
+              ]
+            }
+          }
         }
       }
     },
@@ -1370,6 +1453,98 @@
                       "type": "number"
                     }
                   }
+                },
+                "dem_height_error_model": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "label",
+                    "source"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "applied_height_error_m": {
+                  "type": "object",
+                  "required": [
+                    "min",
+                    "median",
+                    "max"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "min": {
+                      "type": "number"
+                    },
+                    "median": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "sources": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "source",
+                      "azimuth_share"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "source": {
+                        "enum": [
+                          "rms_map",
+                          "flat",
+                          "slope_class",
+                          "constant"
+                        ]
+                      },
+                      "azimuth_share": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                },
+                "limiting_pixels": {
+                  "type": "object",
+                  "required": [
+                    "constrained",
+                    "interpolated",
+                    "unknown"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "constrained": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "interpolated": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "unknown": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
                 }
               },
               "anyOf": [
@@ -1381,6 +1556,11 @@
                 {
                   "required": [
                     "dem_height_error_m"
+                  ]
+                },
+                {
+                  "required": [
+                    "dem_height_error_model"
                   ]
                 }
               ]
@@ -1962,6 +2142,16 @@
               },
               "notes": {
                 "type": "string"
+              },
+              "programme": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Since 0.11. Descriptive only: the programme the site belongs to, for grouping a site list (for example Apollo). Passed through unchanged from the site record; no number depends on it."
+              },
+              "category": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Since 0.11. Descriptive only: what kind of entry the site is in a site list (for example past landing, candidate, project site). Passed through unchanged from the site record; no number depends on it."
               }
             }
           }
@@ -2173,6 +2363,16 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "programme": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Since 0.11. Descriptive only: the programme the site belongs to, for grouping a site list (for example Apollo). Passed through unchanged from the site record; no number depends on it."
+              },
+              "category": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Since 0.11. Descriptive only: what kind of entry the site is in a site list (for example past landing, candidate, project site). Passed through unchanged from the site record; no number depends on it."
               }
             }
           }
@@ -2737,7 +2937,16 @@
         "dem_height_error_m": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "dem_height_error_model": {
+          "$ref": "#/$defs/height_error_model"
         }
+      },
+      "not": {
+        "required": [
+          "dem_height_error_m",
+          "dem_height_error_model"
+        ]
       }
     },
     "site_pairs": {
@@ -3159,6 +3368,99 @@
           }
         }
       }
+    },
+    "height_error_model": {
+      "description": "Since 0.10. A stated height error of the terrain: one constant, or rules per elevation product.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "constant_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rules": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "rms_map_factor",
+                  "flat_m"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rms_map_factor": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "flat_m": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "slope_classes"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "slope_classes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "up_to_deg",
+                        "error_m"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "up_to_deg": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 90
+                        },
+                        "error_m": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "constant_m"
+          ]
+        },
+        {
+          "required": [
+            "rules"
+          ]
+        }
+      ]
     }
   }
 }

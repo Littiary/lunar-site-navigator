@@ -63,6 +63,10 @@ def _window(wid: str, subject: str, h: int, definition: str, intervals: Interval
     return out
 
 
+# Metrics that are counted from the reference instant of the timeline.
+COUNTDOWN_SUFFIXES = ("_visible_at_reference", "_time_to_set_s", "_time_to_set_is_lower_bound", "_time_to_rise_s", "_time_to_rise_is_lower_bound")
+
+
 def _metric(mid: str, label: str, value, unit: str, h: int | None, method: str = pk.M_METRICS) -> dict:
     return {"id": mid, "label": label, "value": None if value is None else float(value), "unit": unit, "height_index": h, "method": method}
 
@@ -265,6 +269,17 @@ def compute_timeline(
             metrics.append(_metric("dte_longest_outage_s", "Longest time without a possible two-way link to the Deep Space Network", two_way.longest_outage_s(), "s", h, M_STATION_LINKS))
             metrics.append(_metric("dte_longest_terrain_outage_s", "Longest time with every station hidden by the lunar terrain", two_way.longest_terrain_outage_s(), "s", h, M_STATION_LINKS))
 
+    # The countdown metrics count from one instant. It is stated with each of them, so that a
+    # reader need not take it from the label (contract 0.10).
+    reference = {
+        "utc": reference_label,
+        "et_s": float(reference_et),
+        "time_scale": "TDB",
+        "is": "start of the time window" if reference_et == domain[0] else ("stated reference time" if reference_utc else "planned landing of the site"),
+    }
+    for metric in metrics:
+        if metric["id"].endswith(COUNTDOWN_SUFFIXES):
+            metric["reference"] = reference
     events.sort(key=lambda event: (event["et_s"], event["body"], event["height_index"]))
     return TimelineResult(
         direction_table_id=table_package.package_id,

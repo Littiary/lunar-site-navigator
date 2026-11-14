@@ -1,7 +1,7 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.9"
+    "version": "0.11"
   },
   "kind": "scenario",
   "scenario_id": "synthetic-sample",
@@ -15,6 +15,8 @@
       "lat_deg": -88.0,
       "lon_deg": 45.0,
       "notes": "Coordinates chosen arbitrarily.",
+      "programme": "SYNTHETIC SAMPLE (invented programme)",
+      "category": "project site",
       "landing_utc": "2026-12-05T06:00:00.000Z"
     },
     {
@@ -22,7 +24,9 @@
       "name": "SYNTHETIC SAMPLE SITE B (not a real place)",
       "lat_deg": -87.5,
       "lon_deg": 60.0,
-      "notes": "Coordinates chosen arbitrarily; a second site so that the sample holds a site_pairs package."
+      "notes": "Coordinates chosen arbitrarily; a second site so that the sample holds a site_pairs package.",
+      "programme": "SYNTHETIC SAMPLE (invented programme)",
+      "category": "candidate"
     }
   ],
   "observer_heights_m": [
