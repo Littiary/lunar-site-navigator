@@ -90,6 +90,21 @@ FVector ALsnSiteScene::GetEyeUnreal() const
 	return FVector(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
 }
 
+FString ALsnSiteScene::GetGroundNote() const
+{
+	if (!bHasRealTerrain)
+	{
+		return TEXT("Ground between the site and the horizon line is a placeholder surface, not elevation data.");
+	}
+	FString Note = FString::Printf(TEXT("Ground: elevation data %s sampled on %d rings per azimuth (drawing only); the horizon line is the package's."),
+		*TerrainGrid.DemSetId, TerrainGrid.RingDistanceM.Num());
+	if (UnknownTerrainSamples > 0)
+	{
+		Note += FString::Printf(TEXT(" %d samples have no data."), UnknownTerrainSamples);
+	}
+	return Note;
+}
+
 FVector ALsnSiteScene::GetSunDirectionFromLight() const
 {
 	return -SunLight->GetComponentRotation().Vector();
@@ -108,6 +123,15 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	bHasPackage = true;
 	HeightIndex = Package.DefaultHeightIndex;
 	TimeIndex = 0;
+
+	// Real elevation samples for this very package, if they were exported; else the placeholder surface.
+	FString GridError;
+	bHasRealTerrain = !Package.bSynthetic && FLsnTerrainGrid::LoadForSite(Package.SiteId, TerrainGrid, GridError) && TerrainGrid.Matches(Package, GridError);
+	if (!bHasRealTerrain)
+	{
+		TerrainGrid = FLsnTerrainGrid();
+		UE_LOG(LogLsn, Display, TEXT("No real terrain for %s: %s. The placeholder surface is drawn."), *Package.SiteId, *GridError);
+	}
 	TimePosition = 0.0;
 
 	if (!SurfaceMaterial)
@@ -163,7 +187,15 @@ void ALsnSiteScene::RebuildGeometry()
 	// Terrain: its outer edge is the package horizon.
 	FLsnHorizonTerrainParams TerrainParams;
 	TerrainParams.Albedo = RegolithAlbedo;
-	LsnMesh::BuildHorizonTerrain(Frame, Package, HeightIndex, TerrainParams, TerrainData, SkippedHorizonSamples);
+	UnknownTerrainSamples = 0;
+	if (bHasRealTerrain)
+	{
+		LsnMesh::BuildGridTerrain(Frame, Package, HeightIndex, TerrainGrid, RegolithAlbedo, TerrainData, SkippedHorizonSamples, UnknownTerrainSamples);
+	}
+	else
+	{
+		LsnMesh::BuildHorizonTerrain(Frame, Package, HeightIndex, TerrainParams, TerrainData, SkippedHorizonSamples);
+	}
 	TerrainData.RoundPositionsToFloat();
 	Terrain->SetWorldLocation(FVector::ZeroVector);
 	ApplyMesh(Terrain, TerrainData, SurfaceMaterial);

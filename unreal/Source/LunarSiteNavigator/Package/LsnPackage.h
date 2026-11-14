@@ -60,6 +60,8 @@ struct FLsnMethodCard
 	FString Frame;
 	FString TimeScale;
 	FString ValidationStatus;
+	/** The numeric entries of the card's "parameters" object. */
+	TMap<FString, double> NumericParameters;
 };
 
 /** An interval set of a site timeline (SPEC 5.4, "Window"). Interval i is [StartsEtS[i], EndsEtS[i]). */
@@ -185,6 +187,13 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	double HorizonElevationInterpolated(int32 HeightIndex, double AzimuthDeg) const;
 
 	const FLsnBodySeries* FindSeries(const FString& Body) const { return Series.Find(Body); }
+
+	/**
+	 * Distance from the site at which the horizon search of the package starts, metres
+	 * (parameter "first_point_m" of the horizon method card); 0 if the package does not say.
+	 * Terrain nearer than this is not part of horizon.elevation_deg.
+	 */
+	double HorizonSearchStartM() const;
 
 	/** Validation status of a method id, or "unknown" if the card is missing. */
 	FString ValidationStatusOf(const FString& MethodId) const;

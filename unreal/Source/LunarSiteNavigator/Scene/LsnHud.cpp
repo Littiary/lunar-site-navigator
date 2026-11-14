@@ -63,7 +63,7 @@ FString LsnHudText::CountdownSentence(const TCHAR* BodyLabel, const FLsnCountdow
 		: FString::Printf(TEXT("%s not visible - rises in %s"), BodyLabel, *Duration);
 }
 
-void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double TimePosition, TArray<FLsnHudLine>& OutLines)
+void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double TimePosition, TArray<FLsnHudLine>& OutLines, const FString& GroundNote)
 {
 	OutLines.Reset();
 	auto Line = [&OutLines](const FString& Text, const FLinearColor& Color, float Size = 1.0f) { OutLines.Add({ Text, Color, Size }); };
@@ -107,7 +107,10 @@ void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double Time
 	{
 		Line(TEXT("This package has no timeline: no Sun or Earth is shown."), Dim);
 	}
-	Line(TEXT("Ground between the site and the horizon line is a placeholder surface, not elevation data."), Dim);
+	if (!GroundNote.IsEmpty())
+	{
+		Line(GroundNote, Dim);
+	}
 	for (const FString& Warning : P.Warnings)
 	{
 		Line(FString::Printf(TEXT("warning: %s"), *Warning), Alert);
@@ -218,7 +221,7 @@ void ALsnHud::DrawHUD()
 	const ALsnObserverPawn* Pawn = Cast<ALsnObserverPawn>(GetOwningPawn());
 
 	TArray<FLsnHudLine> Lines;
-	LsnHudText::BuildStatusLines(P, H, Position, Lines);
+	LsnHudText::BuildStatusLines(P, H, Position, Lines, Scene->GetGroundNote());
 	for (const FLsnHudLine& L : Lines)
 	{
 		Line(L.Text, L.Color, L.Size);

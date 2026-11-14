@@ -36,7 +36,8 @@ namespace LsnHudText
 	LUNARSITENAVIGATOR_API FString CountdownSentence(const TCHAR* BodyLabel, const FLsnCountdown& Countdown);
 
 	/** The text read-out, top to bottom. The first line is the synthetic marker if and only if the package is synthetic. */
-	LUNARSITENAVIGATOR_API void BuildStatusLines(const FLsnSitePackage& Package, int32 HeightIndex, double TimePosition, TArray<FLsnHudLine>& OutLines);
+	LUNARSITENAVIGATOR_API void BuildStatusLines(const FLsnSitePackage& Package, int32 HeightIndex, double TimePosition, TArray<FLsnHudLine>& OutLines,
+		const FString& GroundNote = FString());
 
 	/** The marker a synthetic package must carry on screen (SPEC 3.3). */
 	inline const TCHAR* SyntheticMarker() { return TEXT("SYNTHETIC DATA"); }

@@ -5,6 +5,7 @@
 #include "Frame/LsnSiteFrame.h"
 #include "Mesh/LsnMesh.h"
 #include "Package/LsnPackage.h"
+#include "Terrain/LsnTerrainGrid.h"
 #include "LsnSiteScene.generated.h"
 
 class UDirectionalLightComponent;
@@ -81,6 +82,14 @@ public:
 	int32 GetTimeIndex() const { return TimeIndex; }
 	int32 GetSkippedHorizonSamples() const { return SkippedHorizonSamples; }
 
+	/** True if the ground is drawn from real elevation samples; false for the placeholder surface. */
+	bool HasRealTerrain() const { return bHasRealTerrain; }
+	const FLsnTerrainGrid& GetTerrainGrid() const { return TerrainGrid; }
+	int32 GetUnknownTerrainSamples() const { return UnknownTerrainSamples; }
+
+	/** What the ground between the site and the horizon line is, for the read-out. */
+	FString GetGroundNote() const;
+
 	/** Eye of the observer for the selected height, world centimetres. */
 	FVector GetEyeUnreal() const;
 
@@ -144,4 +153,7 @@ private:
 	int32 TimeIndex = 0;
 	double TimePosition = 0.0;
 	int32 SkippedHorizonSamples = 0;
+	FLsnTerrainGrid TerrainGrid;
+	bool bHasRealTerrain = false;
+	int32 UnknownTerrainSamples = 0;
 };

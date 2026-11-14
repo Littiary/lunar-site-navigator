@@ -4,6 +4,7 @@
 #include "Frame/LsnSiteFrame.h"
 
 struct FLsnSitePackage;
+struct FLsnTerrainGrid;
 
 /**
  * Plain mesh arrays, independent of the component that draws them.
@@ -79,6 +80,20 @@ namespace LsnMesh
 	 */
 	LUNARSITENAVIGATOR_API void BuildHorizonTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
 		const FLsnHorizonTerrainParams& Params, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths);
+
+	/**
+	 * The site terrain from real elevation samples (FLsnTerrainGrid). Along every azimuth
+	 * sample the vertices are the grid's ring points, at their height above the reference
+	 * sphere, plus the package's horizon point of that azimuth, in order of distance. The
+	 * horizon point is the terrain point the science core found to set the horizon, so
+	 * the crest of the mesh is the package horizon and the rest is elevation data.
+	 *
+	 * Origin: the site's ground point. OutSkippedAzimuths counts horizon samples that could
+	 * not be placed, OutUnknownSamples grid samples without data (drawn at the height of
+	 * the nearest ring that has data).
+	 */
+	LUNARSITENAVIGATOR_API void BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
+		const FLsnTerrainGrid& Grid, float Albedo, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples);
 
 	/**
 	 * Depth of the procedural craters at a horizontal position, metres, always >= 0.

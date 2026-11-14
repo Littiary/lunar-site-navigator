@@ -288,6 +288,13 @@ double FLsnSitePackage::HorizonElevationInterpolated(int32 HeightIndex, double A
 	return (1.0 - Fraction) * HorizonElevationAt(HeightIndex, Lower) + Fraction * HorizonElevationAt(HeightIndex, Upper);
 }
 
+double FLsnSitePackage::HorizonSearchStartM() const
+{
+	const FLsnMethodCard* Card = Methods.Find(HorizonElevationMethod);
+	const double* Start = Card ? Card->NumericParameters.Find(TEXT("first_point_m")) : nullptr;
+	return Start ? *Start : 0.0;
+}
+
 FString FLsnSitePackage::ValidationStatusOf(const FString& MethodId) const
 {
 	const FLsnMethodCard* Card = Methods.Find(MethodId);
@@ -423,6 +430,18 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 			(*CardObject)->TryGetStringField(TEXT("title"), Card.Title);
 			(*CardObject)->TryGetStringField(TEXT("frame"), Card.Frame);
 			(*CardObject)->TryGetStringField(TEXT("time_scale"), Card.TimeScale);
+			const FJsonObjectPtr* CardParameters = nullptr;
+			if ((*CardObject)->TryGetObjectField(TEXT("parameters"), CardParameters) && CardParameters && CardParameters->IsValid())
+			{
+				for (const auto& Parameter : (*CardParameters)->Values)
+				{
+					double Number = 0.0;
+					if (Parameter.Value.IsValid() && Parameter.Value->Type == EJson::Number && Parameter.Value->TryGetNumber(Number))
+					{
+						Card.NumericParameters.Add(FString(Parameter.Key), Number);
+					}
+				}
+			}
 			const FJsonObjectPtr* Validation = nullptr;
 			if ((*CardObject)->TryGetObjectField(TEXT("validation"), Validation) && Validation)
 			{

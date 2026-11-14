@@ -1,6 +1,7 @@
 #include "Mesh/LsnMesh.h"
 
 #include "Package/LsnPackage.h"
+#include "Terrain/LsnTerrainGrid.h"
 
 // ---------------------------------------------------------------------------
 // FLsnMeshData
@@ -154,6 +155,81 @@ double LsnMesh::CraterDepthM(double EastM, double NorthM, uint32 Seed)
 		}
 	}
 	return Depth;
+}
+
+void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
+	const FLsnTerrainGrid& Grid, float Albedo, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples)
+{
+	OutMesh = FLsnMeshData();
+	OutSkippedAzimuths = 0;
+	OutUnknownSamples = 0;
+
+	const int32 NumAz = Package.AzimuthCount;
+	const int32 NumRings = Grid.RingDistanceM.Num();
+	const int32 PerAzimuth = NumRings + 1; // the rings and the horizon point
+	const double EyeHeightM = Package.ObserverHeightsM[HeightIndex];
+	const FVector Eye(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
+
+	OutMesh.Positions.Reserve(1 + NumAz * PerAzimuth);
+	OutMesh.Positions.Add(FVector::ZeroVector); // the site's ground point
+	for (int32 A = 0; A < NumAz; ++A)
+	{
+		const double Az = Package.AzimuthDegAt(A);
+		FVector HorizonPoint;
+		double HorizonDistanceM = Package.HorizonDistanceAt(HeightIndex, A);
+		const bool bHasHorizon = HorizonPointUnreal(Frame, EyeHeightM, Az, Package.HorizonElevationAt(HeightIndex, A), HorizonDistanceM, HorizonPoint);
+		if (!bHasHorizon)
+		{
+			++OutSkippedAzimuths;
+		}
+
+		// Height to draw where the data has none: that of the nearest ring with data.
+		double LastKnownHeightM = Package.SurfaceHeightM;
+		bool bHorizonAdded = false;
+		for (int32 R = 0; R < NumRings; ++R)
+		{
+			if (bHasHorizon && !bHorizonAdded && HorizonDistanceM <= Grid.RingDistanceM[R])
+			{
+				OutMesh.Positions.Add(HorizonPoint);
+				bHorizonAdded = true;
+			}
+			const float HeightM = Grid.HeightsM[A * NumRings + R];
+			if (FMath::IsNaN(HeightM))
+			{
+				++OutUnknownSamples;
+			}
+			else
+			{
+				LastKnownHeightM = HeightM;
+			}
+			OutMesh.Positions.Add(Frame.SurfacePointUnreal(Az, Grid.RingDistanceM[R], LastKnownHeightM));
+		}
+		if (!bHorizonAdded)
+		{
+			// Beyond the last ring, or unknown: keep the vertex count per azimuth constant.
+			OutMesh.Positions.Add(bHasHorizon ? HorizonPoint : Frame.SurfacePointUnreal(Az, Grid.RingDistanceM.Last() * 1.0001, LastKnownHeightM));
+		}
+	}
+
+	const uint8 Grey = static_cast<uint8>(FMath::Clamp(FMath::RoundToInt(Albedo * 255.0f), 0, 255));
+	OutMesh.Colors.Init(FColor(Grey, Grey, Grey, 255), OutMesh.Positions.Num());
+	OutMesh.UV0.Init(FVector2D::ZeroVector, OutMesh.Positions.Num());
+
+	auto Index = [NumAz, PerAzimuth](int32 A, int32 K) { return 1 + (A % NumAz) * PerAzimuth + K; };
+	const FVector Up(0.0, 0.0, 1.0);
+	OutMesh.Triangles.Reserve(3 * NumAz * (2 * PerAzimuth - 1));
+	for (int32 A = 0; A < NumAz; ++A)
+	{
+		OutMesh.AddTriangleFacing(0, Index(A, 0), Index(A + 1, 0), Up);
+		for (int32 K = 0; K + 1 < PerAzimuth; ++K)
+		{
+			// A height field over the local horizontal plane: the visible side is the upper one.
+			const int32 I00 = Index(A, K), I01 = Index(A + 1, K), I10 = Index(A, K + 1), I11 = Index(A + 1, K + 1);
+			OutMesh.AddTriangleFacing(I00, I10, I11, Up);
+			OutMesh.AddTriangleFacing(I00, I11, I01, Up);
+		}
+	}
+	OutMesh.ComputeNormals();
 }
 
 void LsnMesh::BuildHorizonTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
