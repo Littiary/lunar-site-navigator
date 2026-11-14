@@ -158,3 +158,9 @@ def test_describe_point_labels_the_resolution_class(moon):
     assert "not resolved" in d["note"]
     d = moon.describe_point(45.0, -75.0)
     assert d["product_id"] is None and d["terrain_class"] == "none"
+
+
+def test_moon_sample_quality_unknown_on_cylindrical(moon):
+    q = moon.sample_quality(np.array([45.0, 90.0]), np.array([-30.0, -89.8]))
+    assert list(q["product_id"]) == ["SYN_CYL", "SYNTH_S90_100M"]
+    assert list(q["returns_in_pixel"]) == [-1, -1] and np.isnan(q["height_rms_error_m"]).all()
