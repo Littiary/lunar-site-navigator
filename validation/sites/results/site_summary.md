@@ -1,6 +1,6 @@
 # End-to-end results: three south-polar candidate points
 
-Generated 2026-11-14T11:47:41Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T12:03:08Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z (UTC). Countdowns count from the start of the window.
 - Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-250a3fe71759fa79`.

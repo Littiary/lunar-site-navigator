@@ -11,7 +11,10 @@ Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
 
 ``--publish`` replaces the published packages in ``packages/`` at the repository root
 (the folder the web pages and the Unreal scene read) and writes ``packages/README.md``.
-Without it the packages go to ``build/packages/sites``, which is not under version control.
+The packages are first written to a staging folder under ``build/`` (not under version
+control) and then copied, so that writing them does not itself make the working tree
+differ from the commit recorded in their provenance. Commit all code changes before
+publishing. Without ``--publish`` the packages go to ``build/packages/sites``.
 """
 
 from __future__ import annotations
@@ -19,7 +22,6 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 import time
 from pathlib import Path
 
@@ -31,6 +33,7 @@ from lsncore.pipeline import run_scenario
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 PUBLISHED = REPO / "packages"
+STAGING = REPO / "build" / "packages" / "publish-staging"
 DEFAULT_START = "2026-11-14T00:00:00.000Z"
 DEFAULT_END = "2027-11-14T00:00:00.000Z"
 NEAR_TERRAIN_M = 1000.0
@@ -224,10 +227,6 @@ def to_markdown(summary: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _git(*args: str) -> str:
-    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True).stdout.strip()
-
-
 def _clear_published(root: Path) -> None:
     """Remove the previously published packages (only what the pipeline itself writes)."""
     for name in ("direction_table", "site"):
@@ -238,9 +237,17 @@ def _clear_published(root: Path) -> None:
             (root / name).unlink()
 
 
-def write_readme(root: Path, written: list, scenario: dict, summary: dict, command: str, commit: str, dirty: bool) -> None:
-    """The README of the published packages: what they are and exactly how they were made."""
+def write_readme(root: Path, written: list, scenario: dict, summary: dict, command: str) -> None:
+    """The README of the published packages: what they are and exactly how they were made.
+
+    The commit and the state of the working tree are those the package writer recorded in
+    the provenance of each package.
+    """
     manifests = [read_package(path).manifest for path in written]
+    software = [m["provenance"]["software"] for m in manifests]
+    commits = sorted({s["git_commit"][:7] for s in software})
+    dirty = any(s["git_dirty"] for s in software)
+    commit = ", ".join(commits)
     table = next(m for m in manifests if m["kind"] == "direction_table")
     sites = [m for m in manifests if m["kind"] == "site"]
     kernel_manifest = kernels.read_manifest()
@@ -258,19 +265,20 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
         "| Item | Value |",
         "|---|---|",
         f"| Command | `{command}` |",
-        f"| Code | commit `{commit}`" + (" **with uncommitted changes** (the changes are part of the commit that adds these files)" if dirty else " (clean working tree)") + " |",
+        f"| Code | commit `{commit}`" + (" **with uncommitted or untracked changes in the working tree** (as recorded in the provenance of the packages)" if dirty else " (clean working tree, as recorded in the provenance of every package)") + " |",
         f"| Generated | {summary['generated_utc']} |",
         f"| Scenario | `validation/sites/scenario.json` (`{scenario['scenario_id']}`): {len(sites)} sites, {w['start_utc']} to {w['end_utc']}, series step {w['step_s']:g} s |",
         f"| Contract | `{table['contract']['name']}` version {table['contract']['version']} |",
         f"| Terrain | `{sites[0]['inputs']['dem']['dem_set_id']}` |",
     ]
     for layer in sites[0]["inputs"]["dem"]["layers"]:
-        lines.append(f"| Terrain layer | {layer['product_id']} {layer['version']}, {layer['pixel_m']:g} m, sha256 `{layer['sha256']}`, {layer['source_url']} |")
+        recorded = f"sha256 `{layer['sha256']}`, {layer['source_url']}" if layer["sha256"] else "checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json`"
+        lines.append(f"| Terrain layer | {layer['product_id']} {layer['version']}, {layer['pixel_m']:g} m; {recorded} |")
     lines += [
         f"| Kernel set | `{kernels.kernel_set_id()}`: " + ", ".join(entry["name"] for entry in kernel_manifest["kernels"]) + " |",
         f"| Station kernel group | `{kernels.station_kernel_set_id()}`: " + ", ".join(entry["name"] for entry in kernel_manifest["station_kernels"]) + " |",
         f"| Body-fixed frame | `{table['frame']}`, aberration correction `{table['aberration_correction']}` |",
-        f"| Size | {size / 1e6:.1f} MB in {sum(1 for f in root.rglob('*') if f.is_file())} files |",
+        f"| Size | {size / 1e6:.1f} MB in {sum(1 for f in root.rglob('*') if f.is_file())} files (without this file) |",
         "",
         "Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain files are described in `data/manifest/manifest.json`.",
         "",
@@ -320,10 +328,9 @@ def main() -> None:
     terrain = open_lola()
     scenario = build_scenario(records, terrain.describe()["dem_set_id"], args.start, args.end)
     (HERE / "scenario.json").write_text(json.dumps(scenario, indent=2) + "\n", encoding="utf-8")
-    out = PUBLISHED if args.publish else Path(args.out)
-    commit, dirty = _git("rev-parse", "--short", "HEAD"), bool(_git("status", "--porcelain", "--untracked-files=no"))
-    if args.publish:
-        _clear_published(out)
+    out = STAGING if args.publish else Path(args.out)
+    if args.publish and out.exists():
+        shutil.rmtree(out)
     t0 = time.perf_counter()
     written = run_scenario(scenario, out, terrain)
     elapsed = time.perf_counter() - t0
@@ -345,8 +352,15 @@ def main() -> None:
     (HERE / "results" / "site_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     (HERE / "results" / "site_summary.md").write_text(to_markdown(summary), encoding="utf-8")
     if args.publish:
+        _clear_published(PUBLISHED)
+        PUBLISHED.mkdir(exist_ok=True)
+        for name in ("direction_table", "site"):
+            shutil.copytree(out / name, PUBLISHED / name)
+        shutil.copy2(out / "index.json", PUBLISHED / "index.json")
+        published = [PUBLISHED / path.relative_to(out) for path in written]
         sites_arg = Path(args.sites_file).as_posix()
-        write_readme(out, written, scenario, summary, f"python -m validation.sites.run {sites_arg} --publish", commit, dirty)
+        write_readme(PUBLISHED, published, scenario, summary, f"python -m validation.sites.run {sites_arg} --publish")
+        out = PUBLISHED
     print(f"{len(written)} packages in {elapsed:.1f} s -> {out}")
     for site in sites:
         row = site["per_height"][site["default_height_index"]]
