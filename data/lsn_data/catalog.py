@@ -130,6 +130,16 @@ RDR_INDEPENDENT = tuple(
     )
 )
 
+# 14 orbits of mission phase LRO_NO_08 (Apr-May 2010, near-circular 50 km orbit, GRGM900C orbits as stated in each
+# label): the LRO_SM_06 files have no valid returns north of 80.5 N (high altitude over the north pole in 2011).
+RDR_NORTH = tuple(
+    f"LOLARDR_{t}"
+    for t in (
+        "100951948", "100972243", "101000137", "101020431", "101040726", "101061019", "101081314",
+        "101101608", "101121901", "101142154", "101170047", "101190339", "101210632", "101230925",
+    )
+)
+
 RDR_FORMAT = Product(
     "_rdr_docs",
     "LOLA RDR record structure (LOLARDR.FMT)",
@@ -169,6 +179,7 @@ PRODUCTS: dict[str, Product] = {
         RDR_FORMAT,
         *(_rdr("LRO_SM_06", n) for n in RDR_SAMPLE),
         *(_rdr("LRO_ES_100", n) for n in RDR_INDEPENDENT),
+        *(_rdr("LRO_NO_08", n) for n in RDR_NORTH),
     )
 }
 

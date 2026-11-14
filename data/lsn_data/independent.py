@@ -213,6 +213,8 @@ def compare_rdr(dem: PolarDEM, files: list[Path], lat_lo: float, lat_hi: float, 
         rad.append(s["radius_m"][ok])
     lon, lat, rad = np.concatenate(lon), np.concatenate(lat), np.concatenate(rad)
     n_all = lon.size
+    if n_all < 100:
+        raise ValueError(f"only {n_all} valid returns in {lat_lo}..{lat_hi} for {dem.product_id}")
     if n_all > max_points:
         pick = np.random.default_rng(seed).choice(n_all, max_points, replace=False)
         lon, lat, rad = lon[pick], lat[pick], rad[pick]
