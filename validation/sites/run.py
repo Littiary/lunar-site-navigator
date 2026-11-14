@@ -52,7 +52,7 @@ from lsncore.contract import contract_header, read_package, validate_document, v
 from lsncore.dem import open_lola, open_moon
 from lsncore.ephem import kernels
 from lsncore.pipeline import run_scenario
-from lsncore.scenario import height_error_presets, requirement_presets
+from lsncore.scenario import height_error_presets, requirement_presets, site_labels
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
@@ -93,8 +93,8 @@ def stated_height_error_model() -> dict:
     return presets["models"][presets["default"]]
 
 
-def build_scenario(records: list, start_utc: str, end_utc: str) -> dict:
-    """The three project sites, with every option."""
+def build_scenario(records: list, labels: dict, start_utc: str, end_utc: str) -> dict:
+    """The three project sites, with every option. ``labels``: site id -> programme and category of the curated list."""
     scenario = {
         "contract": contract_header(),
         "kind": "scenario",
@@ -112,6 +112,7 @@ def build_scenario(records: list, start_utc: str, end_utc: str) -> dict:
                 "lon_deg": record["lon_deg_east"],
                 "landing_utc": PLANNED_LANDING_UTC,
                 "notes": record["status"],
+                **labels.get(record["site_id"].replace("_", "-"), {}),
             }
             for record in records
         ],
@@ -159,6 +160,7 @@ def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
                 "lat_deg": record["lat_deg"],
                 "lon_deg": record["lon_deg_east"],
                 "notes": record["status"],
+                **site_labels(record),
             }
             for record in records
             if record_kind(record) != "project_candidate"
@@ -588,6 +590,8 @@ def describe_site(package_dir: Path, category: str) -> dict:
         "site_id": manifest["site"]["site_id"],
         "name": manifest["site"]["name"],
         "category": category,
+        "programme": manifest["site"].get("programme"),
+        "label": manifest["site"].get("category"),
         "lat_deg": manifest["site"]["lat_deg"],
         "lon_deg": manifest["site"]["lon_deg"],
         "package_id": manifest["package_id"],
@@ -620,6 +624,13 @@ CATEGORY_TEXT = {
 }
 
 
+def _kind_text(site: dict) -> str:
+    """Programme and category as the package states them (contract 0.11), else the kind of the record in words."""
+    if site.get("programme") and site.get("label"):
+        return f"{site['programme']}: {site['label']}"
+    return CATEGORY_TEXT.get(site["category"], site["category"])
+
+
 def _product_text(product: dict) -> str:
     return f"{product['product_id']} ({product['pixel_m']:.0f} m)"
 
@@ -632,7 +643,7 @@ def _all_sites_rows(sites: list) -> list:
     for s in sites:
         horizon = ", ".join(f"{_product_text(p)} {100 * p['azimuth_share']:.0f} %" for p in s["horizon_products"])
         lines.append(
-            f"| {s['name']} (`{s['site_id']}`) | {CATEGORY_TEXT.get(s['category'], s['category'])} | {_product_text(s['terrain_at_site'])} | {s['resolution_class']} | {horizon} | "
+            f"| {s['name']} (`{s['site_id']}`) | {_kind_text(s)} | {_product_text(s['terrain_at_site'])} | {s['resolution_class']} | {horizon} | "
             f"{'on' if s['near_field'] else 'off'} | {', '.join(f'{h:g}' for h in s['observer_heights_m'])} m | {'`' + s['uncertainty_band'] + '`' if s['uncertainty_band'] else 'none'} | "
             f"{'yes' if s['landing_circle_survey'] else 'no'} | {s['planned_landing_utc'][:10] if s['planned_landing_utc'] else 'none'} | {s['size_bytes'] / 1e6:.1f} MB |"
         )
@@ -833,6 +844,7 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         "where unresolved relief, not height error, limits the horizon.",
         "- The terrain patches are for drawing only and are read at 20 m and coarser, also where the near field is on: near a project site the drawn ground and the 5 m surface behind the numbers differ by about a metre.",
         "- The direction table holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
+        "- **Kind** gives the labels `programme` and `category` that every site package and its entry in `index.json` carry, as the data stream states them in `data/sites/curated_sites.json`; a site picker can group by them.",
         "",
         "## Content",
         "",
@@ -901,7 +913,7 @@ def main() -> None:
     near_field = functools.partial(open_lola, near_field=True)
     project_terrain, curated_terrain = near_field(), open_moon()
     scenarios = {
-        PROJECT_SCENARIO_ID: build_scenario(project_records, args.start, args.end),
+        PROJECT_SCENARIO_ID: build_scenario(project_records, {record["site_id"].replace("_", "-"): site_labels(record) for record in curated_records}, args.start, args.end),
         CURATED_SCENARIO_ID: build_curated_scenario(curated_records, args.start, args.end),
     }
     files = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_SCENARIO_ID: "scenario_curated.json"}

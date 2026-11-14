@@ -1,7 +1,7 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.10"
+    "version": "0.11"
   },
   "kind": "scenario",
   "scenario_id": "south-polar-sites",
@@ -15,7 +15,9 @@
       "lat_deg": -89.80531,
       "lon_deg": 205.76891,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     },
     {
       "site_id": "de-gerlache-rim-crest",
@@ -23,7 +25,9 @@
       "lat_deg": -88.6641,
       "lon_deg": 291.58956,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     },
     {
       "site_id": "malapert-massif-summit",
@@ -31,7 +35,9 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "landing_utc": "2027-01-10T00:00:00.000Z",
-      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+      "programme": "Project sites",
+      "category": "project site"
     }
   ],
   "observer_heights_m": [

@@ -107,6 +107,12 @@ def test_published_sites_are_the_curated_list_of_the_data_stream():
         assert abs(site["lat_deg"] - record["lat_deg"]) < 1e-9, site_id
         assert abs((site["lon_deg"] - record["lon_deg_east"] + 180.0) % 360.0 - 180.0) < 1e-9, site_id
         assert site["name"] == record["name"]
+        # The labels of the data stream are passed through to the package and to the index (contract 0.11).
+        assert (site["programme"], site["category"]) == (record["programme"], record["category"]), site_id
+    index = {entry["site_id"]: entry for entry in json.loads((ROOT / "index.json").read_text(encoding="utf-8"))["packages"] if entry["kind"] == "site"}
+    for site_id, record in curated.items():
+        assert (index[site_id]["programme"], index[site_id]["category"]) == (record["programme"], record["category"]), site_id
+    assert len({record["programme"] for record in curated.values()}) >= 5
 
 
 def test_every_site_package_holds_the_common_fields():
@@ -291,6 +297,7 @@ def test_readme_says_for_every_site_what_served_it_and_what_it_carries():
         source = manifest["horizon"]["terrain_source"]
         near_field = any(layer["product_id"].startswith("LOLA5MPP") for layer in manifest["inputs"]["dem"]["layers"])
         assert manifest["site"]["name"] in row[0]
+        assert row[1] == f"{manifest['site']['programme']}: {manifest['site']['category']}", site_id
         assert source["at_site"]["product_id"] in row[2] and row[3] == source["resolution_class"], site_id
         assert all(product["product_id"] in row[4] for product in source["products"]), site_id
         assert row[5] == ("on" if near_field else "off"), site_id
