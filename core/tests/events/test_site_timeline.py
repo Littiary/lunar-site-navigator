@@ -250,3 +250,36 @@ def test_eclipse_of_march_2025_appears_in_the_timeline(tmp_path):
     assert metrics["sun_eclipse_count"] == 1.0 and metrics["sun_eclipse_total_count"] == 1.0
     assert metrics["sun_eclipse_max_covered_fraction"] == 1.0
     assert abs(metrics["sun_eclipse_longest_totality_s"] - (total[1] - total[0])) < 1e-6
+
+
+# ------------------------------------------------------------------ ground stations in the timeline
+
+
+@pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded")
+def test_station_windows_and_relay_need_in_the_timeline(timeline, tmp_path, table_dir, horizon):
+    by_id = {(w["id"], w["height_index"]): w for w in timeline.windows}
+    metrics = {(m["id"], m["height_index"]): m for m in timeline.metrics}
+    domain = (timeline.time["start_et_s"], visible_domain_end(timeline))
+    for h in range(len(HEIGHTS)):
+        network = by_id[("earth_network_dsn", h)]
+        assert network["method"] == tl.M_STATION_LINKS and network["subject"] == "EARTH"
+        # From 20 W, 2 N the Earth never sets: the only outages are station gaps, and three
+        # complexes spread around the Earth leave almost none.
+        assert by_id[("earth_stations_hidden_by_terrain", h)]["intervals_et_s"] == []
+        assert metrics[("dte_relay_need_level", h)]["value"] in (0.0, 1.0)
+        assert metrics[("dte_network_share", h)]["value"] > 0.95
+        assert metrics[("dte_network_receive_share", h)]["value"] >= metrics[("dte_network_share", h)]["value"]
+        assert metrics[("dte_longest_terrain_outage_s", h)]["value"] == 0.0
+        shares = [metrics[(f"dte_station_{name}_share", h)]["value"] for name in ("goldstone", "canberra", "madrid")]
+        assert all(0.25 < share < 0.6 for share in shares)
+        for name in ("goldstone", "canberra", "madrid"):
+            station = by_id[(f"earth_station_{name}", h)]["intervals_et_s"]
+            assert 40 <= len(station) <= 50  # one pass per Earth day in 45 days
+            assert all(domain[0] <= a < b <= domain[1] for a, b in station)
+    # The package with station windows passes the contract validator.
+    methods = {**tl.smooth_sphere_methods(), **tl.timeline_methods(table_dir, horizon_is_terrain=False)}
+    request = {"start_utc": WINDOW["start_utc"], "end_utc": WINDOW["end_utc"], "step_s": WINDOW["step_s"], "bodies": ["SUN", "EARTH"], "thresholds": THRESHOLDS}
+    out = build_site_package(tmp_path, site=SITE, frame_name=d.FRAME, dem_input={"dem_set_id": "none-smooth-sphere", "layers": []}, horizon=horizon, methods=methods,
+                             synthetic=False, timeline=timeline, timeline_request=request, default_height_m=2.0, status="partial", warnings=["No terrain."])
+    manifest = validate_package(out)
+    assert manifest["methods"][tl.M_STATION_LINKS]["parameters"]["transmit_mask_deg"] == 10.0

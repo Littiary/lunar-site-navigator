@@ -7,7 +7,7 @@ from validation.card import build
 
 def test_card_rebuilds_and_every_check_passes():
     card = build.build()
-    assert card["summary"]["failed"] == 0 and card["summary"]["passed"] == len(card["checks"]) == 20
+    assert card["summary"]["failed"] == 0 and card["summary"]["passed"] == len(card["checks"]) == 24
     stored = json.loads((build.HERE / "validation_card.json").read_text(encoding="utf-8"))
     assert [c["id"] for c in stored["checks"]] == [c["id"] for c in card["checks"]]
     for old, new in zip(stored["checks"], card["checks"]):

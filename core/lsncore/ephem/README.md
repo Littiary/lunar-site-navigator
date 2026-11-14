@@ -10,6 +10,9 @@ This folder answers one question for the science core: **seen from a point on th
 | `core/lsncore/ephem/kernel_manifest.json` | What was downloaded: file, URL, size, SHA-256, retrieval time (written by the script) |
 | `core/lsncore/ephem/directions.py` | Time conversion, site, site-independent direction table and its interpolation, azimuth / elevation / angular radius |
 | `core/lsncore/events/finder.py` | Disc signals against a horizon profile, rise and set events, windows, countdown |
+| `core/lsncore/events/eclipse.py` | Eclipses of the Sun by the Earth at a site; eclipse-aware power line |
+| `core/lsncore/ephem/stations.py`, `core/lsncore/events/links.py` | Ground-station geometry (optional kernel group), direct-to-Earth windows, relay need |
+| `core/lsncore/ephem/table.py`, `core/lsncore/events/timeline.py` | Direction-table package and per-site timeline in contract form |
 | `core/tests/ephem/`, `core/tests/events/` | Acceptance tests |
 | `validation/horizons/` | Comparison against JPL Horizons: thresholds, queries, raw responses, results |
 

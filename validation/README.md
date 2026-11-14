@@ -54,6 +54,31 @@ Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie 
 * One eclipse, one site.
 * The package does not yet carry the power line as a time series (a contract field is needed); it carries the eclipse windows and metrics.
 
+## `stations/` — ground-station geometry versus JPL Horizons
+
+**What is compared.** The two conditions of a direct link between a lunar site and a ground station: how high the lunar site stands above the station's horizon (Earth end), and where the station appears in the sky of the lunar site (Moon end). The core computes them from the NAIF station and Earth orientation kernels (`core/lsncore/ephem/stations.py`); Horizons computes them with a Deep Space Network station as observer, and with the station's coordinates as a target seen from the Moon. Thresholds and queries were committed before any response was fetched (commit 6f74153).
+
+**Result** (`stations/results/validation_table.md`): 12 of 12 cases pass, 3468 rows (three stations, a south-polar and an equatorial lunar site, 14 to 16 November 2026 at 10 minutes).
+
+| Quantity | Threshold | Largest difference found |
+|---|---|---|
+| Earth end, observer at the station | 1″ | 0.42″ |
+| Moon end, observer at the lunar site | 1″ | 0.19″ |
+| Earth end through the fast path of the link windows (elevation) | 0.012° | 0.00009° |
+| Moon end through the fast path | 1″ | 0.21″ |
+
+The remaining 0.2″ to 0.4″ are larger than for the Sun and the Earth's centre (0.005″) and were not traced further; they are consistent with small differences in Earth orientation data and in how the two programs treat the Earth's rotation during the light time.
+
+**What is built on it** (`core/lsncore/events/links.py`): per-station windows (station above the lunar terrain horizon, and the site at least 10° above the station's horizon; 6° to receive: the generic elevation limits of DSN 810-005 module 301), the network window of the three complexes, and a relay-need level that separates outages a second station would close from outages caused by lunar terrain.
+
+**Limits.**
+
+* Only the geometry is validated against an external source. The windows themselves are tested on cases with a known answer, not against a mission's contact schedule.
+* Station masks are single elevation limits: azimuth-dependent horizon masks of the stations, the 13.5° limit for high-power transmit, the keyhole near the zenith, weather and scheduling are not modelled.
+* No link budget, antenna pattern or frequency; near the lunar horizon a real link suffers from multipath, and the lunar-end mask is 0° here.
+* Three Deep Space Network complexes only.
+* Dates after 8 February 2027 use the long-term Earth orientation kernel, whose rotation angle is a prediction; the effect on a station rise or set is of the order of a second.
+
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 
 **What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`core/lsncore/ephem/`) and by the JPL Horizons system (observer table, user-defined site on body 301).

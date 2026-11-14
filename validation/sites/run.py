@@ -28,6 +28,12 @@ REPO = HERE.parent.parent
 DEFAULT_START = "2026-11-14T00:00:00.000Z"
 DEFAULT_END = "2027-11-14T00:00:00.000Z"
 NEAR_TERRAIN_M = 1000.0
+RELAY_NEED = {
+    0: "direct link possible at all times",
+    1: "interrupted only by station gaps on the Earth",
+    2: "interrupted by lunar terrain: relay or waiting needed during those outages",
+    3: "no station ever above the lunar terrain: relay required",
+}
 THRESHOLDS = {
     "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
     "EARTH": {"quantity": "margin_deg", "op": ">", "value": 0.0},
@@ -98,6 +104,14 @@ def summarise(package_dir: Path) -> dict:
                 "horizon_min_deg": float(elevation[h].min()),
                 "horizon_max_deg": float(elevation[h].max()),
                 "share_of_horizon_set_closer_than_1km": float((distance[h] < NEAR_TERRAIN_M).mean()),
+                "dte": None if "dte_relay_need_level" not in metrics else {
+                    "relay_need_level": int(metrics["dte_relay_need_level"]),
+                    "network_two_way_share": metrics["dte_network_share"],
+                    "network_receive_share": metrics["dte_network_receive_share"],
+                    "station_shares": {name: metrics[f"dte_station_{name}_share"] for name in ("goldstone", "canberra", "madrid")},
+                    "longest_outage_h": metrics["dte_longest_outage_s"] / 3600.0,
+                    "longest_terrain_outage_h": metrics["dte_longest_terrain_outage_s"] / 3600.0,
+                },
             }
         )
     site_metrics = {x["id"]: x["value"] for x in timeline["metrics"] if x["height_index"] is None}
@@ -168,6 +182,21 @@ def to_markdown(summary: dict) -> str:
                 f"{row['sun_events_set_by_terrain_closer_than_1km']} | {sun_to} | {100 * row['earth_visible_share']:.1f} % | {row['earth_longest_outage_h']:.1f} h | {earth_to} | "
                 f"{100 * row['share_of_horizon_set_closer_than_1km']:.0f} % |"
             )
+        if site["per_height"][0]["dte"] is not None:
+            lines += [
+                "",
+                "Direct link with the Deep Space Network (three complexes; station mask 10 deg for a two-way link, 6 deg to receive; geometry only):",
+                "",
+                "| Observer height | Two-way link possible | Receive possible | Goldstone | Canberra | Madrid | Longest time without a link | Longest time with every station behind lunar terrain | Relay need |",
+                "|---|---|---|---|---|---|---|---|---|",
+            ]
+            for row in site["per_height"]:
+                x = row["dte"]
+                s = x["station_shares"]
+                lines.append(
+                    f"| {row['observer_height_m']:g} m | {100 * x['network_two_way_share']:.1f} % | {100 * x['network_receive_share']:.1f} % | {100 * s['goldstone']:.1f} % | {100 * s['canberra']:.1f} % | "
+                    f"{100 * s['madrid']:.1f} % | {x['longest_outage_h']:.1f} h | {x['longest_terrain_outage_h']:.1f} h | {x['relay_need_level']}: {RELAY_NEED[x['relay_need_level']]} |"
+                )
         e = site["eclipses_of_the_sun_by_the_earth"]
         lines.append("")
         if e["count"]:
@@ -182,6 +211,7 @@ def to_markdown(summary: dict) -> str:
         "- Shares and longest outages describe this twelve-month window only; they are not multi-year averages.",
         "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.",
         "- Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.",
+        "- The direct-link figures are geometric: a station above the lunar terrain horizon and the site above the station's elevation limit. No link budget, no azimuth-dependent station masks, no scheduling, no multipath near the lunar horizon. A relay need of 2 means that for part of the time no ground station at all can be reached.",
         "- A countdown marked 'at least' has no set inside the computed window.",
         "- The shares of time above are cut by the terrain only. Eclipses of the Sun by the Earth are listed per site (opaque Earth, no atmosphere) and are in the package as the windows 'sun_eclipsed_by_earth', 'sun_totally_eclipsed_by_earth' and 'sun_lit'.",
     ]

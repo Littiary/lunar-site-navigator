@@ -1,8 +1,8 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-14T11:31:56Z",
+  "generated_utc": "2026-11-14T11:48:38Z",
   "generated_from": {
-    "commit": "2882fe3",
+    "commit": "6f74153",
     "uncommitted_changes": true
   },
   "core": {
@@ -19,8 +19,8 @@
     ]
   },
   "summary": {
-    "checks": 20,
-    "passed": 20,
+    "checks": 24,
+    "passed": 24,
     "failed": 0
   },
   "checks": [
@@ -199,6 +199,111 @@
       "status": "PASS",
       "evidence": "validation/horizons_rts/results/validation_table.md",
       "limits": []
+    },
+    {
+      "id": "station_earth_end",
+      "group": "Independent source",
+      "quantity": "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.42422114960522356,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_moon_end",
+      "group": "Independent source",
+      "quantity": "Moon end of a direct link: direction of a ground station seen from a lunar site (observer at the site)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.1930506168742497,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_fast_path_earth_end",
+      "group": "Independent source",
+      "quantity": "Elevation of the lunar site at the station through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 0.012,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 8.79670786204656e-05,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin.",
+        "The fast path evaluates both ends at one instant."
+      ]
+    },
+    {
+      "id": "station_fast_path_moon_end",
+      "group": "Independent source",
+      "quantity": "Direction of the station seen from the lunar site through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.2102176762149692,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
     },
     {
       "id": "apollo_landing_angles",
@@ -540,6 +645,11 @@
       "item": "Exact rise and set times at a real lander",
       "state": "not available",
       "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."
+    },
+    {
+      "item": "Direct-to-Earth windows",
+      "state": "geometry validated, windows not",
+      "reason": "Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source."
     },
     {
       "item": "Earth rise and set against an independent source",
