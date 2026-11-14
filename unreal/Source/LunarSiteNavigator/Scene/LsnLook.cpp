@@ -19,6 +19,11 @@ namespace LsnLook
 	TAutoConsoleVariable<float> WideBackM(TEXT("lsn.Cam.WideBackM"), 120.0f, TEXT("Wide view: metres behind the site, away from the Sun."));
 	TAutoConsoleVariable<float> WideUpM(TEXT("lsn.Cam.WideUpM"), 30.0f, TEXT("Wide view: metres above the site."));
 	TAutoConsoleVariable<float> WidePitchDeg(TEXT("lsn.Cam.WidePitchDeg"), -11.0f, TEXT("Wide view: pitch."));
+	TAutoConsoleVariable<float> LitYawDeg(TEXT("lsn.Cam.LitYawDeg"), 130.0f, TEXT("Camera on the lander's sunlit side: turn of the view from the Sun's azimuth; at 130 the Sun stands 50 degrees off the axis behind the camera."));
+	TAutoConsoleVariable<float> LitBackM(TEXT("lsn.Cam.LitBackM"), 17.0f, TEXT("Camera on the lander's sunlit side: metres from the lander."));
+	TAutoConsoleVariable<float> LitUpM(TEXT("lsn.Cam.LitUpM"), 4.0f, TEXT("Camera on the lander's sunlit side: metres above the ground."));
+	TAutoConsoleVariable<float> LitPitchDeg(TEXT("lsn.Cam.LitPitchDeg"), -7.0f, TEXT("Camera on the lander's sunlit side: pitch."));
+	TAutoConsoleVariable<float> LitFovDeg(TEXT("lsn.Cam.LitFovDeg"), 46.0f, TEXT("Camera on the lander's sunlit side: field of view."));
 	TAutoConsoleVariable<float> WideYawDeg(TEXT("lsn.Cam.WideYawDeg"), -60.0f, TEXT("Wide view: turn of the whole view from the Sun's azimuth."));
 	TAutoConsoleVariable<float> HighSunExposure(TEXT("lsn.Look.HighSunExposure"), 0.35f, TEXT("Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground (a camera stops down for bright ground)."));
 	TAutoConsoleVariable<float> BounceScale(TEXT("lsn.Look.BounceScale"), 1.0f, TEXT("Light the sunlit ground throws back onto the scale objects, as a multiple of what the formula gives."));

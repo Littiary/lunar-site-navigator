@@ -25,6 +25,8 @@ namespace LsnLook
 	extern TAutoConsoleVariable<float> WideBackM, WideUpM, WidePitchDeg, WideFovDeg;
 	/** The wide view: turn of the whole view from the Sun's azimuth; 0 looks at the Sun, 90 has the Sun on the left. */
 	extern TAutoConsoleVariable<float> WideYawDeg;
+	/** The camera on the lander's sunlit side: turn of the view from the Sun's azimuth (130: the Sun stands 50 degrees off the axis behind the camera), metres from the lander, metres up, pitch, field of view. */
+	extern TAutoConsoleVariable<float> LitYawDeg, LitBackM, LitUpM, LitPitchDeg, LitFovDeg;
 
 	/** Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground. */
 	extern TAutoConsoleVariable<float> HighSunExposure;

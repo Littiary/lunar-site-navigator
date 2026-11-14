@@ -10,9 +10,14 @@ class UCameraComponent;
 /** Where the camera stands: at the observer, or at one of two composed positions that are not the observer's view. */
 enum class ELsnCameraView : uint8
 {
-	Observer,   // at the observer height of the package, at the site
-	Hero,       // a little above and behind the lander, looking towards the Sun
-	Wide,       // high and far behind the site: the site, the lander and the terrain round them
+	/** The observer's own view. */
+	Observer,
+	/** A camera behind the lander, looking towards the Sun. */
+	Hero,
+	/** A wide view of the site with the Sun outside the picture. */
+	Wide,
+	/** A camera on the lander's sunlit side, the Sun behind the camera's shoulder. */
+	HeroLit,
 };
 
 /**

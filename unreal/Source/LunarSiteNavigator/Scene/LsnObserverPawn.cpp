@@ -106,6 +106,21 @@ void ALsnObserverPawn::ApplyView()
 			bCameraRefused = false;
 		}
 	}
+	// The camera on the lander's sunlit side can stand left or right of the Sun's direction: it takes
+	// the side from which the site, where the mast stands, lies behind the lander in the picture.
+	if (CameraView == ELsnCameraView::HeroLit)
+	{
+		const ALsnSiteScene* SceneForSide = FindScene();
+		FLsnBodyAtTime SunForSide;
+		FVector LanderForSide;
+		if (SceneForSide && SceneForSide->SampleBody(TEXT("SUN"), SceneForSide->GetTimePosition(), SunForSide) && SceneForSide->GetLanderUnreal(LanderForSide))
+		{
+			const double Yaw = FMath::Abs(LsnLook::LitYawDeg.GetValueOnGameThread());
+			const FVector ToSite = (SceneForSide->GetActorLocation() - LanderForSide).GetSafeNormal2D();
+			const bool bPlus = FVector::DotProduct(FLsnSiteFrame::AzElToUnrealDir(SunForSide.AzimuthDeg + Yaw, 0.0), ToSite) >= FVector::DotProduct(FLsnSiteFrame::AzElToUnrealDir(SunForSide.AzimuthDeg - Yaw, 0.0), ToSite);
+			FollowOffsetDeg = bPlus ? Yaw : -Yaw;
+		}
+	}
 	// The scale objects go with the camera position: off in the observer's own view (and so side by
 	// side), on near the lander and in the wide view. The button still switches them by hand.
 	if (ObjectsSwitchedFor != static_cast<int32>(CameraView) + 1)
@@ -191,6 +206,7 @@ void ALsnObserverPawn::SetCameraView(ELsnCameraView NewView)
 	switch (NewView)
 	{
 	case ELsnCameraView::Hero: FollowOffsetDeg = LsnLook::HeroYawDeg.GetValueOnGameThread(); ElevationDeg = LsnLook::HeroPitchDeg.GetValueOnGameThread(); FovDeg = LsnLook::HeroFovDeg.GetValueOnGameThread(); break;
+	case ELsnCameraView::HeroLit: FollowOffsetDeg = LsnLook::LitYawDeg.GetValueOnGameThread(); ElevationDeg = LsnLook::LitPitchDeg.GetValueOnGameThread(); FovDeg = LsnLook::LitFovDeg.GetValueOnGameThread(); break;
 	case ELsnCameraView::Wide: FollowOffsetDeg = LsnLook::WideYawDeg.GetValueOnGameThread(); ElevationDeg = LsnLook::WidePitchDeg.GetValueOnGameThread(); FovDeg = LsnLook::WideFovDeg.GetValueOnGameThread(); break;
 	default: FollowOffsetDeg = 0.0; ElevationDeg = 0.5; FovDeg = 60.0; break;
 	}
@@ -214,6 +230,19 @@ bool ALsnObserverPawn::ComposedLocation(const ALsnSiteScene& Scene, ELsnCameraVi
 		OutLocation = Lander - TowardsSun * (LsnLook::HeroBackM.GetValueOnGameThread() * M) + Right * (LsnLook::HeroRightM.GetValueOnGameThread() * M) + Up * (LsnLook::HeroUpM.GetValueOnGameThread() * M);
 		return true;
 	}
+	if (View == ELsnCameraView::HeroLit)
+	{
+		FVector Lander;
+		if (!Scene.GetLanderUnreal(Lander))
+		{
+			Lander = Scene.GetActorLocation();
+		}
+		// On the lander's sunlit side, looking past it with the Sun behind the camera's shoulder: the
+		// foil, the panels and the legs are lit and the shadow falls away from the camera.
+		const FVector Forward = FLsnSiteFrame::AzElToUnrealDir(SunAzimuthDeg + FollowOffsetDeg, 0.0);
+		OutLocation = Lander - Forward * (LsnLook::LitBackM.GetValueOnGameThread() * M) + Up * (LsnLook::LitUpM.GetValueOnGameThread() * M);
+		return true;
+	}
 	if (View == ELsnCameraView::Wide)
 	{
 		const FVector Forward = FLsnSiteFrame::AzElToUnrealDir(SunAzimuthDeg + LsnLook::WideYawDeg.GetValueOnGameThread(), 0.0);
@@ -232,6 +261,10 @@ FString ALsnObserverPawn::GetCameraNote() const
 	if (CameraView == ELsnCameraView::Hero)
 	{
 		return TEXT("Camera near the lander, not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
+	}
+	if (CameraView == ELsnCameraView::HeroLit)
+	{
+		return TEXT("Camera on the lander's sunlit side, not the observer's view. Sun, Earth and countdowns are those of the observer at the site.");
 	}
 	if (CameraView == ELsnCameraView::Wide)
 	{
@@ -407,7 +440,7 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	{
 		bArrival = false;
 		bCameraRefused = false;
-		SetCameraView(CameraView == ELsnCameraView::Observer ? ELsnCameraView::Hero : CameraView == ELsnCameraView::Hero ? ELsnCameraView::Wide : ELsnCameraView::Observer);
+		SetCameraView(CameraView == ELsnCameraView::Observer ? ELsnCameraView::Hero : CameraView == ELsnCameraView::Hero ? ELsnCameraView::HeroLit : CameraView == ELsnCameraView::HeroLit ? ELsnCameraView::Wide : ELsnCameraView::Observer);
 	}
 	else if (Action == TEXT("arrival"))
 	{
@@ -501,7 +534,7 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		FString ViewName;
 		if (FParse::Value(FCommandLine::Get(), TEXT("LsnView="), ViewName))
 		{
-			SetCameraView(ViewName == TEXT("hero") ? ELsnCameraView::Hero : ViewName == TEXT("wide") ? ELsnCameraView::Wide : ELsnCameraView::Observer);
+			SetCameraView(ViewName == TEXT("hero") ? ELsnCameraView::Hero : ViewName == TEXT("lit") ? ELsnCameraView::HeroLit : ViewName == TEXT("wide") ? ELsnCameraView::Wide : ELsnCameraView::Observer);
 		}
 		FParse::Value(FCommandLine::Get(), TEXT("LsnPitch="), ElevationDeg);
 		if (bFollowSun)
