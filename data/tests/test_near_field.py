@@ -79,3 +79,31 @@ def test_open_terrain_near_field_is_opt_in(synth_label):
 
     sig = inspect.signature(lsn_data.open_terrain)
     assert sig.parameters["near_field"].default is False
+
+
+def test_sample_quality_reports_count_and_error(synth_label, tif, tmp_path):
+    d5 = PolarDEM.from_geotiff(tif, product_id="SYN_SITE")
+    cnt = np.zeros((N, N), dtype="<f4")
+    cnt[:, :80] = 2.0  # left half constrained, right half interpolated
+    err = np.full((N, N), 0.4, dtype="<f4")
+    err[:, 80:] = 0.9
+    d5.attach_quality(count=cnt, rms_error=err, source="test maps")
+    base = PolarDEM(synth_label)
+    base_cnt = np.zeros((base.grid0.n_rows, base.grid0.n_cols), dtype=np.uint8)
+    base_cnt[:200] = 1
+    base.attach_quality(count=base_cnt, source="test count")
+    t = Terrain([base, d5])
+    x = np.array([X0 + 10 * PX, X0 + 150 * PX, -5000.0, -5000.0])
+    y = np.array([Y0 - 10 * PX, Y0 - 10 * PX, 5000.0, -5000.0])
+    lon, lat = xy_to_lonlat(x, y)
+    q = t.sample_quality(lon, lat)
+    assert list(q["product_id"]) == ["SYN_SITE", "SYN_SITE", "SYNTH_S90_100M", "SYNTH_S90_100M"]
+    assert list(q["returns_in_pixel"]) == [2, 0, 1, 0]
+    assert list(q["constrained"]) == [1, 0, 1, 0]
+    assert np.allclose(q["height_rms_error_m"][:2], [0.4, 0.9]) and np.isnan(q["height_rms_error_m"][2:]).all()
+    # a product without quality layers reports unknown (-1, NaN)
+    t2 = Terrain([PolarDEM(synth_label)])
+    q2 = t2.sample_quality(lon[2:], lat[2:])
+    assert list(q2["returns_in_pixel"]) == [-1, -1] and list(q2["constrained"]) == [-1, -1]
+    # heights are unchanged by attaching quality layers
+    assert np.array_equal(t.height_m(lon, lat), Terrain([PolarDEM(synth_label), PolarDEM.from_geotiff(tif, product_id="SYN_SITE")]).height_m(lon, lat))

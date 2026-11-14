@@ -37,11 +37,11 @@ def _q(v: np.ndarray) -> dict:
     }
 
 
-def residuals(dem, files: list[Path], band) -> dict:
+def residuals(dem, files: list[Path], band, rule: str = "flag_zero") -> dict:
     lon, lat, rad = [], [], []
     for f in files:
         s = ind.read_rdr(f)
-        ok = (s["flag"] == 0) & (s["lat"] >= band[0]) & (s["lat"] <= band[1]) & (s["radius_m"] > 1.7e6)
+        ok = ind.VALID_RULES[rule](s["flag"]) & (s["lat"] >= band[0]) & (s["lat"] <= band[1]) & (s["radius_m"] > 1.7e6)
         lon.append(s["lon"][ok]); lat.append(s["lat"][ok]); rad.append(s["radius_m"][ok])
     lon, lat, rad = np.concatenate(lon), np.concatenate(lat), np.concatenate(rad)
     x, y = lonlat_to_xy(lon, lat, dem.grid0.radius_m, dem.grid0.pole)
@@ -146,6 +146,7 @@ def run(root=None) -> dict:
             "band_deg": band,
             "independent_LRO_ES_100": residuals(dem, indep, band) if indep else None,
             "fit_residual_LRO_SM_06_lower_bound": residuals(dem, fit, band),
+            "fit_residual_LRO_SM_06_lower_bound_documented_flags": residuals(dem, fit, band, rule="documented"),
         }
     rep["site_counts_LDEC_80S_20M"] = site_counts()
     rep["gap_interpolation_proxy_LDEM_80S_20M"] = gap_interpolation_proxy(d20)

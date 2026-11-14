@@ -9,6 +9,17 @@ from . import catalog, manifest as mf
 from .paths import data_root, manifest_path
 
 
+def _below_normal_priority() -> None:
+    import os
+
+    if os.name == "nt":
+        import ctypes
+
+        ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00004000)
+    else:
+        os.nice(10)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="lsn-data", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -25,10 +36,11 @@ def main(argv: list[str] | None = None) -> int:
     x = sub.add_parser("cross-check", help="hash each file again from its other source and compare")
     x.add_argument("paths", nargs="*")
 
-    pp = sub.add_parser("pyramid", help="build overview levels for the polar products")
+    pp = sub.add_parser("pyramid", help="build overview levels (polar, cylindrical tiles, 5 m site GeoTIFFs)")
     pp.add_argument("products", nargs="*", default=["LDEM_80S_20M", "LDEM_60S_60M"])
     pp.add_argument("--levels", type=int, default=6)
     pp.add_argument("--hash-only", action="store_true", help="only record SHA-256 of existing level files in pyramid.json")
+    pp.add_argument("--low-priority", action="store_true", help="run at below-normal process priority (Windows) / nice 10")
 
     sub.add_parser("checkpoints", help="run the three data checkpoints and write data/checkpoints/report.json")
 
@@ -55,21 +67,20 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if problems else 0
     if a.cmd == "pyramid":
         from . import pyramid
-        from .dem import PolarDEM
-        from .paths import derived_dir, raw_dir
 
-        m = mf.load(manifest_path())
+        if a.low_priority:
+            _below_normal_priority()
         if a.hash_only:
+            from .paths import derived_dir
+
             for pid in a.products:
                 meta = pyramid.add_file_hashes(derived_dir(root) / pid)
                 print(f"{pid}: recorded {len(meta['files'])} file hashes")
             return 0
         for pid in a.products:
-            rel = f"raw/lola/{pid}/{pid.lower()}.img"
-            sha = m["files"].get(rel, {}).get("sha256")
-            dem = PolarDEM(raw_dir(root) / pid / f"{pid.lower()}.lbl")
-            meta = pyramid.build(dem, derived_dir(root) / pid, a.levels, source_sha256=sha)
-            print(f"{pid}: levels {meta['levels']} written to {derived_dir(root) / pid}")
+            meta = pyramid.build_product(pid, root, a.levels)
+            print(f"{pid}: levels {meta['levels']} written", flush=True)
+        pyramid.write_record(root)
         return 0
     if a.cmd == "checkpoints":
         import json
