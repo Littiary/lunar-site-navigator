@@ -208,6 +208,8 @@ def test_project_sites_carry_every_option_and_the_near_field():
         metric_ids = {metric["id"] for metric in timeline["metrics"]}
         assert {"sun_visible_certain_s", "sun_visible_possible_s", "earth_visible_certain_s"} <= metric_ids
 
+        assert manifest["warnings"] == [], (site_id, manifest["warnings"])
+
         # The planned landing and its slip report.
         assert request["landing_utc"] is not None
         for opportunity in timeline["opportunities"]:
@@ -229,7 +231,9 @@ def test_other_sites_carry_the_stated_reduced_set_and_the_resolution_warning():
         assert "uncertainty" not in timeline and not request.get("uncertainty") and not request.get("landing_utc"), site_id
         assert all("ellipse_visible_share" not in timeline["series"][body] for body in ("SUN", "EARTH"))
         assert all(opportunity["planned_landing"] is None for opportunity in timeline["opportunities"])
-        # A site that is not served by a fine product says so in a warning that names the product and the pixel.
+        # A site that is not served by a fine product says so in a warning that names the product and the pixel;
+        # there is no other warning in a published package.
+        assert all("resolution class" in warning for warning in manifest["warnings"]), (site_id, manifest["warnings"])
         source = horizon["terrain_source"]
         classes.add(source["resolution_class"])
         warnings = [warning for warning in manifest["warnings"] if "resolution class" in warning]

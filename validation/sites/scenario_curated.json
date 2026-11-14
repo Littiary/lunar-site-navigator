@@ -162,7 +162,7 @@
   },
   "mission_profile": null,
   "data": {
-    "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0+LDEM_80N_20M@V2.1+LDEM_60N_60M@V2.1+SLDEM2015_256@V2.0+LDEM_128@V3.0",
+    "dem_set_id": "any",
     "kernel_set_id": "bfe870fccfa5",
     "direction_table_id": null
   },

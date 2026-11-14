@@ -70,7 +70,7 @@
   },
   "mission_profile": null,
   "data": {
-    "dem_set_id": "lola:LOLA5MPP_SITE04@None+LOLA5MPP_SITE11@None+LOLA5MPP_SITE23@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+    "dem_set_id": "any",
     "kernel_set_id": "bfe870fccfa5",
     "direction_table_id": null
   },

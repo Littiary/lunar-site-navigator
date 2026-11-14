@@ -93,7 +93,7 @@ def stated_height_error_model() -> dict:
     return presets["models"][presets["default"]]
 
 
-def build_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str) -> dict:
+def build_scenario(records: list, start_utc: str, end_utc: str) -> dict:
     """The three project sites, with every option."""
     scenario = {
         "contract": contract_header(),
@@ -122,7 +122,9 @@ def build_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str)
         "bodies": ["SUN", "EARTH"],
         "thresholds": THRESHOLDS,
         "mission_profile": None,
-        "data": {"dem_set_id": dem_set_id, "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
+        # No particular set of elevation products is asked for: with the near field the products
+        # that serve a site differ from site to site, and each package records the ones it used.
+        "data": {"dem_set_id": "any", "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
         "requirements": list(requirement_presets().values()),
         "uncertainty": {"dem_height_error_model": stated_height_error_model(), "landing_ellipse": dict(LANDING_ELLIPSE)},
     }
@@ -130,7 +132,7 @@ def build_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str)
     return scenario
 
 
-def build_curated_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str) -> dict:
+def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
     """The sites of the curated list that are not project sites: fewer observer heights, no stated uncertainty, no planned landing."""
     scenario = {
         "contract": contract_header(),
@@ -159,7 +161,9 @@ def build_curated_scenario(records: list, dem_set_id: str, start_utc: str, end_u
         "bodies": ["SUN", "EARTH"],
         "thresholds": THRESHOLDS,
         "mission_profile": None,
-        "data": {"dem_set_id": dem_set_id, "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
+        # No particular set of elevation products is asked for: with the near field the products
+        # that serve a site differ from site to site, and each package records the ones it used.
+        "data": {"dem_set_id": "any", "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
         "requirements": list(requirement_presets().values()),
     }
     validate_document(scenario)
@@ -269,7 +273,8 @@ def summarise_planning(manifest: dict) -> dict:
         "sun_visible_h": [v / 3600.0 for v in trade["sun_visible_s"]["values"]],
         "sun_visible_change_h": [v / 3600.0 for v in trade["sun_visible_s"]["change_s"]],
         "sun_longest_outage_h": [v / 3600.0 for v in trade["sun_longest_outage_s"]["values"]],
-        "sun_least_lunar_day_h": [v / 3600.0 for v in trade["sun_least_lunar_day_s"]["values"]],
+        # absent when the range holds no complete lunar day
+        "sun_least_lunar_day_h": [v / 3600.0 for v in trade["sun_least_lunar_day_s"]["values"]] if "sun_least_lunar_day_s" in trade else None,
     }
     return out
 
@@ -532,7 +537,7 @@ def _planning_markdown(plan: dict) -> list:
     ]
     trade = plan["height_trade"]
     for k, h in enumerate(trade["observer_heights_m"]):
-        lines.append(f"| {h:g} m | {trade['sun_visible_h'][k]:.0f} h | {trade['sun_visible_change_h'][k]:+.0f} h | {trade['sun_longest_outage_h'][k]:.1f} h | {trade['sun_least_lunar_day_h'][k]:.0f} h |")
+        lines.append(f"| {h:g} m | {trade['sun_visible_h'][k]:.0f} h | {trade['sun_visible_change_h'][k]:+.0f} h | {trade['sun_longest_outage_h'][k]:.1f} h | {'n/a' if trade['sun_least_lunar_day_h'] is None else format(trade['sun_least_lunar_day_h'][k], '.0f') + ' h'} |")
     lines.append("")
     return lines
 
@@ -887,8 +892,8 @@ def main() -> None:
     near_field = functools.partial(open_lola, near_field=True)
     project_terrain, curated_terrain = near_field(), open_moon()
     scenarios = {
-        PROJECT_SCENARIO_ID: build_scenario(project_records, project_terrain.describe()["dem_set_id"], args.start, args.end),
-        CURATED_SCENARIO_ID: build_curated_scenario(curated_records, curated_terrain.describe()["dem_set_id"], args.start, args.end),
+        PROJECT_SCENARIO_ID: build_scenario(project_records, args.start, args.end),
+        CURATED_SCENARIO_ID: build_curated_scenario(curated_records, args.start, args.end),
     }
     files = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_SCENARIO_ID: "scenario_curated.json"}
 
