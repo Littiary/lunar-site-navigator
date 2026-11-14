@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T14:09:40Z",
+ "generated_utc": "2026-11-14T14:32:10Z",
  "criterion": "data/checkpoints/thresholds_independent.json",
  "results": {
   "A_LDEM_80S_20M_vs_LDEM_128": {
@@ -204,6 +204,7 @@
   },
   "B_LDEM_80S_20M_vs_RDR": {
    "ours": "LDEM_80S_20M",
+   "spot_selection": "flag_zero",
    "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419",
    "latitude_band": [
     -89.8,
@@ -260,8 +261,68 @@
     "passed": true
    }
   },
+  "B_LDEM_80S_20M_vs_RDR_documented_flags": {
+   "ours": "LDEM_80S_20M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419",
+   "latitude_band": [
+    -89.8,
+    -80.5
+   ],
+   "spots_in_band": 148091,
+   "spots_compared": 148091,
+   "stats": {
+    "n": 148091,
+    "mean_d_m": -0.18091347752705828,
+    "median_abs_d_m": 0.5871519148054176,
+    "p95_abs_d_m": 3.5898940559160337,
+    "rms_d_m": 1.8067142088651382
+   },
+   "fit": {
+    "points_used": 141346,
+    "blocks": 553,
+    "height_offset_m": -0.1882814555041113,
+    "translation_x_m": -2.7650421521978785,
+    "translation_y_m": 0.6347882275230108,
+    "rotation_deg": -0.001351205205798909,
+    "radial_scale": -1.624944343051049e-05,
+    "se": {
+     "height_offset_m": 0.038920243968568795,
+     "translation_x_m": 0.41632467704759024,
+     "translation_y_m": 0.3093508276008874,
+     "rotation_deg": 0.00010484485822406422,
+     "radial_scale": 2.0357353053340244e-06
+    },
+    "residual_rms_m": 1.6171582692179371
+   },
+   "mirror_rms_m": 2292.6068198133676,
+   "mirror_rms_ratio": 1268.9371725556064,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
   "B_LDEM_60S_60M_vs_RDR": {
    "ours": "LDEM_60S_60M",
+   "spot_selection": "flag_zero",
    "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419",
    "latitude_band": [
     -79.5,
@@ -295,6 +356,65 @@
    },
    "mirror_rms_m": 2720.648742641278,
    "mirror_rms_ratio": 1676.2374475619665,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "B_LDEM_60S_60M_vs_RDR_documented_flags": {
+   "ours": "LDEM_60S_60M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419",
+   "latitude_band": [
+    -79.5,
+    -60.5
+   ],
+   "spots_in_band": 545516,
+   "spots_compared": 545516,
+   "stats": {
+    "n": 545516,
+    "mean_d_m": -0.13845366818375462,
+    "median_abs_d_m": 0.6608658499749254,
+    "p95_abs_d_m": 3.0504286288980893,
+    "rms_d_m": 1.6160464945736406
+   },
+   "fit": {
+    "points_used": 520837,
+    "blocks": 1427,
+    "height_offset_m": -0.13659666679637528,
+    "translation_x_m": -1.8266785467305267,
+    "translation_y_m": 0.813430605936149,
+    "rotation_deg": -2.460122186027716e-05,
+    "radial_scale": 4.0308149862333664e-07,
+    "se": {
+     "height_offset_m": 0.01837952398386229,
+     "translation_x_m": 0.27603064956009815,
+     "translation_y_m": 0.1440351699252925,
+     "rotation_deg": 1.6680563798461604e-05,
+     "radial_scale": 3.298442943373216e-07
+    },
+    "residual_rms_m": 1.5464614231451643
+   },
+   "mirror_rms_m": 2486.8234650926174,
+   "mirror_rms_ratio": 1538.8316322846347,
    "judgement": {
     "criterion": {
      "abs_mean_d_m": 1.0,

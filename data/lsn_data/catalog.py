@@ -248,3 +248,10 @@ PRODUCTS[PGDA_DOCS.product_id] = PGDA_DOCS
 for _s in SITE_DEM_SITES:
     PRODUCTS[f"LOLA5MPP_{_s.upper()}"] = _site_dem(_s)
 SITE_DEM_PRODUCTS = tuple(f"LOLA5MPP_{_s.upper()}" for _s in SITE_DEM_SITES)
+
+
+# Count of LOLA returns per 20 m pixel of LDEM_80S_20M (0 = pixel filled by interpolation).
+PRODUCTS["LDEC_80S_20M"] = _polar_dem(
+    "LDEC_80S_20M",
+    "LOLA returns per 20 m pixel of LDEM_80S_20M (uint8; 0 = interpolated pixel)",
+)

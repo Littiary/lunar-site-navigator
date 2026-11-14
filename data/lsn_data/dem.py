@@ -170,6 +170,37 @@ class PolarDEM:
             self._attach_pyramid(Path(pyramid_dir))
         return self
 
+    # -- quality layers --------------------------------------------------------------------
+    def attach_quality(self, count=None, rms_error=None, source: str | None = None) -> None:
+        """Per-pixel layers on the level-0 grid: ``count`` = LOLA returns in the pixel (0 = filled by
+        interpolation), ``rms_error`` = height RMS error in metres. Heights are not affected."""
+        g = self.grid0
+        for name, a in (("count", count), ("rms_error", rms_error)):
+            if a is not None and tuple(a.shape) != (g.n_rows, g.n_cols):
+                raise ValueError(f"{name} layer has shape {a.shape}, expected {(g.n_rows, g.n_cols)}")
+        self._q_count = count
+        self._q_error = rms_error
+        self._q_source = source
+
+    def quality_xy(self, x_m, y_m):
+        """(returns in the pixel containing each point, -1 if unknown; RMS height error m, NaN if unknown)."""
+        x = np.asarray(x_m, dtype=np.float64)
+        y = np.asarray(y_m, dtype=np.float64)
+        g = self.grid0
+        col = np.floor((x - g.x_ul_m) / g.pixel_m).astype(np.int64)
+        row = np.floor((g.y_ul_m - y) / g.pixel_m).astype(np.int64)
+        inside = (row >= 0) & (row < g.n_rows) & (col >= 0) & (col < g.n_cols)
+        cnt = np.full(x.shape, -1, dtype=np.int64)
+        err = np.full(x.shape, np.nan)
+        c = getattr(self, "_q_count", None)
+        e = getattr(self, "_q_error", None)
+        if c is not None and inside.any():
+            v = np.asarray(c[row[inside], col[inside]], dtype=np.float64)
+            cnt[inside] = np.where(np.isfinite(v), np.rint(v), -1).astype(np.int64)
+        if e is not None and inside.any():
+            err[inside] = np.asarray(e[row[inside], col[inside]], dtype=np.float64)
+        return cnt, err
+
     # -- pyramid ---------------------------------------------------------------------------
     def _attach_pyramid(self, d: Path) -> None:
         meta_path = d / "pyramid.json"
@@ -500,6 +531,40 @@ class Terrain:
             prod, level, _ = self._select(x, y, want, statistic)
         ids = np.array([""] + [p.product_id for p in self.products], dtype=object)[prod + 1]
         return ids.reshape(shape), np.where(prod >= 0, level, -1).reshape(shape)
+
+    def sample_quality(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean") -> dict:
+        """For each point, the product ``height_m`` reads and that product's quality layers at the pixel containing it.
+
+        Returns arrays: ``product_id`` ('' if none), ``level``, ``returns_in_pixel`` (LOLA returns in the level-0
+        pixel, -1 if the product has no count layer), ``constrained`` (1 if returns_in_pixel >= 1, 0 if the pixel
+        was filled by interpolation, -1 unknown), ``height_rms_error_m`` (from the product's RMS error map, NaN if
+        it has none), and ``quality_source`` (where the layers come from).
+        """
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        want_in = np.asarray(0.0 if max_pixel_m is None else max_pixel_m, dtype=np.float64)
+        shape = np.broadcast(lon, lat, want_in).shape
+        x, y = lonlat_to_xy(np.broadcast_to(lon, shape).ravel(), np.broadcast_to(lat, shape).ravel(), self.products[0].grid0.radius_m, self.pole)
+        want = np.broadcast_to(want_in, shape).ravel()
+        _, prod, level = self._read(x, y, want, statistic)
+        cnt = np.full(x.shape, -1, dtype=np.int64)
+        err = np.full(x.shape, np.nan)
+        src = np.full(x.shape, "", dtype=object)
+        for i, p in enumerate(self.products):
+            sel = prod == i
+            if sel.any():
+                cnt[sel], err[sel] = p.quality_xy(x[sel], y[sel])
+                src[sel] = getattr(p, "_q_source", None) or ""
+        ids = np.array([""] + [p.product_id for p in self.products], dtype=object)[prod + 1]
+        constrained = np.where(cnt < 0, -1, (cnt >= 1).astype(np.int64))
+        return {
+            "product_id": ids.reshape(shape),
+            "level": np.where(prod >= 0, level, -1).reshape(shape),
+            "returns_in_pixel": cnt.reshape(shape),
+            "constrained": constrained.reshape(shape),
+            "height_rms_error_m": err.reshape(shape),
+            "quality_source": src.reshape(shape),
+        }
 
     def covers(self, lon_deg, lat_deg):
         x, y = lonlat_to_xy(lon_deg, lat_deg, self.products[0].grid0.radius_m, self.pole)

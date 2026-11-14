@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T14:13:14Z",
+ "generated_utc": "2026-11-14T15:06:17Z",
  "criterion": "data/checkpoints/thresholds_moon.json",
  "coverage": [
   {
@@ -17,6 +17,26 @@
    "covers": "its square: +-931 km from the pole"
   },
   {
+   "product_id": "LDEM_80N_20M",
+   "kind": "polar stereographic",
+   "pole": "north",
+   "pixel_m": 20.0,
+   "covers": "its square: +-304 km from the pole"
+  },
+  {
+   "product_id": "LDEM_60N_60M",
+   "kind": "polar stereographic",
+   "pole": "north",
+   "pixel_m": 60.0,
+   "covers": "its square: +-931 km from the pole"
+  },
+  {
+   "product_id": "SLDEM2015_256",
+   "kind": "simple cylindrical",
+   "pixel_m": 118.45058759433391,
+   "covers": "latitude -60..60, 6 tile(s)"
+  },
+  {
    "product_id": "LDEM_128",
    "kind": "simple cylindrical",
    "pixel_m": 236.90117518866782,
@@ -24,10 +44,7 @@
   },
   {
    "missing_products": [
-    "LDEM_80N_20M",
-    "LDEM_60N_60M",
-    "SLDEM2015_512",
-    "SLDEM2015_256"
+    "SLDEM2015_512"
    ]
   }
  ],
@@ -36,6 +53,58 @@
    "raw/lola/LDEM_128/ldem_128.img",
    "raw/lola/LDEM_128/ldem_128.lbl",
    "raw/lola/LDEM_128/ldem_128.xml",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.img",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.lbl",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.xml",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.img",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.lbl",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.xml",
+   "raw/lola_rdr/LOLARDR_100951948/lolardr_100951948.dat",
+   "raw/lola_rdr/LOLARDR_100951948/lolardr_100951948.lbl",
+   "raw/lola_rdr/LOLARDR_100972243/lolardr_100972243.dat",
+   "raw/lola_rdr/LOLARDR_100972243/lolardr_100972243.lbl",
+   "raw/lola_rdr/LOLARDR_101000137/lolardr_101000137.dat",
+   "raw/lola_rdr/LOLARDR_101000137/lolardr_101000137.lbl",
+   "raw/lola_rdr/LOLARDR_101020431/lolardr_101020431.dat",
+   "raw/lola_rdr/LOLARDR_101020431/lolardr_101020431.lbl",
+   "raw/lola_rdr/LOLARDR_101040726/lolardr_101040726.dat",
+   "raw/lola_rdr/LOLARDR_101040726/lolardr_101040726.lbl",
+   "raw/lola_rdr/LOLARDR_101061019/lolardr_101061019.dat",
+   "raw/lola_rdr/LOLARDR_101061019/lolardr_101061019.lbl",
+   "raw/lola_rdr/LOLARDR_101081314/lolardr_101081314.dat",
+   "raw/lola_rdr/LOLARDR_101081314/lolardr_101081314.lbl",
+   "raw/lola_rdr/LOLARDR_101101608/lolardr_101101608.dat",
+   "raw/lola_rdr/LOLARDR_101101608/lolardr_101101608.lbl",
+   "raw/lola_rdr/LOLARDR_101121901/lolardr_101121901.dat",
+   "raw/lola_rdr/LOLARDR_101121901/lolardr_101121901.lbl",
+   "raw/lola_rdr/LOLARDR_101142154/lolardr_101142154.dat",
+   "raw/lola_rdr/LOLARDR_101142154/lolardr_101142154.lbl",
+   "raw/lola_rdr/LOLARDR_101170047/lolardr_101170047.dat",
+   "raw/lola_rdr/LOLARDR_101170047/lolardr_101170047.lbl",
+   "raw/lola_rdr/LOLARDR_101190339/lolardr_101190339.dat",
+   "raw/lola_rdr/LOLARDR_101190339/lolardr_101190339.lbl",
+   "raw/lola_rdr/LOLARDR_101210632/lolardr_101210632.dat",
+   "raw/lola_rdr/LOLARDR_101210632/lolardr_101210632.lbl",
+   "raw/lola_rdr/LOLARDR_101230925/lolardr_101230925.dat",
+   "raw/lola_rdr/LOLARDR_101230925/lolardr_101230925.lbl",
    "raw/lola_rdr/LOLARDR_110320314/lolardr_110320314.dat",
    "raw/lola_rdr/LOLARDR_110320314/lolardr_110320314.lbl",
    "raw/lola_rdr/LOLARDR_110340414/lolardr_110340414.dat",
@@ -64,26 +133,181 @@
    "raw/lola_rdr/LOLARDR_110581419/lolardr_110581419.lbl"
   ],
   "problems": [],
-  "cross_check_failed": [],
+  "cross_check_failed": [
+   "raw/lola/LDEM_128/ldem_128.img"
+  ],
   "data_files_without_matching_cross_check": [
    "raw/lola/LDEM_128/ldem_128.img",
-   "raw/lola_rdr/LOLARDR_110320314/lolardr_110320314.dat",
-   "raw/lola_rdr/LOLARDR_110340414/lolardr_110340414.dat",
-   "raw/lola_rdr/LOLARDR_110360514/lolardr_110360514.dat",
-   "raw/lola_rdr/LOLARDR_110380613/lolardr_110380613.dat",
-   "raw/lola_rdr/LOLARDR_110400713/lolardr_110400713.dat",
-   "raw/lola_rdr/LOLARDR_110420812/lolardr_110420812.dat",
-   "raw/lola_rdr/LOLARDR_110440912/lolardr_110440912.dat",
-   "raw/lola_rdr/LOLARDR_110461013/lolardr_110461013.dat",
-   "raw/lola_rdr/LOLARDR_110481113/lolardr_110481113.dat",
-   "raw/lola_rdr/LOLARDR_110501213/lolardr_110501213.dat",
-   "raw/lola_rdr/LOLARDR_110521312/lolardr_110521312.dat",
-   "raw/lola_rdr/LOLARDR_110561318/lolardr_110561318.dat",
-   "raw/lola_rdr/LOLARDR_110581419/lolardr_110581419.dat"
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.img"
   ],
   "passed": false
  },
+ "deviation": "north-polar products compared with LRO_SM_06 plus LRO_NO_08 returns, selected with the validity rule of LOLARDR.FMT (least significant byte of SHOT_FLAG = 0, bit 10 clear) instead of SHOT_FLAG = 0, which leaves no returns north of 80.5 N; criteria unchanged",
  "checkpoint_2": {
+  "LDEM_80N_20M": {
+   "ours": "LDEM_80N_20M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419, LOLARDR_100951948, LOLARDR_100972243, LOLARDR_101000137, LOLARDR_101020431, LOLARDR_101040726, LOLARDR_101061019, LOLARDR_101081314, LOLARDR_101101608, LOLARDR_101121901, LOLARDR_101142154, LOLARDR_101170047, LOLARDR_101190339, LOLARDR_101210632, LOLARDR_101230925",
+   "latitude_band": [
+    80.5,
+    89.8
+   ],
+   "spots_in_band": 521297,
+   "spots_compared": 521297,
+   "stats": {
+    "n": 521297,
+    "mean_d_m": -0.1849483932412937,
+    "median_abs_d_m": 0.34673586084977615,
+    "p95_abs_d_m": 1.6739358388291277,
+    "rms_d_m": 0.9368529041342529
+   },
+   "fit": {
+    "points_used": 496640,
+    "blocks": 761,
+    "height_offset_m": -0.1818884876753342,
+    "translation_x_m": -0.026911947923409486,
+    "translation_y_m": 0.3320136379295749,
+    "rotation_deg": -0.00012254034775626487,
+    "radial_scale": -4.031788791086094e-06,
+    "se": {
+     "height_offset_m": 0.010185002973707141,
+     "translation_x_m": 0.1477861328435068,
+     "translation_y_m": 0.12334223396308745,
+     "rotation_deg": 2.251276666034172e-05,
+     "radial_scale": 6.991891020072817e-07
+    },
+    "residual_rms_m": 0.8690665449853195
+   },
+   "mirror_rms_m": 1167.9882610789707,
+   "mirror_rms_ratio": 1246.714671988246,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "LDEM_60N_60M": {
+   "ours": "LDEM_60N_60M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419, LOLARDR_100951948, LOLARDR_100972243, LOLARDR_101000137, LOLARDR_101020431, LOLARDR_101040726, LOLARDR_101061019, LOLARDR_101081314, LOLARDR_101101608, LOLARDR_101121901, LOLARDR_101142154, LOLARDR_101170047, LOLARDR_101190339, LOLARDR_101210632, LOLARDR_101230925",
+   "latitude_band": [
+    60.5,
+    79.5
+   ],
+   "spots_in_band": 1249617,
+   "spots_compared": 1249617,
+   "stats": {
+    "n": 1249617,
+    "mean_d_m": -0.12262339787137884,
+    "median_abs_d_m": 0.5904219747908428,
+    "p95_abs_d_m": 2.3980540963117734,
+    "rms_d_m": 1.2209532256614457
+   },
+   "fit": {
+    "points_used": 1173634,
+    "blocks": 2347,
+    "height_offset_m": -0.11973591157517723,
+    "translation_x_m": 0.18902234348688285,
+    "translation_y_m": 0.034091784034672265,
+    "rotation_deg": -5.3532401964460796e-05,
+    "radial_scale": -1.2219882540021043e-06,
+    "se": {
+     "height_offset_m": 0.008944783309683397,
+     "translation_x_m": 0.08965351526307141,
+     "translation_y_m": 0.08842092433039749,
+     "rotation_deg": 7.731895935308176e-06,
+     "radial_scale": 1.493579584788945e-07
+    },
+    "residual_rms_m": 1.1965761792451977
+   },
+   "mirror_rms_m": 1447.9776833758895,
+   "mirror_rms_ratio": 1185.9403398450866,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "SLDEM2015_256": {
+   "ours": "SLDEM2015_256",
+   "pixel_m": 118.45058759433391,
+   "latitude_band": [
+    -59.5,
+    59.5
+   ],
+   "spots_in_band": 443241,
+   "spots_compared": 443241,
+   "stats": {
+    "n": 443241,
+    "mean_d_m": 0.013244697226343874,
+    "median_abs_d_m": 1.7456440969828009,
+    "p95_abs_d_m": 8.721691711905805,
+    "rms_d_m": 4.2992083115672965
+   },
+   "fit": {
+    "points_used": 376933,
+    "blocks": 761,
+    "height_offset_m": -0.0018886918886995131,
+    "translation_east_m": 5.177650941675516,
+    "translation_north_m": -1.6126889330824823,
+    "se": {
+     "height_offset_m": 0.07255815900792431,
+     "translation_east_m": 0.7238410100829397,
+     "translation_north_m": 1.1822563647972286
+    }
+   },
+   "mirror_rms_m": 2166.567496520111,
+   "mirror_rms_ratio": 503.9456894170077,
+   "judgement": {
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_east": true,
+     "translation_north": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
   "LDEM_128": {
    "ours": "LDEM_128",
    "pixel_m": 236.90117518866782,
@@ -170,6 +394,78 @@
  },
  "checkpoint_3": {
   "label_min_max": {
+   "LDEM_80N_20M": {
+    "measured_min_dn": -10105,
+    "measured_max_dn": 4800,
+    "label_min_dn": -10105,
+    "label_max_dn": 4800,
+    "passed": true,
+    "min_m": -5052.5,
+    "max_m": 2400.0
+   },
+   "LDEM_60N_60M": {
+    "measured_min_dn": -12210,
+    "measured_max_dn": 12475,
+    "label_min_dn": -12210,
+    "label_max_dn": 12475,
+    "passed": true,
+    "min_m": -6105.0,
+    "max_m": 6237.5
+   },
+   "SLDEM2015_256_60S_0S_000_120_FLOAT": {
+    "measured_min": -5.8866801261901855,
+    "measured_max": 6.07667875289917,
+    "label_minimum": -5.887,
+    "label_maximum": 6.077,
+    "measured_min_m": -5886.680126190186,
+    "measured_max_m": 6076.67875289917,
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_120_240_FLOAT": {
+    "measured_min": -8.717449188232422,
+    "measured_max": 9.33483600616455,
+    "label_minimum": -8.717,
+    "label_maximum": 9.335,
+    "measured_min_m": -8717.449188232422,
+    "measured_max_m": 9334.83600616455,
+    "passed": false
+   },
+   "SLDEM2015_256_60S_0S_240_360_FLOAT": {
+    "measured_min": -6.109090328216553,
+    "measured_max": 9.454856872558594,
+    "label_minimum": -6.109,
+    "label_maximum": 9.455,
+    "measured_min_m": -6109.090328216553,
+    "measured_max_m": 9454.856872558594,
+    "passed": false
+   },
+   "SLDEM2015_256_0N_60N_000_120_FLOAT": {
+    "measured_min": -6.855032920837402,
+    "measured_max": 3.9066553115844727,
+    "label_minimum": -6.855,
+    "label_maximum": 3.907,
+    "measured_min_m": -6855.032920837402,
+    "measured_max_m": 3906.6553115844727,
+    "passed": false
+   },
+   "SLDEM2015_256_0N_60N_120_240_FLOAT": {
+    "measured_min": -5.640065670013428,
+    "measured_max": 10.781240463256836,
+    "label_minimum": -5.64,
+    "label_maximum": 10.781,
+    "measured_min_m": -5640.065670013428,
+    "measured_max_m": 10781.240463256836,
+    "passed": false
+   },
+   "SLDEM2015_256_0N_60N_240_360_FLOAT": {
+    "measured_min": -5.914435386657715,
+    "measured_max": 7.4693756103515625,
+    "label_minimum": -5.914,
+    "label_maximum": 7.469,
+    "measured_min_m": -5914.435386657715,
+    "measured_max_m": 7469.3756103515625,
+    "passed": false
+   },
    "LDEM_128": {
     "measured_min": -18254.0,
     "measured_max": 21557.0,
@@ -199,6 +495,78 @@
     ],
     "passed": true
    },
+   "LDEM_80N_20M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "LDEM_60N_60M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_000_120_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_120_240_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_240_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_000_120_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_120_240_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_240_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
    "LDEM_128": {
     "offset_km": 1737.4,
     "axes_km": [
@@ -209,6 +577,13 @@
     "passed": true
    }
   },
+  "north_overlap_20m_vs_60m": {
+   "pixels_compared": 102657424,
+   "mean_difference_m": 0.003669954603537917,
+   "median_abs_difference_m": 0.388916015625,
+   "p99_abs_difference_m": 3.0,
+   "passed": true
+  },
   "published_spot_heights": {
    "criterion": "data/checkpoints/thresholds_spot_heights.json",
    "points": [
@@ -216,6 +591,14 @@
      "name": "highest point",
      "published_m": 10783.4,
      "products": {
+      "SLDEM2015_256": {
+       "at_point_m": 10751.246337692282,
+       "point_difference_m": -32.15366230771724,
+       "extreme_m": 10779.971371115795,
+       "extreme_difference_m": -3.4286288842049544,
+       "extreme_distance_km": 0.3535533905932738,
+       "passed": true
+      },
       "LDEM_128": {
        "at_point_m": 10756.032024000004,
        "point_difference_m": -27.367975999995906,
@@ -329,6 +712,79 @@
     "passed": true
    }
   },
+  "LDEM_60N_60M_vs_LDEM_128": {
+   "ours": "LDEM_60N_60M",
+   "reference": "LDEM_128",
+   "reference_version": "V3.0",
+   "latitude_band": [
+    55.0,
+    60.0
+   ],
+   "cells": 20000,
+   "stats": {
+    "n": 10075,
+    "mean_d_m": 0.08371148707400168,
+    "median_abs_d_m": 1.243428584524736,
+    "p95_abs_d_m": 7.008498698289556,
+    "rms_d_m": 3.836863845556892
+   },
+   "fit": {
+    "points_used": 8214,
+    "blocks": 4136,
+    "height_offset_m": 0.06695610272714536,
+    "translation_x_m": -0.10750461100628565,
+    "translation_y_m": -0.6165875398813254,
+    "rotation_deg": 8.237758903005514e-06,
+    "radial_scale": -5.851638993706332e-07,
+    "se": {
+     "height_offset_m": 0.03986253779807202,
+     "translation_x_m": 0.5186065724874805,
+     "translation_y_m": 0.5313788860679189,
+     "rotation_deg": 2.9786674525223937e-05,
+     "radial_scale": 4.6978304545996964e-07
+    },
+    "residual_rms_m": 3.6016254400291263
+   },
+   "mirror_rms_m": 1881.287245814227,
+   "mirror_rms_ratio": 490.31900050161204,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 3.0,
+     "median_abs_d_m": 10.0,
+     "p95_abs_d_m": 60.0,
+     "abs_translation_component_m": 24.0,
+     "abs_rotation_deg": 0.01,
+     "abs_radial_scale": 0.0001,
+     "radial_scale_se_at_most": 3e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true,
+     "p95_abs_d_m": true
+    },
+    "passed": true
+   }
+  },
+  "SLDEM2015_256_vs_LDEM_128": {
+   "ours": "SLDEM2015_256",
+   "reference": "LDEM_128",
+   "cells": 20000,
+   "stats": {
+    "n": 20000,
+    "mean_d_m": 0.09989647045534059,
+    "median_abs_d_m": 2.950733916629474,
+    "p95_abs_d_m": 23.603205917589356,
+    "rms_d_m": 14.251272069209813
+   },
+   "passed": true
+  },
   "moon_terrain_continuity": {
    "edge_of_LDEM_80S_20M": {
     "points": 2000,
@@ -348,10 +804,58 @@
      "LDEM_60S_60M"
     ],
     "outside_source": [
-     "LDEM_128"
+     "SLDEM2015_256"
     ],
-    "median_abs_jump_m": 3.532721271601872,
-    "p95_abs_jump_m": 24.71395861846852,
+    "median_abs_jump_m": 4.271254428811652,
+    "p95_abs_jump_m": 23.582681375303988,
+    "passed": true
+   },
+   "edge_of_LDEM_80N_20M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_80N_20M"
+    ],
+    "outside_source": [
+     "LDEM_60N_60M"
+    ],
+    "median_abs_jump_m": 2.9444913033099738,
+    "p95_abs_jump_m": 23.830728907537765,
+    "passed": true
+   },
+   "edge_of_LDEM_60N_60M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_60N_60M"
+    ],
+    "outside_source": [
+     "SLDEM2015_256"
+    ],
+    "median_abs_jump_m": 5.031809831576197,
+    "p95_abs_jump_m": 40.43241179902868,
+    "passed": true
+   },
+   "tile_seams_of_SLDEM2015_256": {
+    "points": 9000,
+    "max_abs_jump_m": 0.9000429339926086,
+    "passed": true
+   },
+   "outer_edge_of_SLDEM2015_256": {
+    "-60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60S_60M"
+     ],
+     "median_abs_jump_m": 0.06891020224912836,
+     "p95_abs_jump_m": 0.2737365965436197
+    },
+    "+60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60N_60M"
+     ],
+     "median_abs_jump_m": 0.04726585320986487,
+     "p95_abs_jump_m": 0.24774872155868477
+    },
     "passed": true
    }
   }
