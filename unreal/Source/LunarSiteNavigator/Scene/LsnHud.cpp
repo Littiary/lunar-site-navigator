@@ -1085,7 +1085,7 @@ void ALsnHud::DrawHUD()
 		FLsnBlocking Blocking;
 		const bool bBlocked = P.BlockingAt(Body, H, Sample, Blocking) && Blocking.bHiddenOrPartly;
 		const bool bPartly = bBlocked && Blocking.VisibleFraction > 0.0;
-		const FString State = bPartly ? FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction) : Countdown.bVisibleNow ? FString(TEXT("visible")) : FString(TEXT("hidden"));
+		const FString State = bPartly ? (100.0 * Blocking.VisibleFraction < 0.5 ? FString(TEXT("partly hidden, under 1 % visible")) : FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction)) : Countdown.bVisibleNow ? FString(TEXT("visible")) : FString(TEXT("hidden"));
 		const FString LeadIn = FString::Printf(TEXT("%s in%s"), Countdown.bVisibleNow ? TEXT("sets") : TEXT("rises"), Countdown.bLowerBound ? TEXT(" at least") : TEXT(""));
 		TArray<FString> Detail;
 		// With a stated error the event is a range, not an instant.

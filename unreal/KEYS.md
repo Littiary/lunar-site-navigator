@@ -20,7 +20,7 @@ every UTC midnight and a playhead that carries its own time.
 | Jump to the next sunset | **Next sunset** |
 | Which terrain hides the Sun or the Earth, and what it costs | **Obstacle** (on at the start): a thin line along the ridge and a card with the hours it costs, its distance and azimuth |
 | Two sites side by side at the same instant | **Compare** (it becomes **One site**); **Next site** in the header of each half changes that half; one time strip is shared |
-| Camera position | **Camera** goes round: the observer's own view, a camera near the lander looking towards the Sun, a wide view of the site |
+| Camera position | **Camera** goes round: the observer's own view, a camera behind the lander looking towards the Sun, a camera on the lander's sunlit side, a wide view of the site. Lander, mast and boulders are shown in the three camera positions away from the observer and not in the observer's own view or side by side (tab **Controls**, **Scale objects** switches them by hand); no boulder is drawn within 15 m of the camera |
 | Everything else | **More** opens a drawer from the right (**Less** closes it). Its tabs: |
 | ... calendar and landing windows | tab **Calendar** |
 | ... uncertainty | tab **Uncertainty** |
@@ -87,5 +87,5 @@ A first-time user will not find these without this list:
 `LunarSiteNavigator.exe -windowed -ResX=1920 -ResY=1080` runs in a window.
 `-LsnLowQuality` starts with the lower drawing quality.
 `-LsnSite=<site_id>` or `-LsnCompare=<site_id>,<site_id>` chooses the sites shown at the start.
-`-LsnControls` starts with the drawer open. `-LsnView=hero` or `-LsnView=wide` starts with
+`-LsnControls` starts with the drawer open. `-LsnView=hero`, `-LsnView=lit` or `-LsnView=wide` starts with
 that camera position.
