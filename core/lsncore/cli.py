@@ -20,9 +20,10 @@ def _slug(text: str) -> str:
 
 def _terrain(args: argparse.Namespace):
     """Terrain source selected on the command line: (terrain, is_synthetic)."""
-    from .dem import open_lola
+    from .dem import open_lola, open_moon
 
-    terrain = open_lola(label_paths=args.dem_label or None)
+    # Named labels: those products. Otherwise every installed product, for a site anywhere.
+    terrain = open_lola(label_paths=args.dem_label) if args.dem_label else open_moon()
     return terrain, terrain.is_synthetic
 
 

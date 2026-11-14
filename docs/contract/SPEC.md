@@ -1,4 +1,4 @@
-# Package contract, version 0.8
+# Package contract, version 0.9
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.8"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.9"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -213,6 +213,7 @@ and since 0.7 `terrain_patches` (the patches that were written, finest first; ab
 | `flags` | | `coverage_complete`, `truncated_at_data_edge`, `nodata_fraction` |
 | `obstacle_id` | `[H, A]` `<i4` | Since 0.2. For each observer height and azimuth, the index into `obstacles` of the obstacle that this azimuth belongs to; -1 where the horizon has no data |
 | `obstacles` | list | Since 0.2. One record per obstacle, see below. `obstacles[k].id` is `k` |
+| `terrain_source` | | Since 0.9. Which elevation product served the site and the horizon, and its resolution class; see below |
 
 Between azimuth samples, readers interpolate linearly (periodically). The obstacle point,
 its distance and its height can change abruptly from one azimuth to the next; they must
@@ -239,6 +240,23 @@ The outline of an obstacle in 3-D is the sequence of limiting points
 (`obstacle_lat_deg`, `obstacle_lon_deg`, `obstacle_height_m` at `[height_index, j]`) for
 the azimuth indices `j` of its run. Obstacles are geometric runs of the profile; they
 carry no names.
+
+**Terrain source** (since 0.9). `terrain_source` says which elevation product served the
+site, so that a viewer can tell the user how much detail the horizon can hold:
+
+| Field | Content |
+|---|---|
+| `at_site` | `product_id`, `pixel_m`, `projection` of the product the terrain height at the site was read from |
+| `resolution_class` | `fine` (pixel at the site up to 30 m), `medium` (up to 120 m) or `coarse` (larger). With the LOLA products: the 20 m polar products are fine, the 60 m polar products medium, the global 237 m product coarse |
+| `classes` | The definition of the classes in words |
+| `products[]` | Every product that set the horizon in at least one azimuth at the default observer height: `product_id`, `pixel_m`, `projection`, `azimuth_share` (share of the azimuths whose limiting terrain point was read from it) |
+| `method` | Method card id |
+
+The product is chosen per place by the data reader: a polar product where its square
+covers the place, the finest installed latitude-longitude product elsewhere. For a
+latitude-longitude product `pixel_m` is the north-south pixel. A package whose class is
+not `fine` carries a warning that names the pixel; relief narrower than about two pixels
+is not in its horizon, and obstacles of that size cannot be shown.
 
 Reserved optional arrays, same shape: `obstacle_dem_layer` (`|u1`), `elevation_sigma_deg`,
 `elevation_lower_deg`, `elevation_upper_deg` (uncertainty band).
@@ -673,6 +691,14 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.9 (14 November 2026)
+
+Additive; nothing that existed in 0.8 changed its meaning, name, unit or layout.
+
+- Site package: `horizon.terrain_source`; method card `horizon.terrain_source`.
+- A site anywhere on the Moon gets a package when an elevation product covers it; `inputs.dem.layers[]` then lists the latitude-longitude products as well.
+- Packages of sites served by the polar products are unchanged apart from the new field.
 
 ### 0.8 (14 November 2026)
 

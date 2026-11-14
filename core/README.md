@@ -51,8 +51,10 @@ a time window and the ephemeris modules installed, a site package then holds:
 
 and with two or more sites a site-pairs package is written next to them.
 
-Terrain: by default the LOLA products under the data root of the data stream
-(`LSN_DATA_ROOT`). `--dem-label <file.lbl>` (repeatable) opens other products of the same
+Terrain: by default every LOLA product installed under the data root of the data stream
+(`LSN_DATA_ROOT`): the polar products near the poles, the global latitude-longitude
+product elsewhere, so a site anywhere gets a package that names the product and the
+resolution class that served it ([horizon.md](../docs/method/horizon.md), section 9). `--dem-label <file.lbl>` (repeatable) opens other products of the same
 format, for example the synthetic test raster `data/fixtures/synth_s90_100m.lbl`; a
 package computed from a synthetic surface is flagged `synthetic`. `--synthetic` skips the
 computation and writes invented numbers (the walking skeleton behind the contract sample).
@@ -63,7 +65,7 @@ computation and writes invented numbers (the walking skeleton behind the contrac
 |---|---|---|
 | `lsncore/contract/` | Package writer, reader, validator | A |
 | `lsncore/horizon.py` | Terrain horizon on a sphere, several observer heights in one pass, far-field bound | A |
-| `lsncore/dem.py` | Terrain interface; adapter for the data stream's reader; analytic terrain for tests | A |
+| `lsncore/dem.py` | Terrain interface; adapters for the data stream's polar and whole-Moon readers; analytic terrain for tests | A |
 | `lsncore/pipeline.py` | Scenario in, packages out; method cards of the horizon | A |
 | `lsncore/obstacles.py`, `lsncore/blocking.py` | Obstacles of the horizon; which one limits a body; time lost to terrain against a smooth sphere | A |
 | `lsncore/calendar.py` | Visible time per lunar day; landing windows of a stated requirement; slip tolerance | A |

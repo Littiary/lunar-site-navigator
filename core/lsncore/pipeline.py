@@ -292,6 +292,69 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
     return bands, ellipse, notes, applied
 
 
+RESOLUTION_CLASSES = "fine: pixel at the site up to 30 m; medium: up to 120 m; coarse: larger"
+
+
+def resolution_class(pixel_m: float) -> str:
+    return "fine" if pixel_m <= 30.0 else "medium" if pixel_m <= 120.0 else "coarse"
+
+
+def terrain_source(terrain, csite: dict, horizon, height_index: int) -> tuple[dict | None, list[str]]:
+    """Which elevation product served the site and the horizon, and what its pixel allows.
+
+    Returns the block for the package and the warnings that go with it.
+    """
+    site_id, info = terrain.source_at(csite["lon_deg"], csite["lat_deg"])
+    site_id = str(np.asarray(site_id).ravel()[0])
+    if not site_id or horizon.obstacle_lat_deg is None:
+        return None, []
+    lat, lon = horizon.obstacle_lat_deg[height_index], horizon.obstacle_lon_deg[height_index]
+    known = np.isfinite(lat) & np.isfinite(lon)
+    ids, more = terrain.source_at(lon[known], lat[known])
+    info = {**more, **info}
+    products = []
+    for pid in sorted(set(ids.ravel()) - {""}):
+        products.append({"product_id": str(pid), "pixel_m": float(info[pid]["pixel_m"]), "projection": info[pid]["projection"], "azimuth_share": float(np.mean(ids == pid))})
+    products.sort(key=lambda p: -p["azimuth_share"])
+    pixel = float(info[site_id]["pixel_m"])
+    block = {
+        "at_site": {"product_id": site_id, "pixel_m": pixel, "projection": info[site_id]["projection"]},
+        "resolution_class": resolution_class(pixel),
+        "classes": RESOLUTION_CLASSES,
+        "products": products,
+    }
+    notes = []
+    if block["resolution_class"] != "fine":
+        notes.append(
+            f"terrain: the site is served by {site_id} with {pixel:.0f} m pixels (resolution class {block['resolution_class']}); "
+            f"relief narrower than about {2.0 * pixel:.0f} m is not in the horizon, and nearby obstacles of that size cannot be shown"
+        )
+    return block, notes
+
+
+def terrain_source_methods(dem_set_id: str) -> dict:
+    return {
+        pk.M_TERRAIN_SOURCE: pk.method_card(
+            "Elevation product that served the site",
+            "at_site: the product the terrain height at the site was read from, with its pixel size. resolution_class: fine (pixel up to 30 m), medium (up to 120 m) or coarse (larger). products: every product that set the horizon in at least one azimuth at the default observer height, with the share of the azimuths whose limiting terrain point was read from it.",
+            "The data reader names the product for a place: a polar product where its square covers the place, the finest installed simple-cylindrical mosaic elsewhere. Asked at the site and at the limiting terrain point of every azimuth.",
+            "none",
+            "none",
+            [dem_set_id],
+            {"classes": RESOLUTION_CLASSES},
+            "analytic-test-passed",
+            [
+                "core/tests/test_moon_terrain.py::test_a_site_outside_the_polar_products_gets_a_package_that_says_so",
+                "core/tests/test_moon_terrain.py::test_south_polar_sites_are_served_exactly_as_before",
+            ],
+            [
+                "The class describes the grid of the product, not its accuracy. Relief narrower than about two pixels is not in a horizon computed from it.",
+                "For a simple-cylindrical product pixel_m is the north-south pixel; the east-west pixel is smaller by the cosine of the latitude.",
+            ],
+        )
+    }
+
+
 def terrain_patch_methods(dem_set_id: str) -> dict:
     """Method card of the terrain patches."""
     return {
@@ -468,9 +531,7 @@ def run_scenario(
     extra_warnings: list[str] = []
 
     wanted = scenario["data"]["dem_set_id"]
-    actual = terrain.describe()["dem_set_id"]
-    if wanted not in ("any", actual):
-        extra_warnings.append(f"data: the scenario asks for DEM set '{wanted}', the run used '{actual}'")
+    whole_terrain = terrain  # a terrain for any place hands each site the products that serve it
 
     # Direction table and timeline: provided by the ephemeris modules when present.
     table_dir = None
@@ -506,6 +567,7 @@ def run_scenario(
 
     for site in scenario["sites"]:
         csite = canonical_site(site)
+        terrain = whole_terrain.for_site(csite["lat_deg"], csite["lon_deg"], max_range) if hasattr(whole_terrain, "for_site") else whole_terrain
         t0 = _time.perf_counter()
         horizon = compute_horizon(terrain, csite["lat_deg"], csite["lon_deg"], heights, az_step, max_range, settings)
         t1 = _time.perf_counter()
@@ -513,6 +575,15 @@ def run_scenario(
         timeline = None
         status = "ok"
         warnings = list(extra_warnings)
+        actual = terrain.describe()["dem_set_id"]
+        if wanted not in ("any", actual):
+            warnings.append(f"data: the scenario asks for DEM set '{wanted}', the run used '{actual}'")
+        default_index = int(np.argmin(np.abs(np.asarray(heights) - scenario.get("default_height_m", DEFAULT_HEIGHT_M))))
+        horizon.terrain_source, notes = terrain_source(terrain, csite, horizon, default_index)
+        warnings.extend(notes)
+        warnings.extend(getattr(terrain, "site_notes", []))
+        if horizon.terrain_source is not None:
+            methods.update(terrain_source_methods(actual))
         if window is not None and table_dir is None:
             status = "partial"
         if table_dir is not None:
@@ -574,7 +645,7 @@ def run_scenario(
                 terrain_patches=patches,
             )
         )
-    pair_methods = trade_methods(terrain.describe()["dem_set_id"], "the direction table of the site packages")
+    pair_methods = trade_methods(whole_terrain.describe()["dem_set_id"], "the direction table of the site packages")
     pairs = build_pairs_package(
         out_root,
         written,  # it picks the site packages with a timeline
