@@ -1,0 +1,74 @@
+{
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.1"
+  },
+  "kind": "scenario",
+  "scenario_id": "south-polar-sites",
+  "title": "Three south-polar candidate points, twelve months from the hackathon weekend",
+  "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris.",
+  "synthetic": false,
+  "sites": [
+    {
+      "site_id": "shackleton-rim-crest",
+      "name": "Shackleton crater rim crest",
+      "lat_deg": -89.80531,
+      "lon_deg": 205.76891,
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+    },
+    {
+      "site_id": "de-gerlache-rim-crest",
+      "name": "de Gerlache crater rim crest",
+      "lat_deg": -88.6641,
+      "lon_deg": 291.58956,
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+    },
+    {
+      "site_id": "malapert-massif-summit",
+      "name": "Mons Malapert (Malapert massif) summit",
+      "lat_deg": -85.98795,
+      "lon_deg": 2.05767,
+      "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
+    }
+  ],
+  "observer_heights_m": [
+    0.0,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    20.0
+  ],
+  "default_height_m": 2.0,
+  "horizon": {
+    "azimuth_step_deg": 0.25,
+    "max_range_m": 300000.0
+  },
+  "time_window": {
+    "start_utc": "2026-11-14T00:00:00.000Z",
+    "end_utc": "2027-11-14T00:00:00.000Z",
+    "step_s": 3600.0
+  },
+  "bodies": [
+    "SUN",
+    "EARTH"
+  ],
+  "thresholds": {
+    "SUN": {
+      "quantity": "visible_fraction",
+      "op": ">",
+      "value": 0.0
+    },
+    "EARTH": {
+      "quantity": "margin_deg",
+      "op": ">",
+      "value": 0.0
+    }
+  },
+  "mission_profile": null,
+  "data": {
+    "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
+    "kernel_set_id": "bfe870fccfa5",
+    "direction_table_id": null
+  }
+}

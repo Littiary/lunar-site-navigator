@@ -1,0 +1,1446 @@
+{
+  "generated_utc": "2026-11-14T10:19:31Z",
+  "thresholds": {
+    "direction_arcsec_max": 1.0,
+    "angular_diameter_arcsec_max": 0.1,
+    "range_km_max": 1.0,
+    "tdb_minus_ut_seconds_max": 0.002
+  },
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "time_scale": "TDB (computation), UTC (time tags)",
+    "reference_radius_km": 1737.4,
+    "kernel_set_id": "bfe870fccfa5",
+    "kernels": [
+      "naif0012.tls",
+      "pck00011.tpc",
+      "de440s.bsp",
+      "moon_pa_de440_200625.bpc",
+      "moon_de440_250416.tf"
+    ],
+    "spice_toolkit": "CSPICE_N0067"
+  },
+  "reference": {
+    "system": "NASA/JPL Horizons On-Line Ephemeris System, https://ssd.jpl.nasa.gov/horizons/",
+    "api_versions": [
+      "1.2"
+    ],
+    "header_statements": [
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}",
+      "Rel. light bend : Sun, EARTH                      {source: DE441}",
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Target body name: Sun (10)                        {source: DE441}",
+      "Target pole/equ : IAU_SUN                         {East-longitude positive}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Target radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+      "Target radii    : 695700.0, 695700.0, 695700.0 km {Equator_a, b, pole_c}",
+      "Vis. interferer : EARTH (R_eq= 6378.137) km       {source: DE441}"
+    ],
+    "printed_resolution": "azimuth and elevation 0.000001 deg (0.0036 arcsec); angular diameter 0.001 arcsec"
+  },
+  "cases": [
+    {
+      "case_id": "eq_near__sun__weekend",
+      "site": {
+        "id": "eq_near",
+        "lon_deg": 0.0,
+        "lat_deg": 0.0,
+        "height_km": 0.0,
+        "note": "mean sub-Earth point"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:15:58Z",
+      "raw_sha256": "bf9825b4daf100c2ceb7204d9d7240983aa1b22ee46a1688928e4411f56360ea",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002340901314124297,
+        "direction_arcsec_rms": 0.0013910007204913162,
+        "elevation_arcsec_max_abs": 0.0018204001506205714,
+        "elevation_arcsec_mean": -0.00017816980440214778,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017475011121025085,
+        "angular_diameter_arcsec_max_abs": 0.0004982128466508584,
+        "range_km_max_abs": 0.0021423697471618652,
+        "worst_row_utc": "2026-11-15T20:30:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0038630118414675623,
+        "direction_arcsec_rms": 0.0021550539198595285,
+        "elevation_arcsec_max_abs": 0.0037487293781168773,
+        "elevation_arcsec_mean": -0.0015790056465337552,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017683265653402642,
+        "angular_diameter_arcsec_max_abs": 0.0005003551755180524,
+        "range_km_max_abs": 0.1712670922279358,
+        "worst_row_utc": "2026-11-14T01:40:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -36.602284,
+        -12.247124
+      ]
+    },
+    {
+      "case_id": "eq_near__earth__weekend",
+      "site": {
+        "id": "eq_near",
+        "lon_deg": 0.0,
+        "lat_deg": 0.0,
+        "height_km": 0.0,
+        "note": "mean sub-Earth point"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:09Z",
+      "raw_sha256": "d8e4aa44fe1145ba3002d14dc9d7bdecb52820126af69e69477e3369d65a5a76",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0031975920174537277,
+        "direction_arcsec_rms": 0.0018791850746108516,
+        "elevation_arcsec_max_abs": 0.00313095843011979,
+        "elevation_arcsec_mean": -0.0010275389935184484,
+        "azimuth_on_sky_arcsec_max_abs": 0.0016972861197609482,
+        "angular_diameter_arcsec_max_abs": 0.0005492983473232016,
+        "range_km_max_abs": 0.0036093186354264617,
+        "worst_row_utc": "2026-11-15T22:30:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.015577738802772969,
+        "direction_arcsec_rms": 0.012369578796677941,
+        "elevation_arcsec_max_abs": 0.015226145029600957,
+        "elevation_arcsec_mean": -0.010823660624877428,
+        "azimuth_on_sky_arcsec_max_abs": 0.007429674929465453,
+        "angular_diameter_arcsec_max_abs": 0.003311201046926726,
+        "range_km_max_abs": 0.173129360366147,
+        "worst_row_utc": "2026-11-15T22:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        85.409203,
+        85.766077
+      ]
+    },
+    {
+      "case_id": "low_lat_east__sun__weekend",
+      "site": {
+        "id": "low_lat_east",
+        "lon_deg": 23.47,
+        "lat_deg": 0.67,
+        "height_km": 0.0,
+        "note": "near side, low latitude, east longitude"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:11Z",
+      "raw_sha256": "317eef8d49ce88869bc5d56b515b35f3653e7ac16d5b2f5ecfc9b3f9f61043e3",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002436566914383198,
+        "direction_arcsec_rms": 0.001471968911745672,
+        "elevation_arcsec_max_abs": 0.0018144998591651529,
+        "elevation_arcsec_mean": -1.1144936884266086e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.001790246785562352,
+        "angular_diameter_arcsec_max_abs": 0.0004989212145574129,
+        "range_km_max_abs": 0.0021425187587738037,
+        "worst_row_utc": "2026-11-14T19:10:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002877944184435629,
+        "direction_arcsec_rms": 0.0015137514177374898,
+        "elevation_arcsec_max_abs": 0.0025489041469484164,
+        "elevation_arcsec_mean": -5.6245792169113795e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018798157979635485,
+        "angular_diameter_arcsec_max_abs": 0.0004972840731625183,
+        "range_km_max_abs": 0.17414024472236633,
+        "worst_row_utc": "2026-11-14T02:50:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -13.160965,
+        11.194776
+      ]
+    },
+    {
+      "case_id": "low_lat_east__earth__weekend",
+      "site": {
+        "id": "low_lat_east",
+        "lon_deg": 23.47,
+        "lat_deg": 0.67,
+        "height_km": 0.0,
+        "note": "near side, low latitude, east longitude"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:13Z",
+      "raw_sha256": "1dba60a5f1d7c0d47556f64b6f669452a76af5c43b1658ef0c03658a06005d4a",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.003445879536337562,
+        "direction_arcsec_rms": 0.0020253584651416866,
+        "elevation_arcsec_max_abs": 0.003438211660977686,
+        "elevation_arcsec_mean": -0.0016363072621550657,
+        "azimuth_on_sky_arcsec_max_abs": 0.0009014250305086765,
+        "angular_diameter_arcsec_max_abs": 0.0005283285909172264,
+        "range_km_max_abs": 0.0036044720909558237,
+        "worst_row_utc": "2026-11-14T10:40:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0482734274194384,
+        "direction_arcsec_rms": 0.041965555808214705,
+        "elevation_arcsec_max_abs": 0.04827309892618814,
+        "elevation_arcsec_mean": -0.0418397205054279,
+        "azimuth_on_sky_arcsec_max_abs": 0.0013743489068067578,
+        "angular_diameter_arcsec_max_abs": 0.003300849522020144,
+        "range_km_max_abs": 0.17510975245386362,
+        "worst_row_utc": "2026-11-15T23:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        62.41037,
+        64.946756
+      ]
+    },
+    {
+      "case_id": "far_mid_north__sun__weekend",
+      "site": {
+        "id": "far_mid_north",
+        "lon_deg": -150.0,
+        "lat_deg": 45.0,
+        "height_km": 1.0,
+        "note": "far side, west longitude, mid latitude"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:15Z",
+      "raw_sha256": "d74b417cf7fd3bb9e8e7494dedd5fd81360795d835e7bd7943eefa6447c87da5",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002530122288377832,
+        "direction_arcsec_rms": 0.0014939963710195823,
+        "elevation_arcsec_max_abs": 0.001815652581882432,
+        "elevation_arcsec_mean": 3.6773765046890546e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017848757131920837,
+        "angular_diameter_arcsec_max_abs": 0.0004989104304513603,
+        "range_km_max_abs": 0.0021427273750305176,
+        "worst_row_utc": "2026-11-14T14:20:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0030765900924980957,
+        "direction_arcsec_rms": 0.0015283556861974148,
+        "elevation_arcsec_max_abs": 0.0023066232124335784,
+        "elevation_arcsec_mean": 0.0002490661181890772,
+        "azimuth_on_sky_arcsec_max_abs": 0.002208336336082728,
+        "angular_diameter_arcsec_max_abs": 0.000500494683137731,
+        "range_km_max_abs": 0.11897224187850952,
+        "worst_row_utc": "2026-11-15T22:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -13.573341,
+        3.567743
+      ]
+    },
+    {
+      "case_id": "far_mid_north__earth__weekend",
+      "site": {
+        "id": "far_mid_north",
+        "lon_deg": -150.0,
+        "lat_deg": 45.0,
+        "height_km": 1.0,
+        "note": "far side, west longitude, mid latitude"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:18Z",
+      "raw_sha256": "14084ebe6ccd548a9d06fa12defff903e6983f8a19542906e35876648c4f8ac6",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0037742210838865413,
+        "direction_arcsec_rms": 0.0021143250873163497,
+        "elevation_arcsec_max_abs": 0.002661989796592934,
+        "elevation_arcsec_mean": 0.0009481428714761649,
+        "azimuth_on_sky_arcsec_max_abs": 0.0028583188979158874,
+        "angular_diameter_arcsec_max_abs": 0.0005498829550560913,
+        "range_km_max_abs": 0.0036449464969336987,
+        "worst_row_utc": "2026-11-14T07:10:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.07256039848578419,
+        "direction_arcsec_rms": 0.06558326879364208,
+        "elevation_arcsec_max_abs": 0.07255953585172392,
+        "elevation_arcsec_mean": -0.065433813015853,
+        "azimuth_on_sky_arcsec_max_abs": 0.0032181151489731235,
+        "angular_diameter_arcsec_max_abs": 0.0023749180618324317,
+        "range_km_max_abs": 0.11813329509459436,
+        "worst_row_utc": "2026-11-15T21:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -34.295819,
+        -33.474537
+      ]
+    },
+    {
+      "case_id": "north_polar__sun__weekend",
+      "site": {
+        "id": "north_polar",
+        "lon_deg": 30.0,
+        "lat_deg": 88.0,
+        "height_km": 0.0,
+        "note": "north polar region"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:20Z",
+      "raw_sha256": "0883c0659ef0ca507b7e80f8ce9d60fe22f7472d059585579ff8e5a9ab87d514",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002372988101309686,
+        "direction_arcsec_rms": 0.001468974879373504,
+        "elevation_arcsec_max_abs": 0.0017973166491103143,
+        "elevation_arcsec_mean": -9.728731059509435e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018057458587314103,
+        "angular_diameter_arcsec_max_abs": 0.000496952949106344,
+        "range_km_max_abs": 0.002141892910003662,
+        "worst_row_utc": "2026-11-15T12:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0023859095620270077,
+        "direction_arcsec_rms": 0.0014683866850554428,
+        "elevation_arcsec_max_abs": 0.001796763794548184,
+        "elevation_arcsec_mean": -9.69181583693517e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017975278141411026,
+        "angular_diameter_arcsec_max_abs": 0.0004970394954852964,
+        "range_km_max_abs": 0.008685111999511719,
+        "worst_row_utc": "2026-11-15T12:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -1.787449,
+        -0.946086
+      ]
+    },
+    {
+      "case_id": "north_polar__earth__weekend",
+      "site": {
+        "id": "north_polar",
+        "lon_deg": 30.0,
+        "lat_deg": 88.0,
+        "height_km": 0.0,
+        "note": "north polar region"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:22Z",
+      "raw_sha256": "7c49004c274fd33e4d756e8f9c7b33acd037d28e5a3d409ef9b092f860cf341a",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0038377054521809163,
+        "direction_arcsec_rms": 0.0021564109046436288,
+        "elevation_arcsec_max_abs": 0.0019251211217152786,
+        "elevation_arcsec_mean": 0.00012137843411332808,
+        "azimuth_on_sky_arcsec_max_abs": 0.003417455240660842,
+        "angular_diameter_arcsec_max_abs": 0.0005495713203345076,
+        "range_km_max_abs": 0.0036253592115826905,
+        "worst_row_utc": "2026-11-14T08:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.08686217201052226,
+        "direction_arcsec_rms": 0.0778886327175014,
+        "elevation_arcsec_max_abs": 0.08686152424211002,
+        "elevation_arcsec_mean": -0.0776973413795747,
+        "azimuth_on_sky_arcsec_max_abs": 0.003797325923396769,
+        "angular_diameter_arcsec_max_abs": 0.0006496484284070903,
+        "range_km_max_abs": 0.00975370715605095,
+        "worst_row_utc": "2026-11-15T23:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        3.475552,
+        5.868899
+      ]
+    },
+    {
+      "case_id": "south_polar_a__sun__weekend",
+      "site": {
+        "id": "south_polar_a",
+        "lon_deg": -135.0,
+        "lat_deg": -89.5,
+        "height_km": 1.5,
+        "note": "south polar region, above the sphere"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:25Z",
+      "raw_sha256": "93b1a9e16c5a14c149736484d843c3ab550ab17f62f953692fe630300062c6ba",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0024124911682810567,
+        "direction_arcsec_rms": 0.0014943971352480525,
+        "elevation_arcsec_max_abs": 0.0017931159733031166,
+        "elevation_arcsec_mean": 8.864441857917813e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.001814639450884822,
+        "angular_diameter_arcsec_max_abs": 0.0004996155751086917,
+        "range_km_max_abs": 0.0021422505378723145,
+        "worst_row_utc": "2026-11-15T04:30:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002408138472191987,
+        "direction_arcsec_rms": 0.0014945030930595652,
+        "elevation_arcsec_max_abs": 0.0017953611493481958,
+        "elevation_arcsec_mean": 9.115862867880708e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018158517572622638,
+        "angular_diameter_arcsec_max_abs": 0.0004996442899027898,
+        "range_km_max_abs": 0.0004668235778808594,
+        "worst_row_utc": "2026-11-14T15:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        1.284661,
+        1.483657
+      ]
+    },
+    {
+      "case_id": "south_polar_a__earth__weekend",
+      "site": {
+        "id": "south_polar_a",
+        "lon_deg": -135.0,
+        "lat_deg": -89.5,
+        "height_km": 1.5,
+        "note": "south polar region, above the sphere"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:28Z",
+      "raw_sha256": "ba2532907bc49092023a2a943fddc4713f312719e8f0ce962d3b06c75f9a3fdf",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.003817785933378394,
+        "direction_arcsec_rms": 0.002106201201062383,
+        "elevation_arcsec_max_abs": 0.0019536544142439993,
+        "elevation_arcsec_mean": -0.00014377102830053642,
+        "azimuth_on_sky_arcsec_max_abs": 0.0034210136831944967,
+        "angular_diameter_arcsec_max_abs": 0.0005451764282042859,
+        "range_km_max_abs": 0.0036269519478082657,
+        "worst_row_utc": "2026-11-14T07:30:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0868587065666377,
+        "direction_arcsec_rms": 0.07823318464873578,
+        "elevation_arcsec_max_abs": 0.08685857169030697,
+        "elevation_arcsec_mean": -0.07806528947079791,
+        "azimuth_on_sky_arcsec_max_abs": 0.003180938752201886,
+        "angular_diameter_arcsec_max_abs": 0.0005053826653238502,
+        "range_km_max_abs": 0.001249120570719242,
+        "worst_row_utc": "2026-11-15T23:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -4.994162,
+        -2.639524
+      ]
+    },
+    {
+      "case_id": "south_polar_b__sun__weekend",
+      "site": {
+        "id": "south_polar_b",
+        "lon_deg": 45.0,
+        "lat_deg": -85.0,
+        "height_km": -2.0,
+        "note": "south polar region, below the sphere"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:30Z",
+      "raw_sha256": "1f48bbd601f9eaf13fbf193ee4620510fa837356f533cf30fe7b6f1f1c56ffa6",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002463798745351608,
+        "direction_arcsec_rms": 0.0014206836571812546,
+        "elevation_arcsec_max_abs": 0.0017872643205407712,
+        "elevation_arcsec_mean": 2.9637218066553937e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018189761973695041,
+        "angular_diameter_arcsec_max_abs": 0.0004981072711416346,
+        "range_km_max_abs": 0.0021422207355499268,
+        "worst_row_utc": "2026-11-15T20:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002590629632312787,
+        "direction_arcsec_rms": 0.0014205519080891344,
+        "elevation_arcsec_max_abs": 0.001809224869120385,
+        "elevation_arcsec_mean": 4.852851009621499e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019229050336410836,
+        "angular_diameter_arcsec_max_abs": 0.0004979451991857786,
+        "range_km_max_abs": 0.015739500522613525,
+        "worst_row_utc": "2026-11-15T20:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        2.278804,
+        4.253347
+      ]
+    },
+    {
+      "case_id": "south_polar_b__earth__weekend",
+      "site": {
+        "id": "south_polar_b",
+        "lon_deg": 45.0,
+        "lat_deg": -85.0,
+        "height_km": -2.0,
+        "note": "south polar region, below the sphere"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:32Z",
+      "raw_sha256": "cfc70a65c0ea7c097165db1d64ae836bff324abbbdd05f70780c8ddc69820126",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0038698999971103674,
+        "direction_arcsec_rms": 0.0021834415387650776,
+        "elevation_arcsec_max_abs": 0.002048361346540517,
+        "elevation_arcsec_mean": -0.00025217666334230806,
+        "azimuth_on_sky_arcsec_max_abs": 0.0033910203225147777,
+        "angular_diameter_arcsec_max_abs": 0.0005557169470193912,
+        "range_km_max_abs": 0.003621448529884219,
+        "worst_row_utc": "2026-11-15T00:40:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0868515688151775,
+        "direction_arcsec_rms": 0.07840832865435583,
+        "elevation_arcsec_max_abs": 0.08685152287477571,
+        "elevation_arcsec_mean": -0.07822788439426928,
+        "azimuth_on_sky_arcsec_max_abs": 0.003550276229760779,
+        "angular_diameter_arcsec_max_abs": 0.0007561703714600299,
+        "range_km_max_abs": 0.01614184776553884,
+        "worst_row_utc": "2026-11-15T22:40:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -1.1833,
+        0.97269
+      ]
+    },
+    {
+      "case_id": "south_polar_c__sun__weekend",
+      "site": {
+        "id": "south_polar_c",
+        "lon_deg": 0.0,
+        "lat_deg": -89.99,
+        "height_km": 0.0,
+        "note": "0.01 degree from the south pole"
+      },
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:34Z",
+      "raw_sha256": "cbf12be855a15d7dce6b7b71918f30d2530f4a1fb84b8d6f627c8beca4a6d448",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0023204796500377557,
+        "direction_arcsec_rms": 0.0014396050497778184,
+        "elevation_arcsec_max_abs": 0.0017971525947402256,
+        "elevation_arcsec_mean": -1.0650894367162197e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018113498928657048,
+        "angular_diameter_arcsec_max_abs": 0.0004977553335265839,
+        "range_km_max_abs": 0.0021421611309051514,
+        "worst_row_utc": "2026-11-15T06:20:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0023133049208906836,
+        "direction_arcsec_rms": 0.0014394602344649286,
+        "elevation_arcsec_max_abs": 0.001800814278496432,
+        "elevation_arcsec_mean": 2.125164550911224e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018041560844805806,
+        "angular_diameter_arcsec_max_abs": 0.0004977465694082639,
+        "range_km_max_abs": 0.0014778375625610352,
+        "worst_row_utc": "2026-11-15T06:20:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        1.550641,
+        1.553059
+      ]
+    },
+    {
+      "case_id": "south_polar_c__earth__weekend",
+      "site": {
+        "id": "south_polar_c",
+        "lon_deg": 0.0,
+        "lat_deg": -89.99,
+        "height_km": 0.0,
+        "note": "0.01 degree from the south pole"
+      },
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T10:16:36Z",
+      "raw_sha256": "edcc3b957a27b08d1375904981a10d40ab84dc7eb091c773dd496b0eb029388f",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0038491495433343867,
+        "direction_arcsec_rms": 0.0021425998163831584,
+        "elevation_arcsec_max_abs": 0.001956678113934629,
+        "elevation_arcsec_mean": -0.0002676964611780105,
+        "azimuth_on_sky_arcsec_max_abs": 0.0034290870557639875,
+        "angular_diameter_arcsec_max_abs": 0.0005541278906093794,
+        "range_km_max_abs": 0.003625964862294495,
+        "worst_row_utc": "2026-11-14T03:10:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0868372125068105,
+        "direction_arcsec_rms": 0.07833160768600816,
+        "elevation_arcsec_max_abs": 0.08681659529035102,
+        "elevation_arcsec_mean": -0.07815331864332782,
+        "azimuth_on_sky_arcsec_max_abs": 0.0032123090374846274,
+        "angular_diameter_arcsec_max_abs": 0.0005365832594179665,
+        "range_km_max_abs": 0.0025377260171808302,
+        "worst_row_utc": "2026-11-15T23:40:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -4.638272,
+        -2.301273
+      ]
+    },
+    {
+      "case_id": "eq_near__sun__nodal_cycle",
+      "site": {
+        "id": "eq_near",
+        "lon_deg": 0.0,
+        "lat_deg": 0.0,
+        "height_km": 0.0,
+        "note": "mean sub-Earth point"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:16:41Z",
+      "raw_sha256": "9dfe2d40853653ee848e16bfd122282c586f40020d0e3faf04007754430afdb8",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0024736968575534146,
+        "direction_arcsec_rms": 0.0012750017956635648,
+        "elevation_arcsec_max_abs": 0.001928668706341341,
+        "elevation_arcsec_mean": -8.823760367441923e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017941135971571228,
+        "angular_diameter_arcsec_max_abs": 0.0004999801737994858,
+        "range_km_max_abs": 0.004006385803222656,
+        "worst_row_utc": "2036-09-28T19:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.005327992775941247,
+        "direction_arcsec_rms": 0.0027532562170329857,
+        "elevation_arcsec_max_abs": 0.005319665245906435,
+        "elevation_arcsec_mean": -8.432802813811513e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0035630258482543535,
+        "angular_diameter_arcsec_max_abs": 0.0005022750847274438,
+        "range_km_max_abs": 0.1794331669807434,
+        "worst_row_utc": "2028-07-06T13:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -89.36399,
+        89.838387
+      ]
+    },
+    {
+      "case_id": "eq_near__earth__nodal_cycle",
+      "site": {
+        "id": "eq_near",
+        "lon_deg": 0.0,
+        "lat_deg": 0.0,
+        "height_km": 0.0,
+        "note": "mean sub-Earth point"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:16:46Z",
+      "raw_sha256": "9eebdc38a42b11c629dcefd9c92dfb8ac514b9c1f8932df6fe13242955b32416",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.004316798573475905,
+        "direction_arcsec_rms": 0.0020325920255748896,
+        "elevation_arcsec_max_abs": 0.004280461860162177,
+        "elevation_arcsec_mean": -2.1666429581854954e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.002917937220785493,
+        "angular_diameter_arcsec_max_abs": 0.0005707609443561523,
+        "range_km_max_abs": 0.004217902955133468,
+        "worst_row_utc": "2043-02-12T22:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.025404983228249238,
+        "direction_arcsec_rms": 0.011457003174729703,
+        "elevation_arcsec_max_abs": 0.024801275196750794,
+        "elevation_arcsec_mean": -1.2483580549969889e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.009575570264295473,
+        "angular_diameter_arcsec_max_abs": 0.003878574185364414,
+        "range_km_max_abs": 0.18017312500160187,
+        "worst_row_utc": "2045-01-26T11:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        79.486489,
+        89.909159
+      ]
+    },
+    {
+      "case_id": "low_lat_east__sun__nodal_cycle",
+      "site": {
+        "id": "low_lat_east",
+        "lon_deg": 23.47,
+        "lat_deg": 0.67,
+        "height_km": 0.0,
+        "note": "near side, low latitude, east longitude"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:16:52Z",
+      "raw_sha256": "a1e8b6f8ae8300227f12696491effaf8c878650719a3074999e90e64a8772422",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0025508261310155855,
+        "direction_arcsec_rms": 0.0012706029721201782,
+        "elevation_arcsec_max_abs": 0.0018950505932480155,
+        "elevation_arcsec_mean": -8.41302057063602e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017987637483991284,
+        "angular_diameter_arcsec_max_abs": 0.0004998991505544836,
+        "range_km_max_abs": 0.004005342721939087,
+        "worst_row_utc": "2039-08-10T15:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.00520498484798663,
+        "direction_arcsec_rms": 0.002709579346103412,
+        "elevation_arcsec_max_abs": 0.005204102620837148,
+        "elevation_arcsec_mean": -7.26213919255599e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0034703153246609443,
+        "angular_diameter_arcsec_max_abs": 0.0005017556618440722,
+        "range_km_max_abs": 0.18128573894500732,
+        "worst_row_utc": "2040-01-12T20:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -89.784909,
+        89.731064
+      ]
+    },
+    {
+      "case_id": "low_lat_east__earth__nodal_cycle",
+      "site": {
+        "id": "low_lat_east",
+        "lon_deg": 23.47,
+        "lat_deg": 0.67,
+        "height_km": 0.0,
+        "note": "near side, low latitude, east longitude"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:16:57Z",
+      "raw_sha256": "ea59c7dc3eaceddb73420a39a9bff07c6a01ed062e0dac6dffd5a343c31aca88",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.00465245778809531,
+        "direction_arcsec_rms": 0.0020733320007891485,
+        "elevation_arcsec_max_abs": 0.00457961379538574,
+        "elevation_arcsec_mean": -0.001659287111238928,
+        "azimuth_on_sky_arcsec_max_abs": 0.0015257052182970994,
+        "angular_diameter_arcsec_max_abs": 0.0005681968441422214,
+        "range_km_max_abs": 0.004210988408885896,
+        "worst_row_utc": "2043-03-14T02:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.05898728521111323,
+        "direction_arcsec_rms": 0.028287528192272617,
+        "elevation_arcsec_max_abs": 0.058945778664565296,
+        "elevation_arcsec_mean": -0.007445857000367837,
+        "azimuth_on_sky_arcsec_max_abs": 0.003963190044020409,
+        "angular_diameter_arcsec_max_abs": 0.003926853962184396,
+        "range_km_max_abs": 0.17748190771089867,
+        "worst_row_utc": "2045-01-26T11:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        57.803421,
+        74.472433
+      ]
+    },
+    {
+      "case_id": "far_mid_north__sun__nodal_cycle",
+      "site": {
+        "id": "far_mid_north",
+        "lon_deg": -150.0,
+        "lat_deg": 45.0,
+        "height_km": 1.0,
+        "note": "far side, west longitude, mid latitude"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:02Z",
+      "raw_sha256": "82718118c3388e3cb9865af7c75f2de644dbc77b7865fda8a9a12b347aeeba7c",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0025447391641773443,
+        "direction_arcsec_rms": 0.0013722554743006714,
+        "elevation_arcsec_max_abs": 0.001897661036309728,
+        "elevation_arcsec_mean": 2.576609646604882e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018084299699091069,
+        "angular_diameter_arcsec_max_abs": 0.0004999729969767941,
+        "range_km_max_abs": 0.004005849361419678,
+        "worst_row_utc": "2028-09-10T04:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.004219077907263474,
+        "direction_arcsec_rms": 0.0021889671309270986,
+        "elevation_arcsec_max_abs": 0.0028885876730555538,
+        "elevation_arcsec_mean": 2.5959580078858666e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0037285152828702367,
+        "angular_diameter_arcsec_max_abs": 0.0005011566463508643,
+        "range_km_max_abs": 0.12717583775520325,
+        "worst_row_utc": "2044-12-30T09:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -46.559565,
+        46.551895
+      ]
+    },
+    {
+      "case_id": "far_mid_north__earth__nodal_cycle",
+      "site": {
+        "id": "far_mid_north",
+        "lon_deg": -150.0,
+        "lat_deg": 45.0,
+        "height_km": 1.0,
+        "note": "far side, west longitude, mid latitude"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:07Z",
+      "raw_sha256": "e9bc19d7d5652be86752c2df5be198d42d96c14e18dab92b390077aaf3bd5467",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.004416120407086373,
+        "direction_arcsec_rms": 0.0021699136674980806,
+        "elevation_arcsec_max_abs": 0.0032118655127533202,
+        "elevation_arcsec_mean": 0.0007471502941132857,
+        "azimuth_on_sky_arcsec_max_abs": 0.003945722524880917,
+        "angular_diameter_arcsec_max_abs": 0.0005720018889405765,
+        "range_km_max_abs": 0.004247566452249885,
+        "worst_row_utc": "2044-11-09T08:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.08510451864140299,
+        "direction_arcsec_rms": 0.05165611231852768,
+        "elevation_arcsec_max_abs": 0.0850606751114924,
+        "elevation_arcsec_mean": -0.0009785187190832704,
+        "azimuth_on_sky_arcsec_max_abs": 0.004248641516229797,
+        "angular_diameter_arcsec_max_abs": 0.002956064157842775,
+        "range_km_max_abs": 0.13274149660719559,
+        "worst_row_utc": "2036-02-05T08:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -47.38917,
+        -28.437428
+      ]
+    },
+    {
+      "case_id": "north_polar__sun__nodal_cycle",
+      "site": {
+        "id": "north_polar",
+        "lon_deg": 30.0,
+        "lat_deg": 88.0,
+        "height_km": 0.0,
+        "note": "north polar region"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:14Z",
+      "raw_sha256": "05f79cdc381276bc80d9741928d95a22988ceea09b326bec38a0646989ed4ed3",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0025602431584302843,
+        "direction_arcsec_rms": 0.0014707336231878038,
+        "elevation_arcsec_max_abs": 0.002074969877519095,
+        "elevation_arcsec_mean": -8.919044140079952e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.00185727128848265,
+        "angular_diameter_arcsec_max_abs": 0.0004999046202556201,
+        "range_km_max_abs": 0.004005759954452515,
+        "worst_row_utc": "2029-10-22T11:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0026307924202631848,
+        "direction_arcsec_rms": 0.0014738692685870001,
+        "elevation_arcsec_max_abs": 0.002076564432407224,
+        "elevation_arcsec_mean": -8.877926721933474e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.001966920678358542,
+        "angular_diameter_arcsec_max_abs": 0.0004999194502488535,
+        "range_km_max_abs": 0.014657020568847656,
+        "worst_row_utc": "2029-10-22T11:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -3.55089,
+        3.581076
+      ]
+    },
+    {
+      "case_id": "north_polar__earth__nodal_cycle",
+      "site": {
+        "id": "north_polar",
+        "lon_deg": 30.0,
+        "lat_deg": 88.0,
+        "height_km": 0.0,
+        "note": "north polar region"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:18Z",
+      "raw_sha256": "3c730db216f4c5e9c2dc2df237dffb75e5abeaadc0941eea283f20469e1a270a",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.004759188420442235,
+        "direction_arcsec_rms": 0.0022746291784011036,
+        "elevation_arcsec_max_abs": 0.002102911160806187,
+        "elevation_arcsec_mean": -6.214937800394644e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.004580473898185923,
+        "angular_diameter_arcsec_max_abs": 0.0005641123552777572,
+        "range_km_max_abs": 0.004227800644002855,
+        "worst_row_utc": "2041-12-26T09:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09794986262394959,
+        "direction_arcsec_rms": 0.06531600483596571,
+        "elevation_arcsec_max_abs": 0.09791296047225728,
+        "elevation_arcsec_mean": -1.8720309034012858e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.004986573112164226,
+        "angular_diameter_arcsec_max_abs": 0.000719484145520255,
+        "range_km_max_abs": 0.014238882693462074,
+        "worst_row_utc": "2034-01-26T18:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -5.510914,
+        8.437505
+      ]
+    },
+    {
+      "case_id": "south_polar_a__sun__nodal_cycle",
+      "site": {
+        "id": "south_polar_a",
+        "lon_deg": -135.0,
+        "lat_deg": -89.5,
+        "height_km": 1.5,
+        "note": "south polar region, above the sphere"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:32Z",
+      "raw_sha256": "72c70706b77a1fb8c3afca0514968e618abc8312cc68f99d0a386f6a86021ac4",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.00256002102063225,
+        "direction_arcsec_rms": 0.0014688892577806414,
+        "elevation_arcsec_max_abs": 0.002001478096258502,
+        "elevation_arcsec_mean": 3.6311751609855476e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019358412649067396,
+        "angular_diameter_arcsec_max_abs": 0.0004999621316983394,
+        "range_km_max_abs": 0.004006445407867432,
+        "worst_row_utc": "2030-11-09T19:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0025549200692897415,
+        "direction_arcsec_rms": 0.0014689077393305263,
+        "elevation_arcsec_max_abs": 0.002005682422345778,
+        "elevation_arcsec_mean": 3.6715022466832505e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019555840289278014,
+        "angular_diameter_arcsec_max_abs": 0.0004999125330868992,
+        "range_km_max_abs": 0.008171796798706055,
+        "worst_row_utc": "2030-11-21T06:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -2.078785,
+        2.052825
+      ]
+    },
+    {
+      "case_id": "south_polar_a__earth__nodal_cycle",
+      "site": {
+        "id": "south_polar_a",
+        "lon_deg": -135.0,
+        "lat_deg": -89.5,
+        "height_km": 1.5,
+        "note": "south polar region, above the sphere"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:45Z",
+      "raw_sha256": "9c6884f1878650aedaecac9bc31a0832d8a10f392b1e8178c228885e2c2b9131",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.004717342280073721,
+        "direction_arcsec_rms": 0.002294241998706306,
+        "elevation_arcsec_max_abs": 0.002014231826530377,
+        "elevation_arcsec_mean": 8.408382022716973e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.004504486941156906,
+        "angular_diameter_arcsec_max_abs": 0.0005652288564306218,
+        "range_km_max_abs": 0.004231519007589668,
+        "worst_row_utc": "2045-02-02T18:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0987982426998585,
+        "direction_arcsec_rms": 0.06538071722049289,
+        "elevation_arcsec_max_abs": 0.09879176193765549,
+        "elevation_arcsec_mean": -1.0349393623425195e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.004732207959613318,
+        "angular_diameter_arcsec_max_abs": 0.0006609189495065948,
+        "range_km_max_abs": 0.010721550148446113,
+        "worst_row_utc": "2043-01-17T21:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -7.494492,
+        6.289713
+      ]
+    },
+    {
+      "case_id": "south_polar_b__sun__nodal_cycle",
+      "site": {
+        "id": "south_polar_b",
+        "lon_deg": 45.0,
+        "lat_deg": -85.0,
+        "height_km": -2.0,
+        "note": "south polar region, below the sphere"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:52Z",
+      "raw_sha256": "410b8b611f31340ddea2db1fa257598530e717ddf9f85b255d16d9a22b5b8d1b",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0026003546884013286,
+        "direction_arcsec_rms": 0.001468686265263167,
+        "elevation_arcsec_max_abs": 0.0018563862974829703,
+        "elevation_arcsec_mean": -8.911470488081478e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018965386731951452,
+        "angular_diameter_arcsec_max_abs": 0.0004998385004455486,
+        "range_km_max_abs": 0.004006534814834595,
+        "worst_row_utc": "2041-12-07T15:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0027645308470620957,
+        "direction_arcsec_rms": 0.0014820851650286023,
+        "elevation_arcsec_max_abs": 0.0018649927442382364,
+        "elevation_arcsec_mean": -8.871033540273662e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.002102315099887533,
+        "angular_diameter_arcsec_max_abs": 0.0005000389276119677,
+        "range_km_max_abs": 0.02328699827194214,
+        "worst_row_utc": "2041-12-07T15:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -6.550583,
+        6.563981
+      ]
+    },
+    {
+      "case_id": "south_polar_b__earth__nodal_cycle",
+      "site": {
+        "id": "south_polar_b",
+        "lon_deg": 45.0,
+        "lat_deg": -85.0,
+        "height_km": -2.0,
+        "note": "south polar region, below the sphere"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:17:58Z",
+      "raw_sha256": "fdf4916d183cd052562c7559735daa2dfc7368ad562298dc5f7ea912532ef1cd",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.0048374418520319715,
+        "direction_arcsec_rms": 0.0022565833636812704,
+        "elevation_arcsec_max_abs": 0.002149941130724642,
+        "elevation_arcsec_mean": -0.00010986628101704425,
+        "azimuth_on_sky_arcsec_max_abs": 0.004577460043481263,
+        "angular_diameter_arcsec_max_abs": 0.000568776560612605,
+        "range_km_max_abs": 0.004230579361319542,
+        "worst_row_utc": "2045-01-04T14:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09864747367873951,
+        "direction_arcsec_rms": 0.06517138515920634,
+        "elevation_arcsec_max_abs": 0.09863527615951995,
+        "elevation_arcsec_mean": -0.00013686193760656775,
+        "azimuth_on_sky_arcsec_max_abs": 0.0052440800647675645,
+        "angular_diameter_arcsec_max_abs": 0.0008649782103020698,
+        "range_km_max_abs": 0.02191268338356167,
+        "worst_row_utc": "2042-12-19T17:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -4.023699,
+        10.538515
+      ]
+    },
+    {
+      "case_id": "south_polar_c__sun__nodal_cycle",
+      "site": {
+        "id": "south_polar_c",
+        "lon_deg": 0.0,
+        "lat_deg": -89.99,
+        "height_km": 0.0,
+        "note": "0.01 degree from the south pole"
+      },
+      "body": "SUN",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:18:03Z",
+      "raw_sha256": "790d5fc31bf8ebdbf0910cef5824960598a19f6692def2503b8e9d20ca49a43b",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.002530947404081956,
+        "direction_arcsec_rms": 0.001473967899703261,
+        "elevation_arcsec_max_abs": 0.0020711083738023106,
+        "elevation_arcsec_mean": -1.7271873878965743e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019376128450024621,
+        "angular_diameter_arcsec_max_abs": 0.0004999863506327529,
+        "range_km_max_abs": 0.004006564617156982,
+        "worst_row_utc": "2030-02-09T21:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002541876576086919,
+        "direction_arcsec_rms": 0.001474042837310177,
+        "elevation_arcsec_max_abs": 0.0020729535164409896,
+        "elevation_arcsec_mean": -1.7231462903750306e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019394638062394881,
+        "angular_diameter_arcsec_max_abs": 0.0005000070600544859,
+        "range_km_max_abs": 0.008731633424758911,
+        "worst_row_utc": "2030-02-09T21:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -1.579857,
+        1.597226
+      ]
+    },
+    {
+      "case_id": "south_polar_c__earth__nodal_cycle",
+      "site": {
+        "id": "south_polar_c",
+        "lon_deg": 0.0,
+        "lat_deg": -89.99,
+        "height_km": 0.0,
+        "note": "0.01 degree from the south pole"
+      },
+      "body": "EARTH",
+      "span": "nodal_cycle",
+      "first_utc": "2026-11-01T00:00:00",
+      "last_utc": "2045-06-30T16:00:00",
+      "retrieved_utc": "2026-11-14T10:18:10Z",
+      "raw_sha256": "f58a2b92386b82629c91e296ad07dbb6bbb2cd405992b0c00aa5e9ad335939e2",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 6545,
+      "exact": {
+        "direction_arcsec_max": 0.004917975121611816,
+        "direction_arcsec_rms": 0.00227528872588655,
+        "elevation_arcsec_max_abs": 0.0020447534593515115,
+        "elevation_arcsec_mean": 6.1676631458749044e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.004568175738684003,
+        "angular_diameter_arcsec_max_abs": 0.0005683754325218615,
+        "range_km_max_abs": 0.004231664235703647,
+        "worst_row_utc": "2045-01-06T16:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09837296888830505,
+        "direction_arcsec_rms": 0.06533339144261208,
+        "elevation_arcsec_max_abs": 0.09836984504083546,
+        "elevation_arcsec_mean": -2.4070172989652913e-06,
+        "azimuth_on_sky_arcsec_max_abs": 0.004730375540540804,
+        "angular_diameter_arcsec_max_abs": 0.0006522507346744533,
+        "range_km_max_abs": 0.009315784380305558,
+        "worst_row_utc": "2041-12-30T13:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 3.803738438534765e-05,
+      "elevation_range_deg": [
+        -7.091836,
+        6.623174
+      ]
+    }
+  ]
+}

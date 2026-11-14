@@ -1,0 +1,25 @@
+{
+  "title": "Acceptance thresholds: science core versus JPL Horizons (Sun and Earth seen from the lunar surface)",
+  "written_utc": "2026-11-14T10:15:33Z",
+  "rule": "Written and committed before any Horizons response was compared with the core. This file is not edited afterwards. If a comparison exceeds a threshold, the cause is found and reported; the threshold stays.",
+  "applies_to": "Every case in cases.json, every row, both bodies, and both computation paths of the core (exact per-site path and site-independent direction table).",
+  "thresholds": {
+    "direction_arcsec_max": {
+      "value": 1.0,
+      "definition": "Largest great-circle angle, over all rows of a case, between the apparent direction computed by the core and the apparent azimuth and elevation printed by Horizons (quantity 4)."
+    },
+    "angular_diameter_arcsec_max": {
+      "value": 0.1,
+      "definition": "Largest absolute difference between twice the core's angular radius and the angular diameter printed by Horizons (quantity 13)."
+    },
+    "range_km_max": {
+      "value": 1.0,
+      "definition": "Largest absolute difference in apparent observer-to-target distance (Horizons quantity 20, converted from au with the IAU value 149597870.7 km)."
+    },
+    "tdb_minus_ut_seconds_max": {
+      "value": 0.002,
+      "definition": "Largest absolute difference between the core's TDB minus UTC and the TDB minus UT value printed by Horizons (quantity 30)."
+    }
+  },
+  "known_resolution_of_the_reference": "Horizons prints azimuth and elevation in degrees with a fixed number of decimals; the rounding of the reference is reported with the results and is not subtracted from the differences."
+}

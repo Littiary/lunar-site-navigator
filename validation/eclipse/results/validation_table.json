@@ -1,0 +1,211 @@
+{
+  "generated_utc": "2026-11-14T11:24:09Z",
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "kernel_set_id": "bfe870fccfa5",
+    "model": "opaque Earth disc of the equatorial radius, no atmosphere; uniform Sun disc; angles seen from the site"
+  },
+  "site": {
+    "name": "Blue Ghost Mission 1 landing point, Mare Crisium",
+    "value": {
+      "lat_deg": 18.5623,
+      "lon_deg": 61.8103,
+      "height_m": -3650.0
+    },
+    "as_printed": "18.5623 N, 61.8103 E, -3650 [m]",
+    "source": "lroc_blue_ghost",
+    "note": "No terrain: the Sun and the Earth are about 29 degrees above the horizon during this eclipse."
+  },
+  "contacts_utc": {
+    "C1": "2025-03-14T05:00:42.422Z",
+    "C2": "2025-03-14T06:17:23.203Z",
+    "C3": "2025-03-14T08:34:24.609Z",
+    "C4": "2025-03-14T09:51:10.078Z"
+  },
+  "summary": {
+    "pass_fail_checks": 8,
+    "passed": 8,
+    "failed": 0,
+    "reported_without_verdict": 2
+  },
+  "rows": [
+    {
+      "id": "eclipse_partial_start",
+      "kind": "pass_fail",
+      "quantity": "Partial eclipse begins at the site (C1)",
+      "published": "2025-03-14T05:00:00Z",
+      "computed": "2025-03-14T05:00:42.422Z",
+      "unit": "min",
+      "difference": 0.7070311725139617,
+      "threshold": 2.0,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "eclipse_totality_start",
+      "kind": "pass_fail",
+      "quantity": "Totality begins at the site (C2)",
+      "published": "2025-03-14T06:18:00Z",
+      "computed": "2025-03-14T06:17:23.203Z",
+      "unit": "min",
+      "difference": -0.6132813354333242,
+      "threshold": 2.0,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "eclipse_partial_end",
+      "kind": "pass_fail",
+      "quantity": "Partial eclipse ends at the site (C4)",
+      "published": "2025-03-14T09:52:00Z",
+      "computed": "2025-03-14T09:51:10.078Z",
+      "unit": "min",
+      "difference": -0.8320313612620036,
+      "threshold": 2.0,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "eclipse_totality_duration",
+      "kind": "pass_fail",
+      "quantity": "Duration of totality at the site (C3 - C2)",
+      "published": 136.0,
+      "computed": 137.0234375,
+      "unit": "min",
+      "difference": 1.0234375,
+      "threshold": 3.5,
+      "status": "PASS",
+      "note": "totality ends (C3) at 2025-03-14T08:34:24.609Z"
+    },
+    {
+      "id": "eclipse_c1_after_p1",
+      "kind": "pass_fail",
+      "quantity": "C1 at the site is not before the Moon enters the penumbra (P1)",
+      "published": "P1 = 2025-03-14T03:57:24Z",
+      "computed": "2025-03-14T05:00:42.422Z",
+      "unit": "min",
+      "difference": 63.307031180461244,
+      "threshold": "inside the bounds, allowance 2 min",
+      "status": "PASS",
+      "note": "difference: smallest margin to a bound, in minutes (positive = inside)"
+    },
+    {
+      "id": "eclipse_c2_between_u1_and_u2",
+      "kind": "pass_fail",
+      "quantity": "C2 at the site lies between U1 and U2",
+      "published": "U1 = 2025-03-14T05:09:33Z and U2 = 2025-03-14T06:25:59Z",
+      "computed": "2025-03-14T06:17:23.203Z",
+      "unit": "min",
+      "difference": 8.596614670753478,
+      "threshold": "inside the bounds, allowance 2 min",
+      "status": "PASS",
+      "note": "difference: smallest margin to a bound, in minutes (positive = inside)"
+    },
+    {
+      "id": "eclipse_c3_between_u3_and_u4",
+      "kind": "pass_fail",
+      "quantity": "C3 at the site lies between U3 and U4",
+      "published": "U3 = 2025-03-14T07:31:23Z and U4 = 2025-03-14T08:47:48Z",
+      "computed": "2025-03-14T08:34:24.609Z",
+      "unit": "min",
+      "difference": 13.389843853314717,
+      "threshold": "inside the bounds, allowance 2 min",
+      "status": "PASS",
+      "note": "difference: smallest margin to a bound, in minutes (positive = inside)"
+    },
+    {
+      "id": "eclipse_c4_before_p4",
+      "kind": "pass_fail",
+      "quantity": "C4 at the site is not after the Moon leaves the penumbra (P4)",
+      "published": "P4 = 2025-03-14T10:00:01Z",
+      "computed": "2025-03-14T09:51:10.078Z",
+      "unit": "min",
+      "difference": 8.84869802792867,
+      "threshold": "inside the bounds, allowance 2 min",
+      "status": "PASS",
+      "note": "difference: smallest margin to a bound, in minutes (positive = inside)"
+    },
+    {
+      "id": "eclipse_observed_images",
+      "kind": "reported",
+      "quantity": "Fraction of the Sun hidden by the Earth at the times of the published images",
+      "published": {
+        "first_look": "2025-03-14T05:30:00Z (about)",
+        "red_surface_during_totality": "2025-03-14T07:30:00Z (about)",
+        "diamond_ring": "2025-03-14T08:30:00Z (about)"
+      },
+      "computed": {
+        "first_look": 0.3415148892600729,
+        "red_surface_during_totality": 1.0,
+        "diamond_ring": 1.0
+      },
+      "unit": "fraction",
+      "difference": null,
+      "threshold": null,
+      "status": null,
+      "note": "the diamond ring was photographed about 4 min before the computed end of totality"
+    },
+    {
+      "id": "eclipse_power_line",
+      "kind": "reported",
+      "quantity": "Eclipse-aware power line at the site (fraction of the Sun's disc that is lit)",
+      "published": "none",
+      "computed": {
+        "hours_without_any_sunlight": 2.2837239583333333,
+        "hours_with_reduced_sunlight": 4.841015625,
+        "lit_fraction_every_10_min": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.9265,
+          0.7996,
+          0.6469,
+          0.4822,
+          0.3172,
+          0.1649,
+          0.0434,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0412,
+          0.1617,
+          0.3135,
+          0.4784,
+          0.6433,
+          0.7964,
+          0.924,
+          0.9997,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "first_sample_utc": "2025-03-14T04:30:42.422Z",
+        "smallest_separation_deg": 0.36958026350240525,
+        "time_of_smallest_separation": "2025-03-14T07:25:55.070Z",
+        "sun_elevation_deg": 28.975775754499555,
+        "earth_elevation_deg": 28.885352120584475,
+        "earth_azimuth_deg": 258.7679686386555,
+        "sun_angular_radius_deg": 0.26728741246802734,
+        "earth_angular_radius_deg": 0.9120234897769889
+      },
+      "unit": "fraction",
+      "difference": null,
+      "threshold": null,
+      "status": null,
+      "note": ""
+    }
+  ]
+}

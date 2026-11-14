@@ -1,0 +1,31 @@
+{
+  "description": "Query definitions for the Horizons comparison. Sites are test points chosen to cover both hemispheres, both longitude signs, the far side, positive and negative heights and both polar regions; they are not landing-site coordinates from any catalogue.",
+  "api": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "common_parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@301",
+    "COORD_TYPE": "GEODETIC",
+    "QUANTITIES": "4,13,20,30",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS"
+  },
+  "targets": {"SUN": "10", "EARTH": "399"},
+  "sites": [
+    {"id": "eq_near", "lon_deg": 0.0, "lat_deg": 0.0, "height_km": 0.0, "note": "mean sub-Earth point"},
+    {"id": "low_lat_east", "lon_deg": 23.47, "lat_deg": 0.67, "height_km": 0.0, "note": "near side, low latitude, east longitude"},
+    {"id": "far_mid_north", "lon_deg": -150.0, "lat_deg": 45.0, "height_km": 1.0, "note": "far side, west longitude, mid latitude"},
+    {"id": "north_polar", "lon_deg": 30.0, "lat_deg": 88.0, "height_km": 0.0, "note": "north polar region"},
+    {"id": "south_polar_a", "lon_deg": -135.0, "lat_deg": -89.5, "height_km": 1.5, "note": "south polar region, above the sphere"},
+    {"id": "south_polar_b", "lon_deg": 45.0, "lat_deg": -85.0, "height_km": -2.0, "note": "south polar region, below the sphere"},
+    {"id": "south_polar_c", "lon_deg": 0.0, "lat_deg": -89.99, "height_km": 0.0, "note": "0.01 degree from the south pole"}
+  ],
+  "spans": [
+    {"id": "weekend", "start_utc": "2026-11-14 00:00", "stop_utc": "2026-11-16 00:00", "step": "10 m", "note": "hackathon weekend, 10-minute step"},
+    {"id": "nodal_cycle", "start_utc": "2026-11-01 00:00", "stop_utc": "2045-07-01 00:00", "step": "25 h", "note": "one 18.6-year lunar nodal cycle, 25-hour step so that the hour of day drifts"}
+  ]
+}
