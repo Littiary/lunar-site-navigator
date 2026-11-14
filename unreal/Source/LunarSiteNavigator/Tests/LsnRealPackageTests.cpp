@@ -8,8 +8,8 @@
 //    "synthetic" nowhere, in any spelling, except inside the validation status
 //    brackets if a method card of the package itself says so.
 //
-// F. Real packages (every site package under Content/LsnPackages, if that folder
-//    exists; it is not under version control, see Scripts/import_packages.ps1).
+// F. Real packages (every site package published under packages/ at the root of the
+//    repository).
 //    - each loads, is not synthetic, and shows no synthetic marker;
 //    - the countdown at the first sample equals the package's own countdown metric
 //      (time_to_set_s while visible, time_to_rise_s while not) within 1e-3 s and
@@ -26,6 +26,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Mesh/LsnMesh.h"
+#include "Planner/LsnPlanner.h"
 #include "ProceduralMeshComponent.h"
 #include "Scene/LsnHud.h"
 #include "Scene/LsnSiteScene.h"
@@ -137,12 +138,12 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 {
 	using namespace LsnRealTest;
 
-	const FString Root = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnPackages")));
+	const FString Root = LsnPlanner::PublishedPackageRoot();
 	TArray<FLsnIndexEntry> Entries;
 	FString Error;
 	if (!LsnPackageIO::LoadIndex(Root, Entries, Error))
 	{
-		AddWarning(FString::Printf(TEXT("NOT RUN: no imported packages under %s (%s). Run Scripts/import_packages.ps1 <package root>."), *Root, *Error));
+		AddWarning(FString::Printf(TEXT("NOT RUN: no published packages found (packages/ at the root of the repository). %s"), *Error));
 		return true;
 	}
 

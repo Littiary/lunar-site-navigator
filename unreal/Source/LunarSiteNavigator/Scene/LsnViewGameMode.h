@@ -26,9 +26,9 @@ class ALsnSiteScene;
  *                                           stretch as frame_00000.png ... and quit; run with
  *                                           -benchmark -fps=30 for a fixed frame rate)
  *
- * Without -LsnPackage and -LsnPackageRoot the packages are looked for in
- * <project>/Content/LsnPackages (copied there by Scripts/import_packages.ps1 and staged
- * with a packaged build), then in the contract sample, then in the pinned test copy.
+ * Without -LsnPackage and -LsnPackageRoot the published packages are shown: packages/ at
+ * the root of the repository (in a stand-alone build: the copy of that folder staged with
+ * it). Failing that, the contract sample, then the pinned test copy.
  */
 UCLASS()
 class LUNARSITENAVIGATOR_API ALsnViewGameMode : public AGameModeBase

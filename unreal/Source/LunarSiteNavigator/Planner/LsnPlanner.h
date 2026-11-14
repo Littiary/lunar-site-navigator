@@ -30,6 +30,13 @@ namespace LsnPlanner
 	 */
 	LUNARSITENAVIGATOR_API FVector SecondSceneOffsetCm();
 
+	/**
+	 * The published packages: the folder packages/ at the root of the repository, which the
+	 * science core regenerates. A stand-alone build carries a copy of exactly that folder,
+	 * made when it is built (Scripts/package.ps1). Empty if neither exists.
+	 */
+	LUNARSITENAVIGATOR_API FString PublishedPackageRoot();
+
 	/** The site packages of a package root, in the order of index.json. */
 	LUNARSITENAVIGATOR_API bool ListSites(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutSites, FString& OutError);
 

@@ -233,8 +233,12 @@ bool FLsnPlannerLogicTest::RunTest(const FString& Parameters)
 	TArray<FLsnIndexEntry> Sites;
 	FString Error;
 	TestTrue(FString::Printf(TEXT("the sites of the pinned sample are listed (%s)"), *Error), LsnPlanner::ListSites(LsnTest::FixtureRoot(), Sites, Error));
-	TestEqual(TEXT("the sample has one site"), Sites.Num(), 1);
-	TestTrue(TEXT("only site packages are listed"), Sites.Num() == 1 && Sites[0].Kind == TEXT("site") && !Sites[0].SiteId.IsEmpty());
+	TestTrue(TEXT("the sample has at least one site"), Sites.Num() >= 1);
+	for (const FLsnIndexEntry& Site : Sites)
+	{
+		// Direction tables and, since 0.5, site-pairs packages are in the index too and must be left out.
+		TestTrue(TEXT("only site packages are listed"), Site.Kind == TEXT("site") && !Site.SiteId.IsEmpty());
+	}
 	TestFalse(TEXT("a folder without index.json has no site list"), LsnPlanner::ListSites(LsnTest::FixtureRoot() / TEXT("site"), Sites, Error));
 
 	// Panorama: azimuth 0 at the left edge, 360 wraps to it; elevation range clamps.

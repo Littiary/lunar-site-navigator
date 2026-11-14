@@ -36,8 +36,12 @@ FString ALsnViewGameMode::ResolvePackageRoot(FString& OutError)
 	}
 	else
 	{
-		// Packages imported for the demo, the sample that ships with the contract, then the copy pinned for the tests.
-		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnPackages"))));
+		// The published packages, the sample that ships with the contract, then the copy pinned for the tests.
+		const FString Published = LsnPlanner::PublishedPackageRoot();
+		if (!Published.IsEmpty())
+		{
+			Roots.Add(Published);
+		}
 		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../docs/contract/sample/packages"))));
 		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("TestData/contract-sample/packages"))));
 	}

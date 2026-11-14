@@ -1,5 +1,7 @@
 #include "Planner/LsnPlanner.h"
 
+#include "Misc/Paths.h"
+
 FVector2D FLsnPanorama::Point(double AzimuthDeg, double ElevationDeg) const
 {
 	const double Az = FMath::Fmod(FMath::Fmod(AzimuthDeg, 360.0) + 360.0, 360.0);
@@ -12,6 +14,22 @@ FVector LsnPlanner::SecondSceneOffsetCm()
 	// 20 000 km to the north: ten times the Moon's diameter. The shadow clipmaps of a view
 	// reach a few hundred kilometres, the terrain 300 km, the Moon sphere 3474 km.
 	return FVector(2.0e9, 0.0, 0.0);
+}
+
+FString LsnPlanner::PublishedPackageRoot()
+{
+	const FString Candidates[] = {
+		FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../packages"))),
+		FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnPackages"))),
+	};
+	for (const FString& Candidate : Candidates)
+	{
+		if (FPaths::FileExists(FPaths::Combine(Candidate, TEXT("index.json"))))
+		{
+			return Candidate;
+		}
+	}
+	return FString();
 }
 
 bool LsnPlanner::ListSites(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutSites, FString& OutError)

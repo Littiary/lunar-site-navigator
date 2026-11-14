@@ -63,21 +63,22 @@ package never is (both directions are tested).
 Scripts\build.ps1                               # compile the editor target
 Scripts\run_tests.ps1                           # all automated tests, no window
 python Scripts\compare_horizon.py               # horizon comparison repeated in Python
-Scripts\import_packages.ps1 <package root>      # real packages -> Content\LsnPackages
-python Scripts\export_terrain.py Content\LsnPackages   # real ground (needs the data stream's reader and the LOLA files)
+python Scripts\export_terrain.py ..\packages     # real ground (needs the data stream's reader and the LOLA files)
 Scripts\capture.ps1 -Out <png> -Time 2092 -Yaw 211 -Pitch -3 -Fov 40
 Scripts\record.ps1 -Out <mp4> -Site <site_id> -From 2088 -To 2100 -Seconds 25   # needs ffmpeg
 Scripts\package.ps1 -Out <folder>               # stand-alone Windows program
 ```
 
-`Content\LsnPackages` and `Content\LsnTerrain` are not under version control. The real
-packages are produced by the science core (`python -m validation.sites.run <sites.json>
---out <package root>` on the core branch, with the LOLA files of `python -m lsn_data
-fetch`); the same command gives the same package ids on every machine.
+The scene reads the published packages from `packages/` at the root of the repository,
+which the science core regenerates; it keeps no copy of its own. Any contract version
+0.x is read, and a panel whose fields a package lacks is hidden. `Content\LsnTerrain`
+(the terrain samples for drawing) is not under version control; it is tied to the package
+ids, so run `export_terrain.py` again after the packages have been regenerated, or the
+placeholder ground is drawn.
 
 The stand-alone program is the folder `<folder>\Windows`; start `LunarSiteNavigator.exe`.
-It needs neither the editor nor a network connection: packages and terrain are staged
-next to it as plain files. `-LsnSite=<site_id>` picks a site, `-windowed -ResX= -ResY=`
+It needs neither the editor nor a network connection: `package.ps1` copies `packages/`
+and the terrain samples into it as plain files when it is built. `-LsnSite=<site_id>` picks a site, `-windowed -ResX= -ResY=`
 a window.
 
 ## Planner interface
@@ -113,8 +114,9 @@ Command line: `-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with in
 `-LsnFollowSun`, `-LsnHorizonLine`, `-LsnNoFillLight`, `-LsnNoObstacle`, `-LsnShot=<png>`,
 `-LsnPlayFrom= -LsnPlayTo= -LsnPlaySeconds= -LsnMovieDir=`.
 
-Without a package argument the scene uses `Content\LsnPackages`, then
-`docs/contract/sample/packages`, then the pinned copy in `TestData/`.
+Without a package argument the scene uses `packages/` of the repository (in the
+stand-alone program: its copy of that folder), then `docs/contract/sample/packages`, then
+the pinned copy in `TestData/`.
 
 ## Tests and thresholds
 
@@ -140,8 +142,9 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Real.ImportedPackages` | On every imported real package: not synthetic, countdown at the start equals the package's own metric, obstacle points, scene silhouette, direction table against series | 1e-3 s; 0.05; 0.001; 0.0002 deg |
 | `Real.TerrainAgainstHorizon` | No LOLA sample (from the start of the package's horizon search outwards) stands above the package horizon of its azimuth; mesh silhouette with real ground | 0.001 deg |
 
-The two `Real.*` tests report a warning ("NOT RUN") when no real packages or terrain are
-imported, as on a machine without the data.
+The two `Real.*` tests run on the published packages in `packages/`. The terrain test
+reports a warning ("NOT RUN") for a site without exported terrain samples, as on a machine
+without the LOLA files.
 
 ## Limits
 

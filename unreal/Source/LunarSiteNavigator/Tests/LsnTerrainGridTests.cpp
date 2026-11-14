@@ -37,6 +37,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Mesh/LsnMesh.h"
+#include "Planner/LsnPlanner.h"
 #include "ProceduralMeshComponent.h"
 #include "Scene/LsnSiteScene.h"
 #include "Terrain/LsnTerrainGrid.h"
@@ -171,12 +172,12 @@ bool FLsnTerrainRealTest::RunTest(const FString& Parameters)
 {
 	using namespace LsnTerrainTest;
 
-	const FString PackageRoot = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnPackages")));
+	const FString PackageRoot = LsnPlanner::PublishedPackageRoot();
 	TArray<FLsnIndexEntry> Entries;
 	FString Error;
 	if (!LsnPackageIO::LoadIndex(PackageRoot, Entries, Error))
 	{
-		AddWarning(FString::Printf(TEXT("NOT RUN: no imported packages under %s. Run Scripts/import_packages.ps1."), *PackageRoot));
+		AddWarning(TEXT("NOT RUN: no published packages found (packages/ at the root of the repository)."));
 		return true;
 	}
 	int32 SitesWithTerrain = 0;
