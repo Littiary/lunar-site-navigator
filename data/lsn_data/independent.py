@@ -203,11 +203,23 @@ def read_rdr(path: Path) -> dict:
     return {"lon": np.mod(lon, 360.0), "lat": lat, "radius_m": rad, "flag": flag}
 
 
-def compare_rdr(dem: PolarDEM, files: list[Path], lat_lo: float, lat_hi: float, max_points: int = 2_000_000, seed=SEED) -> dict:
+# Spot selection. LOLARDR.FMT: "flags in the least significant byte. Any values other than 0 should be regarded as an
+# invalid measurement"; bits 8-9 are RMU phase status, bit 10 "TDC status invalid, rare but serious", bits 16-31 a
+# relative range-uncertainty indicator. "flag_zero" (the whole word 0) is what the criteria files say and is a strict
+# subset; "documented" is the format's own rule plus bit 10.
+VALID_RULES = {
+    "flag_zero": lambda f: f == 0,
+    "documented": lambda f: (f & 0x04FF) == 0,
+}
+
+
+def compare_rdr(dem: PolarDEM, files: list[Path], lat_lo: float, lat_hi: float, max_points: int = 2_000_000, seed=SEED,
+                rule: str = "flag_zero") -> dict:
     lon, lat, rad = [], [], []
+    valid = VALID_RULES[rule]
     for f in files:
         s = read_rdr(f)
-        ok = (s["flag"] == 0) & (s["lat"] >= lat_lo) & (s["lat"] <= lat_hi) & (s["radius_m"] > 1.7e6)
+        ok = valid(s["flag"]) & (s["lat"] >= lat_lo) & (s["lat"] <= lat_hi) & (s["radius_m"] > 1.7e6)
         lon.append(s["lon"][ok])
         lat.append(s["lat"][ok])
         rad.append(s["radius_m"][ok])
@@ -233,6 +245,7 @@ def compare_rdr(dem: PolarDEM, files: list[Path], lat_lo: float, lat_hi: float, 
     mirror_rms = float(np.sqrt(np.nanmean(dm**2)))
     return {
         "ours": dem.product_id,
+        "spot_selection": rule,
         "reference": "LOLA RDR returns, " + ", ".join(f.stem.upper() for f in files),
         "latitude_band": [lat_lo, lat_hi],
         "spots_in_band": int(n_all),
@@ -272,6 +285,10 @@ def run(root: Path | None = None) -> dict:
         r = compare_rdr(dem, rdr, *band)
         r["judgement"] = _judge(r["stats"], r["fit"], r["mirror_rms_ratio"], crit_b)
         out["results"][name] = r
+        # the format's documented validity rule (more returns); same criterion, reported alongside
+        r2 = compare_rdr(dem, rdr, *band, rule="documented")
+        r2["judgement"] = _judge(r2["stats"], r2["fit"], r2["mirror_rms_ratio"], crit_b)
+        out["results"][name + "_documented_flags"] = r2
     sh = {"LDEM_16": CylMosaic([l16]).height_m, "LDEM_60S_60M": d60.height_m}
     if l128 is not None:
         sh["LDEM_128"] = CylMosaic([l128]).height_m
