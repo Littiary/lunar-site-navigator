@@ -1,7 +1,8 @@
 # Everything to do once new packages are published in packages/ on main, in one command:
 #
 #   1. merge origin/main into the current branch (skipped with -NoMerge);
-#   2. sample the terrain for the new packages (Scripts/export_terrain.py, drawing only);
+#   2. sample the terrain for the new packages (Scripts/export_terrain.py, drawing only) and
+#      export the orientation of the sky for them (Scripts/export_sky.py, star field);
 #   3. build the editor target and run all tests;
 #   4. produce the pitch clip and the six stills (Scripts/pitch.ps1); a still whose field the
 #      packages do not carry is skipped and named in docs/unreal/pitch/README.txt;
@@ -49,6 +50,7 @@ Step "What is published" {
     foreach ($p in $index.packages) { Write-Host ("  {0,-16} {1,-28} {2}  synthetic={3}" -f $p.kind, $p.site_id, $p.package_id, $p.synthetic) }
 }
 Step "Terrain samples for the published packages" { & $Python (Join-Path $PSScriptRoot "export_terrain.py") (Join-Path $repo "packages") }
+Step "Sky orientation for the published packages" { & $Python (Join-Path $PSScriptRoot "export_sky.py") (Join-Path $repo "packages") }
 Step "Build" { & (Join-Path $PSScriptRoot "build.ps1") -EngineRoot $EngineRoot }
 Step "Tests" { & (Join-Path $PSScriptRoot "run_tests.ps1") -EngineRoot $EngineRoot }
 if (-not $SkipPitch) {

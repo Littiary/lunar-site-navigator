@@ -103,10 +103,14 @@ if ($Only -ne "clip") {
         Still "still_4_uncertainty_band.png" "$($a.Name) at $BandUtc, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPage=uncertainty$rootArgument" }
     } else { Skip "still_4_uncertainty_band.png" "The band for a stated horizon error and the landing-ellipse survey (contract 0.4, SPEC 5.7)" }
     Still "still_5_south_pole_wide.png" "The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud$rootArgument" }
+    Still "still_7_mast_and_lander.png" "$($a.Name) at $WideUtc: the camera stands 5 m above and 22 m behind the observer (not the observer's view) and shows the mast that carries the observer at 10 m and the lander beside it. Both are scale objects of the team's own design, not part of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 140; Pitch = -6; Fov = 50; Extra = "-LsnCameraUp=5 -LsnCameraBack=22 -LsnHeight=4 -LsnNoHud$rootArgument" }
     Still "still_6_astronaut_height.png" "$($a.Name) at $WideUtc from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = 3; Fov = 62; Extra = "-LsnNoHud$rootArgument" }
 }
-$notes.Add("Not in any of these: textures, an atmosphere, stars or a map of the Earth. The ground is LOLA elevation data sampled on 320")
-$notes.Add("rings per azimuth; surface shading, exposure and the weak fill light are display choices (see unreal/README.md).")
+$notes.Add("The ground is LOLA elevation data sampled on 320 rings per azimuth. Roughness and small craters finer than that data are")
+$notes.Add("illustrative shading computed in the surface shader: positions, shadows and the horizon are those of the data. Stars are the")
+$notes.Add("Yale Bright Star Catalogue, turned for the date. Lander, mast and boulders are scale objects of the team's own design, not part")
+$notes.Add("of any package. Surface shading, exposure, the glare of the Sun and the fill light while the Sun is down are display choices")
+$notes.Add("(see unreal/README.md). Not in any of these: image textures, an atmosphere or a map of the Earth.")
 $notesFile = Join-Path $Out "README.txt"
 if ($Only -ne "all" -and (Test-Path $notesFile)) { Add-Content -Path $notesFile -Encoding ascii -Value @("", "---- partial run (-Only $Only) ----") ; Add-Content -Path $notesFile -Encoding ascii -Value $notes }
 else { Set-Content -Path $notesFile -Encoding ascii -Value $notes }

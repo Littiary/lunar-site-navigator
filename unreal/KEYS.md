@@ -6,18 +6,25 @@ of a package.
 
 ## With the mouse alone
 
-The mouse pointer is visible. Everything a first look needs is on screen:
+The mouse pointer is visible. The header shows the site, the time and three chips: the Sun,
+the Earth (each with the time to its next set or rise) and whether a landing now meets the
+example requirement. Under it are the three main actions; the other controls are in
+labelled groups along the bottom.
 
 | What | How |
 | --- | --- |
 | Choose the time | drag on either time strip (upper: six days around the selected time; lower: the whole computed range) |
 | Play the timeline | button **Play / pause**, **Slower**, **Faster** |
 | Step in time | **< Step**, **Step >** (one sample of the package), **< Day**, **Day >** |
+| Jump to the next sunset | main button **Jump to next sunset** |
 | Next or previous rise or set of the Sun | **< Sunrise / set**, **Sunrise / set >** |
 | Another site | **Next site** |
-| Two sites side by side at the same instant | **Two sites**; **Next right site** changes the right one |
+| Two sites side by side at the same instant | main button **Compare two sites**; **Next site >** in the header of the right view changes the right one |
 | Calendar, uncertainty, mast-height trade and site pairs | **Calendar**, **Uncertainty**, **Mast / pairs** (a page is shown only if the package has the field) |
-| Which terrain hides the Sun or the Earth | **Obstacle** (on at the start) |
+| Which terrain hides the Sun or the Earth, and what it costs | main button **What blocks the Sun?** (on at the start) |
+| Package id, frame, contract version, test status | **Details** |
+| Lander, mast and boulders for scale | **Scale objects** |
+| A weak light while the Sun is down | **Night fill light** |
 | Observer height (mast height) | **Observer height** goes round the heights of the package |
 | Keep the view on the Sun | **Follow Sun** |
 | Slower graphics card | **Low quality** |
@@ -49,8 +56,10 @@ A lit button is switched on.
 | F | keep the view on the Sun's azimuth |
 | PageUp / PageDown | observer height |
 | H | horizon line of the package |
-| L | weak fill light (a display aid, not physics) |
+| L | fill light while the Sun is down (a display aid, not physics) |
 | G | lower drawing quality |
+| I | details: package, frame, contract version, test status |
+| P | scale objects (lander, boulders) |
 | F1 | list of keys on screen |
 | Tab | hide the pointer and look with the mouse alone (Tab again brings it back) |
 | Esc | quit |
@@ -61,7 +70,7 @@ A first-time user will not find these without this list:
 
 - the events of the Earth (Shift + B / N); the buttons jump to the events of the Sun only;
 - choosing a site by its number (1 .. 9) and choosing the right site directly (Shift + number);
-- the next requirement (R), the horizon line (H), the fill light (L);
+- the next requirement (R), the horizon line (H);
 - jumping to the first or last sample (Home / End) and stepping 24 samples (Shift + Q / E);
 - Tab for looking with the mouse without holding a button.
 

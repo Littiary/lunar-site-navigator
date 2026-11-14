@@ -53,10 +53,14 @@ with Git LFS: run `git lfs install` once per machine).
 | Uncertainty page: ellipse map and its hours | package: `timeline.uncertainty.landing_ellipse` (points, statistics), `series.SUN.ellipse_visible_share` |
 | Mast-height trade, site pairs | package (since 0.5, SPEC 5.8, 6a): `timeline.height_trade`; the `site_pairs` package of the root, shown only if it was computed from the very site package on screen |
 | Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
-| Surface shading | none (a display model): the engine's cosine law times a regolith factor 2 / (mu0 + mu), limited to 4, which together give the Lommel-Seeliger law used as a first description of dark, dusty surfaces. The Sun's direction in it is the package's. Uniform grey, no texture, no invented relief |
+| Surface shading | none (a display model): the engine's cosine law times a regolith factor 2 / (mu0 + mu), limited to 4, which together give the Lommel-Seeliger law used as a first description of dark, dusty surfaces. The Sun's direction in it is the package's. No image texture |
+| Roughness and small craters finer than the elevation data | none: **illustrative**. A procedural height field computed in the surface shader (two scales of roughness, craters of about 0.4 to 4 m, a few per cent of grey variation) tilts the shading normal only. Vertex positions are untouched, so the outline of the terrain, its shadows and the horizon are those of the data, and the horizon test does not see it. It fades out with distance (45 m to 1.1 km). Stated on screen in the details; `-LsnNoDetail` switches it off |
+| Star field | Yale Bright Star Catalogue (8404 stars to magnitude 6.5, `Content/LsnSky/stars.f4`), turned for the date by the orientation of the Moon that `Scripts/export_sky.py` takes from the SPICE kernels of the ephemeris stream (a cache tied to the package id, like the terrain samples). Decoration: no number comes from it. Checked on real data: SPICE's Sun direction turned by the same matrices equals the package's Sun series within 0.001 deg. Dimmed to a tenth while the package gives the Sun as wholly visible; brightness is a compressed scale, not photometry. `-LsnNoStars` |
+| Lander, mast, boulders | none: scale objects of the team's own design, built in Blender by `Scripts/blender/make_scale_objects.py` (generic four-legged lander 3.85 m high, a mast whose head stands at the observer height of the package, boulders of 0.4 to 1.7 m). They belong to no package, are separate from the terrain mesh and take no part in the horizon test. The lander stands 38 m from the site; it can stand between the observer and a low Sun, which no package number knows about. Button **Scale objects**, key `P`, `-LsnNoScaleObjects`. The mast is where the observer is, so it is drawn only for a camera that is not the observer (`-LsnCameraUp= -LsnCameraBack=`) |
+| Glare of the Sun | none: the engine's bloom, limited to what is several times brighter than sunlit ground |
 | Earth's disc | package: direction and angular size; a plain sphere lit by the scene's Sun, so its phase follows from the two package directions. No map of the Earth: the package does not say which side faces the Moon |
 | Shadows | the engine's virtual shadow maps from the terrain mesh, with the Sun's angular diameter (package) as the light's source angle: hard shadows with the penumbra of the solar disc |
-| Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
+| Fill light from the zenith, no shadows | none: a display aid so that the terrain stays readable while the Sun is down. It is on only while the package gives the Sun as wholly hidden at the selected sample; with the Sun up, shadows are black. Button **Night fill light**, key `L`, `-LsnNoFillLight` |
 
 Between two time samples the Sun and the Earth are drawn at the linear interpolation of
 the package series over that one step, for a smooth display; at a whole sample the
@@ -109,12 +113,29 @@ another direction at each site; `F` switches to a common azimuth. If the instant
 outside the time range of the right package, that half says so and keeps its nearest
 sample.
 
-The main actions are buttons along the bottom of the left (or only) view; a lit button is
-switched on. The pointer is visible: click a button, drag on a time strip to choose the
-time, hold the right mouse button to look round, turn the wheel to zoom. Every button and
-its key carry out the same named action (`ALsnObserverPawn::DoAction`). `KEYS.md` is the
-one-page list for a first-time user (copied into the stand-alone program as `KEYS.txt`);
-it also names what is on keys only.
+The screen is laid out as a product screen with one type scale (site name, large; times and
+countdowns, large; text; captions):
+
+- **Header**: site name, selected time, and three chips: Sun, Earth (state and time to the
+  next set or rise from the package windows, with the range for the stated horizon error)
+  and whether a landing now meets the example requirement. A chip is filled in its colour
+  while the state is good and dark with a coloured edge while it is not.
+- **Three main actions**, the largest buttons on screen: compare two sites, jump to the next
+  sunset (the package's next `set` event of the Sun), show what blocks the Sun.
+- **What blocks the Sun or the Earth now**, under the main actions: distance, azimuth and
+  cost of the obstacle as the package gives them.
+- **Bar along the bottom** in labelled groups: time, observer, site, plan, view, info.
+- **Details** on demand (button, key `I`): package id, frame, contract version, the raw
+  values of the sample and the validation status of every method behind a number on screen.
+- **Planner pages** (calendar, uncertainty, mast and pairs) open as a sheet over the view.
+- Side by side, each half has its own header and chips; the right half's **Next site >** is
+  in its own header; the bar spans the window.
+
+The pointer is visible: click a button, drag on a time strip to choose the time, hold the
+right mouse button to look round, turn the wheel to zoom. Every button and its key carry
+out the same named action (`ALsnObserverPawn::DoAction`). `KEYS.md` is the one-page list
+for a first-time user (copied into the stand-alone program as `KEYS.txt`); it also names
+what is on keys only.
 
 | Keys | |
 |---|---|
@@ -133,6 +154,8 @@ it also names what is on keys only.
 | `Space`, `[`, `]` | play and pause, halve and double the playing speed |
 | `Tab` | hide the pointer and look with the mouse alone |
 | `G` | lower drawing quality |
+| `I` | details panel |
+| `P` | scale objects |
 | `F1` | list of keys on screen |
 | `F` | keep the view on the Sun's azimuth |
 | `PageUp` / `PageDown` | observer height |
@@ -205,8 +228,10 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Package.BlockerRecipe`, `ObstaclesOfTheSample` | The viewer recipe of SPEC 5.5 on a hand-made package and on the sample: limiting azimuth, obstacle, cost; runs carry their obstacle id; blockers are sorted and name existing obstacles; wording of the sentences | exact; shares <= 1 + 1e-6 |
 | `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
 | `Acceptance.SecondSceneAwayFromOrigin` | A scene 20 000 km from the world origin is the same scene: eye, Sun disc, light and silhouette as the package says; the two scenes are lit on separate lighting channels | 0.001 deg; 1e-6 cm |
-| `Planner.ButtonsOnScreen` | At six view sizes (full views from 1280 x 720 to 3840 x 2160, half views of a comparison): every button on screen, at least 22 x 60 px, no overlap with another button or a time strip, strips above the buttons, each main action has exactly one button | exact |
-| `Planner.ButtonsDoWhatKeysDo` | Named actions step by one sample and one day exactly, stop at the ends, go round the observer heights, switch play and the obstacle view; an unknown name is refused | exact |
+| `Planner.ButtonsOnScreen` | At four window sizes (1280 x 720 to 3840 x 2160), one view and side by side: every button in the window, at least 22 x 60 px, no overlap with another button or a time strip, strips between header and bar, every bar button in a labelled group, the three main actions at least twice as large as any other button, no button across the middle of a side-by-side window, the right view's control in the right half | exact |
+| `Planner.ButtonsDoWhatKeysDo` | Named actions step by one sample and one day exactly, stop at the ends, go round the observer heights, switch play, the obstacle view and the details; "next sunset" lands on the package's next `set` event of the Sun; an unknown name is refused | exact; 1e-6 s |
+| `Props.ModelsHaveTheirSizes`, `Props.TerrainUntouched` | The scale objects load, stand on the ground, have the sizes they claim, the mast reaches the observer height; showing or hiding them leaves the terrain mesh unchanged | 0.15 m; 0.01 m; exact |
+| `Sky.StarsWhereTheyStand` | Hand-made orientation maps J2000 axes to east, north, up and interpolates by the shortest turn; Sirius is the brightest star at its catalogue position; on the published packages SPICE's Sun direction turned by the exported orientation equals the package's Sun series | 1e-9; 1e-6 deg; 0.01 deg |
 | `Planner.LinkedTimeEventsAndMetrics` | Both halves show the same TDB instant or say that they cannot; jumps go to package events only; the summary numbers are the package metrics with units converted; site list; panorama mapping | 1e-9 samples; exact |
 | `Planner.LandingSlipAndPanels`, `Package.PlanningFieldsOfTheSample` | Slip of a selected landing time from the landing windows (hand-made: exact; at the planned landing: equal to the package's slip report); calendar periods without gaps; certain inside visible inside possible at every sample; event bands contain their event; ellipse points inside the stated ellipse; mast and pair tables; nothing is shown without the fields | 1e-9 s; 1e-3 s; 0 violations |
 | `Real.PlanningFieldsOnlyWhenPublished` | States for every published site package which planning fields it carries, and checks its slip reports where it has them | 1e-3 s |
@@ -250,7 +275,20 @@ without the LOLA files.
   has not been checked: the session that built this cannot move the pointer of the desktop.
   `Scripts\click_test.ps1`, run from an ordinary terminal, does it with real clicks and
   prints what the program received. Keys and split screen were checked on real captures.
-- The right half of a comparison has no buttons; the left half's buttons act on both.
+- Side by side, the bar and the main buttons act on both halves; the right half has one
+  control of its own (its next site).
+- Dark wedges on the near ground at a very low Sun (seen at de Gerlache at 2.5 deg): measured
+  cause, they appear in the single view too and vanish with shadows off. They are shadows the
+  elevation surface casts on itself: its 20 m pixels in 0.5 m steps tilt by multiples of
+  1.43 deg, and a patch tilted away from the Sun by more than the Sun's height lies in the
+  shadow of its own upper edge. The package says the site itself is lit (its horizon search
+  starts 20 m out). Positions are not smoothed, so the wedges stay; the fine shading detail
+  makes them less bare.
+- The dark horizontal stripes that the side-by-side view showed were a different thing and
+  are gone: the two scenes stood 20 000 km apart in one world, which broke the shadows of
+  both (measured: not in the single view, not with shadows off, pattern changed with the
+  distance). Both scenes now stand at the same place, kept apart by the views and the
+  lighting channels.
 - `-LsnCameraUp=<m> -LsnCameraBack=<m>` lifts the camera above the observer for overview
   stills; the read-out then says that this is not the observer's view, and the markers
   that only make sense from the site are not drawn. `-LsnNoHud` leaves a caption line

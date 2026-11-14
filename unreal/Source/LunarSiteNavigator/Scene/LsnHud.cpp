@@ -818,7 +818,7 @@ void ALsnHud::DrawHUD()
 	for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
 	{
 		FLsnBlocking Blocking;
-		if (bOverview || Page != ELsnPlannerPage::Summary || !Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
+		if (bOverview || bDetails || Page != ELsnPlannerPage::Summary || !Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
 		{
 			continue;
 		}
