@@ -295,3 +295,118 @@ def test_gridded_synthetic_dem_of_the_data_stream():
     assert res.elevation_deg[0, 90] > res.elevation_deg[0, 270] + 3.0
     # the gridded cone is lower than the analytic one, never higher, and not by much
     assert -0.5 <= res.elevation_deg[0, 90] - expected[90] <= TOL_FIXTURE_DEG
+
+
+# -- completeness on gridded terrain: nothing along a ray may be missed -------------------
+#
+# Added after the first runs on LOLA data showed that sparse sampling of far terrain can
+# step over narrow crests. The threshold below was written before the new search was
+# implemented and measured.
+#
+# The reference is an exhaustive walk along the ray on the finest data in 1 m steps with
+# the unrearranged triangle formula. Both the core and the reference can only find
+# elevations that exist on the surface, so "core >= reference - tolerance" means the core
+# missed nothing the reference found.
+#
+# Change of the test logic (not of the threshold), 14 November: the first version also
+# demanded |core - reference| <= tolerance for obstacles farther than 1 km, assuming that
+# a 1 m step resolves the surface well below the tolerance there. That assumption is
+# false where the surface has sharp peaks between the reference's steps: the core then
+# reported HIGHER elevations than the reference (by 0.0022 deg on LOLA data, by 0.011 deg
+# on the spiked raster below). A higher value is only acceptable if it is real, so the
+# two-sided comparison was replaced by an independent check that the point the core
+# reports exists on the surface and has the elevation the core states.
+TOL_COMPLETENESS_DEG = 0.002
+TOL_REPORTED_POINT_DEG = 1e-5  # reported obstacle, recomputed independently from the data
+
+
+def _reference_profile(reader, radius, lat, lon, azimuth_deg, observer_m, max_range_m):
+    s = np.arange(20.0, max_range_m, 1.0)
+    g = s / radius
+    if abs(lat) == 90.0:
+        plat, plon = -90.0 + np.degrees(g), np.full_like(g, lon + azimuth_deg)
+    else:
+        plat, plon = gc_point(lat, lon, azimuth_deg, g)
+    h = reader.height_m(plon, plat)
+    ground = float(reader.height_m(lon, lat))
+    e = exact_elevation_deg(radius + ground + observer_m, radius + h, g)
+    k = int(np.nanargmax(e))
+    return float(e[k]), float(s[k])
+
+
+def _assert_complete(terrain, reader, lat, lon, max_range_m, azimuths, heights=(0.0, 2.0, 20.0)):
+    res = compute_horizon(terrain, lat, lon, list(heights), azimuth_step_deg=0.25, max_range_m=max_range_m)
+    for i, m in enumerate(heights):
+        for az in azimuths:
+            j = int(round(az / 0.25))
+            ref_e, ref_s = _reference_profile(reader, terrain.reference_radius_m, lat, lon, az, m, max_range_m)
+            assert res.elevation_deg[i, j] >= ref_e - TOL_COMPLETENESS_DEG, (lat, lon, az, m)
+            # the reported obstacle is a real point of the surface with the stated elevation
+            radius = terrain.reference_radius_m
+            g = res.distance_m[i, j] / radius
+            if abs(lat) == 90.0:
+                plat, plon = -90.0 + math.degrees(g), lon + az
+            else:
+                plat, plon = gc_point(lat, lon, az, g)
+            ground = float(reader.height_m(lon, lat))
+            there = float(reader.height_m(plon, plat))
+            recomputed = float(exact_elevation_deg(radius + ground + m, radius + there, g))
+            assert abs(recomputed - res.elevation_deg[i, j]) <= TOL_REPORTED_POINT_DEG, (lat, lon, az, m)
+            assert abs(there - res.obstacle_height_m[i, j]) <= 1e-3
+    return res
+
+
+@pytest.fixture(scope="module")
+def rough_raster(tmp_path_factory):
+    """A rough synthetic raster in the format of the LOLA polar products, with overviews:
+    20 m pixels, 4096 x 4096, relief with sharp single-pixel spikes. Not lunar data."""
+    lsn_data = pytest.importorskip("lsn_data")
+    from lsn_data import pyramid, synthetic
+    from lsn_data.dem import PolarDEM, Terrain
+
+    out = tmp_path_factory.mktemp("rough")
+    n, pixel = 4096, 20.0
+    half = n * pixel / 2
+    c = (np.arange(n) + 0.5) * pixel
+    x, y = -half + c[None, :], half - c[:, None]
+    h = (
+        900.0 * np.sin(x / 5200.0) * np.cos(y / 4100.0)
+        + 250.0 * np.sin(x / 700.0 + y / 450.0)
+        + 60.0 * np.sin(x / 90.0) * np.sin(y / 70.0)
+    )
+    rng = np.random.default_rng(20261114)
+    spikes = rng.integers(0, n, size=(4000, 2))
+    h[spikes[:, 0], spikes[:, 1]] += rng.uniform(40.0, 200.0, size=4000)  # single-pixel peaks
+    dn = np.rint(h / synthetic.SCALE).astype("<i2")
+    (out / "rough_s90_20m.dat").write_bytes(dn.tobytes())
+    (out / "rough_s90_20m.lbl").write_bytes(synthetic.label_text(dn, n, pixel, "ROUGH_S90_20M").encode("ascii"))
+    base = PolarDEM(out / "rough_s90_20m.lbl")
+    pyramid.build(base, out / "pyr", levels=6, log=lambda *a: None)
+    return Terrain([PolarDEM(out / "rough_s90_20m.lbl", pyramid_dir=out / "pyr")])
+
+
+@pytest.mark.parametrize("lat, lon", [(-90.0, 0.0), (-89.7, 40.0), (-89.4, -110.0)])
+def test_nothing_is_missed_on_a_rough_gridded_surface(rough_raster, lat, lon):
+    from lsncore.dem import LolaTerrain
+
+    terrain = LolaTerrain(rough_raster)
+    _assert_complete(terrain, rough_raster, lat, lon, 20_000.0, azimuths=np.arange(0.0, 360.0, 22.5))
+
+
+def test_nothing_is_missed_on_lola_data():
+    """The same check on the LOLA products, when they are present on this machine."""
+    lsn_data = pytest.importorskip("lsn_data")
+    from lsncore.dem import LolaTerrain
+
+    try:
+        reader = lsn_data.open_terrain()
+    except FileNotFoundError:
+        pytest.skip("LOLA products are not on this machine")
+    terrain = LolaTerrain(reader)
+    for lat, lon in [(-89.5, 137.0), (-85.3, 31.2), (-88.8, -68.5)]:  # arbitrary test points
+        t0 = time.perf_counter()
+        _assert_complete(terrain, reader, lat, lon, 300_000.0, azimuths=np.arange(0.0, 360.0, 30.0), heights=(2.0,))
+    # runtime of the full default request on real data
+    t0 = time.perf_counter()
+    compute_horizon(terrain, -89.5, 137.0, [0.0, 1.0, 2.0, 5.0, 10.0, 20.0])
+    assert time.perf_counter() - t0 <= MAX_RUNTIME_S
