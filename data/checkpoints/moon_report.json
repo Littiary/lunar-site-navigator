@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T15:06:17Z",
+ "generated_utc": "2026-11-14T15:43:16Z",
  "criterion": "data/checkpoints/thresholds_moon.json",
  "coverage": [
   {
@@ -137,13 +137,7 @@
    "raw/lola/LDEM_128/ldem_128.img"
   ],
   "data_files_without_matching_cross_check": [
-   "raw/lola/LDEM_128/ldem_128.img",
-   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.img",
-   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.img",
-   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.img",
-   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img",
-   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.img",
-   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.img"
+   "raw/lola/LDEM_128/ldem_128.img"
   ],
   "passed": false
  },
@@ -419,7 +413,9 @@
     "label_maximum": 6.077,
     "measured_min_m": -5886.680126190186,
     "measured_max_m": 6076.67875289917,
-    "passed": true
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.3212471008300355,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "SLDEM2015_256_60S_0S_120_240_FLOAT": {
     "measured_min": -8.717449188232422,
@@ -428,7 +424,9 @@
     "label_maximum": 9.335,
     "measured_min_m": -8717.449188232422,
     "measured_max_m": 9334.83600616455,
-    "passed": false
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4491882324213492,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "SLDEM2015_256_60S_0S_240_360_FLOAT": {
     "measured_min": -6.109090328216553,
@@ -437,7 +435,9 @@
     "label_maximum": 9.455,
     "measured_min_m": -6109.090328216553,
     "measured_max_m": 9454.856872558594,
-    "passed": false
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.14312744140632105,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "SLDEM2015_256_0N_60N_000_120_FLOAT": {
     "measured_min": -6.855032920837402,
@@ -446,7 +446,9 @@
     "label_maximum": 3.907,
     "measured_min_m": -6855.032920837402,
     "measured_max_m": 3906.6553115844727,
-    "passed": false
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.34468841552737217,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "SLDEM2015_256_0N_60N_120_240_FLOAT": {
     "measured_min": -5.640065670013428,
@@ -455,7 +457,9 @@
     "label_maximum": 10.781,
     "measured_min_m": -5640.065670013428,
     "measured_max_m": 10781.240463256836,
-    "passed": false
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.24046325683535485,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "SLDEM2015_256_0N_60N_240_360_FLOAT": {
     "measured_min": -5.914435386657715,
@@ -464,7 +468,9 @@
     "label_maximum": 7.469,
     "measured_min_m": -5914.435386657715,
     "measured_max_m": 7469.3756103515625,
-    "passed": false
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4353866577151422,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    },
    "LDEM_128": {
     "measured_min": -18254.0,
@@ -473,7 +479,9 @@
     "label_maximum": 21557.0,
     "measured_min_m": -9127.0,
     "measured_max_m": 10778.5,
-    "passed": true
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.5,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
    }
   },
   "reference_radius": {

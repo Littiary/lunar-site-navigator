@@ -136,6 +136,11 @@ def open_moon(root=None, near_field=False):
             dems += site_dems(root)
         if dems:
             polar.append(Terrain(dems))
+    import json
+
+    from .paths import repo_data_dir
+
+    approved = json.loads((repo_data_dir() / "manifest" / "approved_mosaics.json").read_text(encoding="utf-8"))["approved"]
     cyl = []
     for mosaic_id, tile_ids in catalog.MOON_CYLINDRICAL:
         tiles = []
@@ -144,7 +149,9 @@ def open_moon(root=None, near_field=False):
             img = raw_dir(root) / tid / f"{tid.lower()}.img"
             if lbl.exists() and img.exists():
                 tiles.append(CylDEM(lbl, pyramid_dir=derived_dir(root) / tid))
-        if tiles and len(tiles) == len(tile_ids):
+        if tiles and len(tiles) == len(tile_ids) and mosaic_id not in approved:
+            missing.append(f"{mosaic_id} (present but not approved in data/manifest/approved_mosaics.json)")
+        elif tiles and len(tiles) == len(tile_ids):
             cyl.append(CylMosaic(tiles, product_id=mosaic_id))
         else:
             missing.append(mosaic_id + (f" ({len(tiles)} of {len(tile_ids)} tiles)" if tiles else ""))
