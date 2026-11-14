@@ -295,7 +295,7 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
     return m
 
 
-def cross_check(root: Path, rel_paths: list[str] | None = None) -> list[str]:
+def cross_check(root: Path, rel_paths: list[str] | None = None, workers: int = 3) -> list[str]:
     """Hash the same file from its other source and compare (nothing is stored)."""
     import hashlib
 
@@ -329,7 +329,7 @@ def cross_check(root: Path, rel_paths: list[str] | None = None) -> list[str]:
         if not res["matches"]:
             problems.append(rel)
 
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=workers) as ex:
         list(ex.map(one, todo))
     return problems
 

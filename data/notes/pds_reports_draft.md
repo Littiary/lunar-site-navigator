@@ -69,3 +69,35 @@ python -c "import math; R=1737400; S=20; N=30400; r=-2*R*math.tan(5*math.pi/360)
 ```
 
 The evidence and measured RMS are in data/checkpoints/dsmap_polar_sign_note.md and data/checkpoints/independent_report.json.
+
+---
+
+## 3. SLDEM2015: a one-pixel step of 144-358 m along the 90 E tile edge at 48.13-48.18 S that LDEM_128 does not show
+
+**Files**
+
+* https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/sldem2015_512_60s_30s_045_090_float.img
+  and `..._090_135_float.img` (SHA-256 identical to the MIT LOLA mirror copies; see data/manifest/manifest.json)
+* `sldem2015_256_60s_0s_000_120_float.img` (same directory)
+* LDEM_128.IMG (lola_gdr/cylindrical/img)
+
+**Observation**
+
+* SLDEM2015_512, rows 48.183 S to 48.128 S (11 rows): the last sample of tile 045_090 and the first sample of tile
+  090_135 differ by -144 to -358 m. Pixel pairs next to them within each tile differ by 5-30 m. Example at
+  48.1396 S, samples centred at 89.9990 E / 90.0010 E: 367.1 m / 126.5 m.
+* SLDEM2015_256 holds the same step, 335.0 m / 118.8 m at 48.1387 S, 89.998 / 90.002 E. Within this area
+  SLDEM2015_256 equals the 2 x 2 mean of SLDEM2015_512 exactly.
+* LDEM_128 shows a continuous slope at the same place. Along 48.1367 S, from 89.988 E to 90.012 E, the values are
+  237, 165, 94, 20 m, falling about 70 m per sample. Within 1.35 x 1.5 deg the steepest sample pair is 38.8 deg; in
+  SLDEM2015_512 it is 85.4 deg.
+* No LOLA RDR returns in our sample cover 48.6-47.7 S, 89.4-90.6 E, so which surface is right is not settled.
+
+**Reproduce**
+
+```
+# float32 km tiles, 512 ppd; sample of 89.999 E at 48.1396 S in tile 045_090 and of 90.001 E in tile 090_135
+python -c "import numpy as np; ppd=512; row=int((-30-(-48.1396))*ppd); w=np.memmap('sldem2015_512_60s_30s_045_090_float.img','<f4','r',shape=(15360,23040)); e=np.memmap('sldem2015_512_60s_30s_090_135_float.img','<f4','r',shape=(15360,23040)); print(w[row,-1]*1000, e[row,0]*1000)"
+```
+
+Numbers and the surrounding check: data/notes/known_limit_sldem_step_90e_48s.md, data/checkpoints/sldem512_candidate_note.md.
