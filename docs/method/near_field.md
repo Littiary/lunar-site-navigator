@@ -39,15 +39,38 @@ Thresholds were fixed before the first run; the first is the one of
 | The neighbourhood bound across the edge of the finer raster, 150 discs of 3 m to 1.2 km against 3000 sampled points each | never below | holds |
 | The adapter's surface against the data reader's at 5000 points on both rasters | 1e-9 m | passes |
 | Three site records on their 5 m rasters, 8 azimuths at 2 m, 300 km, against a 1 m scan of the same surface | 0.002 deg | nothing missed |
-| Runtime of one site with the near field (six heights, 1440 azimuths, 300 km), best of three, on a machine that is doing nothing else | 15 s | 4.6 s (de Gerlache record) to 9.7 s (Malapert record) measured alone; passes |
+| Runtime of one site with the near field (six heights, 1440 azimuths, 300 km), best of three, on a machine that is doing nothing else | 15 s | 2.8 to 2.9 s with the search in rounds (3.4 to 4.5 s before it), measured while other work ran; passes |
 
 What the runtime limit means: the time of one site on an otherwise idle machine, taken
 as the best of three runs. The best of three removes a short disturbance; it does not
 remove a loaded machine. In one of two runs of the whole test suite on 14 November the
 laptop was slowed by the long run itself, and two sites took 15.5 s and 18.1 s (best
 of three each); alone, minutes later, the same two took 4.6 s and 9.7 s, and the second
-run of the whole suite passed. The limit was not changed. The Malapert record has the
-least margin.
+run of the whole suite passed. The limit was not changed. The 9.7 s was itself a slowed
+measurement (processors at 37 % load, straight after the long run): measured again the
+same evening, the Malapert record took 4.5 s.
+
+**Where the time goes, and the order of the search.** The two zones cost about the same:
+at the Malapert record 2.0 s for the 5 m zone (out to 18.8 km) and 2.6 s for the 20 m
+and 60 m zone beyond it. No single step dominates (one profile run): about a third is
+the terrain at the lattice points, about a third the creases between them, about a fifth
+the bounds of the cells. What could be saved was points: after the most promising cell of each azimuth,
+every surviving cell used to be walked in one go. Walking them in rounds (one cell per
+azimuth, then two, four and so on, each round skipping what the last one proved
+irrelevant) gives the same horizon, to the last bit of elevation, distance and height of
+the limiting point at all three records, and the same package (same `content_sha256` at
+the Shackleton record), with fewer points:
+
+| Site record, near field on | Lattice points walked, before | With rounds | Crease points, before | With rounds | Horizon, best of three, before | With rounds |
+|---|---|---|---|---|---|---|
+| Mons Malapert summit | 2 219 681 | 1 475 279 (-34 %) | 1 595 003 | 1 128 753 (-29 %) | 4.48 s | 2.93 s |
+| de Gerlache rim crest | 2 048 045 | 1 431 385 (-30 %) | 1 416 302 | 1 061 785 (-25 %) | 3.64 s | 2.85 s |
+| Shackleton rim crest | 2 083 622 | 1 286 858 (-38 %) | 1 285 510 | 888 161 (-31 %) | 3.40 s | 2.77 s |
+
+The counts are exact and repeat. The times were taken on 14 November 2026 while another
+job held the processors at 25 to 40 % load, each pair under about the same load; they are
+not idle-machine figures, and single runs under heavier load took up to 8 s. The same
+loop serves every horizon, so sites without the near field gain as well.
 
 The runtime criterion was not met by the first design: one search with the 2.5 m lattice
 along the whole 300 km took 38 s at the Shackleton record and 96 s at the Malapert
