@@ -34,6 +34,11 @@ function Step([string]$title, [scriptblock]$body) {
     if ($LASTEXITCODE -ne 0) { Write-Host "STOPPED: '$title' failed with exit code $LASTEXITCODE."; exit 1 }
 }
 if (Get-Process UnrealEditor -ErrorAction SilentlyContinue) { Write-Host "The Unreal editor is running. Close it first."; exit 1 }
+# The export scripts read the terrain through the data stream's reader of this very checkout
+# (the reader installed in a Python environment can be older than the published packages).
+if ((Test-Path (Join-Path $repo "core\lsncore")) -and (Test-Path (Join-Path $repo "data\lsn_data"))) {
+    $env:PYTHONPATH = (Join-Path $repo "core") + ";" + (Join-Path $repo "data")
+}
 
 if (-not $NoMerge) {
     Step "Merge origin/main" {

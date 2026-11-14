@@ -1,8 +1,8 @@
 Pitch material of the Unreal planner view. Every file is a real render of the running scene
 from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1
-at repository commit 8f5521a on 2026-11-14 17:06 UTC.
+at repository commit f55e315 on 2026-11-14 18:53 UTC.
 
-Packages: Shackleton crater rim crest: site-a4d3f54375701349 (contract 0.9); de Gerlache crater rim crest: site-f5debe0fd2f3cdf7 (contract 0.9).
+Packages: Shackleton crater rim crest: site-e3810b35dcfa4777 (contract 0.11); de Gerlache crater rim crest: site-66887386ea4fc6ea (contract 0.11).
 Published fields: obstacles and their cost: True; lunar-day calendar: True; stated horizon error or landing ellipse: True.
 
 pitch_two_sites_sunset_1080p60.mp4
@@ -31,6 +31,15 @@ still_7_mast_and_lander.png
 
 still_6_astronaut_height.png
     Shackleton crater rim crest at 2027-09-19T13:00:00Z from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right.
+
+still_8_camera_near_lander.png
+    Shackleton crater rim crest at 2027-09-19T13:00:00Z: a camera 16 m behind the lander and 5.5 m up, looking towards the Sun (not the observer's view). The lander is a scale object of the team's own design; the ground, the light and the shadows are those of the package and the elevation data.
+
+still_9_wide_view.png
+    Shackleton crater rim crest at 2027-09-19T13:00:00Z: the wide view from 120 m away and 30 m up with the Sun 60 deg to the right, outside the picture (not the observer's view): lander, mast and boulders with their shadows, for scale.
+
+clip_arrival.mp4
+    Shackleton crater rim crest at 2027-09-19T13:00:00Z: a camera move of 8 s from 9 km above and 26 km behind the site down to the camera near the lander, for the opening of the video. A camera move only: no descent, trajectory or engine is simulated, and ten minutes of the package pass during the move.
 
 The ground is LOLA elevation data sampled on 320 rings per azimuth. Roughness and small craters finer than that data are
 illustrative shading computed in the surface shader: positions, shadows and the horizon are those of the data. Stars are the
