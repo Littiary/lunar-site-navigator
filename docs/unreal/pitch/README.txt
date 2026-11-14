@@ -1,15 +1,18 @@
 Pitch material of the Unreal planner view. Every file is a real render of the running scene
 from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1
-at repository commit df3718b on 2026-11-14 16:23 UTC.
+at repository commit 8f5521a on 2026-11-14 17:06 UTC.
 
-Packages: Shackleton crater rim crest: site-a4f5f765a5d43bbf (contract 0.6); de Gerlache crater rim crest: site-6ded733f4be837e5 (contract 0.6).
+Packages: Shackleton crater rim crest: site-a4d3f54375701349 (contract 0.9); de Gerlache crater rim crest: site-f5debe0fd2f3cdf7 (contract 0.9).
 Published fields: obstacles and their cost: True; lunar-day calendar: True; stated horizon error or landing ellipse: True.
 
 pitch_two_sites_sunset_1080p60.mp4
-    Shackleton crater rim crest (left) and de Gerlache crater rim crest (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from 2027-07-28T11:00:00Z to 2027-07-29T01:00:00Z in 26 s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; the blocking ridge lights up with the hours it costs.
+    Shackleton crater rim crest (left) and de Gerlache crater rim crest (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from 2027-07-28T16:30:00Z to 2027-07-28T20:00:00Z in 26 s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; the blocking ridge lights up with the hours it costs. Shown without the controls of the tool; the caption across the picture is part of the clip, and its second text appears when the package gives the Sun of the left site as hidden.
 
 still_1_planner_two_sites.png
-    Shackleton crater rim crest and de Gerlache crater rim crest side by side at 2027-07-29T06:00:00Z, observer 2 m: countdowns, time strips, horizon panorama and the summary numbers of the whole window.
+    Shackleton crater rim crest and de Gerlache crater rim crest side by side at 2027-07-29T06:00:00Z, observer 2 m: state chips and time strip of each site, without the controls, with a caption; readable when shown small.
+
+still_1b_planner_with_controls.png
+    The same view with the controls of the tool: the three main actions, the horizon all round and the grouped bar. Dense; meant for a close look, not for a small picture on a slide.
 
 still_2_obstacle_highlight.png
     Shackleton crater rim crest at 2027-07-29T06:00:00Z, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window.
