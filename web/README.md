@@ -53,17 +53,26 @@ python -m lsn_web.evidence <site package dir | index.json> [...] --card <validat
 
 The page loads nothing from the network: the charts are embedded as data URIs and the styles are inline. The same file is therefore the offline copy, and it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
 
-## Provisional outputs from the real site packages
+## Public site (`lsn_web/site.py`)
 
-The core stream publishes the real packages of the three south-polar sites in `packages/` at the repository root (commit `945546d`: contract 0.1, generated from core commit `d1af9e6` with a clean working tree; see `packages/README.md`). The outputs are built from there into `web/dist/provisional-0.1/`, a folder that git ignores. Every chart and the page carry a "PROVISIONAL RESULTS, NOT FINAL" banner until the packages are final. When updated packages are published, fetch and rebuild with the same two commands:
+One command builds the hosted site from the packages published by the core stream in `packages/`:
 
 ```
 cd web
-python -m lsn_web.charts ../packages/index.json --out ../web/dist/provisional-0.1 --notice "<text>"
-python -m lsn_web.evidence ../packages/index.json --card ../validation/card/validation_card.json --notice "<text>" --out ../web/dist/provisional-0.1/evidence.html
+python -m lsn_web.site
 ```
 
-Before publication the same packages arrived as `packages_sites.zip`; their content digests are identical to the published ones.
+It writes `web/dist/site/` (ignored by git): `index.html` (the evidence page), `charts/*.svg` (every chart as its own file, linked from the page) and `.nojekyll`. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+
+**Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
+
+**When the packages change:** fetch the branch that holds the new `packages/`, run `python -m lsn_web.site`, then publish `web/dist/site/` (see Hosting).
+
+The packages were first handed over as `packages_sites.zip` (contract 0.1). Their content digests are identical to the published ones in `packages/` (commit `945546d`, generated from core commit `d1af9e6` with a clean working tree).
+
+## Hosting
+
+The site is static: any host that serves files works, with no build step and no server code. Publishing copies `web/dist/site/` to the hosting location as it is.
 
 ## Tests
 

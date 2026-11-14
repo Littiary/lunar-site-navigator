@@ -141,7 +141,7 @@ def slug(text: str) -> str:
 
 # ---------------------------------------------------------------- sections
 
-def site_section(site: SitePackage, notice: str | None = None) -> str:
+def site_section(site: SitePackage, notice: str | None = None, chart_links: bool = False) -> str:
     m = site.manifest
     s = m["site"]
     horizon = m["horizon"]
@@ -185,7 +185,10 @@ def site_section(site: SitePackage, notice: str | None = None) -> str:
         f'<figure><div class="chart"><img src="{svg_data_uri(panorama)}" alt="{e("Terrain horizon panorama of " + s["name"])}"></div>'
         "<figcaption>Terrain horizon at the observer height shown, with the paths of the Sun and Earth disc "
         "centres. Drawn from the package arrays without recomputation. On a narrow screen, swipe the chart "
-        "sideways.</figcaption></figure>"
+        "sideways."
+        + (f' <a href="charts/horizon_panorama__{e(s["site_id"])}.svg">Open the chart on its own (SVG)</a>.'
+           if chart_links else "")
+        + "</figcaption></figure>"
     )
     if not timeline:
         out.append('<p class="muted">This package has no time window, so windows, events and metrics are not shown.</p>')
@@ -194,7 +197,9 @@ def site_section(site: SitePackage, notice: str | None = None) -> str:
     strip = charts.window_strip([site], notice)
     out.append(
         f'<figure><div class="chart"><img src="{svg_data_uri(strip)}" alt="{e("Lighting and direct-to-Earth windows of " + s["name"])}"></div>'
-        "<figcaption>Visibility windows from the package (<code>timeline.windows</code>).</figcaption></figure>"
+        "<figcaption>Visibility windows from the package (<code>timeline.windows</code>)."
+        + (' <a href="charts/window_strip.svg">Open the windows of all sites on one axis (SVG)</a>.' if chart_links else "")
+        + "</figcaption></figure>"
     )
 
     metrics = [mt for mt in timeline.get("metrics", []) if mt.get("height_index") == index]
@@ -382,7 +387,10 @@ def validation_section(card: dict) -> str:
 
 # ---------------------------------------------------------------- page
 
-def build_page(sites: list[SitePackage], card_path: str | Path | None = None, notice: str | None = None) -> str:
+def build_page(sites: list[SitePackage], card_path: str | Path | None = None, notice: str | None = None,
+               chart_links: bool = False) -> str:
+    """The evidence page. ``chart_links`` adds links to chart files in a ``charts/`` folder next to
+    the page (as written by ``lsn_web.site``); the page itself stays self-contained."""
     card = json.loads(Path(card_path).read_text(encoding="utf-8")) if card_path else None
     nav = [(f"#site-{slug(s.manifest['site']['site_id'])}", s.manifest["site"]["name"]) for s in sites]
     nav += [("#methods", "Methods"), ("#data", "Data")]
@@ -417,7 +425,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
         banner,
         "</header>",
     ]
-    parts += [site_section(site, notice) for site in sites]
+    parts += [site_section(site, notice, chart_links) for site in sites]
     parts.append(methods_section(sites))
     parts.append(data_section(sites))
     if card:
