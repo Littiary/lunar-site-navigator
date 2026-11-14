@@ -1,0 +1,51 @@
+{
+  "note": "Independent georeferencing check against a hand-measured crater catalogue. Criterion written and committed BEFORE any offset was measured. Only catalogue counts per diameter bin were looked at to choose the range.",
+  "catalogue": {
+    "name": "Robbins lunar crater database v1, 2018-08-15 (USGS Astrogeology, PDS4 bundle, 1,296,796 records)",
+    "url": "https://astrogeology.usgs.gov/search/map/moon_crater_database_v1_robbins",
+    "how_independent": "Positions were measured by hand on LROC WAC images, LOLA topography, Kaguya TC images and the merged LOLA+TC DTM, in a LOLA control net (USGS page). It is therefore NOT independent of LOLA: this check tests our reading and georeferencing of the LDEM files against LOLA-controlled products, not the absolute lunar frame.",
+    "centre_used": "LAT_CIRC_IMG, LON_CIRC_IMG (circle fit to the rim), diameter DIAM_CIRC_IMG"
+  },
+  "selection": {
+    "region": "centre latitude <= -80.5 deg and centre distance from the pole + 1.5 * radius <= 300 km, so the whole rim and its search window lie inside the 20 m product",
+    "diameter_range_km": "2 <= D < 16. Below 2 km the rim is under 100 pixels of 20 m across and the catalogue's own positional error is a large fraction of the crater; above 16 km craters are rare (under 100 in the region), old and irregular, and a single large crater has too much leverage.",
+    "quality_flags": [
+      "DIAM_ELLI_ELLIP_IMG <= 1.1 (near circular, so a circle is a fair model of the rim)",
+      "ARC_IMG >= 0.8 (at least 80 % of the rim arc was measured, i.e. a clear rim)",
+      "DIAM_CIRC_SD_IMG / DIAM_CIRC_IMG <= 0.03 (consistent circle fit)"
+    ]
+  },
+  "rim_fit": {
+    "rays": "72 azimuths every 5 deg from the catalogue centre in the polar stereographic plane; plane radius of the catalogue circle a = (D/2) * k, k = 1 / cos^2(colatitude / 2) the projection scale",
+    "crest": "highest 20 m DEM point (bilinear, 10 m steps) on each ray between 0.75 a and 1.25 a",
+    "circle": "algebraic least-squares circle through the crest points; points with |residual| > 3 * 1.4826 * MAD are dropped and the circle is refitted once",
+    "crater_accepted_if": [
+      "at least 50 of the 72 rays kept",
+      "fitted radius within 15 % of a",
+      "root-mean-square residual of kept points <= 0.06 a"
+    ],
+    "offset": "fitted centre minus catalogue centre, (dx, dy) in metres in the polar stereographic plane"
+  },
+  "estimation": {
+    "model": "t_i = T + delta * (z x r_i) + eps * r_i, with r_i the catalogue centre relative to the pole, T = (Tx, Ty) common translation, delta rotation about the pole, eps radial scale",
+    "fit": "ordinary least squares over all accepted craters; craters whose residual vector is longer than 3 * 1.4826 * MAD of the residual lengths are dropped and the fit repeated once",
+    "standard_errors": "bootstrap over craters, 1000 resamples, standard deviation of each parameter",
+    "stability": "leave-one-out largest change of each parameter; the same fit separately on craters with longitude < 180 and >= 180, and on craters nearer and farther than the median distance from the pole"
+  },
+  "what_matters_for_horizons": {
+    "translation_m": 100,
+    "translation_why": "a 1 km high ridge 5 km away shifted by 100 m changes its elevation angle by about 0.2 degree, a large part of the 0.53 degree solar disc",
+    "rotation_deg": 0.038,
+    "rotation_why": "0.038 deg moves a point 150 km from the pole (the farthest of the three sites is about 120 km) by 100 m",
+    "radial_scale": 0.00067,
+    "radial_scale_why": "0.00067 times 150 km is 100 m"
+  },
+  "classification": {
+    "detected": "|estimate| >= 3 * bootstrap SE AND the estimate has the same sign in both longitude halves and in both distance halves (for the translation: both components)",
+    "confirmed_and_matters": "detected AND |estimate| >= the 'matters' level",
+    "detected_but_small": "detected AND |estimate| < the 'matters' level",
+    "ruled_out_to_matter_level": "not detected AND |estimate| + 1.96 * SE < the 'matters' level",
+    "undecided": "anything else"
+  },
+  "if_confirmed_and_matters": "tell the control session immediately"
+}
