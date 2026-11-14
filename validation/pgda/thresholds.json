@@ -1,0 +1,43 @@
+{
+  "title": "Acceptance thresholds: long-term Sun and Earth visibility over LOLA terrain versus the published PGDA maps",
+  "written_utc": "2026-11-14T12:35:00Z",
+  "rule": "Written and committed together with points.json before any value of the published maps was downloaded or read (only their README and labels had been read). Not edited afterwards. If the agreement is poor, the cause is looked for and reported before anything is changed; the thresholds stay.",
+  "reference": {
+    "product": "LOLA illumination maps of the lunar south pole, 60 m: AVGVISIB_85S_060M_201608 (Sun), AVGVISIB_85S_060M_201608_EARTH (Earth), LPSR_85S_060M_201608 (permanent shadow)",
+    "producer": "LOLA Science Team, NASA Goddard Space Flight Center; distributed by the Planetary Geodesy Data Archive (PGDA), https://pgda.gsfc.nasa.gov/products/69, files at http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/",
+    "method_reference": "Mazarico et al. (2011), Icarus 211, 1066-1081, doi:10.1016/j.icarus.2010.10.030",
+    "definition_from_the_label": "Values between 0 and 1: the share of timesteps at which the pixel was lit by any fraction of the solar disc (Sun map) or of the Earth disc (Earth map). Computed from the LOLA elevation map LDEM_85S_060M. Permanent-shadow map: 1 where the pixel is never lit.",
+    "definition_from_the_product_page": "Hourly timesteps over a full lunar nutation cycle of about 18.6 years; the light source is a finite disc; the Earth counts as visible if any part of its disc is unobscured.",
+    "not_stated_by_the_source": ["the start and end dates of the average", "the height of the observer above the surface", "how the disc is sampled", "the search radius and azimuth sampling of the horizon"]
+  },
+  "comparison": {
+    "points": "the 100 points of points.json, each the centre of a pixel of the published 60 m grid",
+    "our_quantity": "share of hourly timesteps at which any part of the disc is above the terrain horizon (upper-limb margin > 0), Sun and Earth separately",
+    "period": "one nodal cycle: 163161 hourly steps (6798.38 days) from 2020-01-01T00:00:00 UTC",
+    "observer_height_m": 0.0,
+    "horizon": "azimuth step 0.25 degree, search radius 300 km",
+    "run_A_like_for_like": "terrain from the 60 m LOLA product alone (LDEM_60S_60M), the pixel size of the published maps; this run is judged",
+    "run_B_production": "terrain as the tool uses it (LDEM_80S_20M with LDEM_60S_60M beyond it); reported as the effect of resolution, not judged",
+    "also_reported": "the same shares at 2 m observer height; for ten points the shares over a second nodal cycle starting 2000-01-01, to show what the unknown period of the reference can change"
+  },
+  "thresholds_run_A": {
+    "sun": {
+      "pearson_r_min": 0.90,
+      "median_absolute_difference_max": 0.05,
+      "median_signed_difference_abs_max": 0.02,
+      "permanent_shadow_agreement_min": 0.95
+    },
+    "earth": {
+      "pearson_r_min": 0.90,
+      "median_absolute_difference_max": 0.05,
+      "median_signed_difference_abs_max": 0.02
+    },
+    "definitions": {
+      "difference": "our share minus the published value at the same pixel, over all 100 points",
+      "permanent_shadow_agreement": "share of points at which 'never lit in our period' (our Sun share equal to 0) agrees with the published permanent-shadow flag; points whose 3 x 3 pixel neighbourhood in the published flag map is mixed are left out and counted"
+    },
+    "why_these_values": "The reference does not state its period, observer height or disc sampling, and its 60 m elevation model of 2016 is not the product available today, so equality cannot be demanded. 0.05 is half of the difference that separates good sites from mediocre ones; a correlation of 0.90 means the tool ranks points as the reference does; a median signed difference above 0.02 would point to a different definition (for example the mean visible fraction instead of 'any part'), which shifts every lit point the same way."
+  },
+  "distribution_to_report": "for each run, body and stratum: number of points, mean, median, 10th and 90th percentile of the signed difference, largest absolute difference, and the number of points beyond 0.05, 0.10 and 0.20",
+  "statistical_note": "With 100 points the 95 % confidence interval of a correlation of 0.90 is about 0.85 to 0.93. Many points in permanent shadow have the value 0 on both sides and raise the correlation, so it is also reported per stratum."
+}
