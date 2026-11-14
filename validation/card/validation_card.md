@@ -1,6 +1,6 @@
 # Validation card: ephemeris, time and event finding
 
-Generated 2026-11-14T11:28:22Z by `validation/card/build.py`; every measured value is recomputed from the stored reference data and the code. Do not edit by hand.
+Generated 2026-11-14T11:31:56Z by `validation/card/build.py`; every measured value is recomputed from the stored reference data and the code. Do not edit by hand.
 
 **20 of 20 checks pass.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
 

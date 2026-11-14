@@ -1,6 +1,6 @@
 # Validation table: core versus published records of real lunar landers
 
-Generated 2026-11-14T11:12:44Z by `validation/landers/compare.py`. Do not edit by hand.
+Generated 2026-11-14T11:31:35Z by `validation/landers/compare.py`. Do not edit by hand.
 
 **20 of 20 pass/fail checks pass; 0 fail; 5 comparisons are reported without a verdict.**
 Published values, sources, precision and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit eaf5634). The test is not blind: see the disclosure in `thresholds.json`.
