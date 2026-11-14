@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import math
+import time
 from pathlib import Path
 
 import numpy as np
@@ -63,10 +64,17 @@ class RangeTile:
             b = (r * self.grid0.n_cols + c1) * size - 1
             copies = []
             for u in self.urls:
-                with _open(u, {"Range": f"bytes={a}-{b}"}, timeout=120) as resp:
-                    if resp.status != 206:
-                        raise OSError(f"{u}: range request not honoured")
-                    copies.append(resp.read())
+                for attempt in range(6):
+                    try:
+                        with _open(u, {"Range": f"bytes={a}-{b}"}, timeout=120) as resp:
+                            if resp.status != 206:
+                                raise ValueError(f"{u}: range request not honoured")
+                            copies.append(resp.read())
+                        break
+                    except OSError:
+                        if attempt == 5:
+                            raise
+                        time.sleep(5 * (attempt + 1))
             if len(set(copies)) != 1 or len(copies[0]) != b - a + 1:
                 raise ValueError(f"{self.product_id}: the mirrors disagree at bytes {a}-{b}")
             vals = np.frombuffer(copies[0], dtype=self.dtype)
@@ -125,8 +133,19 @@ def run(root=None) -> dict:
     l16 = CylMosaic([CylDEM(raw_dir(root) / "LDEM_16" / "ldem_16.lbl")])
     if (raw_dir(root) / "LDEM_128" / "ldem_128.img").exists():
         out["results"]["LDEM_128"] = evaluate(CylMosaic([CylDEM(raw_dir(root) / "LDEM_128" / "ldem_128.lbl")]), th)
+        out["results"]["LDEM_128"]["provisional"] = False
     else:
-        out["results"]["LDEM_128"] = {"pending": "LDEM_128 not downloaded yet"}
+        from .fetch import _urls
+
+        t = RangeTile(raw_dir(root) / "LDEM_128" / "ldem_128.lbl", _urls(catalog.PRODUCTS["LDEM_128"].files[0], "mit"))
+        for ref in th["reflectors_DE421_ME"] + th["reflectors_DE421_PA_for_the_mixup_test"]:
+            r, c = t.grid0.lonlat_to_rowcol(ref["lon_deg_east"], ref["lat_deg"])
+            t.fetch_window(int(round(float(r))), int(round(float(c))), half=3)
+        res = evaluate(CylMosaic([t], product_id="LDEM_128"), th)
+        res["provisional"] = True
+        res["provisional_why"] = "values read by HTTP byte ranges from the MIT mirror and PDS (identical copies); the whole file is not yet downloaded and checksummed"
+        res["ranges"] = [t.provenance()]
+        out["results"]["LDEM_128"] = res
     # SLDEM2015 256: whole files when present, otherwise byte ranges from both mirrors (provisional)
     tiles, provisional = [], False
     for tid in catalog.SLDEM_256_TILES:
@@ -157,7 +176,11 @@ def run(root=None) -> dict:
     out["results"]["LDEM_16_reported_only"] = evaluate(l16, th)
     judged = [v for k, v in out["results"].items() if k in ("LDEM_128", "SLDEM2015_256") and "passed" in v]
     out["passed"] = bool(judged) and all(v["passed"] for v in judged)
-    out["complete"] = "pending" not in out["results"]["LDEM_128"] and not provisional
+    out["complete"] = not out["results"]["LDEM_128"].get("provisional", True) and not provisional
+    # how much the coarser global product differs from SLDEM at the same points
+    if "SLDEM2015_256" in out["results"] and "reflectors" in out["results"]["LDEM_128"]:
+        a = {r["name"]: r["dem_radius_m"] for r in out["results"]["SLDEM2015_256"]["reflectors"]}
+        out["LDEM_128_minus_SLDEM2015_256_m"] = {r["name"]: r["dem_radius_m"] - a[r["name"]] for r in out["results"]["LDEM_128"]["reflectors"]}
     return out
 
 
