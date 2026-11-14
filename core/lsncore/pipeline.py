@@ -14,6 +14,8 @@ import numpy as np
 
 from . import packaging as pk
 from .blocking import add_blocking_to_timeline
+from .calendar import add_calendar_to_timeline
+from .contract import read_package
 from .contract import write_index
 from .dem import Terrain
 from .horizon import M_FAR_FIELD, HorizonSettings, compute_horizon
@@ -169,6 +171,52 @@ def blocking_methods(dem_set_id: str, azimuth_step_deg: float, series_step_s: fl
     }
 
 
+def calendar_methods(dem_set_id: str, direction_table_id: str) -> dict:
+    """Method cards of the lunar-day calendar and of the landing windows."""
+    local = "local East/North/Up at the site; up is the outward radial direction of the reference sphere"
+    data = [dem_set_id, direction_table_id]
+    evidence = [
+        "core/tests/test_calendar.py::test_lunar_days_begin_when_the_sun_crosses_the_far_side_meridian: boundaries 0.004 s off the closed form (threshold 5 s)",
+        "core/tests/test_calendar.py::test_calendar_totals_add_up_to_the_window_totals (threshold 1e-6 s)",
+        "core/tests/test_calendar.py::test_exact_landing_windows_agree_with_a_brute_force_scan: 25 random cases, 1 s scan (threshold 2 s)",
+        "core/tests/test_calendar.py::test_slip_tolerance_of_a_planned_landing",
+        "The calendar and the landing windows are arithmetic on the visibility windows; they inherit the accuracy and the limits of those windows.",
+    ]
+    return {
+        pk.M_CALENDAR: pk.method_card(
+            "Visible time per lunar day",
+            "For every lunar day inside the computed range and every observer height: the time for which a visibility window holds (seconds), or the longest stretch inside the lunar day for which it does not. A lunar day begins when the Sun crosses the 180 degree meridian of the body-fixed frame; the periods are the same for every site.",
+            "Subsolar longitude from the direction table, crossings located by linear interpolation between hourly records; intersection of the visibility windows with each period.",
+            local,
+            "TDB",
+            data,
+            {"period_boundary": "subsolar longitude 180 deg"},
+            "analytic-test-passed",
+            evidence,
+            [
+                "The first and the last period are cut by the ends of the computed range (complete = false); their totals cannot be compared with full lunar days.",
+                "A stretch without the Sun that continues across a period boundary is cut there; the longest outage of the whole range is in the metrics.",
+            ],
+        ),
+        pk.M_OPPORTUNITY: pk.method_card(
+            "Landing windows of a stated requirement and slip tolerance",
+            "landing_windows: the set of landing times for which every condition of the requirement holds. slip_tolerance_s: how long the planned landing can be delayed while the requirement keeps holding (0 if the planned time is not feasible); early_tolerance_s: how much earlier it can be. wait_s: time from an infeasible planned landing to the next landing window. feasible_s_per_period: feasible landing time inside each lunar day.",
+            "Exact interval arithmetic on the visibility windows: erosion of the windows for 'continuous from landing', a piecewise-linear cumulative measure for 'total in mission', intersection of all conditions. No sampling of dates.",
+            local,
+            "TDB",
+            data,
+            {"requirement": "request.timeline.requirements"},
+            "analytic-test-passed",
+            evidence,
+            [
+                "The requirement is the one stated in the scenario; the tool does not know whether it is the right requirement for a mission.",
+                "Nothing is assumed about the time after the computed range: a landing whose requirement cannot be checked inside the range counts as not feasible, and a tolerance that ends at the edge of the range is a lower bound.",
+                "A landing window is as reliable as the visibility windows it is built from: near-field obstacles and DEM errors move its edges (docs/method/horizon.md).",
+            ],
+        ),
+    }
+
+
 def _smooth_sphere_windows(csite: dict, horizon, table_dir, timeline, thresholds: dict) -> dict:
     """Visibility windows of every body and observer height over a smooth sphere through the site."""
     from .ephem import directions as d
@@ -251,6 +299,8 @@ def run_scenario(
                 "bodies": bodies,
                 "thresholds": {b: thresholds[b] for b in bodies},
             }
+            if scenario.get("requirements"):
+                timeline_request["requirements"] = scenario["requirements"]
         except ImportError:
             extra_warnings.append(
                 "timeline: the ephemeris modules are not installed; this package holds the horizon only"
@@ -277,6 +327,12 @@ def run_scenario(
             methods.update(
                 blocking_methods(terrain.describe()["dem_set_id"], az_step, float(window["step_s"]), timeline.direction_table_id)
             )
+            landing = site.get("landing_utc")
+            add_calendar_to_timeline(
+                timeline, read_package(table_dir), len(heights), scenario.get("requirements"),
+                float(ephem_directions.utc_to_et(landing)) if landing else None, ephem_directions.et_to_utc_z,
+            )
+            methods.update(calendar_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
         t2 = _time.perf_counter()
         if not horizon.coverage_complete:
             status = "partial"
@@ -293,7 +349,7 @@ def run_scenario(
                 synthetic=synthetic,
                 synthetic_notice=SYNTHETIC_TERRAIN_NOTICE if synthetic else None,
                 timeline=timeline,
-                timeline_request=timeline_request if timeline is not None else None,
+                timeline_request={**timeline_request, "landing_utc": site.get("landing_utc")} if timeline is not None else None,
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},

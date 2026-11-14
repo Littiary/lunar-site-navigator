@@ -1,5 +1,8 @@
 {
-  "contract": {"name": "lsn-package", "version": "0.2"},
+  "contract": {
+    "name": "lsn-package",
+    "version": "0.3"
+  },
   "kind": "scenario",
   "scenario_id": "synthetic-sample",
   "title": "SYNTHETIC SAMPLE - not a real site, not real dates",
@@ -11,23 +14,68 @@
       "name": "SYNTHETIC SAMPLE SITE (not a real place)",
       "lat_deg": -88.0,
       "lon_deg": 45.0,
-      "notes": "Coordinates chosen arbitrarily."
+      "notes": "Coordinates chosen arbitrarily.",
+      "landing_utc": "2026-12-05T06:00:00.000Z"
     }
   ],
-  "observer_heights_m": [0.0, 1.0, 2.0, 5.0, 10.0, 20.0],
+  "observer_heights_m": [
+    0.0,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    20.0
+  ],
   "default_height_m": 2.0,
-  "horizon": {"azimuth_step_deg": 0.25, "max_range_m": 300000.0},
+  "horizon": {
+    "azimuth_step_deg": 0.25,
+    "max_range_m": 300000.0
+  },
   "time_window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2026-12-14T00:00:00.000Z",
     "step_s": 3600.0
   },
-  "bodies": ["SUN", "EARTH"],
+  "bodies": [
+    "SUN",
+    "EARTH"
+  ],
   "thresholds": {
-    "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
-    "EARTH": {"quantity": "margin_deg", "op": ">", "value": 0.0}
+    "SUN": {
+      "quantity": "visible_fraction",
+      "op": ">",
+      "value": 0.0
+    },
+    "EARTH": {
+      "quantity": "margin_deg",
+      "op": ">",
+      "value": 0.0
+    }
   },
   "mission_profile": null,
+  "requirements": [
+    {
+      "id": "example-surface-stay",
+      "label": "EXAMPLE requirement, invented for the sample: Earth in view at landing, 48 h of unbroken sunlight from landing, Earth in view for at least 60 h of a 5-day stay",
+      "mission_duration_s": 432000.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 172800.0
+        },
+        {
+          "window": "earth_visible",
+          "kind": "total_in_mission",
+          "min_s": 216000.0
+        }
+      ]
+    }
+  ],
   "data": {
     "dem_set_id": "SYNTHETIC-no-terrain-data",
     "kernel_set_id": "SYNTHETIC-no-kernels",

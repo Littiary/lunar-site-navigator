@@ -7,7 +7,7 @@ import shutil
 import numpy as np
 import pytest
 
-from lsncore.contract import ContractError, contract_dir, read_package, validate_document, validate_package
+from lsncore.contract import CONTRACT_VERSION, ContractError, contract_dir, read_package, validate_document, validate_package
 from lsncore.scenario import load_scenario
 from lsncore.synthetic import run_synthetic_scenario
 from lsncore.timeline import IntervalSet
@@ -104,16 +104,18 @@ def test_lost_and_gained_time_close_the_balance(site):
 def test_reader_of_this_version_accepts_older_minor_versions_only(site):
     manifest = copy.deepcopy(site.manifest)
     validate_document(manifest)
-    # a 0.1 package has none of the 0.2 fields
+    # a 0.1 package has none of the later fields
     older = copy.deepcopy(manifest)
     older["contract"]["version"] = "0.1"
     for key in ("obstacle_id", "obstacles"):
         older["horizon"].pop(key)
-    older["timeline"].pop("blockers")
+    for key in ("blockers", "calendar", "opportunities"):
+        older["timeline"].pop(key, None)
     for body in older["timeline"]["bodies"]:
         older["timeline"]["series"][body].pop("blocker_azimuth_index")
     validate_document(older)
-    for version in ("0.3", "1.0", "0.2.1", "x"):
+    major, minor = (int(part) for part in CONTRACT_VERSION.split("."))
+    for version in (f"{major}.{minor + 1}", f"{major + 1}.0", f"{CONTRACT_VERSION}.1", "x"):
         newer = copy.deepcopy(manifest)
         newer["contract"]["version"] = version
         with pytest.raises(ContractError):

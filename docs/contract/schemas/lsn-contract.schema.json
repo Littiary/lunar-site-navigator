@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.2",
+  "title": "Lunar Site Navigator package contract, version 0.3",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
   "required": [
@@ -674,6 +674,22 @@
                   "additionalProperties": {
                     "$ref": "#/$defs/threshold"
                   }
+                },
+                "requirements": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/requirement"
+                  }
+                },
+                "landing_utc": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/utc"
+                    }
+                  ]
                 }
               }
             }
@@ -1168,6 +1184,15 @@
           "items": {
             "$ref": "#/$defs/blocker"
           }
+        },
+        "calendar": {
+          "$ref": "#/$defs/calendar"
+        },
+        "opportunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/opportunity"
+          }
         }
       }
     },
@@ -1632,6 +1657,12 @@
               ]
             }
           }
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirement"
+          }
         }
       }
     },
@@ -1895,6 +1926,339 @@
         },
         "near_field": {
           "type": "boolean"
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
+      }
+    },
+    "requirement": {
+      "description": "A stated mission requirement on the landing time, built from visibility windows.",
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "conditions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mission_duration_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "window",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "window": {
+                "$ref": "#/$defs/method_id"
+              },
+              "kind": {
+                "enum": [
+                  "visible_at_landing",
+                  "continuous_from_landing",
+                  "total_in_mission"
+                ]
+              },
+              "min_s": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "continuous_from_landing",
+                    "total_in_mission"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "min_s"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "calendar": {
+      "description": "Visible time per lunar day.",
+      "type": "object",
+      "required": [
+        "period",
+        "definition",
+        "periods",
+        "quantities",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "const": "lunar_day"
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        },
+        "periods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "start_et_s",
+              "end_et_s",
+              "start_utc",
+              "end_utc",
+              "complete"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "start_et_s": {
+                "type": "number"
+              },
+              "end_et_s": {
+                "type": "number"
+              },
+              "start_utc": {
+                "$ref": "#/$defs/utc"
+              },
+              "end_utc": {
+                "$ref": "#/$defs/utc"
+              },
+              "complete": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "quantities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "unit",
+              "window",
+              "values",
+              "method"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/method_id"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "window": {
+                "$ref": "#/$defs/method_id"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "method": {
+                "$ref": "#/$defs/method_id"
+              }
+            }
+          }
+        }
+      }
+    },
+    "opportunity": {
+      "description": "Landing times for which a stated requirement holds, for one observer height.",
+      "type": "object",
+      "required": [
+        "requirement_id",
+        "height_index",
+        "landing_windows_et_s",
+        "landing_windows_utc",
+        "clipped_start",
+        "clipped_end",
+        "latest_landing_et_s",
+        "latest_landing_utc",
+        "feasible_fraction",
+        "window_count",
+        "longest_window_s",
+        "median_window_s",
+        "feasible_s_per_period",
+        "planned_landing",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "landing_windows_et_s": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "landing_windows_utc": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/utc"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "clipped_start": {
+          "type": "boolean"
+        },
+        "clipped_end": {
+          "type": "boolean"
+        },
+        "latest_landing_et_s": {
+          "type": "number"
+        },
+        "latest_landing_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "feasible_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "window_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "longest_window_s": {
+          "type": "number"
+        },
+        "median_window_s": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "feasible_s_per_period": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "planned_landing": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "utc",
+                "et_s",
+                "feasible",
+                "slip_tolerance_s",
+                "early_tolerance_s",
+                "slip_tolerance_is_lower_bound",
+                "wait_s",
+                "wait_after_window_s",
+                "next_window_start_utc",
+                "next_window_length_s"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "et_s": {
+                  "type": "number"
+                },
+                "feasible": {
+                  "type": "boolean"
+                },
+                "slip_tolerance_s": {
+                  "type": "number"
+                },
+                "early_tolerance_s": {
+                  "type": "number"
+                },
+                "slip_tolerance_is_lower_bound": {
+                  "type": "boolean"
+                },
+                "wait_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "wait_after_window_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "next_window_start_utc": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/utc"
+                    }
+                  ]
+                },
+                "next_window_length_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "method": {
           "$ref": "#/$defs/method_id"

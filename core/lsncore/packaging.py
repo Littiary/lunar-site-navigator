@@ -24,6 +24,8 @@ M_EVENTS = "timeline.events"
 M_WINDOWS = "timeline.windows"
 M_METRICS = "timeline.metrics"
 M_LIT = "timeline.lit_fraction"
+M_CALENDAR = "timeline.calendar"
+M_OPPORTUNITY = "timeline.opportunity"
 M_OBSTACLES = "horizon.obstacles"
 M_SMOOTH_SPHERE = "timeline.smooth_sphere"
 M_BLOCKING = "timeline.blocking"
@@ -221,6 +223,10 @@ def build_site_package(
         }
         if timeline.blockers is not None:
             sections["timeline"]["blockers"] = timeline.blockers
+        if timeline.calendar is not None:
+            sections["timeline"]["calendar"] = timeline.calendar
+        if timeline.opportunities is not None:
+            sections["timeline"]["opportunities"] = timeline.opportunities
 
     used = _used_methods(sections, set())
     missing = used - methods.keys()

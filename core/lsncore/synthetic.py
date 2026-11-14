@@ -17,6 +17,7 @@ import numpy as np
 
 from . import packaging as pk
 from .blocking import add_blocking_to_timeline
+from .calendar import add_calendar_to_timeline
 from .contract import format_utc, read_package, write_index
 from .obstacles import segment_obstacles
 from .geometry import DEG, destination, site_frame, topocentric_az_el
@@ -97,6 +98,8 @@ def synthetic_methods() -> dict:
         pk.M_WINDOWS: _card("visibility windows", "Intervals during which the stated condition holds.", local, "TDB"),
         pk.M_METRICS: _card("window statistics", "Summary numbers derived from the visibility windows.", local, "TDB"),
         pk.M_LIT: _card("lit disc fraction", "Fraction of the disc above the terrain horizon and not hidden by another body.", local, "TDB"),
+        pk.M_CALENDAR: _card("lunar-day calendar", "Visible time per lunar day.", local, "TDB"),
+        pk.M_OPPORTUNITY: _card("landing windows", "Landing times for which a stated requirement holds, and how far a planned landing can slip.", local, "TDB"),
         pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
         pk.M_SMOOTH_SPHERE: _card("visibility over a smooth sphere", "The visibility condition evaluated without terrain.", local, "TDB"),
         pk.M_BLOCKING: _card("time lost to terrain", "Time in which a smooth sphere would show the body and the terrain hides it, and the obstacle that hides it.", local, "TDB"),
@@ -357,6 +360,8 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
             "bodies": list(scenario["bodies"]),
             "thresholds": {b: thresholds[b] for b in scenario["bodies"]},
         }
+        if scenario.get("requirements"):
+            timeline_request["requirements"] = scenario["requirements"]
 
     dem_input = {"dem_set_id": SYNTHETIC_DEM_SET_ID, "layers": []}
     for site in scenario["sites"]:
@@ -371,6 +376,11 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
         timeline = None
         if table_dir is not None:
             timeline = synthetic_timeline(site, horizon, table_dir, window, scenario["bodies"], thresholds)
+            landing = site.get("landing_utc")
+            add_calendar_to_timeline(
+                timeline, read_package(table_dir), len(horizon.observer_heights_m), scenario.get("requirements"),
+                clock.utc_to_et(landing) if landing else None, clock.et_to_utc,
+            )
         t2 = _time.perf_counter()
         written.append(
             pk.build_site_package(
@@ -383,7 +393,7 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 synthetic=True,
                 synthetic_notice=SYNTHETIC_NOTICE,
                 timeline=timeline,
-                timeline_request=timeline_request,
+                timeline_request=None if timeline_request is None else {**timeline_request, "landing_utc": site.get("landing_utc")},
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},

@@ -76,3 +76,17 @@ class TimelineResult:
     thresholds: dict[str, dict] = field(default_factory=dict)
     # obstacles that cost visible time compared with a smooth sphere; None = not computed
     blockers: list | None = None
+    # visible time per lunar day (lsncore.calendar); None = not computed
+    calendar: dict | None = None
+    # landing windows and slip tolerance per stated requirement; None = no requirement stated
+    opportunities: list | None = None
+
+    def window(self, window_id: str, height_index: int):
+        """The window with this id and observer height as an IntervalSet over the series range."""
+        from .timeline import IntervalSet, TimeGrid
+
+        grid = TimeGrid.from_contract(self.time)
+        for record in self.windows:
+            if record["id"] == window_id and record["height_index"] == height_index:
+                return IntervalSet(record["intervals_et_s"], (grid.start_et_s, grid.end_et_s))
+        raise KeyError(f"no window {window_id!r} for height index {height_index}")

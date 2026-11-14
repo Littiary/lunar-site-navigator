@@ -1,11 +1,11 @@
-# Package contract, version 0.2
+# Package contract, version 0.3
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
 
 - Machine-checkable schema: [`schemas/lsn-contract.schema.json`](schemas/lsn-contract.schema.json) (JSON Schema 2020-12).
 - Sample with invented values: [`sample/`](sample/README.md).
-- What changed since 0.1: [section 10](#10-changes).
+- What changed since earlier versions: [section 10](#10-changes).
 - Reference writer, reader and validator: `core/lsncore/contract/`.
 - Owner: the core stream. Other streams request changes; they do not edit these files
   (CONTRIBUTING.md, rule 2).
@@ -103,7 +103,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.2"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.3"}` |
 | `kind` | `site` or `direction_table` |
 | `package_id` | `site-` or `dirtab-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -160,6 +160,7 @@ same package ids.
 | `time_window` | `start_utc`, `end_utc`, `step_s`, or `null` for horizon only |
 | `bodies` | `SUN`, `EARTH` |
 | `thresholds` | Per body, the condition that defines "visible": `{"quantity": "visible_fraction" \| "margin_deg", "op": ">" \| ">=", "value": number}` |
+| `requirements[]` | Since 0.3, optional. Stated mission requirements on the landing time; see 5.6. `sites[].landing_utc` is the planned landing the slip tolerance refers to |
 | `mission_profile` | Reserved |
 | `data` | `dem_set_id`, `kernel_set_id`, optional `direction_table_id`: the data versions the run must use |
 
@@ -170,7 +171,7 @@ same package ids.
 `request` echoes, in canonical form, the part of the scenario that concerns this site:
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
-`bodies`, `thresholds`, or `null`).
+`bodies`, `thresholds`, and since 0.3 `requirements` and the site's `landing_utc`; or `null`).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -257,6 +258,8 @@ Present only when a time window was computed.
 | `windows[]` | Interval sets |
 | `metrics[]` | Summary numbers |
 | `blockers[]` | Since 0.2. The obstacles that cost visible time compared with a smooth sphere; see 5.5 |
+| `calendar` | Since 0.3. Visible time per lunar day; see 5.6 |
+| `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
 
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
@@ -340,6 +343,66 @@ for the half step before and after it.
 5. Show the method card and, if `near_field` is true, say that the obstacle is within
    1 km and depends on single pixels of the elevation model.
 
+### 5.6 Opportunity calendar and slip tolerance (since 0.3)
+
+**Calendar.** `timeline.calendar` cuts the computed range into lunar days and gives the
+visible time in each. A lunar day begins when the Sun crosses the 180 degree meridian
+of the body-fixed frame (the middle of the far side, close to new Moon). The periods do
+not depend on the site, so the rows of several sites line up.
+
+| Field | Content |
+|---|---|
+| `period`, `definition`, `method` | `lunar_day`; the sentence above; method card |
+| `periods[]` | `index`, `start_et_s`, `end_et_s`, `start_utc`, `end_utc`, `complete`. The periods follow each other without gaps and cover the range of the series. The first and the last are cut by the ends of the range and have `complete: false`: their totals are not totals of a full lunar day |
+| `quantities[]` | `id`, `label`, `unit` (seconds), `window` (the window id it is taken from), `values[h][p]` for observer height `h` and period `p`, `method` |
+
+Quantity ids: `sun_visible_s`, `earth_visible_s`, `sun_and_earth_visible_s` (time for
+which the window holds inside the lunar day), `sun_longest_outage_s`,
+`earth_longest_outage_s` (longest stretch inside the lunar day without the body; a
+stretch that continues across a boundary is cut there), and `sun_lit_s` when the package
+has the eclipse-aware window `sun_lit`.
+
+**Requirement.** A scenario may state requirements on the landing time:
+
+```json
+{"id": "example-surface-stay", "label": "…", "mission_duration_s": 432000,
+ "conditions": [
+   {"window": "earth_visible", "kind": "visible_at_landing"},
+   {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": 172800},
+   {"window": "earth_visible", "kind": "total_in_mission", "min_s": 216000}]}
+```
+
+`window` is the id of any window of the timeline. `visible_at_landing`: the window's
+condition holds at the landing time. `continuous_from_landing`: it holds without
+interruption for `min_s` from landing. `total_in_mission`: it holds for at least `min_s`
+in total between landing and landing + `mission_duration_s`. All conditions must hold.
+
+**Opportunity** (one record per requirement and observer height):
+
+| Field | Content |
+|---|---|
+| `requirement_id`, `height_index` | Which requirement (in `request.timeline.requirements`), which observer height |
+| `landing_windows_et_s`, `landing_windows_utc` | The landing times for which the requirement holds: sorted, disjoint intervals |
+| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration. Later landings are not in the windows, whatever the truth |
+| `clipped_start`, `clipped_end` | The first window starts at the start of the range, or the last one ends at `latest_landing`: its true extent is unknown |
+| `feasible_fraction` | Total length of the windows divided by the time from the start of the range to `latest_landing` |
+| `window_count`, `longest_window_s`, `median_window_s` | Summary of the windows |
+| `feasible_s_per_period` | Feasible landing time inside each period of the calendar |
+| `planned_landing` | `null`, or the slip report for the site's `landing_utc` (below) |
+| `method` | Method card |
+
+**Slip report** (`planned_landing`): `utc`, `et_s`; `feasible` (the requirement holds for
+a landing at the planned time); `slip_tolerance_s` (the landing can be delayed by up to
+this much and the requirement still holds; 0 if not feasible); `early_tolerance_s` (or
+advanced by this much); `slip_tolerance_is_lower_bound` (the window is cut by the end of
+what can be judged); `wait_s` (0 if feasible, otherwise the time to the next landing
+window, `null` if there is none in the range); `wait_after_window_s` (from the end of the
+current window to the next one); `next_window_start_utc`, `next_window_length_s`.
+
+The landing windows are computed from the edges of the visibility windows by interval
+arithmetic, not by trying dates, so they have the accuracy of the event times. The
+requirement is the scenario's; the package cannot tell whether it is the right one.
+
 ## 6. Direction-table package (decision 3)
 
 One table serves every site. It stores positions relative to the **centre of the Moon**.
@@ -397,6 +460,16 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.3 (14 November 2026)
+
+Additive; nothing that existed in 0.2 changed its meaning, name, unit or layout.
+
+- Scenario: `requirements[]`; `sites[].landing_utc` is now used as the planned landing.
+- Site request: `request.timeline.requirements`, `request.timeline.landing_utc` (so that the package id depends on them).
+- `timeline.calendar`, `timeline.opportunities[]` (5.6).
+- New method card ids: `timeline.calendar`, `timeline.opportunity`.
+- The sample scenario states an invented example requirement and a planned landing; the sample was regenerated (new site package id).
 
 ### 0.2 (14 November 2026)
 

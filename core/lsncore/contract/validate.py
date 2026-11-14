@@ -199,6 +199,29 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
         for name in ("margin_deg", "visible_fraction", "lit_fraction", "blocker_azimuth_index"):
             _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
+    calendar = tl.get("calendar")
+    n_periods = None
+    if calendar is not None:
+        n_periods = len(calendar["periods"])
+        for k, period in enumerate(calendar["periods"]):
+            if period["index"] != k or not period["start_et_s"] < period["end_et_s"]:
+                errors.append(f"timeline/calendar/periods/{k}: index or time order is wrong")
+            if k and period["start_et_s"] != calendar["periods"][k - 1]["end_et_s"]:
+                errors.append(f"timeline/calendar/periods/{k}: periods must follow each other without gaps")
+        for quantity in calendar["quantities"]:
+            rows = quantity["values"]
+            if len(rows) != len(heights) or any(len(row) != n_periods for row in rows):
+                errors.append(f"timeline/calendar/quantities/{quantity['id']}: values must be [heights][periods]")
+    stated = {r["id"] for r in (manifest["request"]["timeline"] or {}).get("requirements", [])}
+    for i, opportunity in enumerate(tl.get("opportunities", [])):
+        if opportunity["requirement_id"] not in stated:
+            errors.append(f"timeline/opportunities/{i}: requirement_id is not in request/timeline/requirements")
+        if opportunity["height_index"] >= len(heights):
+            errors.append(f"timeline/opportunities/{i}: height_index out of range")
+        if len(opportunity["landing_windows_et_s"]) != len(opportunity["landing_windows_utc"]):
+            errors.append(f"timeline/opportunities/{i}: landing windows differ in length")
+        if n_periods is not None and len(opportunity["feasible_s_per_period"]) != n_periods:
+            errors.append(f"timeline/opportunities/{i}: feasible_s_per_period must have one value per calendar period")
     n_obstacles = len(hz.get("obstacles", []))
     for i, blocker in enumerate(tl.get("blockers", [])):
         if blocker["height_index"] >= len(heights) or blocker["body"] not in tl["bodies"]:
