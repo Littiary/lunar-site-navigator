@@ -2,6 +2,8 @@
 
 Independent checks of the science core. Each check has a threshold file that is written and committed before the comparison is run and is not edited afterwards.
 
+Setup from a fresh clone, where the downloaded inputs go (never into the repository) and what the tests do without them: [`docs/setup.md`](../docs/setup.md). All commands below are run from the repository root with the environment that `python scripts/bootstrap.py` creates.
+
 ## `card/` — the validation card
 
 `card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree.
@@ -58,7 +60,7 @@ Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %
 
 ## `lro_images/` — sunlit or shadowed state against dated LROC images
 
-**What is compared.** Whether a point is sunlit or in shadow at the moment a Lunar Reconnaissance Orbiter Camera image was taken: the state the terrain horizon gives (sunlit if at least half of the Sun's disc is above the horizon at the surface) against the image. Two cases, with the reading rule and the criteria committed before any computation and before the image was downloaded (`lro_images/cases.json`, commit fb05da0). `python -m validation.lro_images.fetch` downloads the image; `files.json` records its URL, checksum and retrieval time.
+**What is compared.** Whether a point is sunlit or in shadow at the moment a Lunar Reconnaissance Orbiter Camera image was taken: the state the terrain horizon gives (sunlit if at least half of the Sun's disc is above the horizon at the surface) against the image. Two cases, with the reading rule and the criteria committed before any computation and before the image was downloaded (`lro_images/cases.json`, commit fb05da0). `python -m validation.lro_images.fetch` downloads the image to the data root, outside the repository; `files.json` records its URL, checksum and retrieval time, and a download that differs from that record is refused.
 
 **Result** (`lro_images/results/validation_table.md`): 3 of 4 registered checks pass, 1 fail, 0 not decided.
 
