@@ -1,0 +1,62 @@
+{
+  "description": "Published LOLA illumination maps used by the PGDA check, as downloaded. Written by validation/pgda/fetch.py; do not edit by hand.",
+  "product_page": "https://pgda.gsfc.nasa.gov/products/69",
+  "files": [
+    {
+      "name": "README_ILLUMINATION_2016.TXT",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/README_ILLUMINATION_2016.TXT",
+      "bytes": 2016,
+      "sha256": "f806f9c7fb410b17dd75c2f44f91755b5ca890ac047004a1e8fbb819c24b9ec6",
+      "server_last_modified": "Tue, 28 Nov 2023 20:49:09 GMT",
+      "retrieved_utc": "2026-11-14T12:26:39Z"
+    },
+    {
+      "name": "AVGVISIB_85S_060M_201608.LBL",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608.LBL",
+      "bytes": 4094,
+      "sha256": "33decce957d5d4d9608557d8d969d1e1b94056a159b2563624ade4b528a0c917",
+      "server_last_modified": "Fri, 13 Oct 2023 20:22:50 GMT",
+      "retrieved_utc": "2026-11-14T12:26:39Z"
+    },
+    {
+      "name": "AVGVISIB_85S_060M_201608.IMG",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608.IMG",
+      "bytes": 51166728,
+      "sha256": "82dadf321dee28f1947c1fed81858d4cf50fe8eb2aa405aae114e8ab21c1efe1",
+      "server_last_modified": "Thu, 15 Sep 2016 02:22:23 GMT",
+      "retrieved_utc": "2026-11-14T12:27:00Z"
+    },
+    {
+      "name": "AVGVISIB_85S_060M_201608_EARTH.LBL",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608_EARTH.LBL",
+      "bytes": 4111,
+      "sha256": "45a61697d779fdb9170bca2553f9e0188aeda1159811d3531c348df8f57f68bd",
+      "server_last_modified": "Fri, 13 Oct 2023 20:22:42 GMT",
+      "retrieved_utc": "2026-11-14T12:27:00Z"
+    },
+    {
+      "name": "AVGVISIB_85S_060M_201608_EARTH.IMG",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608_EARTH.IMG",
+      "bytes": 51166728,
+      "sha256": "0958313069d6039b2474c875ff662f28dbcba2bd853d9ea458aa807b7948c11f",
+      "server_last_modified": "Thu, 15 Sep 2016 02:23:39 GMT",
+      "retrieved_utc": "2026-11-14T12:27:03Z"
+    },
+    {
+      "name": "LPSR_85S_060M_201608.LBL",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/LPSR_85S_060M_201608.LBL",
+      "bytes": 3914,
+      "sha256": "42ae7cb0ae64ff8df7a17106228921bd07eb9afba8fb833c4a8cfd2f53487c0f",
+      "server_last_modified": "Fri, 13 Oct 2023 20:23:30 GMT",
+      "retrieved_utc": "2026-11-14T12:27:03Z"
+    },
+    {
+      "name": "LPSR_85S_060M_201608.IMG",
+      "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/LPSR_85S_060M_201608.IMG",
+      "bytes": 51166728,
+      "sha256": "f8203cab342c817fc7851431e264def3cc64a3b8c30f032d61e0a44f1e4ef761",
+      "server_last_modified": "Thu, 15 Sep 2016 02:22:12 GMT",
+      "retrieved_utc": "2026-11-14T12:27:19Z"
+    }
+  ]
+}

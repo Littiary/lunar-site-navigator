@@ -375,7 +375,7 @@ def timeline_methods(
             limits=[
                 f"Numerical accuracy 0.25 s for the given inputs; two crossings closer together than {scan_step_s:g} s can be missed.",
                 terrain_limit,
-                "Not yet compared with published event times of real landers.",
+                "No published sunrise or sunset clock time of a real lander was found to compare with; the operational records of two landers bound the computed events from one side only (validation/landers).",
             ],
         ),
         pk.M_WINDOWS: pk.method_card(
@@ -389,6 +389,8 @@ def timeline_methods(
             status="analytic-test-passed",
             evidence=[
                 "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+                "validation/pgda: the long-term share of time with any part of the Sun, and of the Earth, above the terrain horizon agrees with the published LOLA illumination maps at 100 points on terrain of the same 60 m resolution (median absolute difference 0.0006 and 0.0004; permanent shadow agrees at all 98 points compared). This checks long-term shares, not individual window edges.",
+                "validation/lro_images: sunlit or shadowed state against two dated LROC images. The shadowed state of the south pole on 18 May 2022 agrees. Along an image strip of 13 December 2010 the agreement is 89.3 % of 298 points against a registered criterion of 90 %: a failed check, in which every disagreement is ground this method calls sunlit at grazing incidence and the image rule reads as shadow.",
                 "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts).",
             ],
             limits=[terrain_limit, "Eclipses: the Earth's atmosphere is not modelled; the real edge of the shadow is soft over about a minute and totality is dim, not black."],

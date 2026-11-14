@@ -1,6 +1,6 @@
 # End-to-end results: three south-polar candidate points
 
-Generated 2026-11-14T12:11:39Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T12:24:21Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z (UTC). Countdowns count from the start of the window.
 - Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-250a3fe71759fa79`.
@@ -10,7 +10,7 @@ Generated 2026-11-14T12:11:39Z by `validation/sites/run.py`. Do not edit by hand
 
 ## Shackleton crater rim crest
 
-89.80531 deg S, -154.23109 deg E, terrain height 1701.1 m above the 1737.4 km sphere. Package `site-3d084d7f181d1b64`, status `ok`. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.41 deg.
+89.80531 deg S, -154.23109 deg E, terrain height 1701.1 m above the 1737.4 km sphere. Package `site-1bb3ba58499d4530`, status `ok`. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.41 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -36,7 +36,7 @@ Eclipses of the Sun by the Earth in the window: 1 (0 total at the site); largest
 
 ## de Gerlache crater rim crest
 
-88.66410 deg S, -68.41044 deg E, terrain height 1815.2 m above the 1737.4 km sphere. Package `site-08105a0f3060aee8`, status `ok`. Sun centre elevation -2.85 to 2.84 deg; Earth centre elevation -6.77 to 7.22 deg.
+88.66410 deg S, -68.41044 deg E, terrain height 1815.2 m above the 1737.4 km sphere. Package `site-886457e9968ec44d`, status `ok`. Sun centre elevation -2.85 to 2.84 deg; Earth centre elevation -6.77 to 7.22 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -62,7 +62,7 @@ Eclipses of the Sun by the Earth in the window: 1 (0 total at the site); largest
 
 ## Mons Malapert (Malapert massif) summit
 
-85.98795 deg S, 2.05767 deg E, terrain height 5173.5 m above the 1737.4 km sphere. Package `site-b425911bcc8e34f8`, status `ok`. Sun centre elevation -5.54 to 5.54 deg; Earth centre elevation -3.10 to 10.53 deg.
+85.98795 deg S, 2.05767 deg E, terrain height 5173.5 m above the 1737.4 km sphere. Package `site-1e8bb8bfac94b02e`, status `ok`. Sun centre elevation -5.54 to 5.54 deg; Earth centre elevation -3.10 to 10.53 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
