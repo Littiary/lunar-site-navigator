@@ -181,7 +181,15 @@ float FLsnToolbar::BarTop(float SizeY)
 	return 0.992f * SizeY - 2.0f * (ButtonHeight + LabelHeight) - Gap;
 }
 
-FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing)
+FBox2D FLsnToolbar::LookAtSunBox(float WindowSizeX, float SizeY, bool bComparing)
+{
+	// At the right end of the left (or only) view, above the time strip.
+	const float ViewRight = bComparing ? 0.5f * WindowSizeX : WindowSizeX;
+	const float StripTop = BarTop(SizeY) - 0.126f * SizeY;
+	return FBox2D(FVector2D(ViewRight - 0.012f * WindowSizeX - 0.205f * WindowSizeX, StripTop - 0.082f * SizeY), FVector2D(ViewRight - 0.012f * WindowSizeX, StripTop - 0.032f * SizeY));
+}
+
+FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing, bool bAllControls)
 {
 	FLsnToolbar Toolbar;
 	const float W = WindowSizeX, H = SizeY;
@@ -216,7 +224,12 @@ FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing)
 	};
 	const float ButtonHeight = FMath::Max(0.036f * H, 23.0f), LabelHeight = 0.021f * H, Gap = 0.004f * H;
 	const float Left = 0.06f * W, Cell = 0.088f * W, Pad = 0.0025f * W;
-	for (int32 Row = 0; Row < 2; ++Row)
+	// The one button that opens and closes everything else, in the corner beside the bar.
+	{
+		const float RowTop = Toolbar.Top + LabelHeight + (ButtonHeight + LabelHeight + Gap);
+		Toolbar.Buttons.Add({ TEXT("controls"), bAllControls ? TEXT("Less") : TEXT("More"), FBox2D(FVector2D(0.943f * W, RowTop), FVector2D(0.997f * W, RowTop + ButtonHeight)), ELsnButtonStyle::Bar, TEXT("VIEW") });
+	}
+	for (int32 Row = 0; Row < 2 && bAllControls; ++Row)
 	{
 		const float RowTop = Toolbar.Top + LabelHeight + Row * (ButtonHeight + LabelHeight + Gap);
 		for (int32 Column = 0; Column < 10; ++Column)
@@ -255,7 +268,7 @@ FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bCompar
 {
 	FLsnSitePicker Picker;
 	const float W = WindowSizeX, H = SizeY;
-	const FLsnToolbar Toolbar = FLsnToolbar::Make(W, H, bComparing);
+	const FLsnToolbar Toolbar = FLsnToolbar::Make(W, H, bComparing, false);
 	// Below the main buttons, above the time strips; side by side across both halves.
 	const float StripsTop = FLsnToolbar::BarTop(H) - 0.126f * H;
 	Picker.Sheet = FBox2D(FVector2D(0.012f * W, Toolbar.HeaderBottom + 0.086f * H), FVector2D(bComparing ? 0.988f * W : 0.685f * W, StripsTop - 0.034f * H));
@@ -595,7 +608,9 @@ void ALsnHud::DrawHUD()
 
 	// For the pitch clip: the view without its controls, with a caption that says what is shown.
 	const bool bPresentation = FParse::Param(FCommandLine::Get(), TEXT("LsnPresentation"));
-	const FLsnToolbar Toolbar = FLsnToolbar::Make(WindowX, SizeY, bComparing);
+	// The clean view is the default: everything beyond the name, the chips, one strip and the main actions opens on demand.
+	const bool bAllControls = !bPresentation && LeftPawn && LeftPawn->AreControlsShown();
+	const FLsnToolbar Toolbar = FLsnToolbar::Make(WindowX, SizeY, bComparing, bAllControls);
 	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
 	const bool bOverview = Pawn && Pawn->IsOverview();
 	const double EtS = P.bHasTimeline ? P.EtOfPosition(Position) : 0.0;
@@ -753,12 +768,12 @@ void ALsnHud::DrawHUD()
 	{
 		Pano.Box = FBox2D(FVector2D(0.70f * SizeX, Toolbar.HeaderBottom + 0.012f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom + 0.012f * SizeY + 0.115f * SizeY));
 	}
-	if (!bPresentation)
+	if (bAllControls)
 	{
 		DrawPanorama(Pano, *Scene, Pawn, Scale);
 	}
 	float RightY = Pano.Box.Max.Y + 22.0f * Scale;
-	if (P.bHasTimeline && Page == ELsnPlannerPage::Summary && !bComparing)
+	if (P.bHasTimeline && Page == ELsnPlannerPage::Summary && !bComparing && bAllControls)
 	{
 		if (Metrics.Num() > 0)
 		{
@@ -772,7 +787,8 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- left column: notices, what blocks the Sun or the Earth, details --------------------
-	const float ColumnWidth = (bPresentation ? 0.95f : bComparing ? 0.50f : 0.66f) * SizeX - Margin;
+	const bool bDetailsEarly = LeftPawn && LeftPawn->AreDetailsShown();
+	const float ColumnWidth = (bPresentation || !bAllControls ? 0.95f : bComparing ? 0.50f : 0.66f) * SizeX - Margin;
 	// Without the main buttons the column starts right under the header.
 	float Y = bPresentation ? Toolbar.HeaderBottom + 0.014f * SizeY : ContentTop;
 	auto Notice = [&](const FString& Text)
@@ -795,7 +811,14 @@ void ALsnHud::DrawHUD()
 	{
 		Notice(FString::Printf(TEXT("warning of the package: %s"), *Warning));
 	}
-	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
+	if (Scene->GetNearGroundShadeShare() >= 0.3 && !bOverview && !bPresentation && !bDetailsEarly && Page == ELsnPlannerPage::Summary)
+	{
+		// One short line: the chip says "visible" while the ground in the picture is dark.
+		FLsnBodyAtTime SunLow;
+		Scene->SampleBody(TEXT("SUN"), Position, SunLow);
+		Y = DrawWrapped(FString::Printf(TEXT("You are in sunlight; %.0f %% of the ground around you is not: the Sun is only %.1f deg high."), 100.0 * Scene->GetNearGroundShadeShare(), SunLow.ElevationDeg), White, Margin, Y, ColumnWidth, TypeM) + 6.0f * Scale;
+	}
+	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && !bPresentation && bDetailsEarly && Page == ELsnPlannerPage::Summary)
 	{
 		// The scene must not seem to contradict the package where the user looks: say what the dark ground is.
 		FLsnBodyAtTime SunNow;
@@ -825,7 +848,7 @@ void ALsnHud::DrawHUD()
 			Y = DrawWrapped(Entry.TimelineLine, Entry.bFailed ? Alert : P.bHasTimeline ? Good : Dim, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
 		}
 	}
-	const bool bDetails = LeftPawn && LeftPawn->AreDetailsShown();
+	const bool bDetails = bDetailsEarly;
 	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(SizeX, SizeY, P);
 	const float SheetBottom = Layout.Zoom.Min.Y - 0.030f * SizeY;
 	if (Page == ELsnPlannerPage::Summary && P.bHasTimeline)
@@ -954,7 +977,21 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- where the Sun and the Earth are when they are outside the view -----------------
-	if (Pawn && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
+	// The Sun outside the picture: one click turns the view to it.
+	if (View == 0 && LeftPawn && LeftPawn->IsSunOutOfView() && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
+	{
+		const FBox2D Box = FLsnToolbar::LookAtSunBox(WindowX, SizeY, bComparing);
+		const float Width = Box.Max.X - Box.Min.X, Height = Box.Max.Y - Box.Min.Y;
+		DrawRect(SunColor, Box.Min.X, Box.Min.Y, Width, Height);
+		DrawRect(FLinearColor(0.10f, 0.08f, 0.02f, 1.0f), Box.Min.X + 2.0f, Box.Min.Y + 2.0f, Width - 4.0f, Height - 4.0f);
+		const FString Label = TEXT("The Sun is outside the picture: look at it");
+		float TextWidth = 0.0f, TextHeight = 0.0f;
+		const float LabelScale = 1.05f * FLsnToolbar::TextScale(WindowX, SizeY);
+		GetTextSize(Label, TextWidth, TextHeight, Font, LabelScale);
+		const float Fit = FMath::Min(1.0f, (Width - 12.0f) / FMath::Max(TextWidth, 1.0f));
+		DrawText(Label, SunColor, Box.Min.X + 0.5f * (Width - TextWidth * Fit), Box.Min.Y + 0.5f * (Height - TextHeight * Fit), Font, LabelScale * Fit);
+	}
+	if (Pawn && !bOverview && !bPresentation && bAllControls && Page == ELsnPlannerPage::Summary)
 	{
 		float IndicatorY = Layout.Zoom.Min.Y - 36.0f * Scale;
 		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
@@ -1051,6 +1088,22 @@ void ALsnHud::DrawHUD()
 			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.85f), 0.0f, BandTop, SizeX, BandHeight);
 			// Centred in the window; each view draws its part.
 			DrawText(Text, White, 0.5f * (WindowX - TextWidth * Fit) - ViewX0, BandTop + 0.5f * (BandHeight - TextHeight * Fit), Font, CaptionScale * Fit);
+		}
+		return;
+	}
+	if (!bAllControls)
+	{
+		// The clean view: one strip and one line that says how to use it and where the rest is.
+		DrawText(TEXT("six days around this instant   yellow: Sun visible   blue: Earth visible"), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeM);
+		if (View == 0)
+		{
+			const FString Hint = (LeftPawn && LeftPawn->IsPlaying()) ? FString::Printf(TEXT("playing: %.1f h of site time per second"), LeftPawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0)
+				: FString(TEXT("drag the strip to change the time   right mouse button: look round   More: all controls"));
+			DrawText(Hint, White, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 26.0f * Scale, Font, TypeM);
+		}
+		if (View == 0 && LeftPawn && LeftPawn->IsHelpShown())
+		{
+			DrawHelp(SizeX, SizeY, Scale);
 		}
 		return;
 	}
@@ -1275,7 +1328,7 @@ void ALsnHud::DrawHelp(float SizeX, float SizeY, float Scale)
 		TEXT("  K  calendar and landing windows      U  uncertainty      M  mast-height trade and site pairs      R  next requirement"),
 		TEXT("  O  obstacle view      F  keep the view on the Sun      PageUp / PageDown  observer height"),
 		TEXT("  H  horizon line of the package      L  fill light while the Sun is down (a display aid)      G  lower drawing quality"),
-		TEXT("  I  details: package, frame, contract, test status      P  scale objects (lander, boulders)"),
+		TEXT("  T  all controls on and off      I  details: package, frame, contract, test status      P  scale objects (lander, boulders)"),
 		TEXT("  S  site list, pinning two sites, custom coordinates"),
 		TEXT("  F1  this list      Esc  quit"),
 	};

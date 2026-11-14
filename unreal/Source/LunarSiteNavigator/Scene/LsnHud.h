@@ -99,7 +99,13 @@ struct LUNARSITENAVIGATOR_API FLsnToolbar
 	/** Lower edge of the header (site name, time, state chips). */
 	float HeaderBottom = 0.0f;
 
-	static FLsnToolbar Make(float WindowSizeX, float SizeY, bool bComparing);
+	/**
+	 * bAllControls false: the clean default view, with the three main actions and the one
+	 * button that opens the rest; true: the bar of grouped buttons as well.
+	 */
+	static FLsnToolbar Make(float WindowSizeX, float SizeY, bool bComparing, bool bAllControls = true);
+	/** Where "look at the Sun" is drawn while the Sun is outside the picture. */
+	static FBox2D LookAtSunBox(float WindowSizeX, float SizeY, bool bComparing);
 	/** Upper edge of the bar for a window height; the time strips are laid out above it. */
 	static float BarTop(float SizeY);
 	/** The action of the button under a point of the window; none outside the buttons. */

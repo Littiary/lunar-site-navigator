@@ -32,6 +32,7 @@ class UCameraComponent;
  *   PageUp / PageDown     observer height
  *   Z / X                 zoom
  *   O, H, L               obstacle view, package horizon line, weak fill light (a display aid)
+ *   T                     all controls on and off (the default view shows the main actions only)
  *   G                     lower drawing quality for slower graphics cards
  *   I                     details: package, frame, contract version, test status
  *   P                     scale objects (lander, boulders) on and off
@@ -67,6 +68,10 @@ public:
 	bool IsFollowingSun() const { return bFollowSun; }
 	double GetFollowOffsetDeg() const { return FollowOffsetDeg; }
 	bool IsHelpShown() const { return bShowHelp; }
+	/** False for the clean default view: site name, chips, one time strip and the three main actions. */
+	bool AreControlsShown() const { return bShowControls; }
+	/** True while the Sun of the package is outside the picture (and the package has a Sun). */
+	bool IsSunOutOfView() const { return bSunOutOfView; }
 	/** The details panel: package id, frame, contract version and test status of what is shown. */
 	bool AreDetailsShown() const { return bShowDetails; }
 	/** True if the camera stands above or behind the observer (overview stills): not the observer's view. */
@@ -91,6 +96,8 @@ private:
 	double FovDeg = 60.0;
 	bool bInitialised = false;
 	bool bShowHelp = false;
+	bool bShowControls = false;
+	bool bSunOutOfView = false;
 	bool bShowDetails = false;
 
 	/** Overview camera: metres above and behind the observer along the viewing azimuth. */

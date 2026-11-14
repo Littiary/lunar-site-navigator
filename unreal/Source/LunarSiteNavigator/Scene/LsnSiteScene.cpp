@@ -180,7 +180,7 @@ void ALsnSiteScene::UpdateLook()
 	NearGroundShadeShare = 0.0;
 	FLsnBodyAtTime SunNow;
 	// Only while the whole disc is up and clear of the horizon: at sunset the dark ground needs no explanation.
-	if (bHasRealTerrain && SunShare >= 0.999 && SampleBody(TEXT("SUN"), TimePosition, SunNow) && SunNow.ElevationDeg > 0.3)
+	if (bHasRealTerrain && SunShare > 0.0 && SampleBody(TEXT("SUN"), TimePosition, SunNow))
 	{
 		NearGroundShadeShare = LsnMesh::NearGroundFacingAwayShare(TerrainGrid, Package.SurfaceHeightM, SunNow.AzimuthDeg, SunNow.ElevationDeg, FMath::Max(Package.HorizonSearchStartM(), 5.0));
 	}

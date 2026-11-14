@@ -57,7 +57,7 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
 		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("next_sunset"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
 		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("page_sites"), TEXT("next_requirement"),
-		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("help"), TEXT("quit"),
+		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("controls"), TEXT("look_at_sun"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
 }
@@ -224,6 +224,8 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("scale_objects")) { Scene->SetScaleObjectsVisible(!Scene->AreScaleObjectsVisible()); }
 	else if (Action == TEXT("quality")) { if (GameMode) { GameMode->SetLowQuality(!GameMode->IsLowQuality()); } }
 	else if (Action == TEXT("details")) { bShowDetails = !bShowDetails; }
+	else if (Action == TEXT("controls")) { bShowControls = !bShowControls; }
+	else if (Action == TEXT("look_at_sun")) { bFollowSun = true; FollowOffsetDeg = 0.0; ElevationDeg = 0.5; }
 	else if (Action == TEXT("help")) { bShowHelp = !bShowHelp; }
 	else if (Action == TEXT("quit"))
 	{
@@ -272,7 +274,11 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		double El = 0.0;
 		FLsnSiteFrame::UnrealDirToAzEl(ToSun, AzimuthDeg, El);
 		ElevationDeg = 0.0;
-		bFollowSun = FParse::Param(FCommandLine::Get(), TEXT("LsnFollowSun")) || (GameMode && GameMode->IsComparing());
+		// The view keeps to the Sun's azimuth by default, so that the body the chips talk about is in the
+		// picture; an azimuth given on the command line (without -LsnFollowSun) is meant as it stands.
+		double Unused = 0.0;
+		bFollowSun = FParse::Param(FCommandLine::Get(), TEXT("LsnFollowSun")) || (GameMode && GameMode->IsComparing()) || !FParse::Value(FCommandLine::Get(), TEXT("LsnYaw="), Unused);
+		bShowControls = FParse::Param(FCommandLine::Get(), TEXT("LsnControls"));
 		FParse::Value(FCommandLine::Get(), TEXT("LsnPitch="), ElevationDeg);
 		if (bFollowSun)
 		{
@@ -357,6 +363,16 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		}
 	}
 	ApplyView();
+
+	// Is the Sun of the package in the picture? (Its direction is the package's; this only compares it with the camera.)
+	FLsnBodyAtTime SunNow;
+	bSunOutOfView = false;
+	if (Scene->SampleBody(TEXT("SUN"), Scene->GetTimePosition(), SunNow))
+	{
+		const double Turn = FMath::Abs(FMath::Fmod(SunNow.AzimuthDeg - AzimuthDeg + 540.0, 360.0) - 180.0);
+		// The vertical field of view of a 16:9 picture is about 0.56 of the horizontal one.
+		bSunOutOfView = Turn > 0.45 * FovDeg || FMath::Abs(SunNow.ElevationDeg - ElevationDeg) > 0.45 * 0.56 * FovDeg;
+	}
 }
 
 void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, float DeltaSeconds)
@@ -407,7 +423,11 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		// A click on a button carries out its action.
 		if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton) && PC->GetMousePosition(CursorX, CursorY) && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoHud")))
 		{
-			const FName Clicked = FLsnToolbar::Make(WindowSizeX, SizeY, GameMode && GameMode->IsComparing()).ActionAt(FVector2D(CursorX, CursorY));
+			FName Clicked = FLsnToolbar::Make(WindowSizeX, SizeY, GameMode && GameMode->IsComparing(), bShowControls).ActionAt(FVector2D(CursorX, CursorY));
+			if (Clicked.IsNone() && bSunOutOfView && FLsnToolbar::LookAtSunBox(WindowSizeX, SizeY, GameMode && GameMode->IsComparing()).IsInside(FVector2D(CursorX, CursorY)))
+			{
+				Clicked = TEXT("look_at_sun");
+			}
 			if (!Clicked.IsNone())
 			{
 				DoAction(Clicked);
@@ -485,7 +505,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::S, TEXT("page_sites"), TEXT("page_sites") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
 		{ EKeys::O, TEXT("obstacle"), TEXT("obstacle") }, { EKeys::H, TEXT("horizon_line"), TEXT("horizon_line") }, { EKeys::L, TEXT("fill_light"), TEXT("fill_light") },
 		{ EKeys::F, TEXT("follow_sun"), TEXT("follow_sun") }, { EKeys::PageUp, TEXT("height_up"), TEXT("height_up") }, { EKeys::PageDown, TEXT("height_down"), TEXT("height_down") },
-		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
+		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::T, TEXT("controls"), TEXT("controls") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
 	const bool bTyping = GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites;
 	if (bTyping && PC->WasInputKeyJustPressed(EKeys::Period)) { GameMode->TypeCustom(TEXT('.')); }

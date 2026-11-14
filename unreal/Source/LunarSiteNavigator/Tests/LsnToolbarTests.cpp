@@ -20,7 +20,13 @@
 //    7. side by side: no button lies across the middle of the window; the control of the
 //       right view (its next site) lies wholly in the right half and exists only side by
 //       side; the main actions lie in the left half.
-//    The actions a planner needs first must have a button: play, a step and a day in both
+//    8. (Added on 2026-11-14, before its first run: the clean view became the default.)
+//       Without "all controls" the window holds the three main actions and one button that
+//       opens the rest, and nothing else (side by side also the right view's control);
+//       criteria 1 to 7 hold for that layout too. The box of "look at the Sun", shown while
+//       the Sun is outside the frame, lies in the window, in the left half side by side, and
+//       overlaps no button and no time strip in either layout.
+//    The actions a planner needs first must have a button (with all controls open): play, a step and a day in both
 //    directions, the next and previous rise or set of the Sun, the site list (it replaced
 //    "next site" on 2026-11-14, when the list of sites grew), the three planner pages, the
 //    observer height, the details and help.
@@ -52,10 +58,11 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 	const FVector2D Sizes[] = { { 1280, 720 }, { 1920, 1080 }, { 2560, 1440 }, { 3840, 2160 } };
 	for (const FVector2D& Size : Sizes)
 	{
-		for (const bool bComparing : { false, true })
+		for (int32 Variant = 0; Variant < 4; ++Variant)
 		{
-			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""));
-			const FLsnToolbar Toolbar = FLsnToolbar::Make(Size.X, Size.Y, bComparing);
+			const bool bComparing = (Variant & 1) != 0, bControls = (Variant & 2) != 0;
+			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""), bControls ? TEXT(", all controls") : TEXT(", clean"));
+			const FLsnToolbar Toolbar = FLsnToolbar::Make(Size.X, Size.Y, bComparing, bControls);
 			const FBox2D Window(FVector2D(0.0, 0.0), Size);
 			const double Middle = 0.5 * Size.X;
 			// The strips of each view, moved to window coordinates.
@@ -130,10 +137,26 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 				TestTrue(Where + TEXT(": the right view's control lies in the right half"), RightSite->Box.Min.X >= Middle);
 			}
 			TestTrue(Where + TEXT(": no action outside the buttons"), Toolbar.ActionAt(FVector2D(1.0, 0.5 * Size.Y)).IsNone() && Toolbar.ActionAt(Strips[0].GetCenter()).IsNone());
+			TestTrue(Where + TEXT(": there is a button that opens or closes the rest"), Seen.Contains(TEXT("controls")));
+			if (!bControls)
+			{
+				TestEqual(Where + TEXT(": the clean view holds the main actions and the button for the rest only"), Toolbar.Buttons.Num(), bComparing ? 5 : 4);
+			}
+			const FBox2D LookBox = FLsnToolbar::LookAtSunBox(Size.X, Size.Y, bComparing);
+			TestTrue(Where + TEXT(": 'look at the Sun' lies in the window"), Window.IsInside(LookBox.Min) && Window.IsInside(LookBox.Max));
+			TestTrue(Where + TEXT(": 'look at the Sun' lies in the left half side by side"), !bComparing || LookBox.Max.X <= Middle);
+			for (const FLsnButton& Button : Toolbar.Buttons)
+			{
+				TestFalse(Where + TEXT(": 'look at the Sun' overlaps no button"), LookBox.Intersect(Button.Box));
+			}
+			for (const FBox2D& Strip : Strips)
+			{
+				TestFalse(Where + TEXT(": 'look at the Sun' overlaps no time strip"), LookBox.Intersect(Strip));
+			}
 			for (const TCHAR* Needed : { TEXT("play"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"), TEXT("sun_event_back"), TEXT("sun_event_forward"),
 				TEXT("page_sites"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help") })
 			{
-				TestTrue(Where + TEXT(": there is a button for ") + Needed, Seen.Contains(Needed));
+				TestTrue(Where + TEXT(": there is a button for ") + Needed, !bControls || Seen.Contains(Needed));
 			}
 		}
 	}
@@ -213,6 +236,14 @@ bool FLsnNamedActionsTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("no set event in the package: the time stays"), Scene->GetTimePosition(), 0.0);
 		}
+		TestFalse(TEXT("the clean view at first"), Pawn->AreControlsShown());
+		Pawn->DoAction(TEXT("controls"));
+		TestTrue(TEXT("all controls open"), Pawn->AreControlsShown());
+		Pawn->DoAction(TEXT("follow_sun"));
+		const bool bFollowed = Pawn->IsFollowingSun();
+		Pawn->DoAction(TEXT("look_at_sun"));
+		TestTrue(TEXT("'look at the Sun' keeps the view on the Sun"), Pawn->IsFollowingSun());
+		TestEqual(TEXT("'look at the Sun' turns the view straight to it"), Pawn->GetFollowOffsetDeg(), 0.0);
 		TestFalse(TEXT("details closed at first"), Pawn->AreDetailsShown());
 		Pawn->DoAction(TEXT("details"));
 		TestTrue(TEXT("details open"), Pawn->AreDetailsShown());
