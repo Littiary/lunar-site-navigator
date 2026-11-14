@@ -585,7 +585,6 @@ class MoonTerrainAdapter:
         self._polar = [LolaTerrain(t) for t in moon.polar]
         self._cyl = list(moon.cylindrical)
         self._cyl_levels = {id(c): [k for k in c.levels if k == 0 or c.has_level(k, "max")] for c in self._cyl}
-        self._bands = {id(c): self._latitude_band(c) for c in self._cyl}
         self._active = list(range(len(self._polar)))  # polar products that can serve a point (all, until a site narrows it)
         self._cyl_top: dict[int, float | None] = {}
         self.max_cover_radius_m = math.inf  # a neighbourhood too wide for the overviews gets the ceiling of the layer
@@ -595,25 +594,6 @@ class MoonTerrainAdapter:
         self.ceiling_height_m = None if any(t is None for t in tops) else float(max(tops))
         self._described: dict | None = None
         self._records: dict | None = None
-
-    @staticmethod
-    def _latitude_band(c):
-        """(south, north) if the tiles of a mosaic cover every longitude between two latitudes;
-        None otherwise. The data stream's mosaics are rows of adjoining tiles."""
-        rows: dict = {}
-        for tile in c.tiles:
-            g = tile.grid0
-            rows.setdefault((float(g.south_lat), float(g.north_lat)), []).append(360.0 if g.is_global_in_lon else float(g.east_lon - g.west_lon))
-        if any(sum(widths) < 360.0 - 1e-9 for widths in rows.values()):
-            return None
-        edges = sorted(rows)
-        if any(abs(a[1] - b[0]) > 1e-9 for a, b in zip(edges, edges[1:])):
-            return None
-        return edges[0][0], edges[-1][1]
-
-    def _covered(self, c, lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
-        band = self._bands[id(c)]
-        return c.covers(lon, lat) if band is None else (lat >= band[0]) & (lat <= band[1])
 
     def _polar_reach_deg(self, polar) -> float:
         """Lowest absolute latitude a polar terrain can cover: that of the corners of its widest raster."""
@@ -749,7 +729,7 @@ class MoonTerrainAdapter:
         for c in self._cyl:
             if not todo.any():
                 break
-            sel = todo & self._covered(c, lon, lat)
+            sel = todo & c.covers(lon, lat)
             if sel.any():
                 out[sel] = c.height_m(lon[sel], lat[sel])
                 todo &= ~sel
@@ -813,7 +793,7 @@ class MoonTerrainAdapter:
         step_lon = (lon[1:] - lon[:-1] + 180.0) % 360.0 - 180.0
         todo &= (np.abs(lat[1:] - lat[:-1]) <= reach) & (np.abs(step_lon) * np.cos(np.radians(lat[:-1])) <= reach)
         for c in self._cyl:
-            sel = todo & self._covered(c, lon[:-1], lat[:-1])
+            sel = todo & c.covers(lon[:-1], lat[:-1])
             if not sel.any():
                 continue
             n_cols = 360.0 * c.res_ppd
