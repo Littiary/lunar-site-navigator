@@ -1,640 +1,2832 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.1",
+  "title": "Lunar Site Navigator package contract, version 0.6",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
-  "required": ["contract", "kind"],
-  "allOf": [
-    {"if": {"properties": {"kind": {"const": "site"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/site"}},
-    {"if": {"properties": {"kind": {"const": "direction_table"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/direction_table"}},
-    {"if": {"properties": {"kind": {"const": "scenario"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/scenario"}},
-    {"if": {"properties": {"kind": {"const": "index"}}, "required": ["kind"]}, "then": {"$ref": "#/$defs/index"}}
+  "required": [
+    "contract",
+    "kind"
   ],
-  "properties": {
-    "kind": {"enum": ["site", "direction_table", "scenario", "index"]}
-  },
-
-  "$defs": {
-
-    "contract": {
-      "type": "object",
-      "required": ["name", "version"],
-      "additionalProperties": false,
-      "properties": {
-        "name": {"const": "lsn-package"},
-        "version": {"type": "string", "pattern": "^0\\.[0-9]+$"}
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "site"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/site"
       }
     },
-
-    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "direction_table"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/direction_table"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "site_pairs"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/site_pairs"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "scenario"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/scenario"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "index"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/index"
+      }
+    }
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "site",
+        "direction_table",
+        "site_pairs",
+        "scenario",
+        "index"
+      ]
+    }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "const": "lsn-package"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^0\\.[0-9]+$"
+        }
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "utc": {
       "description": "UTC instant, ISO 8601, millisecond resolution, always with the Z suffix.",
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
     },
-    "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"},
-    "method_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,95}$"},
-    "body": {"enum": ["SUN", "EARTH"]},
-    "vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
-
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "method_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{0,95}$"
+    },
+    "body": {
+      "enum": [
+        "SUN",
+        "EARTH"
+      ]
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
     "array_ref": {
       "description": "A raw little-endian binary array stored next to the manifest. C order (last index varies fastest).",
       "type": "object",
-      "required": ["file", "dtype", "shape", "unit", "method", "sha256", "nan_count"],
+      "required": [
+        "file",
+        "dtype",
+        "shape",
+        "unit",
+        "method",
+        "sha256",
+        "nan_count"
+      ],
       "additionalProperties": false,
       "properties": {
-        "file": {"type": "string", "pattern": "^[a-z0-9_]+\\.(f4|f8|i4|u1)$"},
-        "dtype": {"enum": ["<f4", "<f8", "<i4", "|u1"]},
-        "shape": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 1, "maxItems": 4},
-        "unit": {"type": "string", "minLength": 1},
-        "method": {"$ref": "#/$defs/method_id"},
-        "sha256": {"$ref": "#/$defs/sha256"},
-        "nan_count": {"type": "integer", "minimum": 0}
+        "file": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+\\.(f4|f8|i4|u1)$"
+        },
+        "dtype": {
+          "enum": [
+            "<f4",
+            "<f8",
+            "<i4",
+            "|u1"
+          ]
+        },
+        "shape": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "nan_count": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-
     "quantity": {
       "description": "A single number with its unit and its method card.",
       "type": "object",
-      "required": ["value", "unit", "method"],
+      "required": [
+        "value",
+        "unit",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
-        "value": {"type": ["number", "null"]},
-        "unit": {"type": "string", "minLength": 1},
-        "method": {"$ref": "#/$defs/method_id"}
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
       }
     },
-
     "method_card": {
       "description": "What a number means, how it was computed, from which data, and how far it has been checked.",
       "type": "object",
-      "required": ["title", "definition", "algorithm", "frame", "time_scale", "data", "parameters", "validation", "limits"],
+      "required": [
+        "title",
+        "definition",
+        "algorithm",
+        "frame",
+        "time_scale",
+        "data",
+        "parameters",
+        "validation",
+        "limits"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": {"type": "string", "minLength": 1},
-        "definition": {"type": "string", "minLength": 1},
-        "algorithm": {"type": "string", "minLength": 1},
-        "frame": {"type": "string", "minLength": 1},
-        "time_scale": {"enum": ["TDB", "UTC", "none"]},
-        "data": {"type": "array", "items": {"type": "string"}},
-        "parameters": {"type": "object"},
-        "validation": {
-          "type": "object",
-          "required": ["status", "evidence"],
-          "additionalProperties": false,
-          "properties": {
-            "status": {"enum": ["synthetic", "unverified", "analytic-test-passed", "externally-validated"]},
-            "evidence": {"type": "array", "items": {"type": "string"}}
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "algorithm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frame": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time_scale": {
+          "enum": [
+            "TDB",
+            "UTC",
+            "none"
+          ]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        "limits": {"type": "array", "items": {"type": "string"}}
-      }
-    },
-
-    "methods": {
-      "type": "object",
-      "propertyNames": {"$ref": "#/$defs/method_id"},
-      "additionalProperties": {"$ref": "#/$defs/method_card"}
-    },
-
-    "time_grid": {
-      "description": "Uniform time axis. Sample i is at start_et_s + i * step_s, in TDB seconds past J2000.",
-      "type": "object",
-      "required": ["scale", "epoch", "start_et_s", "step_s", "count", "start_utc", "end_utc", "leap_seconds_in_range"],
-      "additionalProperties": false,
-      "properties": {
-        "scale": {"const": "TDB"},
-        "epoch": {"const": "J2000"},
-        "start_et_s": {"type": "number"},
-        "step_s": {"type": "number", "exclusiveMinimum": 0},
-        "count": {"type": "integer", "minimum": 1},
-        "start_utc": {"$ref": "#/$defs/utc"},
-        "end_utc": {"$ref": "#/$defs/utc"},
-        "leap_seconds_in_range": {"type": "integer", "minimum": 0}
-      }
-    },
-
-    "provenance": {
-      "description": "Volatile record of how and when the package was produced. Not part of package_id or content_sha256.",
-      "type": "object",
-      "required": ["created_utc", "software"],
-      "additionalProperties": false,
-      "properties": {
-        "created_utc": {"$ref": "#/$defs/utc"},
-        "scenario_id": {"type": ["string", "null"]},
-        "machine_class": {"type": "string"},
-        "timings_s": {"type": "object", "additionalProperties": {"type": "number"}},
-        "software": {
+        "parameters": {
+          "type": "object"
+        },
+        "validation": {
           "type": "object",
-          "required": ["core_version", "git_commit", "git_dirty"],
-          "additionalProperties": {"type": ["string", "boolean", "null"]},
+          "required": [
+            "status",
+            "evidence"
+          ],
+          "additionalProperties": false,
           "properties": {
-            "core_version": {"type": "string"},
-            "git_commit": {"type": ["string", "null"]},
-            "git_dirty": {"type": ["boolean", "null"]}
+            "status": {
+              "enum": [
+                "synthetic",
+                "unverified",
+                "analytic-test-passed",
+                "externally-validated"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }
     },
-
-    "package_header": {
+    "methods": {
       "type": "object",
-      "required": ["contract", "kind", "package_id", "content_sha256", "status", "synthetic", "warnings", "request", "inputs", "methods", "provenance"],
-      "properties": {
-        "contract": {"$ref": "#/$defs/contract"},
-        "package_id": {"type": "string", "pattern": "^(site|dirtab)-[0-9a-f]{16}$"},
-        "content_sha256": {"$ref": "#/$defs/sha256"},
-        "status": {"enum": ["ok", "partial", "error"]},
-        "synthetic": {"type": "boolean"},
-        "synthetic_notice": {"type": "string", "minLength": 1},
-        "warnings": {"type": "array", "items": {"type": "string"}},
-        "request": {"type": "object"},
-        "inputs": {
-          "type": "object",
-          "required": ["science_version"],
-          "properties": {"science_version": {"type": "integer", "minimum": 0}}
-        },
-        "methods": {"$ref": "#/$defs/methods"},
-        "provenance": {"$ref": "#/$defs/provenance"}
+      "propertyNames": {
+        "$ref": "#/$defs/method_id"
       },
-      "if": {"properties": {"synthetic": {"const": true}}},
-      "then": {"required": ["synthetic_notice"]}
-    },
-
-    "dem_layer": {
-      "type": "object",
-      "required": ["layer_id", "product_id", "version", "source_url", "sha256", "pixel_m", "projection"],
-      "additionalProperties": false,
-      "properties": {
-        "layer_id": {"type": "string"},
-        "product_id": {"type": "string"},
-        "version": {"type": "string"},
-        "source_url": {"type": "string"},
-        "sha256": {"type": ["string", "null"]},
-        "pixel_m": {"type": "number", "exclusiveMinimum": 0},
-        "projection": {"type": "string"}
+      "additionalProperties": {
+        "$ref": "#/$defs/method_card"
       }
     },
-
+    "time_grid": {
+      "description": "Uniform time axis. Sample i is at start_et_s + i * step_s, in TDB seconds past J2000.",
+      "type": "object",
+      "required": [
+        "scale",
+        "epoch",
+        "start_et_s",
+        "step_s",
+        "count",
+        "start_utc",
+        "end_utc",
+        "leap_seconds_in_range"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "scale": {
+          "const": "TDB"
+        },
+        "epoch": {
+          "const": "J2000"
+        },
+        "start_et_s": {
+          "type": "number"
+        },
+        "step_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "end_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "leap_seconds_in_range": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "provenance": {
+      "description": "Volatile record of how and when the package was produced. Not part of package_id or content_sha256.",
+      "type": "object",
+      "required": [
+        "created_utc",
+        "software"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "created_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "scenario_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "machine_class": {
+          "type": "string"
+        },
+        "timings_s": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "software": {
+          "type": "object",
+          "required": [
+            "core_version",
+            "git_commit",
+            "git_dirty"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "boolean",
+              "null"
+            ]
+          },
+          "properties": {
+            "core_version": {
+              "type": "string"
+            },
+            "git_commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "git_dirty": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "package_header": {
+      "type": "object",
+      "required": [
+        "contract",
+        "kind",
+        "package_id",
+        "content_sha256",
+        "status",
+        "synthetic",
+        "warnings",
+        "request",
+        "inputs",
+        "methods",
+        "provenance"
+      ],
+      "properties": {
+        "contract": {
+          "$ref": "#/$defs/contract"
+        },
+        "package_id": {
+          "type": "string",
+          "pattern": "^(site|dirtab|pairs)-[0-9a-f]{16}$"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "partial",
+            "error"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "synthetic_notice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "request": {
+          "type": "object"
+        },
+        "inputs": {
+          "type": "object",
+          "required": [
+            "science_version"
+          ],
+          "properties": {
+            "science_version": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "methods": {
+          "$ref": "#/$defs/methods"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "if": {
+        "properties": {
+          "synthetic": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "synthetic_notice"
+        ]
+      }
+    },
+    "dem_layer": {
+      "type": "object",
+      "required": [
+        "layer_id",
+        "product_id",
+        "version",
+        "source_url",
+        "sha256",
+        "pixel_m",
+        "projection"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "type": "string"
+        },
+        "product_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pixel_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "projection": {
+          "type": "string"
+        }
+      }
+    },
     "azimuth_grid": {
       "description": "Uniform azimuth axis covering the full circle. Sample j is at start_deg + j * step_deg; count * step_deg = 360.",
       "type": "object",
-      "required": ["start_deg", "step_deg", "count"],
+      "required": [
+        "start_deg",
+        "step_deg",
+        "count"
+      ],
       "additionalProperties": false,
       "properties": {
-        "start_deg": {"const": 0},
-        "step_deg": {"type": "number", "exclusiveMinimum": 0, "maximum": 5},
-        "count": {"type": "integer", "minimum": 72}
+        "start_deg": {
+          "const": 0
+        },
+        "step_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 5
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 72
+        }
       }
     },
-
     "threshold": {
       "type": "object",
-      "required": ["quantity", "op", "value"],
+      "required": [
+        "quantity",
+        "op",
+        "value"
+      ],
       "additionalProperties": false,
       "properties": {
-        "quantity": {"enum": ["visible_fraction", "margin_deg"]},
-        "op": {"enum": [">", ">="]},
-        "value": {"type": "number"}
+        "quantity": {
+          "enum": [
+            "visible_fraction",
+            "margin_deg"
+          ]
+        },
+        "op": {
+          "enum": [
+            ">",
+            ">="
+          ]
+        },
+        "value": {
+          "type": "number"
+        }
       }
     },
-
     "site_request": {
       "type": "object",
-      "required": ["site", "observer_heights_m", "horizon", "timeline"],
+      "required": [
+        "site",
+        "observer_heights_m",
+        "horizon",
+        "timeline"
+      ],
       "additionalProperties": false,
       "properties": {
         "site": {
           "type": "object",
-          "required": ["site_id", "name", "lat_deg", "lon_deg"],
+          "required": [
+            "site_id",
+            "name",
+            "lat_deg",
+            "lon_deg"
+          ],
           "additionalProperties": false,
           "properties": {
-            "site_id": {"$ref": "#/$defs/slug"},
-            "name": {"type": "string", "minLength": 1},
-            "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
-            "lon_deg": {"type": "number", "exclusiveMinimum": -180, "maximum": 180}
+            "site_id": {
+              "$ref": "#/$defs/slug"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lat_deg": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "lon_deg": {
+              "type": "number",
+              "exclusiveMinimum": -180,
+              "maximum": 180
+            }
           }
         },
         "observer_heights_m": {
-          "type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1,
+          "maxItems": 16
         },
         "horizon": {
           "type": "object",
-          "required": ["azimuth_step_deg", "max_range_m"],
+          "required": [
+            "azimuth_step_deg",
+            "max_range_m"
+          ],
           "additionalProperties": false,
           "properties": {
-            "azimuth_step_deg": {"type": "number", "exclusiveMinimum": 0},
-            "max_range_m": {"type": "number", "exclusiveMinimum": 0}
+            "azimuth_step_deg": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "max_range_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
           }
         },
         "timeline": {
           "oneOf": [
-            {"type": "null"},
+            {
+              "type": "null"
+            },
             {
               "type": "object",
-              "required": ["start_utc", "end_utc", "step_s", "bodies"],
+              "required": [
+                "start_utc",
+                "end_utc",
+                "step_s",
+                "bodies"
+              ],
               "additionalProperties": false,
               "properties": {
-                "start_utc": {"$ref": "#/$defs/utc"},
-                "end_utc": {"$ref": "#/$defs/utc"},
-                "step_s": {"type": "number", "exclusiveMinimum": 0},
-                "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
-                "thresholds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/threshold"}}
+                "start_utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "end_utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "step_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "bodies": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/body"
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "thresholds": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/threshold"
+                  }
+                },
+                "requirements": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/requirement"
+                  }
+                },
+                "landing_utc": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/utc"
+                    }
+                  ]
+                },
+                "uncertainty": {
+                  "$ref": "#/$defs/uncertainty_request"
+                }
               }
             }
           ]
         }
       }
     },
-
     "site_block": {
       "type": "object",
-      "required": ["site_id", "name", "body", "lat_deg", "lon_deg", "frame", "reference_radius_m", "surface_height_m", "radius_m", "position_km", "enu"],
+      "required": [
+        "site_id",
+        "name",
+        "body",
+        "lat_deg",
+        "lon_deg",
+        "frame",
+        "reference_radius_m",
+        "surface_height_m",
+        "radius_m",
+        "position_km",
+        "enu"
+      ],
       "additionalProperties": false,
       "properties": {
-        "site_id": {"$ref": "#/$defs/slug"},
-        "name": {"type": "string", "minLength": 1},
-        "body": {"const": "MOON"},
-        "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
-        "lon_deg": {"type": "number", "exclusiveMinimum": -180, "maximum": 180},
-        "frame": {"type": "string", "minLength": 1},
-        "reference_radius_m": {"$ref": "#/$defs/quantity"},
-        "surface_height_m": {"$ref": "#/$defs/quantity"},
-        "radius_m": {"$ref": "#/$defs/quantity"},
-        "position_km": {"$ref": "#/$defs/vec3"},
+        "site_id": {
+          "$ref": "#/$defs/slug"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "const": "MOON"
+        },
+        "lat_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon_deg": {
+          "type": "number",
+          "exclusiveMinimum": -180,
+          "maximum": 180
+        },
+        "frame": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_radius_m": {
+          "$ref": "#/$defs/quantity"
+        },
+        "surface_height_m": {
+          "$ref": "#/$defs/quantity"
+        },
+        "radius_m": {
+          "$ref": "#/$defs/quantity"
+        },
+        "position_km": {
+          "$ref": "#/$defs/vec3"
+        },
         "enu": {
           "type": "object",
-          "required": ["east", "north", "up"],
+          "required": [
+            "east",
+            "north",
+            "up"
+          ],
           "additionalProperties": false,
           "properties": {
-            "east": {"$ref": "#/$defs/vec3"},
-            "north": {"$ref": "#/$defs/vec3"},
-            "up": {"$ref": "#/$defs/vec3"}
+            "east": {
+              "$ref": "#/$defs/vec3"
+            },
+            "north": {
+              "$ref": "#/$defs/vec3"
+            },
+            "up": {
+              "$ref": "#/$defs/vec3"
+            }
           }
         },
         "dem_pixel": {
           "type": "object",
-          "required": ["layer_id", "row", "col"],
+          "required": [
+            "layer_id",
+            "row",
+            "col"
+          ],
           "additionalProperties": false,
           "properties": {
-            "layer_id": {"type": "string"},
-            "row": {"type": "number"},
-            "col": {"type": "number"}
+            "layer_id": {
+              "type": "string"
+            },
+            "row": {
+              "type": "number"
+            },
+            "col": {
+              "type": "number"
+            }
           }
         },
-        "slope_deg": {"$ref": "#/$defs/quantity"}
+        "slope_deg": {
+          "$ref": "#/$defs/quantity"
+        }
       }
     },
-
     "horizon_block": {
       "type": "object",
-      "required": ["azimuth", "observer_heights_m", "default_height_index", "max_range_m", "elevation_deg", "distance_m", "flags"],
+      "required": [
+        "azimuth",
+        "observer_heights_m",
+        "default_height_index",
+        "max_range_m",
+        "elevation_deg",
+        "distance_m",
+        "flags"
+      ],
       "additionalProperties": false,
       "properties": {
-        "azimuth": {"$ref": "#/$defs/azimuth_grid"},
-        "observer_heights_m": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16},
-        "default_height_index": {"type": "integer", "minimum": 0},
-        "max_range_m": {"$ref": "#/$defs/quantity"},
-        "elevation_deg": {"$ref": "#/$defs/array_ref"},
-        "distance_m": {"$ref": "#/$defs/array_ref"},
-        "obstacle_height_m": {"$ref": "#/$defs/array_ref"},
-        "obstacle_lat_deg": {"$ref": "#/$defs/array_ref"},
-        "obstacle_lon_deg": {"$ref": "#/$defs/array_ref"},
-        "obstacle_dem_layer": {"$ref": "#/$defs/array_ref"},
-        "elevation_sigma_deg": {"$ref": "#/$defs/array_ref"},
-        "elevation_lower_deg": {"$ref": "#/$defs/array_ref"},
-        "elevation_upper_deg": {"$ref": "#/$defs/array_ref"},
-        "error_bounds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/quantity"}},
+        "azimuth": {
+          "$ref": "#/$defs/azimuth_grid"
+        },
+        "observer_heights_m": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "default_height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_range_m": {
+          "$ref": "#/$defs/quantity"
+        },
+        "elevation_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "distance_m": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacle_height_m": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacle_lat_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacle_lon_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacle_dem_layer": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "elevation_sigma_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "elevation_lower_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "elevation_upper_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "error_bounds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/quantity"
+          }
+        },
         "flags": {
           "type": "object",
-          "required": ["coverage_complete", "truncated_at_data_edge", "nodata_fraction"],
+          "required": [
+            "coverage_complete",
+            "truncated_at_data_edge",
+            "nodata_fraction"
+          ],
           "additionalProperties": false,
           "properties": {
-            "coverage_complete": {"type": "boolean"},
-            "truncated_at_data_edge": {"type": "boolean"},
-            "nodata_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+            "coverage_complete": {
+              "type": "boolean"
+            },
+            "truncated_at_data_edge": {
+              "type": "boolean"
+            },
+            "nodata_fraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "obstacle_id": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "obstacles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/obstacle"
           }
         }
       }
     },
-
     "event": {
       "type": "object",
-      "required": ["type", "body", "height_index", "et_s", "utc", "azimuth_deg", "horizon_elevation_deg", "obstacle_distance_m", "threshold", "method"],
+      "required": [
+        "type",
+        "body",
+        "height_index",
+        "et_s",
+        "utc",
+        "azimuth_deg",
+        "horizon_elevation_deg",
+        "obstacle_distance_m",
+        "threshold",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": {"enum": ["rise", "set"]},
-        "body": {"$ref": "#/$defs/body"},
-        "height_index": {"type": "integer", "minimum": 0},
-        "et_s": {"type": "number"},
-        "utc": {"$ref": "#/$defs/utc"},
-        "azimuth_deg": {"type": "number", "minimum": 0, "exclusiveMaximum": 360},
-        "horizon_elevation_deg": {"type": "number"},
-        "obstacle_distance_m": {"type": ["number", "null"]},
-        "obstacle_lat_deg": {"type": ["number", "null"]},
-        "obstacle_lon_deg": {"type": ["number", "null"]},
-        "threshold": {"$ref": "#/$defs/threshold"},
-        "method": {"$ref": "#/$defs/method_id"},
-        "sigma_s": {"type": ["number", "null"]},
-        "closing_rate_deg_per_h": {"type": ["number", "null"]},
-        "grazing": {"type": "boolean"}
+        "type": {
+          "enum": [
+            "rise",
+            "set"
+          ]
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "et_s": {
+          "type": "number"
+        },
+        "utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "azimuth_deg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "horizon_elevation_deg": {
+          "type": "number"
+        },
+        "obstacle_distance_m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "obstacle_lat_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "obstacle_lon_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "threshold": {
+          "$ref": "#/$defs/threshold"
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        },
+        "sigma_s": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "closing_rate_deg_per_h": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "grazing": {
+          "type": "boolean"
+        },
+        "earliest_et_s": {
+          "type": "number"
+        },
+        "latest_et_s": {
+          "type": "number"
+        },
+        "earliest_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "latest_utc": {
+          "$ref": "#/$defs/utc"
+        }
       }
     },
-
     "window": {
       "description": "An interval set: the times at which a stated condition holds.",
       "type": "object",
-      "required": ["id", "subject", "height_index", "definition", "intervals_et_s", "intervals_utc", "clipped_start", "clipped_end", "method"],
+      "required": [
+        "id",
+        "subject",
+        "height_index",
+        "definition",
+        "intervals_et_s",
+        "intervals_utc",
+        "clipped_start",
+        "clipped_end",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {"$ref": "#/$defs/method_id"},
-        "subject": {"enum": ["SUN", "EARTH", "COMBINED"]},
-        "height_index": {"type": "integer", "minimum": 0},
-        "definition": {"type": "string", "minLength": 1},
-        "threshold": {"$ref": "#/$defs/threshold"},
+        "id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "subject": {
+          "enum": [
+            "SUN",
+            "EARTH",
+            "COMBINED"
+          ]
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "threshold": {
+          "$ref": "#/$defs/threshold"
+        },
         "intervals_et_s": {
           "type": "array",
-          "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
         },
         "intervals_utc": {
           "type": "array",
-          "items": {"type": "array", "items": {"$ref": "#/$defs/utc"}, "minItems": 2, "maxItems": 2}
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/utc"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
         },
-        "clipped_start": {"type": "boolean"},
-        "clipped_end": {"type": "boolean"},
-        "method": {"$ref": "#/$defs/method_id"}
+        "clipped_start": {
+          "type": "boolean"
+        },
+        "clipped_end": {
+          "type": "boolean"
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
       }
     },
-
     "metric": {
       "type": "object",
-      "required": ["id", "label", "value", "unit", "height_index", "method"],
+      "required": [
+        "id",
+        "label",
+        "value",
+        "unit",
+        "height_index",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {"$ref": "#/$defs/method_id"},
-        "label": {"type": "string", "minLength": 1},
-        "value": {"type": ["number", "null"]},
-        "unit": {"type": "string", "minLength": 1},
-        "height_index": {"type": ["integer", "null"], "minimum": 0},
-        "method": {"$ref": "#/$defs/method_id"}
+        "id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "height_index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
       }
     },
-
     "body_series": {
       "type": "object",
-      "required": ["azimuth_deg", "elevation_deg", "margin_deg", "visible_fraction"],
+      "required": [
+        "azimuth_deg",
+        "elevation_deg",
+        "margin_deg",
+        "visible_fraction"
+      ],
       "additionalProperties": false,
       "properties": {
-        "azimuth_deg": {"$ref": "#/$defs/array_ref"},
-        "elevation_deg": {"$ref": "#/$defs/array_ref"},
-        "angular_radius_deg": {"$ref": "#/$defs/array_ref"},
-        "margin_deg": {"$ref": "#/$defs/array_ref"},
-        "visible_fraction": {"$ref": "#/$defs/array_ref"}
+        "azimuth_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "elevation_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "angular_radius_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "margin_deg": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "visible_fraction": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "blocker_azimuth_index": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "lit_fraction": {
+          "$ref": "#/$defs/array_ref"
+        },
+        "ellipse_visible_share": {
+          "$ref": "#/$defs/array_ref"
+        }
       }
     },
-
     "timeline_block": {
       "type": "object",
-      "required": ["direction_table_id", "time", "bodies", "series", "events", "windows", "metrics"],
+      "required": [
+        "direction_table_id",
+        "time",
+        "bodies",
+        "series",
+        "events",
+        "windows",
+        "metrics"
+      ],
       "additionalProperties": false,
       "properties": {
-        "direction_table_id": {"type": "string", "pattern": "^dirtab-[0-9a-f]{16}$"},
-        "time": {"$ref": "#/$defs/time_grid"},
-        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
+        "direction_table_id": {
+          "type": "string",
+          "pattern": "^dirtab-[0-9a-f]{16}$"
+        },
+        "time": {
+          "$ref": "#/$defs/time_grid"
+        },
+        "bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/body"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
         "series": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "SUN": {"$ref": "#/$defs/body_series"},
-            "EARTH": {"$ref": "#/$defs/body_series"}
+            "SUN": {
+              "$ref": "#/$defs/body_series"
+            },
+            "EARTH": {
+              "$ref": "#/$defs/body_series"
+            }
           }
         },
-        "events": {"type": "array", "items": {"$ref": "#/$defs/event"}},
-        "windows": {"type": "array", "items": {"$ref": "#/$defs/window"}},
-        "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}}
-      }
-    },
-
-    "site": {
-      "allOf": [{"$ref": "#/$defs/package_header"}],
-      "required": ["site", "horizon"],
-      "properties": {
-        "kind": {"const": "site"},
-        "package_id": {"type": "string", "pattern": "^site-"},
-        "request": {"$ref": "#/$defs/site_request"},
-        "inputs": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "windows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/window"
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blocker"
+          }
+        },
+        "calendar": {
+          "$ref": "#/$defs/calendar"
+        },
+        "opportunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/opportunity"
+          }
+        },
+        "uncertainty": {
           "type": "object",
-          "required": ["science_version", "dem", "direction_table"],
           "additionalProperties": false,
           "properties": {
-            "science_version": {"type": "integer", "minimum": 0},
-            "dem": {
+            "horizon_error": {
               "type": "object",
-              "required": ["dem_set_id", "layers"],
+              "required": [
+                "assumption",
+                "method"
+              ],
               "additionalProperties": false,
               "properties": {
-                "dem_set_id": {"type": "string", "minLength": 1},
-                "layers": {"type": "array", "items": {"$ref": "#/$defs/dem_layer"}}
+                "error_deg": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "assumption": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "method": {
+                  "$ref": "#/$defs/method_id"
+                },
+                "dem_height_error_m": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "applied_error_deg": {
+                  "type": "object",
+                  "required": [
+                    "min",
+                    "median",
+                    "max"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "min": {
+                      "type": "number"
+                    },
+                    "median": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "error_deg"
+                  ]
+                },
+                {
+                  "required": [
+                    "dem_height_error_m"
+                  ]
+                }
+              ]
+            },
+            "landing_ellipse": {
+              "type": "object",
+              "required": [
+                "semi_major_m",
+                "semi_minor_m",
+                "azimuth_deg",
+                "height_index",
+                "assumption",
+                "points",
+                "visible_s",
+                "method"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "semi_major_m": {
+                  "type": "number"
+                },
+                "semi_minor_m": {
+                  "type": "number"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                },
+                "height_index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "assumption": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "points": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "lat_deg",
+                      "lon_deg",
+                      "surface_height_m",
+                      "visible_s"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "lat_deg": {
+                        "type": "number"
+                      },
+                      "lon_deg": {
+                        "type": "number"
+                      },
+                      "surface_height_m": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "visible_s": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "visible_s": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "centre_s",
+                      "min_s",
+                      "median_s",
+                      "max_s"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "centre_s": {
+                        "type": "number"
+                      },
+                      "min_s": {
+                        "type": "number"
+                      },
+                      "median_s": {
+                        "type": "number"
+                      },
+                      "max_s": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "method": {
+                  "$ref": "#/$defs/method_id"
+                }
+              }
+            }
+          }
+        },
+        "height_trade": {
+          "description": "Visible time and longest outage per observer height.",
+          "type": "object",
+          "required": [
+            "observer_heights_m",
+            "quantities",
+            "method"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "observer_heights_m": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 1
+            },
+            "method": {
+              "$ref": "#/$defs/method_id"
+            },
+            "quantities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label",
+                  "unit",
+                  "window",
+                  "values",
+                  "change_s",
+                  "method"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/method_id"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "window": {
+                    "$ref": "#/$defs/method_id"
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "change_s": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "method": {
+                    "$ref": "#/$defs/method_id"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "site": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/package_header"
+        }
+      ],
+      "required": [
+        "site",
+        "horizon"
+      ],
+      "properties": {
+        "kind": {
+          "const": "site"
+        },
+        "package_id": {
+          "type": "string",
+          "pattern": "^site-"
+        },
+        "request": {
+          "$ref": "#/$defs/site_request"
+        },
+        "inputs": {
+          "type": "object",
+          "required": [
+            "science_version",
+            "dem",
+            "direction_table"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "science_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "dem": {
+              "type": "object",
+              "required": [
+                "dem_set_id",
+                "layers"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "dem_set_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "layers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/dem_layer"
+                  }
+                }
               }
             },
             "direction_table": {
               "oneOf": [
-                {"type": "null"},
+                {
+                  "type": "null"
+                },
                 {
                   "type": "object",
-                  "required": ["package_id", "content_sha256"],
+                  "required": [
+                    "package_id",
+                    "content_sha256"
+                  ],
                   "additionalProperties": false,
                   "properties": {
-                    "package_id": {"type": "string", "pattern": "^dirtab-[0-9a-f]{16}$"},
-                    "content_sha256": {"$ref": "#/$defs/sha256"}
+                    "package_id": {
+                      "type": "string",
+                      "pattern": "^dirtab-[0-9a-f]{16}$"
+                    },
+                    "content_sha256": {
+                      "$ref": "#/$defs/sha256"
+                    }
                   }
                 }
               ]
             }
           }
         },
-        "site": {"$ref": "#/$defs/site_block"},
-        "horizon": {"$ref": "#/$defs/horizon_block"},
-        "timeline": {"$ref": "#/$defs/timeline_block"}
+        "site": {
+          "$ref": "#/$defs/site_block"
+        },
+        "horizon": {
+          "$ref": "#/$defs/horizon_block"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline_block"
+        }
       },
       "unevaluatedProperties": false
     },
-
     "kernel": {
       "type": "object",
-      "required": ["name", "bytes", "sha256", "source_url", "load_order"],
+      "required": [
+        "name",
+        "bytes",
+        "sha256",
+        "source_url",
+        "load_order"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": {"type": "string", "minLength": 1},
-        "bytes": {"type": "integer", "minimum": 0},
-        "sha256": {"$ref": "#/$defs/sha256"},
-        "source_url": {"type": "string"},
-        "load_order": {"type": "integer", "minimum": 0}
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "load_order": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-
     "direction_table": {
-      "allOf": [{"$ref": "#/$defs/package_header"}],
-      "required": ["frame", "center", "aberration_correction", "bodies", "time", "positions_km", "body_radii_km", "interpolation"],
+      "allOf": [
+        {
+          "$ref": "#/$defs/package_header"
+        }
+      ],
+      "required": [
+        "frame",
+        "center",
+        "aberration_correction",
+        "bodies",
+        "time",
+        "positions_km",
+        "body_radii_km",
+        "interpolation"
+      ],
       "properties": {
-        "kind": {"const": "direction_table"},
-        "package_id": {"type": "string", "pattern": "^dirtab-"},
+        "kind": {
+          "const": "direction_table"
+        },
+        "package_id": {
+          "type": "string",
+          "pattern": "^dirtab-"
+        },
         "request": {
           "type": "object",
-          "required": ["start_et_s", "step_s", "count", "bodies", "frame", "center", "aberration_correction"],
+          "required": [
+            "start_et_s",
+            "step_s",
+            "count",
+            "bodies",
+            "frame",
+            "center",
+            "aberration_correction"
+          ],
           "additionalProperties": false,
           "properties": {
-            "start_et_s": {"type": "number"},
-            "step_s": {"type": "number", "exclusiveMinimum": 0},
-            "count": {"type": "integer", "minimum": 4},
-            "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
-            "frame": {"type": "string", "minLength": 1},
-            "center": {"const": "MOON"},
-            "aberration_correction": {"type": "string", "minLength": 1}
+            "start_et_s": {
+              "type": "number"
+            },
+            "step_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "bodies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/body"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "frame": {
+              "type": "string",
+              "minLength": 1
+            },
+            "center": {
+              "const": "MOON"
+            },
+            "aberration_correction": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "inputs": {
           "type": "object",
-          "required": ["science_version", "kernel_set_id", "kernels"],
+          "required": [
+            "science_version",
+            "kernel_set_id",
+            "kernels"
+          ],
           "additionalProperties": false,
           "properties": {
-            "science_version": {"type": "integer", "minimum": 0},
-            "kernel_set_id": {"type": "string", "minLength": 1},
-            "kernels": {"type": "array", "items": {"$ref": "#/$defs/kernel"}}
+            "science_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kernel_set_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kernels": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/kernel"
+              }
+            }
           }
         },
-        "frame": {"type": "string", "minLength": 1},
-        "center": {"const": "MOON"},
-        "aberration_correction": {"type": "string", "minLength": 1},
-        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
-        "time": {"$ref": "#/$defs/time_grid"},
-        "positions_km": {"$ref": "#/$defs/array_ref"},
+        "frame": {
+          "type": "string",
+          "minLength": 1
+        },
+        "center": {
+          "const": "MOON"
+        },
+        "aberration_correction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/body"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "time": {
+          "$ref": "#/$defs/time_grid"
+        },
+        "positions_km": {
+          "$ref": "#/$defs/array_ref"
+        },
         "body_radii_km": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "SUN": {"$ref": "#/$defs/quantity"},
-            "EARTH": {"$ref": "#/$defs/quantity"}
+            "SUN": {
+              "$ref": "#/$defs/quantity"
+            },
+            "EARTH": {
+              "$ref": "#/$defs/quantity"
+            }
           }
         },
         "interpolation": {
           "type": "object",
-          "required": ["recommended", "max_error_km", "max_error_arcsec"],
+          "required": [
+            "recommended",
+            "max_error_km",
+            "max_error_arcsec"
+          ],
           "additionalProperties": false,
           "properties": {
-            "recommended": {"type": "string", "minLength": 1},
-            "max_error_km": {"$ref": "#/$defs/quantity"},
-            "max_error_arcsec": {"$ref": "#/$defs/quantity"}
+            "recommended": {
+              "type": "string",
+              "minLength": 1
+            },
+            "max_error_km": {
+              "$ref": "#/$defs/quantity"
+            },
+            "max_error_arcsec": {
+              "$ref": "#/$defs/quantity"
+            }
           }
         },
-        "earth_rotation": {"$ref": "#/$defs/array_ref"}
+        "earth_rotation": {
+          "$ref": "#/$defs/array_ref"
+        }
       },
       "unevaluatedProperties": false
     },
-
     "scenario": {
       "description": "The single input file of the tool (decision 5).",
       "type": "object",
-      "required": ["contract", "kind", "scenario_id", "title", "synthetic", "sites", "observer_heights_m", "horizon", "time_window", "bodies", "data"],
+      "required": [
+        "contract",
+        "kind",
+        "scenario_id",
+        "title",
+        "synthetic",
+        "sites",
+        "observer_heights_m",
+        "horizon",
+        "time_window",
+        "bodies",
+        "data"
+      ],
       "additionalProperties": false,
       "properties": {
-        "contract": {"$ref": "#/$defs/contract"},
-        "kind": {"const": "scenario"},
-        "scenario_id": {"$ref": "#/$defs/slug"},
-        "title": {"type": "string", "minLength": 1},
-        "description": {"type": "string"},
-        "synthetic": {"type": "boolean"},
+        "contract": {
+          "$ref": "#/$defs/contract"
+        },
+        "kind": {
+          "const": "scenario"
+        },
+        "scenario_id": {
+          "$ref": "#/$defs/slug"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
         "sites": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["site_id", "name", "lat_deg", "lon_deg"],
+            "required": [
+              "site_id",
+              "name",
+              "lat_deg",
+              "lon_deg"
+            ],
             "additionalProperties": false,
             "properties": {
-              "site_id": {"$ref": "#/$defs/slug"},
-              "name": {"type": "string", "minLength": 1},
-              "lat_deg": {"type": "number", "minimum": -90, "maximum": 90},
-              "lon_deg": {"type": "number", "minimum": -180, "maximum": 360},
-              "landing_utc": {"$ref": "#/$defs/utc"},
-              "notes": {"type": "string"}
+              "site_id": {
+                "$ref": "#/$defs/slug"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lat_deg": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "lon_deg": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 360
+              },
+              "landing_utc": {
+                "$ref": "#/$defs/utc"
+              },
+              "notes": {
+                "type": "string"
+              }
             }
           }
         },
-        "observer_heights_m": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1, "maxItems": 16},
-        "default_height_m": {"type": "number", "minimum": 0},
+        "observer_heights_m": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "default_height_m": {
+          "type": "number",
+          "minimum": 0
+        },
         "horizon": {
           "type": "object",
-          "required": ["azimuth_step_deg", "max_range_m"],
+          "required": [
+            "azimuth_step_deg",
+            "max_range_m"
+          ],
           "additionalProperties": false,
           "properties": {
-            "azimuth_step_deg": {"type": "number", "exclusiveMinimum": 0},
-            "max_range_m": {"type": "number", "exclusiveMinimum": 0}
+            "azimuth_step_deg": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "max_range_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
           }
         },
         "time_window": {
           "oneOf": [
-            {"type": "null"},
+            {
+              "type": "null"
+            },
             {
               "type": "object",
-              "required": ["start_utc", "end_utc", "step_s"],
+              "required": [
+                "start_utc",
+                "end_utc",
+                "step_s"
+              ],
               "additionalProperties": false,
               "properties": {
-                "start_utc": {"$ref": "#/$defs/utc"},
-                "end_utc": {"$ref": "#/$defs/utc"},
-                "step_s": {"type": "number", "exclusiveMinimum": 0}
+                "start_utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "end_utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "step_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
               }
             }
           ]
         },
-        "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}, "minItems": 1, "uniqueItems": true},
-        "thresholds": {"type": "object", "additionalProperties": {"$ref": "#/$defs/threshold"}},
-        "mission_profile": {"type": ["string", "null"]},
+        "bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/body"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/threshold"
+          }
+        },
+        "mission_profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "data": {
           "type": "object",
-          "required": ["dem_set_id", "kernel_set_id"],
+          "required": [
+            "dem_set_id",
+            "kernel_set_id"
+          ],
           "additionalProperties": false,
           "properties": {
-            "dem_set_id": {"type": "string", "minLength": 1},
-            "kernel_set_id": {"type": ["string", "null"]},
-            "direction_table_id": {"type": ["string", "null"]}
+            "dem_set_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kernel_set_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "direction_table_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirement"
+          }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/uncertainty_request"
         }
       }
     },
-
     "index": {
       "description": "List of the packages under one package root, so that static readers need no directory listing.",
       "type": "object",
-      "required": ["contract", "kind", "generated_utc", "packages"],
+      "required": [
+        "contract",
+        "kind",
+        "generated_utc",
+        "packages"
+      ],
       "additionalProperties": false,
       "properties": {
-        "contract": {"$ref": "#/$defs/contract"},
-        "kind": {"const": "index"},
-        "generated_utc": {"$ref": "#/$defs/utc"},
-        "scenario_id": {"type": ["string", "null"]},
+        "contract": {
+          "$ref": "#/$defs/contract"
+        },
+        "kind": {
+          "const": "index"
+        },
+        "generated_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "scenario_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "packages": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["kind", "package_id", "path", "synthetic", "status"],
+            "required": [
+              "kind",
+              "package_id",
+              "path",
+              "synthetic",
+              "status"
+            ],
             "additionalProperties": false,
             "properties": {
-              "kind": {"enum": ["site", "direction_table"]},
-              "package_id": {"type": "string"},
-              "path": {"type": "string", "pattern": "^[A-Za-z0-9_./-]+$"},
-              "synthetic": {"type": "boolean"},
-              "status": {"enum": ["ok", "partial", "error"]},
-              "site_id": {"type": "string"},
-              "name": {"type": "string"},
-              "lat_deg": {"type": "number"},
-              "lon_deg": {"type": "number"},
-              "has_timeline": {"type": "boolean"}
+              "kind": {
+                "enum": [
+                  "site",
+                  "direction_table",
+                  "site_pairs"
+                ]
+              },
+              "package_id": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_./-]+$"
+              },
+              "synthetic": {
+                "type": "boolean"
+              },
+              "status": {
+                "enum": [
+                  "ok",
+                  "partial",
+                  "error"
+                ]
+              },
+              "site_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "lat_deg": {
+                "type": "number"
+              },
+              "lon_deg": {
+                "type": "number"
+              },
+              "has_timeline": {
+                "type": "boolean"
+              },
+              "site_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
       }
+    },
+    "obstacle": {
+      "description": "A run of neighbouring azimuths whose horizon is set by the same piece of terrain.",
+      "type": "object",
+      "required": [
+        "id",
+        "height_index",
+        "azimuth_start_index",
+        "azimuth_count",
+        "azimuth_start_deg",
+        "azimuth_end_deg",
+        "peak_azimuth_deg",
+        "peak_elevation_deg",
+        "peak_distance_m",
+        "peak_lat_deg",
+        "peak_lon_deg",
+        "peak_height_m",
+        "distance_min_m",
+        "distance_max_m",
+        "near_field",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "azimuth_start_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "azimuth_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "azimuth_start_deg": {
+          "type": "number"
+        },
+        "azimuth_end_deg": {
+          "type": "number"
+        },
+        "peak_azimuth_deg": {
+          "type": "number"
+        },
+        "peak_elevation_deg": {
+          "type": "number"
+        },
+        "peak_distance_m": {
+          "type": "number"
+        },
+        "peak_lat_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "peak_lon_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "peak_height_m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "distance_min_m": {
+          "type": "number"
+        },
+        "distance_max_m": {
+          "type": "number"
+        },
+        "near_field": {
+          "type": "boolean"
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
+      }
+    },
+    "blocker": {
+      "description": "An obstacle that hides a body during time in which a smooth sphere would show it.",
+      "type": "object",
+      "required": [
+        "body",
+        "height_index",
+        "obstacle_id",
+        "lost_s",
+        "share_of_lost",
+        "intervals_et_s",
+        "intervals_utc",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/body"
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "obstacle_id": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "lost_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "share_of_lost": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intervals_et_s": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "intervals_utc": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/utc"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "azimuth_start_deg": {
+          "type": "number"
+        },
+        "azimuth_end_deg": {
+          "type": "number"
+        },
+        "peak_azimuth_deg": {
+          "type": "number"
+        },
+        "peak_elevation_deg": {
+          "type": "number"
+        },
+        "peak_distance_m": {
+          "type": "number"
+        },
+        "peak_lat_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "peak_lon_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "peak_height_m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "near_field": {
+          "type": "boolean"
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
+      }
+    },
+    "requirement": {
+      "description": "A stated mission requirement on the landing time, built from visibility windows.",
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "conditions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mission_duration_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "window",
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "window": {
+                "$ref": "#/$defs/method_id"
+              },
+              "kind": {
+                "enum": [
+                  "visible_at_landing",
+                  "continuous_from_landing",
+                  "total_in_mission"
+                ]
+              },
+              "min_s": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "continuous_from_landing",
+                    "total_in_mission"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "min_s"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "calendar": {
+      "description": "Visible time per lunar day.",
+      "type": "object",
+      "required": [
+        "period",
+        "definition",
+        "periods",
+        "quantities",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "const": "lunar_day"
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        },
+        "periods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "start_et_s",
+              "end_et_s",
+              "start_utc",
+              "end_utc",
+              "complete"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "start_et_s": {
+                "type": "number"
+              },
+              "end_et_s": {
+                "type": "number"
+              },
+              "start_utc": {
+                "$ref": "#/$defs/utc"
+              },
+              "end_utc": {
+                "$ref": "#/$defs/utc"
+              },
+              "complete": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "quantities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "unit",
+              "window",
+              "values",
+              "method"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/method_id"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "window": {
+                "$ref": "#/$defs/method_id"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "method": {
+                "$ref": "#/$defs/method_id"
+              }
+            }
+          }
+        }
+      }
+    },
+    "opportunity": {
+      "description": "Landing times for which a stated requirement holds, for one observer height.",
+      "type": "object",
+      "required": [
+        "requirement_id",
+        "height_index",
+        "landing_windows_et_s",
+        "landing_windows_utc",
+        "clipped_start",
+        "clipped_end",
+        "latest_landing_et_s",
+        "latest_landing_utc",
+        "feasible_fraction",
+        "window_count",
+        "longest_window_s",
+        "median_window_s",
+        "feasible_s_per_period",
+        "planned_landing",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "$ref": "#/$defs/method_id"
+        },
+        "height_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "landing_windows_et_s": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "landing_windows_utc": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/utc"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "clipped_start": {
+          "type": "boolean"
+        },
+        "clipped_end": {
+          "type": "boolean"
+        },
+        "latest_landing_et_s": {
+          "type": "number"
+        },
+        "latest_landing_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "feasible_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "window_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "longest_window_s": {
+          "type": "number"
+        },
+        "median_window_s": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "feasible_s_per_period": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "planned_landing": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "utc",
+                "et_s",
+                "feasible",
+                "slip_tolerance_s",
+                "early_tolerance_s",
+                "slip_tolerance_is_lower_bound",
+                "wait_s",
+                "wait_after_window_s",
+                "next_window_start_utc",
+                "next_window_length_s"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "utc": {
+                  "$ref": "#/$defs/utc"
+                },
+                "et_s": {
+                  "type": "number"
+                },
+                "feasible": {
+                  "type": "boolean"
+                },
+                "slip_tolerance_s": {
+                  "type": "number"
+                },
+                "early_tolerance_s": {
+                  "type": "number"
+                },
+                "slip_tolerance_is_lower_bound": {
+                  "type": "boolean"
+                },
+                "wait_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "wait_after_window_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "next_window_start_utc": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/utc"
+                    }
+                  ]
+                },
+                "next_window_length_s": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        }
+      }
+    },
+    "uncertainty_request": {
+      "description": "Stated assumptions for the uncertainty band and the landing-ellipse survey.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "horizon_error_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 5
+        },
+        "landing_ellipse": {
+          "type": "object",
+          "required": [
+            "semi_major_m",
+            "semi_minor_m",
+            "azimuth_deg",
+            "points"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "semi_major_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "semi_minor_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "azimuth_deg": {
+              "type": "number"
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        },
+        "dem_height_error_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "site_pairs": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/package_header"
+        }
+      ],
+      "required": [
+        "time",
+        "sites",
+        "pairs"
+      ],
+      "properties": {
+        "kind": {
+          "const": "site_pairs"
+        },
+        "package_id": {
+          "type": "string",
+          "pattern": "^pairs-"
+        },
+        "request": {
+          "type": "object",
+          "required": [
+            "site_package_ids",
+            "windows"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "site_package_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^site-[0-9a-f]{16}$"
+              },
+              "minItems": 2
+            },
+            "windows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/method_id"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "inputs": {
+          "type": "object",
+          "required": [
+            "science_version",
+            "site_packages"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "science_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "site_packages": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "required": [
+                  "site_id",
+                  "package_id",
+                  "content_sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "site_id": {
+                    "$ref": "#/$defs/slug"
+                  },
+                  "package_id": {
+                    "type": "string",
+                    "pattern": "^site-[0-9a-f]{16}$"
+                  },
+                  "content_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "time": {
+          "$ref": "#/$defs/time_grid"
+        },
+        "sites": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "site_id",
+              "name",
+              "lat_deg",
+              "lon_deg",
+              "package_id",
+              "observer_height_m"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "site_id": {
+                "$ref": "#/$defs/slug"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lat_deg": {
+                "type": "number"
+              },
+              "lon_deg": {
+                "type": "number"
+              },
+              "package_id": {
+                "type": "string",
+                "pattern": "^site-[0-9a-f]{16}$"
+              },
+              "observer_height_m": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "site_a",
+              "site_b",
+              "distance_m",
+              "windows"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "site_a": {
+                "$ref": "#/$defs/slug"
+              },
+              "site_b": {
+                "$ref": "#/$defs/slug"
+              },
+              "distance_m": {
+                "type": "number",
+                "minimum": 0
+              },
+              "windows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "window",
+                    "a_s",
+                    "b_s",
+                    "either_s",
+                    "both_s",
+                    "neither_s",
+                    "longest_neither_s",
+                    "either_fraction",
+                    "gain_over_better_s",
+                    "covered_share_of_better_outage",
+                    "neither_intervals_et_s",
+                    "neither_intervals_utc",
+                    "method"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "window": {
+                      "$ref": "#/$defs/method_id"
+                    },
+                    "a_s": {
+                      "type": "number"
+                    },
+                    "b_s": {
+                      "type": "number"
+                    },
+                    "either_s": {
+                      "type": "number"
+                    },
+                    "both_s": {
+                      "type": "number"
+                    },
+                    "neither_s": {
+                      "type": "number"
+                    },
+                    "longest_neither_s": {
+                      "type": "number"
+                    },
+                    "either_fraction": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "gain_over_better_s": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "covered_share_of_better_outage": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      ]
+                    },
+                    "neither_intervals_et_s": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "neither_intervals_utc": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/utc"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "method": {
+                      "$ref": "#/$defs/method_id"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unevaluatedProperties": false
     }
   }
 }

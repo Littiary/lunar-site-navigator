@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .contract import contract_header, validate_document
+from .contract import contract_dir, contract_header, validate_document
 from .geometry import canonical_lon
 
 # Defaults chosen by the team; a scenario may override every one of them.
@@ -69,3 +69,13 @@ def single_site_scenario(
     }
     validate_document(scenario)
     return scenario
+
+
+def requirement_presets() -> dict:
+    """The example requirements shipped with the contract, by id.
+
+    They are examples chosen by the team (docs/contract/presets/README.md); a scenario
+    may state any other requirement.
+    """
+    path = contract_dir() / "presets" / "requirements.json"
+    return {r["id"]: r for r in json.loads(path.read_text(encoding="utf-8"))["requirements"]}

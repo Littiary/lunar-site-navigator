@@ -117,6 +117,7 @@ class LolaTerrain:
             for p in terrain.products
         )
         self.ceiling_height_m = self._ceiling()
+        self._described: dict | None = None  # asked for often; the reader may hash files to answer
 
     # -- overview levels --------------------------------------------------------------------
 
@@ -147,11 +148,12 @@ class LolaTerrain:
         p0 = product.grid0.pixel_m
         return 0.5 * p0 if level == 0 else p0 * 2**level - p0
 
-    @staticmethod
-    def _max_scale(product) -> float:
-        """Largest map scale factor of the raster (at its corners): projection / sphere."""
+    def _max_scale(self, product) -> float:
+        """Largest map scale factor (projection / sphere) at any point whose neighbourhood
+        can touch the raster: its corners, moved outwards by the widest neighbourhood."""
         g = product.grid0
-        rho = math.hypot(max(abs(g.x_ul_m), abs(g.x_lr_m)), max(abs(g.y_ul_m), abs(g.y_lr_m)))
+        pad = self._level_radius(product, max(self._levels[id(product)]))
+        rho = math.hypot(max(abs(g.x_ul_m), abs(g.x_lr_m)) + pad, max(abs(g.y_ul_m), abs(g.y_lr_m)) + pad)
         return 1.0 + (rho / (2.0 * g.radius_m)) ** 2
 
     def _ceiling(self) -> float | None:
@@ -214,10 +216,13 @@ class LolaTerrain:
             levels = self._levels[id(p)]
             radii = np.array([self._level_radius(p, k) for k in levels])
             which = np.searchsorted(radii, need, side="left")  # finest level that is wide enough
-            if np.any(which >= len(levels)):
+            # Points whose widest neighbourhood cannot touch this raster get nothing from it.
+            pad = radii[-1]
+            near = (x >= g0.x_ul_m - pad) & (x <= g0.x_lr_m + pad) & (y <= g0.y_ul_m + pad) & (y >= g0.y_lr_m - pad)
+            if np.any(near & (which >= len(levels))):
                 raise ValueError("cover_max_m: radius exceeds max_cover_radius_m")
             for idx, k in enumerate(levels):
-                sel = np.flatnonzero(which == idx)
+                sel = np.flatnonzero(near & (which == idx))
                 if sel.size == 0:
                     continue
                 g = p.grid(k)
@@ -276,18 +281,23 @@ class LolaTerrain:
         )
 
     def describe(self) -> dict:
-        layers = []
-        for item in self._terrain.provenance():
-            layers.append(
-                {
-                    "layer_id": str(item["product_id"]),
-                    "product_id": str(item["product_id"]),
-                    "version": str(item.get("product_version")),
-                    "source_url": str(item.get("source_url", "")),
-                    "sha256": item.get("sha256"),
-                    "pixel_m": float(item["pixel_m"]),
-                    "projection": "polar stereographic on a sphere, true scale at the pole",
-                }
-            )
-        ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
-        return {"dem_set_id": f"lola:{ids}", "layers": layers}
+        """The elevation layers for the package record: product, version, and the checksum
+        and source address of the product's data file as the data reader reports them."""
+        if self._described is None:
+            layers = []
+            for item in self._terrain.provenance():
+                data_file = next((f for f in item.get("files", []) if f.get("role") == "data"), {})
+                layers.append(
+                    {
+                        "layer_id": str(item["product_id"]),
+                        "product_id": str(item["product_id"]),
+                        "version": str(item.get("product_version")),
+                        "source_url": str(data_file.get("source_url") or item.get("source_url") or ""),
+                        "sha256": data_file.get("sha256") or item.get("sha256"),
+                        "pixel_m": float(item["pixel_m"]),
+                        "projection": "polar stereographic on a sphere, true scale at the pole",
+                    }
+                )
+            ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
+            self._described = {"dem_set_id": f"lola:{ids}", "layers": layers}
+        return self._described
