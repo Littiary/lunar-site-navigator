@@ -1099,6 +1099,9 @@
         },
         "blocker_azimuth_index": {
           "$ref": "#/$defs/array_ref"
+        },
+        "lit_fraction": {
+          "$ref": "#/$defs/array_ref"
         }
       }
     },

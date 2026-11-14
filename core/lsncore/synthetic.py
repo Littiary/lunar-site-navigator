@@ -96,6 +96,7 @@ def synthetic_methods() -> dict:
         pk.M_EVENTS: _card("rise and set events", "Times at which a body crosses its visibility threshold.", local, "TDB"),
         pk.M_WINDOWS: _card("visibility windows", "Intervals during which the stated condition holds.", local, "TDB"),
         pk.M_METRICS: _card("window statistics", "Summary numbers derived from the visibility windows.", local, "TDB"),
+        pk.M_LIT: _card("lit disc fraction", "Fraction of the disc above the terrain horizon and not hidden by another body.", local, "TDB"),
         pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
         pk.M_SMOOTH_SPHERE: _card("visibility over a smooth sphere", "The visibility condition evaluated without terrain.", local, "TDB"),
         pk.M_BLOCKING: _card("time lost to terrain", "Time in which a smooth sphere would show the body and the terrain hides it, and the obstacle that hides it.", local, "TDB"),
@@ -244,6 +245,8 @@ def synthetic_timeline(
         )
         fraction = _disc_fraction(margin, ang_radius[None, :])
         series[body] = BodySeries(az, el, margin, fraction, ang_radius)
+        if body == "SUN":
+            series[body].lit_fraction = fraction.copy()  # no eclipse is invented for the sample
 
         threshold = thresholds[body]
         if threshold["quantity"] == "visible_fraction":

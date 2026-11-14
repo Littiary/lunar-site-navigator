@@ -251,6 +251,7 @@ Present only when a time window was computed.
 | `series.<BODY>.angular_radius_deg` | `[N]` optional |
 | `series.<BODY>.margin_deg` | `[H, N]` elevation of the disc centre minus the terrain horizon at the same azimuth, for each observer height |
 | `series.<BODY>.visible_fraction` | `[H, N]` fraction of the disc area above the terrain horizon, 0 to 1 |
+| `series.<BODY>.lit_fraction` | `[H, N]` optional, since 0.2. Fraction of the disc that is above the terrain horizon and not hidden by another body; for the Sun: `visible_fraction` reduced by an eclipse by the Earth. Use it for power; use `visible_fraction` for line of sight to the terrain |
 | `series.<BODY>.blocker_azimuth_index` | `[H, N]` `<i4`, since 0.2. For every sample, the azimuth index of the horizon sample that limits the view of the disc; see 5.5 |
 | `events[]` | Rise and set events, sorted by time |
 | `windows[]` | Interval sets |
@@ -404,6 +405,7 @@ Additive; nothing that existed in 0.1 changed its meaning, name, unit or layout.
 - `horizon.obstacle_id`, `horizon.obstacles[]`: the profile grouped into obstacles (5.3).
 - `timeline.series.<BODY>.blocker_azimuth_index`, `timeline.blockers[]` (5.5).
 - New window ids `<body>_visible_smooth_sphere`, `<body>_lost_to_terrain`, `<body>_gained_from_terrain` and metrics `<body>_visible_s`, `<body>_visible_smooth_sphere_s`, `<body>_lost_to_terrain_s`, `<body>_gained_from_terrain_s` (5.5).
-- New method card ids: `horizon.obstacles`, `timeline.smooth_sphere`, `timeline.blocking`.
+- `timeline.series.<BODY>.lit_fraction` (5.4), optional.
+- New method card ids: `horizon.obstacles`, `timeline.smooth_sphere`, `timeline.blocking`, `timeline.lit_fraction`.
 - The validator accepts packages of older minor versions.
 - The sample was regenerated: its package ids changed (new directories), and its invented horizon now has a far ridge and a near rock field so that it falls into several obstacles. Find the packages through `index.json`.

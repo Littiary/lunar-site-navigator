@@ -50,6 +50,9 @@ class BodySeries:
     margin_deg: np.ndarray  # [H, N]
     visible_fraction: np.ndarray  # [H, N]
     angular_radius_deg: np.ndarray | None = None  # [N]
+    # [H, N] fraction of the disc that is above the terrain horizon and not hidden by another
+    # body (for the Sun: not eclipsed by the Earth); None = not computed
+    lit_fraction: np.ndarray | None = None
     # [H, N] index of the horizon sample that limits the view of the disc (lsncore.blocking)
     blocker_azimuth_index: np.ndarray | None = None
 

@@ -197,7 +197,7 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             continue
         for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg"):
             _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
-        for name in ("margin_deg", "visible_fraction", "blocker_azimuth_index"):
+        for name in ("margin_deg", "visible_fraction", "lit_fraction", "blocker_azimuth_index"):
             _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
     n_obstacles = len(hz.get("obstacles", []))
     for i, blocker in enumerate(tl.get("blockers", [])):

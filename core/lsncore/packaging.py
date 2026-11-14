@@ -23,6 +23,7 @@ M_FRACTION = "timeline.visible_fraction"
 M_EVENTS = "timeline.events"
 M_WINDOWS = "timeline.windows"
 M_METRICS = "timeline.metrics"
+M_LIT = "timeline.lit_fraction"
 M_OBSTACLES = "horizon.obstacles"
 M_SMOOTH_SPHERE = "timeline.smooth_sphere"
 M_BLOCKING = "timeline.blocking"
@@ -202,6 +203,8 @@ def build_site_package(
             block["visible_fraction"] = writer.array(
                 f"series_{tag}_visible_fraction", s.visible_fraction, "<f4", "1", M_FRACTION
             )
+            if s.lit_fraction is not None:
+                block["lit_fraction"] = writer.array(f"series_{tag}_lit_fraction", s.lit_fraction, "<f4", "1", M_LIT)
             if s.blocker_azimuth_index is not None:
                 block["blocker_azimuth_index"] = writer.array(
                     f"series_{tag}_blocker_azimuth_index", s.blocker_azimuth_index, "<i4", "1", M_BLOCKING

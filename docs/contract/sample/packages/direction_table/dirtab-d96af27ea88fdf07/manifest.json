@@ -133,13 +133,13 @@
     }
   },
   "provenance": {
-    "created_utc": "2026-11-14T11:40:38.696Z",
+    "created_utc": "2026-11-14T11:42:47.143Z",
     "scenario_id": "synthetic-sample",
     "timings_s": {},
     "software": {
       "core_version": "0.1.0",
       "science_version": "1",
-      "git_commit": "40d0bb9e6b98a4cff3831a5def7f6a0ab6e04067",
+      "git_commit": "33629afa6c1a6ab4d994f647756a3f1f19ed4fc4",
       "git_dirty": true,
       "python": "3.14.7",
       "numpy": "2.5.4",
