@@ -26,7 +26,7 @@ from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
 from .terrain_patch import DEFAULT_PATCHES, canonical_patches, compute_patches, patch_warnings
 from .timeline import IntervalSet, TimeGrid
-from .uncertainty import add_uncertainty_to_timeline, ellipse_points, horizon_error_band, horizon_error_profile, visibility_window
+from .uncertainty import add_uncertainty_to_timeline, band_from_windows, ellipse_points, horizon_error_profile, window_job
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -231,18 +231,18 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
     return cards
 
 
-def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings):
-    """Bands for a stated horizon error and windows at the sample points of a stated ellipse."""
-    from .ephem import directions as d
-    from .ephem import table as ephem_table
-    from .events import finder
+def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings, workers: int = 1):
+    """Bands for a stated horizon error and windows at the sample points of a stated ellipse.
 
-    table = ephem_table.load_table(table_dir)
+    workers: processes that share the event searches (two per body and height for the
+    band, one per body and sample point for the ellipse). The result is the same for any
+    number of them."""
     grid = TimeGrid.from_contract(timeline.time)
     domain = (grid.start_et_s, grid.end_et_s)
     heights = horizon.observer_heights_m
-    rules = {body: finder.threshold_from_contract(thresholds[body], "visible") for body in timeline.bodies}
     notes = []
+    tasks = []  # (what the window is for, arguments of window_job)
+    errors = None
 
     bands, applied = None, None
     if stated.get("horizon_error_deg") or stated.get("dem_height_error_m"):
@@ -252,12 +252,11 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
             for h in range(len(heights))
         ]
         applied = {"min": float(errors[hd].min()), "median": float(np.median(errors[hd])), "max": float(errors[hd].max())}
-        ground = d.Site(csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
+        here = (csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
         for body in timeline.bodies:
-            direction = finder.site_direction(ground, table, body)
             for h in range(len(heights)):
-                nominal = timeline.window(f"{body.lower()}_visible", h)
-                bands[(body, h)] = horizon_error_band(direction, horizon.elevation_deg[h], az_step, domain, rules[body], errors[h], nominal)
+                for sign in (1.0, -1.0):  # the horizon raised, then lowered
+                    tasks.append((("band", body, h, sign), (*here, str(table_dir), body, horizon.elevation_deg[h] + sign * errors[h], az_step, domain, thresholds[body])))
 
     ellipse = None
     spec = stated.get("landing_ellipse")
@@ -282,13 +281,31 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
                     sets[body].append(None)
                 continue
             ground_heights.append(ground_height)
-            place = d.Site(float(lon), float(lat), ground_height / 1000.0)
             for body in timeline.bodies:
                 if k == 0:
                     sets[body].append(timeline.window(f"{body.lower()}_visible", hd))
                 else:
-                    sets[body].append(visibility_window(finder.site_direction(place, table, body), profile, az_step, domain, rules[body]))
+                    sets[body].append(None)  # filled in below
+                    tasks.append((("point", body, len(sets[body]) - 1, 0.0), (float(lon), float(lat), ground_height / 1000.0, str(table_dir), body, profile, az_step, domain, thresholds[body])))
         ellipse = {"spec": spec, "height_index": hd, "points": points, "surface_height_m": ground_heights, "sets": sets}
+
+    # Every task is one event search over the whole range; they are independent of each other.
+    if workers > 1 and len(tasks) > 1:
+        from concurrent.futures import ProcessPoolExecutor
+
+        with ProcessPoolExecutor(max_workers=min(int(workers), len(tasks))) as pool:
+            found = list(pool.map(window_job, *zip(*(arguments for _, arguments in tasks))))
+    else:
+        found = [window_job(*arguments) for _, arguments in tasks]
+    raised = {}
+    for (kind, body, where, sign), intervals in zip((key for key, _ in tasks), found):
+        result = IntervalSet(intervals, domain)
+        if kind == "point":
+            sets[body][where] = result
+        elif sign > 0.0:
+            raised[(body, where)] = result
+        else:
+            bands[(body, where)] = band_from_windows(timeline.window(f"{body.lower()}_visible", where), raised[(body, where)], result, float(errors[where].max()))
     return bands, ellipse, notes, applied
 
 
@@ -505,14 +522,33 @@ def _mark_synthetic(methods: dict) -> dict:
     return out
 
 
+def _site_job(scenario: dict, index: int, out_root: str, table_dir: str | None, terrain_factory, synthetic: bool, settings, inner: int = 1) -> str:
+    """One site of a scenario in a worker process: its own terrain, the shared direction table."""
+    one = {**scenario, "sites": [scenario["sites"][index]]}
+    paths = run_scenario(one, out_root, terrain_factory(), synthetic, settings, jobs=inner, _table_dir=table_dir or "", _finish=False)
+    return str(paths[-1])
+
+
 def run_scenario(
     scenario: dict,
     out_root: Path | str,
     terrain: Terrain | None = None,
     terrain_is_synthetic: bool = False,
     settings: HorizonSettings = HorizonSettings(),
+    *,
+    jobs: int = 1,
+    terrain_factory=None,
+    _table_dir: str | None = None,
+    _finish: bool = True,
 ) -> list[Path]:
-    """Compute every site of a scenario and write the packages. Returns their directories."""
+    """Compute every site of a scenario and write the packages. Returns their directories.
+
+    jobs: processes the run may use. Sites are computed side by side, each in its own
+    process; that needs terrain_factory, a picklable callable without arguments that
+    opens the terrain in a worker. What is left over is shared inside each site among the
+    event searches of the uncertainty band and the landing ellipse. The packages are the
+    same whatever the number of jobs.
+    """
     if scenario["synthetic"] and terrain is None:
         return run_synthetic_scenario(scenario, out_root)
     if terrain is None:
@@ -545,10 +581,13 @@ def run_scenario(
             from .synthetic import DEFAULT_THRESHOLDS
 
             thresholds = {**DEFAULT_THRESHOLDS, **scenario.get("thresholds", {})}
-            table_dir = ephem_table.write_direction_table(
-                out_root, window["start_utc"], window["end_utc"], scenario_id=scenario_id
-            )
-            written.append(Path(table_dir))
+            if _table_dir:  # a worker: the table was written by the process that started it
+                table_dir = Path(_table_dir)
+            else:
+                table_dir = ephem_table.write_direction_table(
+                    out_root, window["start_utc"], window["end_utc"], scenario_id=scenario_id
+                )
+                written.append(Path(table_dir))
             timeline_request = {
                 "start_utc": window["start_utc"],
                 "end_utc": window["end_utc"],
@@ -565,7 +604,20 @@ def run_scenario(
                 "timeline: the ephemeris modules are not installed; this package holds the horizon only"
             )
 
-    for site in scenario["sites"]:
+    sites = list(scenario["sites"])
+    if jobs > 1 and terrain_factory is not None and len(sites) > 1 and not (window is not None and table_dir is None):
+        from concurrent.futures import ProcessPoolExecutor
+
+        at_once = min(int(jobs), len(sites))
+        with ProcessPoolExecutor(max_workers=at_once) as pool:
+            futures = [
+                pool.submit(_site_job, scenario, k, str(out_root), str(table_dir) if table_dir else None, terrain_factory, synthetic, settings, int(jobs) // at_once)
+                for k in range(len(sites))
+            ]
+            written.extend(Path(future.result()) for future in futures)
+        sites = []
+
+    for site in sites:
         csite = canonical_site(site)
         terrain = whole_terrain.for_site(csite["lat_deg"], csite["lon_deg"], max_range) if hasattr(whole_terrain, "for_site") else whole_terrain
         t0 = _time.perf_counter()
@@ -601,7 +653,8 @@ def run_scenario(
                 default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
                 hd = int(np.argmin(np.abs(np.asarray(heights) - default_height)))
                 bands, ellipse, notes, applied = _uncertainty_inputs(
-                    csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings
+                    csite, terrain, horizon, table_dir, timeline, thresholds, stated, hd, az_step, max_range, settings,
+                    workers=max(1, int(jobs)),
                 )
                 warnings.extend(notes)
                 add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied)
@@ -645,7 +698,10 @@ def run_scenario(
                 terrain_patches=patches,
             )
         )
-    pair_methods = trade_methods(whole_terrain.describe()["dem_set_id"], "the direction table of the site packages")
+    if not _finish:
+        return written
+    dem_sets = sorted({read_package(p).manifest["inputs"]["dem"]["dem_set_id"] for p in written if p.name.startswith("site-")})
+    pair_methods = trade_methods(" and ".join(dem_sets), "the direction table of the site packages")
     pairs = build_pairs_package(
         out_root,
         written,  # it picks the site packages with a timeline

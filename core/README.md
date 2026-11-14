@@ -36,7 +36,8 @@ stream; options state what else is wanted: `--landing-utc` (planned landing),
 [`docs/contract/presets`](../docs/contract/presets/README.md); repeatable, `all` for every
 one) or `--requirements <file>` (your own requirements on the landing time),
 `--horizon-error-deg`, `--dem-height-error-m` and `--ellipse` (assumptions for the
-uncertainty band and the landing-ellipse survey), `--heights` (mast heights to compare). `run` computes every site of a scenario file. With
+uncertainty band and the landing-ellipse survey), `--heights` (mast heights to compare). `run` computes every site of a scenario file
+(`--jobs N`: processes it may use, see run times below). With
 a time window and the ephemeris modules installed, a site package then holds:
 
 | Part | From |
@@ -58,6 +59,36 @@ resolution class that served it ([horizon.md](../docs/method/horizon.md), sectio
 format, for example the synthetic test raster `data/fixtures/synth_s90_100m.lbl`; a
 package computed from a synthetic surface is flagged `synthetic`. `--synthetic` skips the
 computation and writes invented numbers (the walking skeleton behind the contract sample).
+
+## Run times
+
+Measured on 14 November 2026 on one laptop (20 logical processors, Windows 11), each as a
+fresh `python -m lsncore ...` process from its start to validated packages. South-polar
+LOLA products, hourly series, six observer heights, default `--jobs` (8 here).
+
+| Request | Time |
+|---|---|
+| One custom site, horizon and terrain patches, no dates (`lsncore site`) | 3.5 to 4.4 s |
+| One site, 30 days, calendar and mast trade | 11 s |
+| One site, 30 days, three presets, uncertainty band and landing ellipse of 13 points | 31 s (35 s in one process) |
+| One site, 24 months, the same | 3.7 min (223 s) |
+| Three sites, 24 months, calendar and mast trade | 2.7 min (159 s) |
+| Three sites, 24 months, three presets, band and ellipse | 6.1 min (367 s); 16.2 min (970 s) in one process |
+
+A site without dates, or with a month of them, is answered while the user waits. Two
+years are a batch job of minutes. `run --jobs N` sets how many processes a run may use:
+sites are computed side by side, and what is left over shares, inside each site, the
+event searches of the uncertainty band and of the landing ellipse. The packages are
+identical for any number of jobs (tests in `core/tests/test_pipeline.py`).
+
+Where the time of a 24-month site goes (one process, 375 s while other work was
+running): 77 % in the event searches, 72 of them per site with every option on (12 for
+the windows themselves, 12 over a smooth sphere, 24 for the band, 24 for the ellipse),
+about 4 s each; most of that is the visible fraction of the disc against the horizon
+profile in the event finder. The horizon itself takes 2 s, the twelve horizons of the
+ellipse points 16 s, the ground-station windows and the eclipses of the ephemeris modules
+47 s and 39 s. A site on the global 237 m product costs about the same as a polar one
+(2.6 to 2.9 s for the horizon, [horizon.md](../docs/method/horizon.md), section 9).
 
 ## Layout
 

@@ -20,17 +20,31 @@ def _slug(text: str) -> str:
 
 def _terrain(args: argparse.Namespace):
     """Terrain source selected on the command line: (terrain, is_synthetic)."""
-    from .dem import open_lola, open_moon
-
-    # Named labels: those products. Otherwise every installed product, for a site anywhere.
-    terrain = open_lola(label_paths=args.dem_label) if args.dem_label else open_moon()
+    terrain = _open_terrain(args.dem_label)
     return terrain, terrain.is_synthetic
 
 
-def _run(scenario: dict, out: Path, terrain=None, terrain_is_synthetic: bool = False) -> int:
+def _open_terrain(labels=None):
+    """Named labels: those products. Otherwise every installed product, for a site anywhere."""
+    from .dem import open_lola, open_moon
+
+    return open_lola(label_paths=labels) if labels else open_moon()
+
+
+def _jobs(requested: int, scenario: dict) -> int:
+    """Processes a run may use: as asked, or by default half the processors and at most
+    eight. Sites are computed side by side; the rest is shared inside each site."""
+    import os
+
+    if requested > 0:
+        return requested
+    return max(1, min((os.cpu_count() or 2) // 2, 8))
+
+
+def _run(scenario: dict, out: Path, terrain=None, terrain_is_synthetic: bool = False, jobs: int = 1, terrain_factory=None) -> int:
     from .pipeline import run_scenario
 
-    for path in run_scenario(scenario, out, terrain, terrain_is_synthetic):
+    for path in run_scenario(scenario, out, terrain, terrain_is_synthetic, jobs=jobs, terrain_factory=terrain_factory):
         validate_package(path)
         print(path.as_posix())
     print((out / "index.json").as_posix())
@@ -41,8 +55,11 @@ def cmd_run(args: argparse.Namespace) -> int:
     scenario = load_scenario(args.scenario)
     if scenario["synthetic"] and not args.dem_label:
         return _run(scenario, Path(args.out))
+    import functools
+
     terrain, synthetic = _terrain(args)
-    return _run(scenario, Path(args.out), terrain, synthetic)
+    factory = functools.partial(_open_terrain, args.dem_label)
+    return _run(scenario, Path(args.out), terrain, synthetic, jobs=_jobs(args.jobs, scenario), terrain_factory=factory)
 
 
 def cmd_site(args: argparse.Namespace) -> int:
@@ -59,7 +76,7 @@ def cmd_site(args: argparse.Namespace) -> int:
         return _run(scenario, Path(args.out))
     terrain, synthetic = _terrain(args)
     scenario = single_site_scenario(
-        site_id, args.name, args.lat, args.lon, dem_set_id=terrain.describe()["dem_set_id"], synthetic=synthetic, **common
+        site_id, args.name, args.lat, args.lon, dem_set_id="any", synthetic=synthetic, **common
     )
     return _run(scenario, Path(args.out), terrain, synthetic)
 
@@ -155,6 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("scenario")
     p.add_argument("--out", required=True, help="package root directory")
     p.add_argument("--dem-label", action="append", help=dem_help)
+    p.add_argument("--jobs", type=int, default=0, help="processes the run may use (default: half the processors, at most 8); sites are computed side by side")
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("site", help="compute the terrain horizon of one site given by latitude and longitude")
