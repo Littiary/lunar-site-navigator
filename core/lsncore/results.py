@@ -39,6 +39,8 @@ class HorizonResult:
     # grouping of the profile into obstacles (lsncore.obstacles): [H, A] ids and the records
     obstacle_id: np.ndarray | None = None
     obstacles: list | None = None
+    # which elevation product served the site and the horizon (lsncore.pipeline.terrain_source)
+    terrain_source: dict | None = None
 
 
 @dataclass

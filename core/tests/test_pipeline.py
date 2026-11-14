@@ -129,3 +129,49 @@ def test_scenario_command_builds_a_valid_scenario_from_site_records(tmp_path):
     assert scenario["sites"][0]["lon_deg"] == 205.5 and scenario["sites"][0]["landing_utc"] == "2027-01-10T00:00:00.000Z"
     assert scenario["uncertainty"] == {"horizon_error_deg": 0.05, "landing_ellipse": {"semi_major_m": 100.0, "semi_minor_m": 50.0, "azimuth_deg": 30.0, "points": 13}}
     assert scenario["requirements"][0]["id"] == "stay" and scenario["data"]["dem_set_id"] == "any"
+
+
+def _ridge_terrain():
+    """Opens the terrain in a worker process (must be importable, hence at module level)."""
+    return AnalyticTerrain(_ridge, R, ceiling_height_m=800.0, dem_set_id="ANALYTIC-ridges")
+
+
+def test_sites_computed_in_parallel_give_the_same_packages(tmp_path):
+    scenario = single_site_scenario(
+        "ridge-a", "Analytic ridge site A", -86.0, 20.0, dem_set_id="any", synthetic=False, azimuth_step_deg=5.0, max_range_m=50_000.0,
+    )
+    scenario["scenario_id"] = "three-ridge-sites"
+    scenario["sites"] += [
+        {"site_id": "ridge-b", "name": "Analytic ridge site B", "lat_deg": -84.5, "lon_deg": 100.0},
+        {"site_id": "ridge-c", "name": "Analytic ridge site C", "lat_deg": -87.2, "lon_deg": -60.0},
+    ]
+    one = run_scenario(scenario, tmp_path / "one", _ridge_terrain())
+    many = run_scenario(scenario, tmp_path / "many", _ridge_terrain(), jobs=3, terrain_factory=_ridge_terrain)
+    assert [p.name for p in one] == [p.name for p in many] and len(one) == 3
+    for a, b in zip(one, many):
+        ma, mb = validate_package(a), validate_package(b)
+        assert ma["content_sha256"] == mb["content_sha256"] and ma["site"]["site_id"] == mb["site"]["site_id"]
+    index = lambda root: [(p["kind"], p["package_id"]) for p in json.loads((root / "index.json").read_text())["packages"]]  # noqa: E731
+    assert index(tmp_path / "one") == index(tmp_path / "many")
+
+
+def test_event_searches_shared_among_processes_give_the_same_package(tmp_path):
+    """One site with dates, a stated horizon error and a landing ellipse: the band and the
+    ellipse survey are event searches that can run in other processes."""
+    pytest.importorskip("spiceypy")
+    from lsncore.ephem import kernels
+
+    try:
+        kernels.load()
+    except FileNotFoundError as missing:
+        pytest.skip(f"kernels are not on this machine: {missing}")
+    scenario = single_site_scenario(
+        "ridge-a", "Analytic ridge site A", -86.0, 20.0, dem_set_id="any", synthetic=False, heights_m=[0.0, 2.0], azimuth_step_deg=1.0, max_range_m=50_000.0,
+    )
+    scenario["time_window"] = {"start_utc": "2026-11-14T00:00:00.000Z", "end_utc": "2026-11-24T00:00:00.000Z", "step_s": 3600.0}
+    scenario["uncertainty"] = {"horizon_error_deg": 0.2, "dem_height_error_m": 5.0, "landing_ellipse": {"semi_major_m": 3000.0, "semi_minor_m": 2000.0, "azimuth_deg": 20.0, "points": 4}}
+    (_, a) = run_scenario(scenario, tmp_path / "one", _ridge_terrain())
+    (_, b) = run_scenario(scenario, tmp_path / "many", _ridge_terrain(), jobs=4)
+    ma, mb = validate_package(a), validate_package(b)
+    assert ma["package_id"] == mb["package_id"] and ma["content_sha256"] == mb["content_sha256"]
+    assert any(w["id"] == "sun_visible_certain" for w in ma["timeline"]["windows"]) and "landing_ellipse" in ma["timeline"]["uncertainty"]

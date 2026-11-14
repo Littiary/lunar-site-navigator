@@ -152,8 +152,25 @@ def write_direction_table(
         {"name": entry["name"], "bytes": int(entry["bytes"]), "sha256": entry["sha256"], "source_url": entry["url"], "load_order": order}
         for order, entry in enumerate(manifest)
     ]
+    # The orientation of the Earth (for drawing it) needs the optional kernel group.
+    methods = dirtab_methods(step_s, error)
+    earth, notes = None, []
+    if kernels.stations_available():
+        from .. import earth_view
+
+        earth = earth_view.earth_view(grid.times())
+        used = earth_view.orientation_kernels()
+        earth["kernels"] = [
+            {"name": entry["name"], "bytes": int(entry["bytes"]), "sha256": entry["sha256"], "source_url": entry["url"], "load_order": len(manifest) + order}
+            for order, entry in enumerate(used)
+        ]
+        methods.update(earth_view.earth_view_methods([f"{entry['name']} (sha256 {entry['sha256'][:12]})" for entry in used], horizons_validated=True))
+    else:
+        notes.append("earth_view: the Earth orientation kernels are not installed (python -m lsncore.ephem.fetch_kernels); the orientation of the Earth is not in this table")
     return pk.build_direction_table_package(
         out_root,
+        earth_view=earth,
+        warnings=notes,
         time=grid.to_contract(d.et_to_utc_z(grid.start_et_s), d.et_to_utc_z(grid.end_et_s), d.leap_seconds_between(grid.start_et_s, grid.end_et_s)),
         frame_name=d.FRAME,
         aberration_correction=d.ABCORR,
@@ -165,7 +182,7 @@ def write_direction_table(
         interpolation_max_error_arcsec=error["max_error_arcsec"],
         kernel_set_id=kernels.kernel_set_id(),
         kernels=kernel_list,
-        methods=dirtab_methods(step_s, error),
+        methods=methods,
         synthetic=False,
         scenario_id=scenario_id,
         timings_s={"direction_table": _time.perf_counter() - t0},

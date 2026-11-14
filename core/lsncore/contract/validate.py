@@ -263,6 +263,39 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             prev_end = b
 
 
+def _check_terrain(manifest: dict, errors: list[str]) -> None:
+    block = manifest.get("terrain")
+    stated = manifest["request"].get("terrain_patches")
+    if block is None:
+        if stated:
+            errors.append("request/terrain_patches is stated but the package has no terrain block")
+        return
+    patches = block["patches"]
+    ids = [p["id"] for p in patches]
+    if len(set(ids)) != len(ids):
+        errors.append("terrain/patches: ids must be unique")
+    spacings = [p["spacing_m"] for p in patches]
+    if spacings != sorted(spacings):
+        errors.append("terrain/patches must be listed finest first")
+    if stated != [{"id": p["id"], "half_width_m": p["half_width_m"], "spacing_m": p["spacing_m"]} for p in patches]:
+        errors.append("terrain/patches differ from request/terrain_patches")
+    for i, p in enumerate(patches):
+        where = f"terrain/patches/{i}"
+        cells = p["half_width_m"] / p["spacing_m"]
+        count = 2 * int(round(cells)) + 1
+        if abs(cells - round(cells)) > 1e-9 or p["count_east"] != count or p["count_north"] != count:
+            errors.append(f"{where}: count_east and count_north must be 2 * half_width_m / spacing_m + 1 = {count}")
+        _expect_shape(p["up_m"], [p["count_north"], p["count_east"]], f"{where}/up_m", errors)
+        if p["up_m"]["dtype"] != "<f4" or p["up_m"]["unit"] != "m":
+            errors.append(f"{where}/up_m must be float32 in metres")
+        if p["up_m"]["method"] != block["method"]:
+            errors.append(f"{where}/up_m: method differs from terrain/method")
+        if p["east_min_m"] != -p["half_width_m"] or p["north_min_m"] != -p["half_width_m"]:
+            errors.append(f"{where}: east_min_m and north_min_m must be -half_width_m (the grid is centred on the site)")
+        if p["sources"] and abs(sum(s["node_share"] for s in p["sources"]) - 1.0) > 1e-6:
+            errors.append(f"{where}/sources: node_share must add up to 1")
+
+
 def _check_direction_table(manifest: dict, errors: list[str]) -> None:
     n = manifest["time"]["count"]
     bodies = manifest["bodies"]
@@ -279,6 +312,14 @@ def _check_direction_table(manifest: dict, errors: list[str]) -> None:
     for key in ("start_et_s", "step_s", "count"):
         if manifest["time"][key] != req[key]:
             errors.append(f"time/{key} differs from request/{key}")
+    view = manifest.get("earth_view")
+    if (view is not None) != bool(req.get("earth_view")):
+        errors.append("earth_view: the block and request/earth_view must both be present or both be absent")
+    if view is not None:
+        for name in ("sub_lunar_lat_deg", "sub_lunar_lon_deg", "north_pole_angle_deg"):
+            _expect_shape(view[name], [n], f"earth_view/{name}", errors)
+            if view[name]["dtype"] != "<f4" or view[name]["unit"] != "deg" or view[name]["method"] != view["method"]:
+                errors.append(f"earth_view/{name} must be float32 in degrees with the method of the block")
 
 
 def _check_site_pairs(manifest: dict, errors: list[str]) -> None:
@@ -317,6 +358,7 @@ def validate_package(path: Path | str) -> dict:
     _check_methods(manifest, errors)
     if manifest["kind"] == "site":
         _check_site(manifest, errors)
+        _check_terrain(manifest, errors)
     elif manifest["kind"] == "site_pairs":
         _check_site_pairs(manifest, errors)
     else:

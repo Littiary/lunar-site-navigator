@@ -53,7 +53,8 @@ class HorizonSettings:
     Lengths are in units of the finest pixel of the terrain source.
     """
 
-    first_sample_px: float = 1.0  # distance of the first point from the site
+    first_sample_px: float = 1.0  # distance of the first point from the site ...
+    first_sample_max_m: float = 20.0  # ... but never farther than this: on a coarse grid the ground next to the site counts too
     fine_step_px: float = 0.5  # lattice step
     inner_zone_px: float = 10.0  # extent of the denser lattice next to the site
     inner_step_px: float = 0.125  # its step: elevation angles are most sensitive there
@@ -104,7 +105,7 @@ def _layout(terrain: Terrain, max_range_m: float, settings: HorizonSettings):
     grouped into cells given by the index of their first point and their number of points.
     """
     p = terrain.finest_pixel_m
-    first = p * settings.first_sample_px
+    first = min(p * settings.first_sample_px, settings.first_sample_max_m)
     fine = p * settings.fine_step_px
     if max_range_m <= first:
         raise ValueError("max_range_m must exceed the first sample distance")
