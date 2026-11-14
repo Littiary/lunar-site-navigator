@@ -25,7 +25,7 @@ from .io import (
     contract_dir,
 )
 
-KINDS = ("site", "direction_table", "scenario", "index")
+KINDS = ("site", "direction_table", "site_pairs", "scenario", "index")
 
 
 class ContractError(ValueError):
@@ -186,6 +186,13 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     tl = manifest.get("timeline")
     if tl is None:
         return
+    trade = tl.get("height_trade")
+    if trade is not None:
+        if trade["observer_heights_m"] != heights:
+            errors.append("timeline/height_trade: observer_heights_m differs from the horizon")
+        for quantity in trade["quantities"]:
+            if len(quantity["values"]) != len(heights) or len(quantity["change_s"]) != len(heights):
+                errors.append(f"timeline/height_trade/{quantity['id']}: one value per observer height is required")
     n = tl["time"]["count"]
     dt_input = manifest["inputs"]["direction_table"]
     if dt_input is None or dt_input["package_id"] != tl["direction_table_id"]:
@@ -274,6 +281,25 @@ def _check_direction_table(manifest: dict, errors: list[str]) -> None:
             errors.append(f"time/{key} differs from request/{key}")
 
 
+def _check_site_pairs(manifest: dict, errors: list[str]) -> None:
+    known = [s["site_id"] for s in manifest["sites"]]
+    if len(set(known)) != len(known):
+        errors.append("sites: site_id values must be unique")
+    if [s["package_id"] for s in manifest["sites"]] != manifest["request"]["site_package_ids"]:
+        errors.append("sites: package ids differ from request/site_package_ids")
+    if len(manifest["pairs"]) != len(known) * (len(known) - 1) // 2:
+        errors.append("pairs: there must be one entry for every pair of sites")
+    total = (manifest["time"]["count"] - 1) * manifest["time"]["step_s"]
+    for i, pair in enumerate(manifest["pairs"]):
+        if pair["site_a"] not in known or pair["site_b"] not in known or pair["site_a"] == pair["site_b"]:
+            errors.append(f"pairs/{i}: site ids must be two different sites of this package")
+        for row in pair["windows"]:
+            if abs(row["either_s"] + row["neither_s"] - total) > 1e-3:
+                errors.append(f"pairs/{i}/{row['window']}: either_s + neither_s must equal the length of the time range")
+            if len(row["neither_intervals_et_s"]) != len(row["neither_intervals_utc"]):
+                errors.append(f"pairs/{i}/{row['window']}: neither intervals differ in length")
+
+
 def validate_package(path: Path | str) -> dict:
     """Validate a package directory completely. Returns the manifest; raises ContractError."""
     path = Path(path)
@@ -284,13 +310,15 @@ def validate_package(path: Path | str) -> dict:
     errors = _schema_errors(manifest)
     if errors:
         raise ContractError(errors)
-    if manifest["kind"] not in ("site", "direction_table"):
+    if manifest["kind"] not in ("site", "direction_table", "site_pairs"):
         raise ContractError([f"kind '{manifest['kind']}' is a document, not a package"])
 
     _check_arrays(path, manifest, errors)
     _check_methods(manifest, errors)
     if manifest["kind"] == "site":
         _check_site(manifest, errors)
+    elif manifest["kind"] == "site_pairs":
+        _check_site_pairs(manifest, errors)
     else:
         _check_direction_table(manifest, errors)
 

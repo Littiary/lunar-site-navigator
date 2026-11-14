@@ -21,6 +21,8 @@ from .calendar import add_calendar_to_timeline
 from .uncertainty import Band, add_uncertainty_to_timeline, ellipse_points
 from .contract import format_utc, read_package, write_index
 from .obstacles import segment_obstacles
+from .pairs import build_pairs_package
+from .trade import add_height_trade_to_timeline
 from .geometry import DEG, destination, site_frame, topocentric_az_el
 from .results import BodySeries, HorizonResult, TimelineResult
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
@@ -101,6 +103,8 @@ def synthetic_methods() -> dict:
         pk.M_LIT: _card("lit disc fraction", "Fraction of the disc above the terrain horizon and not hidden by another body.", local, "TDB"),
         pk.M_HORIZON_ERROR: _card("band for a stated horizon error", "Windows that hold with the horizon higher or lower by the stated angle.", local, "TDB"),
         pk.M_ELLIPSE: _card("survey of the landing ellipse", "Windows at sample points of the stated landing ellipse.", local, "TDB"),
+        pk.M_HEIGHT_TRADE: _card("mast-height trade", "Visible time and longest outage per observer height.", local, "TDB"),
+        pk.M_PAIRS: _card("site pairs", "What two sites achieve together: time with the body visible at one of them at least.", local, "TDB"),
         pk.M_CALENDAR: _card("lunar-day calendar", "Visible time per lunar day.", local, "TDB"),
         pk.M_OPPORTUNITY: _card("landing windows", "Landing times for which a stated requirement holds, and how far a planned landing can slip.", local, "TDB"),
         pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
@@ -416,6 +420,7 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 timeline, read_package(table_dir), len(horizon.observer_heights_m), scenario.get("requirements"),
                 clock.utc_to_et(landing) if landing else None, clock.et_to_utc,
             )
+            add_height_trade_to_timeline(timeline, horizon.observer_heights_m)
         t2 = _time.perf_counter()
         written.append(
             pk.build_site_package(
@@ -434,5 +439,8 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
             )
         )
+    pairs = build_pairs_package(out_root, [p for p in written if p.parent.parent.name == "site"], synthetic_methods(), scenario_id=scenario_id)
+    if pairs is not None:
+        written.append(pairs)
     write_index(out_root, scenario_id)
     return written

@@ -26,6 +26,8 @@ M_METRICS = "timeline.metrics"
 M_LIT = "timeline.lit_fraction"
 M_HORIZON_ERROR = "timeline.horizon_error"
 M_ELLIPSE = "timeline.landing_ellipse"
+M_HEIGHT_TRADE = "timeline.height_trade"
+M_PAIRS = "pairs.complementarity"
 M_CALENDAR = "timeline.calendar"
 M_OPPORTUNITY = "timeline.opportunity"
 M_OBSTACLES = "horizon.obstacles"
@@ -255,6 +257,8 @@ def build_site_package(
             sections["timeline"]["uncertainty"] = timeline.uncertainty
         if timeline.calendar is not None:
             sections["timeline"]["calendar"] = timeline.calendar
+        if timeline.height_trade is not None:
+            sections["timeline"]["height_trade"] = timeline.height_trade
         if timeline.opportunities is not None:
             sections["timeline"]["opportunities"] = timeline.opportunities
 

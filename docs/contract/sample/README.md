@@ -16,7 +16,9 @@ every method card has validation status `synthetic`.
 | `SYNTHETIC_scenario.json` | The scenario the sample was produced from |
 | `packages/index.json` | List of the packages below |
 | `packages/direction_table/<id>/` | Direction-table package: 769 hourly records, Sun and Earth |
-| `packages/site/synthetic-sample-site/<id>/` | Site package: horizon for 6 observer heights and 1440 azimuths with its obstacles (four per height: an invented far ridge, an invented near rock field and two stretches between them), a 30-day hourly series, events, windows, metrics, the blocker of every sample and the time lost to each obstacle, the lunar-day calendar, and the landing windows and slip tolerance for the invented example requirement of the scenario, the band for an invented horizon error and the survey of an invented landing ellipse (9 points) |
+| `packages/site/synthetic-sample-site-b/<id>/` | A second invented site with the same content, so that two sites can be compared |
+| `packages/site_pairs/<id>/` | Site-pairs package: what the two invented sites achieve together |
+| `packages/site/synthetic-sample-site/<id>/` | Site package: horizon for 6 observer heights and 1440 azimuths with its obstacles (four per height: an invented far ridge, an invented near rock field and two stretches between them), a 30-day hourly series, events, windows, metrics, the blocker of every sample and the time lost to each obstacle, the lunar-day calendar, and the landing windows and slip tolerance for the invented example requirement of the scenario, the band for an invented horizon error and the survey of an invented landing ellipse (9 points), and the mast-height trade table |
 
 Regenerate and check:
 

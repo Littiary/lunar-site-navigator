@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.4",
+  "title": "Lunar Site Navigator package contract, version 0.5",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
   "required": [
@@ -43,6 +43,21 @@
       "if": {
         "properties": {
           "kind": {
+            "const": "site_pairs"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/site_pairs"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
             "const": "scenario"
           }
         },
@@ -75,6 +90,7 @@
       "enum": [
         "site",
         "direction_table",
+        "site_pairs",
         "scenario",
         "index"
       ]
@@ -420,7 +436,7 @@
         },
         "package_id": {
           "type": "string",
-          "pattern": "^(site|dirtab)-[0-9a-f]{16}$"
+          "pattern": "^(site|dirtab|pairs)-[0-9a-f]{16}$"
         },
         "content_sha256": {
           "$ref": "#/$defs/sha256"
@@ -1339,6 +1355,75 @@
               }
             }
           }
+        },
+        "height_trade": {
+          "description": "Visible time and longest outage per observer height.",
+          "type": "object",
+          "required": [
+            "observer_heights_m",
+            "quantities",
+            "method"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "observer_heights_m": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 1
+            },
+            "method": {
+              "$ref": "#/$defs/method_id"
+            },
+            "quantities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label",
+                  "unit",
+                  "window",
+                  "values",
+                  "change_s",
+                  "method"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/method_id"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "window": {
+                    "$ref": "#/$defs/method_id"
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "change_s": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "method": {
+                    "$ref": "#/$defs/method_id"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1857,7 +1942,8 @@
               "kind": {
                 "enum": [
                   "site",
-                  "direction_table"
+                  "direction_table",
+                  "site_pairs"
                 ]
               },
               "package_id": {
@@ -1891,6 +1977,12 @@
               },
               "has_timeline": {
                 "type": "boolean"
+              },
+              "site_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -2453,6 +2545,249 @@
           }
         }
       }
+    },
+    "site_pairs": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/package_header"
+        }
+      ],
+      "required": [
+        "time",
+        "sites",
+        "pairs"
+      ],
+      "properties": {
+        "kind": {
+          "const": "site_pairs"
+        },
+        "package_id": {
+          "type": "string",
+          "pattern": "^pairs-"
+        },
+        "request": {
+          "type": "object",
+          "required": [
+            "site_package_ids",
+            "windows"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "site_package_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^site-[0-9a-f]{16}$"
+              },
+              "minItems": 2
+            },
+            "windows": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/method_id"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "inputs": {
+          "type": "object",
+          "required": [
+            "science_version",
+            "site_packages"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "science_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "site_packages": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "required": [
+                  "site_id",
+                  "package_id",
+                  "content_sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "site_id": {
+                    "$ref": "#/$defs/slug"
+                  },
+                  "package_id": {
+                    "type": "string",
+                    "pattern": "^site-[0-9a-f]{16}$"
+                  },
+                  "content_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "time": {
+          "$ref": "#/$defs/time_grid"
+        },
+        "sites": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "site_id",
+              "name",
+              "lat_deg",
+              "lon_deg",
+              "package_id",
+              "observer_height_m"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "site_id": {
+                "$ref": "#/$defs/slug"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lat_deg": {
+                "type": "number"
+              },
+              "lon_deg": {
+                "type": "number"
+              },
+              "package_id": {
+                "type": "string",
+                "pattern": "^site-[0-9a-f]{16}$"
+              },
+              "observer_height_m": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "site_a",
+              "site_b",
+              "distance_m",
+              "windows"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "site_a": {
+                "$ref": "#/$defs/slug"
+              },
+              "site_b": {
+                "$ref": "#/$defs/slug"
+              },
+              "distance_m": {
+                "type": "number",
+                "minimum": 0
+              },
+              "windows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "window",
+                    "a_s",
+                    "b_s",
+                    "either_s",
+                    "both_s",
+                    "neither_s",
+                    "longest_neither_s",
+                    "either_fraction",
+                    "gain_over_better_s",
+                    "covered_share_of_better_outage",
+                    "neither_intervals_et_s",
+                    "neither_intervals_utc",
+                    "method"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "window": {
+                      "$ref": "#/$defs/method_id"
+                    },
+                    "a_s": {
+                      "type": "number"
+                    },
+                    "b_s": {
+                      "type": "number"
+                    },
+                    "either_s": {
+                      "type": "number"
+                    },
+                    "both_s": {
+                      "type": "number"
+                    },
+                    "neither_s": {
+                      "type": "number"
+                    },
+                    "longest_neither_s": {
+                      "type": "number"
+                    },
+                    "either_fraction": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "gain_over_better_s": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "covered_share_of_better_outage": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      ]
+                    },
+                    "neither_intervals_et_s": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "neither_intervals_utc": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/utc"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "method": {
+                      "$ref": "#/$defs/method_id"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unevaluatedProperties": false
     }
   }
 }

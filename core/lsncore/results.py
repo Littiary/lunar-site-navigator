@@ -80,6 +80,8 @@ class TimelineResult:
     blockers: list | None = None
     # what was assumed for the uncertainty band and the landing ellipse; None = not computed
     uncertainty: dict | None = None
+    # visible time and longest outage per observer height (lsncore.trade); None = not computed
+    height_trade: dict | None = None
     # visible time per lunar day (lsncore.calendar); None = not computed
     calendar: dict | None = None
     # landing windows and slip tolerance per stated requirement; None = no requirement stated

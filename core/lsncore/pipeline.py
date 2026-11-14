@@ -20,6 +20,8 @@ from .contract import write_index
 from .dem import Terrain
 from .horizon import M_FAR_FIELD, HorizonSettings, compute_horizon
 from .obstacles import ABS_TOL_M, NEAR_FIELD_M, REL_TOL
+from .pairs import build_pairs_package
+from .trade import add_height_trade_to_timeline
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
 from .timeline import IntervalSet, TimeGrid
@@ -279,6 +281,50 @@ def _uncertainty_inputs(csite, terrain, horizon, table_dir, timeline, thresholds
     return bands, ellipse, notes
 
 
+def trade_methods(dem_set_id: str, direction_table_id: str) -> dict:
+    """Method cards of the mast-height trade and of the site pairs."""
+    local = "local East/North/Up at each site; up is the outward radial direction of the reference sphere"
+    data = [dem_set_id, direction_table_id]
+    evidence = [
+        "core/tests/test_trade_pairs.py::test_mast_height_in_a_crater_against_the_closed_form: visible time for five observer heights against the closed-form rim elevation (threshold 5 s)",
+        "core/tests/test_trade_pairs.py::test_pair_identities_hold_for_random_windows (threshold 1e-6 s)",
+        "Both are arithmetic on the visibility windows and inherit their accuracy and their limits.",
+    ]
+    return {
+        pk.M_HEIGHT_TRADE: pk.method_card(
+            "Mast-height trade",
+            "For every observer height of the package: the total time a visibility window holds and the longest continuous time it does not, over the computed range, and the change of each against the lowest height. sun_least_lunar_day_s: Sun-visible time in the least sunlit complete lunar day.",
+            "The horizon is computed for all observer heights in one pass and the event finder runs for each; the table is read off the resulting windows.",
+            local,
+            "TDB",
+            data,
+            {},
+            "analytic-test-passed",
+            evidence,
+            [
+                "Only the listed heights are computed; nothing is interpolated between them.",
+                "A mast changes the view of near terrain most. Where the gain is large, the horizon is set by terrain within about 1 km, which depends on single pixels of the elevation model: the gain is then as uncertain as that terrain.",
+                "The observer is a point on the radial through the site; a real mast, its base and the lander are not modelled.",
+            ],
+        ),
+        pk.M_PAIRS: pk.method_card(
+            "Complementary site pairs",
+            "For every pair of sites and each compared window: a_s and b_s are the times the window holds at each site; either_s at one of them at least; both_s at both; neither_s at neither, with its longest stretch and its intervals. gain_over_better_s is either_s minus the larger of a_s and b_s; covered_share_of_better_outage is that gain divided by the time the better site lacks. distance_m is the great-circle distance on the reference sphere.",
+            "Union, intersection and complement of the visibility windows of the site packages, each taken at its default observer height. The packages must share one time range.",
+            local,
+            "TDB",
+            data,
+            {},
+            "analytic-test-passed",
+            evidence,
+            [
+                "The comparison says when at least one site sees the body. It says nothing about moving power or data between the sites: no line of sight between them, no cable, no relay is computed.",
+                "Each site's windows carry the limits of its own horizon.",
+            ],
+        ),
+    }
+
+
 def calendar_methods(dem_set_id: str, direction_table_id: str) -> dict:
     """Method cards of the lunar-day calendar and of the landing windows."""
     local = "local East/North/Up at the site; up is the outward radial direction of the reference sphere"
@@ -453,6 +499,8 @@ def run_scenario(
                 float(ephem_directions.utc_to_et(landing)) if landing else None, ephem_directions.et_to_utc_z,
             )
             methods.update(calendar_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
+            add_height_trade_to_timeline(timeline, heights)
+            methods.update(trade_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
         t2 = _time.perf_counter()
         if not horizon.coverage_complete:
             status = "partial"
@@ -477,5 +525,14 @@ def run_scenario(
                 warnings=warnings,
             )
         )
+    pair_methods = trade_methods(terrain.describe()["dem_set_id"], "the direction table of the site packages")
+    pairs = build_pairs_package(
+        out_root,
+        [p for p in written if p.parent.parent.name == "site"],
+        _mark_synthetic(pair_methods) if synthetic else pair_methods,
+        scenario_id=scenario_id,
+    )
+    if pairs is not None:
+        written.append(pairs)
     write_index(out_root, scenario_id)
     return written

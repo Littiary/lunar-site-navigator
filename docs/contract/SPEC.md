@@ -1,4 +1,4 @@
-# Package contract, version 0.4
+# Package contract, version 0.5
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -20,6 +20,7 @@ validator or a reader relies on.
 | Scenario | one JSON file, `kind: "scenario"` | The single input of the tool: sites, time window, observer heights, thresholds, data versions |
 | Site package | directory, `kind: "site"` | Everything computed for one site: site geometry, 360° horizon, and (when computed) time series, events, windows, metrics |
 | Direction-table package | directory, `kind: "direction_table"` | Sun and Earth positions over time, independent of any site |
+| Site-pairs package | directory, `kind: "site_pairs"` | Since 0.5. What every two sites of a scenario achieve together; written when a scenario has two or more sites with a timeline |
 | Index | `index.json`, `kind: "index"` | Lists the packages under a package root, so static pages need no directory listing |
 
 A **package** is a directory that holds `manifest.json` and the binary arrays the manifest
@@ -30,6 +31,7 @@ refers to. Nothing else may be in the directory. The directory name is the packa
   index.json
   direction_table/<package_id>/manifest.json, positions_km.f8
   site/<site_id>/<package_id>/manifest.json, horizon_*.f4|f8, series_*.f4
+  site_pairs/<package_id>/manifest.json
 ```
 
 Readers find packages through `index.json` (`packages[].path` is relative to the package
@@ -103,9 +105,9 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.4"}` |
-| `kind` | `site` or `direction_table` |
-| `package_id` | `site-` or `dirtab-` followed by 16 hex digits; see 3.4 |
+| `contract` | `{"name": "lsn-package", "version": "0.5"}` |
+| `kind` | `site`, `direction_table` or `site_pairs` |
+| `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
 | `status` | `ok`; `partial` (something requested is missing, explained in `warnings`); `error` |
 | `synthetic` | `true` if any value is invented. Then `synthetic_notice` is required and every method card has status `synthetic` |
@@ -262,6 +264,7 @@ Present only when a time window was computed.
 | `blockers[]` | Since 0.2. The obstacles that cost visible time compared with a smooth sphere; see 5.5 |
 | `uncertainty` | Since 0.4, only if the scenario states assumptions. What was assumed and what follows; see 5.7 |
 | `calendar` | Since 0.3. Visible time per lunar day; see 5.6 |
+| `height_trade` | Since 0.5. Visible time and longest outage per observer height; see 5.8 |
 | `opportunities[]` | Since 0.3, only if the scenario states requirements. Landing windows and slip tolerance; see 5.6 |
 
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
@@ -444,6 +447,23 @@ own local vertical. Computed for the default observer height only.
 carry an `assumption` sentence that a viewer must show with the band. The share of
 points is a survey of the ellipse, not a probability.
 
+### 5.8 Mast-height trade (since 0.5)
+
+`timeline.height_trade` puts the observer heights of the package side by side:
+
+| Field | Content |
+|---|---|
+| `observer_heights_m` | The heights of the package, lowest first |
+| `quantities[]` | `id`, `label`, `unit` (seconds), `window` (the window id it is read from), `values[h]`, `change_s[h]` (value minus the value at the lowest height), `method` |
+
+Quantity ids: `sun_visible_s`, `earth_visible_s`, `sun_and_earth_visible_s` (total time
+the window holds in the computed range), `sun_longest_outage_s`,
+`earth_longest_outage_s` (longest continuous time it does not), `sun_lit_s` when the
+eclipse-aware window exists, and `sun_least_lunar_day_s` (Sun-visible time in the least
+sunlit complete lunar day of the calendar). Only the listed heights are computed; a
+viewer must not interpolate between them. For more heights, list them in the
+scenario's `observer_heights_m` (up to 16).
+
 ## 6. Direction-table package (decision 3)
 
 One table serves every site. It stores positions relative to the **centre of the Moon**.
@@ -472,10 +492,41 @@ az = atan2(d · east, d · north)      el = asin((d · up) / |d|)
 Viewers use this only to place the Sun and the Earth in a scene. Rise and set times,
 margins and visible fractions are read from the site package, never recomputed.
 
+## 6a. Site-pairs package (since 0.5)
+
+Written at `site_pairs/<package_id>/` when a scenario has at least two sites with a
+timeline. It holds no arrays. Each site is taken at its default observer height; all
+sites share the time range of the scenario.
+
+| Field | Content |
+|---|---|
+| `request` | `site_package_ids` (in the order of `sites`), `windows` (the window ids compared) |
+| `inputs.site_packages[]` | `site_id`, `package_id`, `content_sha256` of each site package used |
+| `time` | The common time grid |
+| `sites[]` | `site_id`, `name`, `lat_deg`, `lon_deg`, `package_id`, `observer_height_m` |
+| `pairs[]` | One entry for every two sites: `site_a`, `site_b`, `distance_m` (great circle on the reference sphere), `windows[]` |
+
+A row of `pairs[].windows[]`, for one compared window (`sun_visible`, `earth_visible`,
+`sun_and_earth_visible`):
+
+| Field | Content |
+|---|---|
+| `window` | The window id |
+| `a_s`, `b_s` | Time the window holds at site A, at site B |
+| `either_s`, `both_s`, `neither_s` | At one of them at least; at both; at neither. `either_s + neither_s` is the length of the range |
+| `either_fraction` | `either_s` divided by the length of the range |
+| `longest_neither_s`, `neither_intervals_et_s`, `neither_intervals_utc` | The joint outages |
+| `gain_over_better_s` | `either_s` minus the larger of `a_s` and `b_s`: what the second site adds |
+| `covered_share_of_better_outage` | That gain divided by the time the better site lacks; `null` if it lacks none |
+| `method` | Method card |
+
+The package says when at least one site sees the body. It does not say that power or
+data can be moved between the sites.
+
 ## 7. Index
 
 `packages[]`: `kind`, `package_id`, `path`, `synthetic`, `status`; for sites also
-`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline`.
+`site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline`; for site pairs `site_ids`.
 
 ## 8. Versioning
 
@@ -501,6 +552,15 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.5 (14 November 2026)
+
+Additive; nothing that existed in 0.4 changed its meaning, name, unit or layout.
+
+- `timeline.height_trade` (5.8).
+- New package kind `site_pairs` with id prefix `pairs-` (6a); the index lists it with `site_ids`. Readers that only know `site` and `direction_table` must skip index entries of other kinds.
+- New method card ids: `timeline.height_trade`, `pairs.complementarity`.
+- The sample scenario has a second invented site, so the sample holds two site packages and one site-pairs package; it was regenerated (new ids).
 
 ### 0.4 (14 November 2026)
 
