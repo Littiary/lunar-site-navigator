@@ -115,7 +115,9 @@ def _cyl_range(t: CylDEM) -> dict:
     lab_min, lab_max = float(t.label["MINIMUM"]), float(t.label["MAXIMUM"])
     return {"measured_min": mn, "measured_max": mx, "label_minimum": lab_min, "label_maximum": lab_max,
             "measured_min_m": mn * t.scale, "measured_max_m": mx * t.scale,
-            "passed": bool(lab_min - 1e-9 <= mn and mx <= lab_max + 1e-9)}
+            "passed": bool(lab_min - 1e-9 <= mn and mx <= lab_max + 1e-9),
+            "max_abs_difference_to_label_m": float(max(abs(mn - lab_min), abs(mx - lab_max)) * t.scale),
+            "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"}
 
 
 def _radius_ok(lab: dict) -> dict:
