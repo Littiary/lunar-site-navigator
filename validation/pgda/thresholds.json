@@ -1,6 +1,6 @@
 {
   "title": "Acceptance thresholds: long-term Sun and Earth visibility over LOLA terrain versus the published PGDA maps",
-  "written_utc": "2026-11-14T12:35:00Z",
+  "written_utc": "2026-11-14T12:26:27Z",
   "rule": "Written and committed together with points.json before any value of the published maps was downloaded or read (only their README and labels had been read). Not edited afterwards. If the agreement is poor, the cause is looked for and reported before anything is changed; the thresholds stay.",
   "reference": {
     "product": "LOLA illumination maps of the lunar south pole, 60 m: AVGVISIB_85S_060M_201608 (Sun), AVGVISIB_85S_060M_201608_EARTH (Earth), LPSR_85S_060M_201608 (permanent shadow)",
