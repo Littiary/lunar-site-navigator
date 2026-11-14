@@ -202,3 +202,44 @@ def test_committed_sample_matches_a_fresh_run(generated):
             np.testing.assert_allclose(
                 committed.array(ref), fresh.array(_lookup(fresh.manifest, where)), rtol=0, atol=1e-6, err_msg=where
             )
+
+
+# -- how the files are written ---------------------------------------------------------------
+#
+# Manifests are written as compact JSON: they are read by programs, and indentation made up
+# nearly half of the published set. Whitespace is not part of a JSON value, and identity
+# and digests are computed on the canonical form, so nothing a reader compares may change.
+# The index and a scenario file stay indented: they are small and people read them.
+
+def test_manifests_are_written_compact_and_index_and_scenario_stay_readable(generated, tmp_path):
+    out, paths = generated
+    for path in paths:
+        text = (path / "manifest.json").read_text(encoding="ascii")
+        manifest = json.loads(text)
+        # no indentation, no space after a separator, one final line end; key order as written
+        assert text == json.dumps(manifest, separators=(",", ":"), ensure_ascii=True, allow_nan=False) + "\n", path.name
+        assert len(text) < len(json.dumps(manifest, indent=2, ensure_ascii=True))
+        assert list(manifest)[:3] == ["contract", "kind", "package_id"]
+    assert "\n  " in (out / "index.json").read_text(encoding="ascii")
+    scenario_file = tmp_path / "scenario.json"
+    (tmp_path / "sites.json").write_text(json.dumps({"sites": [{"site_id": "a", "name": "A", "lat_deg": -89.0, "lon_deg": 10.0}]}))
+    assert cli.main(["scenario", "--sites", str(tmp_path / "sites.json"), "--id", "readable", "--start", "2026-11-14T00:00:00.000Z", "--end", "2026-11-20T00:00:00.000Z", "--out", str(scenario_file)]) == 0
+    assert "\n  " in scenario_file.read_text(encoding="ascii")
+
+
+def test_formatting_of_a_manifest_enters_neither_its_id_nor_any_digest(generated, tmp_path):
+    from lsncore.contract.io import compute_content_sha256, compute_package_id
+
+    _, paths = generated
+    for path in paths:
+        compact = validate_package(path)
+        assert compact["package_id"] == compute_package_id(compact["kind"], compact["synthetic"], compact["request"], compact["inputs"])
+        assert compact["content_sha256"] == compute_content_sha256(compact)
+        # the same package with its manifest indented, as it was written until 14 November 2026
+        dst = tmp_path / path.name
+        shutil.copytree(path, dst)
+        (dst / "manifest.json").write_text(json.dumps(compact, indent=2, ensure_ascii=True, allow_nan=False) + "\n", encoding="ascii", newline="\n")
+        indented = validate_package(dst)
+        assert indented == compact
+        assert (indented["package_id"], indented["content_sha256"]) == (compact["package_id"], compact["content_sha256"])
+        assert [ref["sha256"] for _, ref in _array_refs(indented)] == [ref["sha256"] for _, ref in _array_refs(compact)]
