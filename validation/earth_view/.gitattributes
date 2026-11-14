@@ -1,0 +1,2 @@
+# Stored responses are compared by checksum: never convert line endings.
+raw/** -text
