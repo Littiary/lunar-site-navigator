@@ -126,6 +126,19 @@ def test_every_site_package_holds_every_field_the_core_writes():
         assert trade["observer_heights_m"] == heights
         assert {q["id"] for q in trade["quantities"]} >= {"sun_visible_s", "earth_visible_s", "sun_longest_outage_s", "sun_least_lunar_day_s"}
 
+        # Which elevation products served the site, and their resolution class (contract 0.9).
+        source = horizon["terrain_source"]
+        assert source["method"] == "horizon.terrain_source" and "horizon.terrain_source" in manifest["methods"]
+        assert source["resolution_class"] in ("fine", "medium", "coarse")
+        layer_ids = {layer["product_id"] for layer in manifest["inputs"]["dem"]["layers"]}
+        assert source["at_site"]["product_id"] in layer_ids
+        assert {product["product_id"] for product in source["products"]} <= layer_ids
+        assert abs(sum(product["azimuth_share"] for product in source["products"]) - 1.0) < 1e-9
+        if source["resolution_class"] != "fine":
+            assert any("resolution class" in warning for warning in manifest["warnings"]), site_id
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        assert f"Terrain that served {manifest['site']['name']}" in readme and source["at_site"]["product_id"] in readme
+
         # Terrain patches for drawing (contract 0.7): the default near, mid and far patches, each a square grid around the site.
         terrain = manifest["terrain"]
         assert terrain["use"] == "drawing" and terrain["method"] == "terrain.patch" and "terrain.patch" in manifest["methods"]
