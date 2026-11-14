@@ -1,0 +1,80 @@
+{
+  "description": "Second batch of lander cases: the four remaining Apollo landings. Same sources and the same rules as the first batch (cases.json, thresholds.json); thresholds.json is not changed. Every published value was read from its source on 14 November 2026 and is given as printed. Committed before the core was run on these cases.",
+  "why_these": "They are the remaining missions for which a source prints both the landing time to the second and Sun and Earth angles to 0.01 degree. For other landers examined (Blue Ghost Mission 1, Chandrayaan-3 in the first batch; SLIM, IM-1 and IM-2 looked at during the research) no source prints a sunrise or sunset clock time or an angle with a stated precision.",
+  "sources": {
+    "sp4029_landing": {
+      "title": "NASA SP-2000-4029, Apollo by the Numbers: table 'LM Lunar Landing'",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/SP-4029/Apollo_18-27_LM_Lunar_Landing.htm",
+      "retrieved_utc": "2026-11-14T11:07:54Z",
+      "page_sha256": "4739026a10caccffb3cba6d1db249b094f50ab7efeae3a8f9526439cfa7b3719"
+    },
+    "alsj_altaz": {
+      "title": "Apollo Lunar Surface Journal: Sun and Earth altitude and azimuth table (Scotti_AltAz.txt)",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt",
+      "retrieved_utc": "2026-11-14T11:07:56Z",
+      "page_sha256": "fb2e6f347eb178c33b8bdbbdc4eeeb28308044c66c00ebdfa7578b5798a8e5d7"
+    }
+  },
+  "cases": [
+    {
+      "id": "apollo12",
+      "mission": "Apollo 12 lunar module landing, 19 November 1969",
+      "terrain": "none (smooth sphere)",
+      "published": [
+        {"id": "landing_time", "value": "1969-11-19T06:54:36", "as_printed": "19 Nov 1969, 06:54:36 (GMT)", "source": "sp4029_landing", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "landing_site_actual", "value": {"lat_deg": -3.01239, "lon_deg": -23.42157}, "as_printed": "-3.01239 N, -23.42157 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": -3.1975, "lon_deg": -23.3856}, "as_printed": "(-23.3856,  -3.1975)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": 5.02, "sub_earth_lat_deg": -1.36, "earth_alt_deg": 61.56, "earth_az_deg": 86.95, "sub_solar_lon_deg": 61.50, "sub_solar_lat_deg": -1.44, "sun_alt_deg": 5.19, "sun_az_deg": 91.16}, "as_printed": "Landing 1969 Nov 19 06:54:36  +5.02 -1.36  61.56  86.95   61.50 -1.44   5.19  91.16", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 5.1, "as_printed": "Sun Angle (deg) 5.1", "source": "sp4029_landing", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ]
+    },
+    {
+      "id": "apollo14",
+      "mission": "Apollo 14 lunar module landing, 5 February 1971",
+      "terrain": "none (smooth sphere)",
+      "published": [
+        {"id": "landing_time", "value": "1971-02-05T09:18:13", "as_printed": "05 Feb 1971, 09:18:13 (GMT)", "source": "sp4029_landing", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "landing_site_actual", "value": {"lat_deg": -3.6453, "lon_deg": -17.47136}, "as_printed": "-3.64530 N, -17.47136 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": -3.6733, "lon_deg": -17.4653}, "as_printed": "(-17.4653,  -3.6733)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": 6.40, "sub_earth_lat_deg": -6.07, "earth_alt_deg": 66.10, "earth_az_deg": 96.70, "sub_solar_lon_deg": 62.17, "sub_solar_lat_deg": -0.21, "sun_alt_deg": 10.36, "sun_az_deg": 89.54}, "as_printed": "Landing 1971 Feb 05 09:18:13  +6.40 -6.07  66.10  96.70   62.17 -0.21  10.36  89.54", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 10.3, "as_printed": "Sun Angle (deg) 10.3", "source": "sp4029_landing", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ]
+    },
+    {
+      "id": "apollo15",
+      "mission": "Apollo 15 lunar module landing, 30 July 1971",
+      "terrain": "none (smooth sphere)",
+      "published": [
+        {"id": "landing_time", "value": "1971-07-30T22:16:29", "as_printed": "30 Jul 1971, 22:16:29 (GMT)", "source": "sp4029_landing", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "landing_site_actual", "value": {"lat_deg": 26.13222, "lon_deg": 3.63386}, "as_printed": "26.13222 N, 3.63386 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": 26.1008, "lon_deg": 3.6528}, "as_printed": "(+3.6528,  +26.1008)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": -4.35, "sub_earth_lat_deg": 6.84, "earth_alt_deg": 69.28, "earth_az_deg": 203.00, "sub_solar_lon_deg": 80.33, "sub_solar_lat_deg": 0.24, "sun_alt_deg": 12.05, "sun_az_deg": 95.73}, "as_printed": "Landing 1971 Jul 30 22:16:29  -4.35 +6.84  69.28 203.00   80.33 +0.24  12.05  95.73", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 12.2, "as_printed": "Sun Angle (deg) 12.2", "source": "sp4029_landing", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ]
+    },
+    {
+      "id": "apollo17",
+      "mission": "Apollo 17 lunar module landing, 11 December 1972",
+      "terrain": "none (smooth sphere)",
+      "published": [
+        {"id": "landing_time", "value": "1972-12-11T19:54:58", "as_printed": "11 Dec 1972, 19:54:58 (GMT)", "source": "sp4029_landing", "precision": "1 second", "approximate": false, "nature": "recorded event"},
+        {"id": "landing_site_actual", "value": {"lat_deg": 20.1908, "lon_deg": 30.77168}, "as_printed": "20.19080 N, 30.77168 E", "source": "sp4029_landing", "precision": "0.00001 degree", "approximate": false, "nature": "measured position"},
+        {"id": "alsj_site", "value": {"lat_deg": 20.1653, "lon_deg": 30.7658}, "as_printed": "(+30.7658, +20.1653)", "source": "alsj_altaz", "precision": "0.0001 degree", "approximate": false, "nature": "coordinates used by the source for its computation"},
+        {"id": "alsj_landing_row", "value": {"sub_earth_lon_deg": -7.10, "sub_earth_lat_deg": -4.25, "earth_alt_deg": 45.52, "earth_az_deg": 240.88, "sub_solar_lon_deg": 106.26, "sub_solar_lat_deg": -0.76, "sun_alt_deg": 13.33, "sun_az_deg": 95.83}, "as_printed": "Landing 1972 Dec 11 19:54:58  -7.10 -4.25  45.52 240.88  106.26 -0.76  13.33  95.83", "source": "alsj_altaz", "precision": "0.01 degree", "approximate": false, "nature": "computed by the source from the Nautical Almanac"},
+        {"id": "targeted_sun_angle", "value": 13.0, "as_printed": "Sun Angle (deg) 13.0", "source": "sp4029_landing", "precision": "0.1 degree", "approximate": false, "nature": "planned value (launch-window target)"}
+      ]
+    }
+  ],
+  "checks_for_every_case": [
+    {"suffix": "sun_altitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sun_azimuth", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sub_solar_longitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sub_solar_latitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "earth_altitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "earth_azimuth", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sub_earth_longitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sub_earth_latitude", "rule": "R1_angle_same_inputs", "kind": "pass_fail"},
+    {"suffix": "sun_at_actual_site", "kind": "reported", "why_not_judged": "The published angle is a launch-window target; no planned landing time was read from a source for these missions."},
+    {"suffix": "earth_topocentric", "kind": "reported", "why_not_judged": "Different definition: the source ignores the parallax of the site."}
+  ]
+}
