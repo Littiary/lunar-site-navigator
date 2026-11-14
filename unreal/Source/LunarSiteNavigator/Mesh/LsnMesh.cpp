@@ -166,33 +166,43 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 
 	const int32 NumAz = Package.AzimuthCount;
 	const int32 NumRings = Grid.RingDistanceM.Num();
-	const int32 PerAzimuth = NumRings + 1; // the rings and the horizon point
 	const double EyeHeightM = Package.ObserverHeightsM[HeightIndex];
-	const FVector Eye(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
 
-	OutMesh.Positions.Reserve(1 + NumAz * PerAzimuth);
+	OutMesh.Positions.Reserve(1 + NumAz * NumRings);
 	OutMesh.Positions.Add(FVector::ZeroVector); // the site's ground point
 	for (int32 A = 0; A < NumAz; ++A)
 	{
 		const double Az = Package.AzimuthDegAt(A);
 		FVector HorizonPoint;
-		double HorizonDistanceM = Package.HorizonDistanceAt(HeightIndex, A);
+		const double HorizonDistanceM = Package.HorizonDistanceAt(HeightIndex, A);
 		const bool bHasHorizon = HorizonPointUnreal(Frame, EyeHeightM, Az, Package.HorizonElevationAt(HeightIndex, A), HorizonDistanceM, HorizonPoint);
 		if (!bHasHorizon)
 		{
 			++OutSkippedAzimuths;
 		}
+		// The horizon point is itself a point of the terrain. It takes the place of the ring
+		// sample nearest to it in distance (the rings grow by a constant factor, so nearest
+		// by ratio). Every azimuth then has the same number of vertices, ring k of one
+		// azimuth joins ring k of the next, and the crest of the mesh is the package horizon.
+		int32 CrestRing = INDEX_NONE;
+		if (bHasHorizon)
+		{
+			double Best = TNumericLimits<double>::Max();
+			for (int32 R = 0; R < NumRings; ++R)
+			{
+				const double Ratio = FMath::Abs(FMath::Loge(Grid.RingDistanceM[R] / HorizonDistanceM));
+				if (Ratio < Best)
+				{
+					Best = Ratio;
+					CrestRing = R;
+				}
+			}
+		}
 
 		// Height to draw where the data has none: that of the nearest ring with data.
 		double LastKnownHeightM = Package.SurfaceHeightM;
-		bool bHorizonAdded = false;
 		for (int32 R = 0; R < NumRings; ++R)
 		{
-			if (bHasHorizon && !bHorizonAdded && HorizonDistanceM <= Grid.RingDistanceM[R])
-			{
-				OutMesh.Positions.Add(HorizonPoint);
-				bHorizonAdded = true;
-			}
 			const float HeightM = Grid.HeightsM[A * NumRings + R];
 			if (FMath::IsNaN(HeightM))
 			{
@@ -202,12 +212,7 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 			{
 				LastKnownHeightM = HeightM;
 			}
-			OutMesh.Positions.Add(Frame.SurfacePointUnreal(Az, Grid.RingDistanceM[R], LastKnownHeightM));
-		}
-		if (!bHorizonAdded)
-		{
-			// Beyond the last ring, or unknown: keep the vertex count per azimuth constant.
-			OutMesh.Positions.Add(bHasHorizon ? HorizonPoint : Frame.SurfacePointUnreal(Az, Grid.RingDistanceM.Last() * 1.0001, LastKnownHeightM));
+			OutMesh.Positions.Add(R == CrestRing ? HorizonPoint : Frame.SurfacePointUnreal(Az, Grid.RingDistanceM[R], LastKnownHeightM));
 		}
 	}
 
@@ -215,16 +220,16 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 	OutMesh.Colors.Init(FColor(Grey, Grey, Grey, 255), OutMesh.Positions.Num());
 	OutMesh.UV0.Init(FVector2D::ZeroVector, OutMesh.Positions.Num());
 
-	auto Index = [NumAz, PerAzimuth](int32 A, int32 K) { return 1 + (A % NumAz) * PerAzimuth + K; };
+	auto Index = [NumAz, NumRings](int32 A, int32 R) { return 1 + (A % NumAz) * NumRings + R; };
 	const FVector Up(0.0, 0.0, 1.0);
-	OutMesh.Triangles.Reserve(3 * NumAz * (2 * PerAzimuth - 1));
+	OutMesh.Triangles.Reserve(3 * NumAz * (2 * NumRings - 1));
 	for (int32 A = 0; A < NumAz; ++A)
 	{
 		OutMesh.AddTriangleFacing(0, Index(A, 0), Index(A + 1, 0), Up);
-		for (int32 K = 0; K + 1 < PerAzimuth; ++K)
+		for (int32 R = 0; R + 1 < NumRings; ++R)
 		{
 			// A height field over the local horizontal plane: the visible side is the upper one.
-			const int32 I00 = Index(A, K), I01 = Index(A + 1, K), I10 = Index(A, K + 1), I11 = Index(A + 1, K + 1);
+			const int32 I00 = Index(A, R), I01 = Index(A + 1, R), I10 = Index(A, R + 1), I11 = Index(A + 1, R + 1);
 			OutMesh.AddTriangleFacing(I00, I10, I11, Up);
 			OutMesh.AddTriangleFacing(I00, I11, I01, Up);
 		}

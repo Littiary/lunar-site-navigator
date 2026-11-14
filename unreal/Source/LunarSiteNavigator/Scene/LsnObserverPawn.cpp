@@ -6,6 +6,7 @@
 #include "InputCoreTypes.h"
 #include "Misc/CommandLine.h"
 #include "Planner/LsnPlanner.h"
+#include "ProceduralMeshComponent.h"
 #include "Scene/LsnHud.h"
 #include "Scene/LsnSiteScene.h"
 #include "Scene/LsnViewGameMode.h"
@@ -110,6 +111,14 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 	ALsnViewGameMode* GameMode = GetWorld()->GetAuthGameMode<ALsnViewGameMode>();
 	const bool bRightView = GameMode && GameMode->GetViewIndexOf(GetController()) == 1;
 
+	if (IsOverview() && Scene->GetMoonSphereComponent()->IsVisible())
+	{
+		// The reference sphere is drawn sunk so that the observer never sees it; where the real
+		// terrain lies deeper than that (a crater floor) it would cover the terrain when seen
+		// from above. An overview shows the elevation data only.
+		Scene->GetMoonSphereComponent()->SetVisibility(false);
+	}
+
 	if (!bInitialised)
 	{
 		bInitialised = true;
@@ -132,7 +141,14 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 
 		// A stretch of the timeline to play once, for recordings.
 		double PlayFrom = 0.0, PlaySeconds = 25.0;
-		if (!bRightView && FParse::Value(FCommandLine::Get(), TEXT("LsnPlayFrom="), PlayFrom) && FParse::Value(FCommandLine::Get(), TEXT("LsnPlayTo="), PlayTo) && PlayTo > PlayFrom)
+		// The stretch by sample positions, or by UTC (-LsnPlayFromUtc= -LsnPlayToUtc=).
+		FString FromUtc, ToUtc;
+		bool bHasStretch = FParse::Value(FCommandLine::Get(), TEXT("LsnPlayFrom="), PlayFrom) && FParse::Value(FCommandLine::Get(), TEXT("LsnPlayTo="), PlayTo);
+		if (FParse::Value(FCommandLine::Get(), TEXT("LsnPlayFromUtc="), FromUtc) && FParse::Value(FCommandLine::Get(), TEXT("LsnPlayToUtc="), ToUtc))
+		{
+			bHasStretch = LsnPlanner::PositionOfUtc(Scene->GetPackage(), FromUtc, PlayFrom) && LsnPlanner::PositionOfUtc(Scene->GetPackage(), ToUtc, PlayTo);
+		}
+		if (!bRightView && bHasStretch && PlayTo > PlayFrom)
 		{
 			FParse::Value(FCommandLine::Get(), TEXT("LsnPlaySeconds="), PlaySeconds);
 			Scene->SetTimePosition(PlayFrom);

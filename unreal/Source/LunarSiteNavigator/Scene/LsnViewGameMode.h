@@ -26,6 +26,7 @@ enum class ELsnPlannerPage : uint8
  *   -LsnSite=<site_id>                     (the site shown first; default: the first of the index)
  *   -LsnCompare=<site_id>,<site_id>        (start with these two sites side by side)
  *   -LsnTime=<timeline sample index>   -LsnHeight=<observer height index>
+ *   -LsnUtc=<2027-07-28T18:00:00Z>         (the time by UTC instead of by sample index)
  *   -LsnYaw=<azimuth, deg>  -LsnPitch=<elevation, deg>  -LsnFov=<horizontal field of view, deg>
  *   -LsnPage=calendar|uncertainty|trade    (the planner page shown; default: summary)
  *   -LsnRequirement=<index>                (which requirement of the package the landing windows are shown for)

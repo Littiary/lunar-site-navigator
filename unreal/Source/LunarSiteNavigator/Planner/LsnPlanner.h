@@ -76,6 +76,13 @@ namespace LsnPlanner
 	 */
 	LUNARSITENAVIGATOR_API FString PublishedPackageRoot();
 
+	/**
+	 * Position on the time axis of a UTC time such as "2027-07-28T18:00:00Z". As for
+	 * labels (SPEC 3.5), this is only allowed without a leap second in the range; false
+	 * then, and false for a time outside the axis.
+	 */
+	LUNARSITENAVIGATOR_API bool PositionOfUtc(const FLsnSitePackage& Package, const FString& Utc, double& OutPosition);
+
 	/** The site packages of a package root, in the order of index.json. */
 	LUNARSITENAVIGATOR_API bool ListSites(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutSites, FString& OutError);
 

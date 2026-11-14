@@ -10,6 +10,8 @@ param(
     # for example -Extra "-LsnCompare=a,b -LsnNoHud".
     [string]$Extra = "",
     [int]$Time = 0,
+    # The time by UTC, for example 2027-07-28T18:00:00Z, instead of by sample index.
+    [string]$Utc = "",
     [int]$Height = -1,
     [double]$Yaw = [double]::NaN,
     [double]$Pitch = [double]::NaN,
@@ -33,6 +35,7 @@ $args = @(
 )
 if ($Package -ne "") { $args += "-LsnPackage=`"$([System.IO.Path]::GetFullPath($Package))`"" }
 if ($Site -ne "") { $args += "-LsnSite=$Site" }
+if ($Utc -ne "") { $args += "-LsnUtc=$Utc" }
 if ($Extra -ne "") { $args += $Extra }
 if ($Height -ge 0) { $args += "-LsnHeight=$Height" }
 if (-not [double]::IsNaN($Yaw)) { $args += "-LsnYaw=$($Yaw.ToString($inv))" }

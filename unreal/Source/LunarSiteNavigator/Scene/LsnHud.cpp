@@ -394,7 +394,9 @@ void ALsnHud::DrawHUD()
 		{
 			Line(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, 1.4f);
 		}
-		DrawText(FString::Printf(TEXT("%s   %s   observer %.1f m   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), P.ObserverHeightsM[H], *P.PackageId, *P.ContractVersion),
+		const FString Viewpoint = (Pawn && Pawn->IsOverview()) ? FString::Printf(TEXT("overview from %.0f km above the site, not the observer's view"), Pawn->GetCameraUpM() / 1000.0)
+			: FString::Printf(TEXT("observer %.1f m"), P.ObserverHeightsM[H]);
+		DrawText(FString::Printf(TEXT("%s   %s   %s   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), *Viewpoint, *P.PackageId, *P.ContractVersion),
 			Dim, X, SizeY - 26.0f * Scale, Font, Scale * 0.9f);
 		return;
 	}

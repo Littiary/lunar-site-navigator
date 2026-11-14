@@ -1,0 +1,100 @@
+# Produces the material for the pitch and the video from the published packages
+# (packages/ at the root of the repository): one continuous clip and six stills at
+# 1920x1080, and a text file that says which package, site and time each one shows.
+#
+# Everything is a real render of the running scene. Times are given by UTC, so the script
+# gives the same views again after the packages have been regenerated. A view whose data
+# the published packages do not carry is not produced; the text file says which and why.
+#
+#   unreal\Scripts\pitch.ps1                     # everything
+#   unreal\Scripts\pitch.ps1 -Only stills        # or: -Only clip
+param(
+    [string]$Out = "",
+    [ValidateSet("all", "clip", "stills")][string]$Only = "all",
+    [string]$EngineRoot = "C:\Program Files\Epic Games\UE_5.8",
+    # The story: the Sun sets behind a ridge at SiteA while SiteB stays in sunlight.
+    [string]$SiteA = "shackleton-rim-crest",
+    [string]$SiteB = "de-gerlache-rim-crest",
+    [string]$ClipFromUtc = "2027-07-28T11:00:00Z",
+    [string]$ClipToUtc = "2027-07-29T01:00:00Z",
+    [double]$ClipSeconds = 26,
+    [string]$HiddenUtc = "2027-07-29T06:00:00Z",
+    [string]$BandUtc = "2027-07-28T17:00:00Z",
+    [string]$WideUtc = "2027-09-19T13:00:00Z"
+)
+$ErrorActionPreference = "Stop"
+$root = Split-Path -Parent $PSScriptRoot
+$repo = Split-Path -Parent $root
+if ($Out -eq "") { $Out = Join-Path $repo "docs\unreal\pitch" }
+$Out = [System.IO.Path]::GetFullPath($Out)
+New-Item -ItemType Directory -Force $Out | Out-Null
+$capture = Join-Path $PSScriptRoot "capture.ps1"
+$record = Join-Path $PSScriptRoot "record.ps1"
+
+# What the published packages carry decides what can be shown.
+$packages = Join-Path $repo "packages"
+$index = Get-Content (Join-Path $packages "index.json") -Raw | ConvertFrom-Json
+function Get-Site([string]$siteId) {
+    $entry = $index.packages | Where-Object { $_.kind -eq "site" -and $_.site_id -eq $siteId } | Select-Object -First 1
+    if (-not $entry) { throw "packages/ has no site '$siteId'" }
+    $manifest = Get-Content (Join-Path $packages (Join-Path $entry.path "manifest.json")) -Raw | ConvertFrom-Json
+    [pscustomobject]@{
+        Id = $siteId; Name = $manifest.site.name; Package = $manifest.package_id; Contract = $manifest.contract.version; Synthetic = [bool]$manifest.synthetic
+        Obstacles = [bool]($manifest.horizon.PSObject.Properties.Name -contains "obstacles")
+        Calendar = [bool]($manifest.timeline.PSObject.Properties.Name -contains "calendar")
+        Band = [bool]($manifest.timeline.PSObject.Properties.Name -contains "uncertainty")
+    }
+}
+$a = Get-Site $SiteA
+$b = Get-Site $SiteB
+if ($a.Synthetic -or $b.Synthetic) { throw "The published packages are synthetic; pitch material is made from real packages only." }
+$commit = (git -C $repo rev-parse --short HEAD).Trim()
+$notes = New-Object System.Collections.Generic.List[string]
+$notes.Add("Pitch material of the Unreal planner view. Every file is a real render of the running scene")
+$notes.Add("from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1")
+$notes.Add("at repository commit $commit on $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC.")
+$notes.Add("")
+$notes.Add("Packages: $($a.Name): $($a.Package) (contract $($a.Contract)); $($b.Name): $($b.Package) (contract $($b.Contract)).")
+$notes.Add("Published fields: obstacles and their cost: $($a.Obstacles -and $b.Obstacles); lunar-day calendar: $($a.Calendar); stated horizon error or landing ellipse: $($a.Band).")
+$notes.Add("")
+
+function Add-Note([string]$file, [string]$text) { $script:notes.Add("$file"); $script:notes.Add("    $text"); $script:notes.Add("") }
+function Remove-Old([string]$file) { $path = Join-Path $Out $file; if (Test-Path $path) { Remove-Item $path } }
+function Still([string]$file, [string]$text, [hashtable]$params) {
+    & $capture -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -ResX 1920 -ResY 1080 @params | Out-Host
+    if (-not (Test-Path (Join-Path $Out $file))) { throw "$file was not written" }
+    Add-Note $file $text
+}
+function Skip([string]$file, [string]$what) {
+    Remove-Old $file
+    Add-Note "$file  -  NOT PRODUCED" "$what is not in the published packages (contract $($a.Contract)). Run this script again once packages/ carries it."
+}
+$compare = "-LsnCompare=$SiteA,$SiteB"
+
+if ($Only -ne "stills") {
+    $file = "pitch_two_sites_sunset_1080p60.mp4"
+    $story = if ($a.Obstacles) { "the blocking ridge lights up with the hours it costs" } else { "the ridge is NOT highlighted and no cost is shown, because the published packages (contract $($a.Contract)) carry no obstacles" }
+    & $record -Out (Join-Path $Out $file) -EngineRoot $EngineRoot -FromUtc $ClipFromUtc -ToUtc $ClipToUtc -Seconds $ClipSeconds -Fps 60 -ResX 1920 -ResY 1080 -Pitch 0.5 -Fov 30 -Extra $compare | Out-Host
+    if (-not (Test-Path (Join-Path $Out $file))) { throw "$file was not written" }
+    Add-Note $file "$($a.Name) (left) and $($b.Name) (right), the same instant in both halves, observer 2 m, each view on its own Sun. Time runs from $ClipFromUtc to $ClipToUtc in $ClipSeconds s at 60 frames per second; the Sun sets behind a ridge at the left site and stays up at the right one; $story."
+}
+if ($Only -ne "clip") {
+    Still "still_1_planner_two_sites.png" "$($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m: countdowns, time strips, horizon panorama and the summary numbers of the whole window." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = $compare }
+    if ($a.Obstacles) {
+        Still "still_2_obstacle_highlight.png" "$($a.Name) at $HiddenUtc, observer 2 m: the Sun behind the ridge the package names, its distance, azimuth and the hours it costs in the computed window." @{ Site = $SiteA; Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun" }
+    } else { Skip "still_2_obstacle_highlight.png" "The obstacle that hides the Sun and the hours it costs (contract 0.2, SPEC 5.5)" }
+    if ($a.Calendar) {
+        Still "still_3_calendar.png" "$($a.Name) and $($b.Name) at ${HiddenUtc}: lunar-day calendar of both sites on one time axis, landing windows of the example requirement and the slip of a landing at that time." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnPage=calendar" }
+    } else { Skip "still_3_calendar.png" "The lunar-day calendar and the landing windows (contract 0.3, SPEC 5.6)" }
+    if ($a.Band) {
+        Still "still_4_uncertainty_band.png" "$($a.Name) at $BandUtc, observer 2 m: the band of the stated horizon error on the time strips and under the countdown, and the survey of the stated landing ellipse." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnPage=uncertainty" }
+    } else { Skip "still_4_uncertainty_band.png" "The band for a stated horizon error and the landing-ellipse survey (contract 0.4, SPEC 5.7)" }
+    Still "still_5_south_pole_wide.png" "The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud" }
+    Still "still_6_astronaut_height.png" "$($a.Name) at $WideUtc from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = 3; Fov = 62; Extra = "-LsnNoHud" }
+}
+$notes.Add("Not in any of these: textures, an atmosphere, stars or a map of the Earth. The ground is LOLA elevation data sampled on 320")
+$notes.Add("rings per azimuth; surface shading, exposure and the weak fill light are display choices (see unreal/README.md).")
+$notesFile = Join-Path $Out "README.txt"
+if ($Only -ne "all" -and (Test-Path $notesFile)) { Add-Content -Path $notesFile -Encoding ascii -Value @("", "---- partial run (-Only $Only) ----") ; Add-Content -Path $notesFile -Encoding ascii -Value $notes }
+else { Set-Content -Path $notesFile -Encoding ascii -Value $notes }
+Write-Host "Pitch material written to $Out"

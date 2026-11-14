@@ -8,7 +8,12 @@
 //      another azimuth layout than the package in the scene.
 //    - A mesh vertex of ring r and azimuth a is the point at arc distance ring r along
 //      azimuth a with the grid's height above the reference sphere, to 0.01 cm before
-//      rounding to 32-bit.
+//      rounding to 32-bit; except the ring nearest in distance to the package's horizon
+//      point of that azimuth, whose vertex is that horizon point.
+//      (Until 14 November 2026 the horizon point was an additional vertex. Azimuths then
+//      differed in where it fell among the rings, and neighbouring azimuths were joined
+//      one ring apart, which drew radial seams from the site. The structure was changed;
+//      no tolerance was.)
 //
 // H. Real terrain against the package horizon (needs Content/LsnTerrain; warns if absent).
 //    The package horizon is the highest elevation of the terrain along each azimuth out
@@ -124,7 +129,7 @@ bool FLsnTerrainGridMeshTest::RunTest(const FString& Parameters)
 	LsnMesh::BuildGridTerrain(Frame, P, P.DefaultHeightIndex, Grid, 0.13f, Mesh, Skipped, Unknown);
 	TestEqual(TEXT("horizon samples that could not be placed"), Skipped, 0);
 	TestEqual(TEXT("grid samples without data"), Unknown, 0);
-	TestEqual(TEXT("one centre vertex, and per azimuth one vertex per ring plus the horizon point"), Mesh.Positions.Num(), 1 + P.AzimuthCount * 4);
+	TestEqual(TEXT("one centre vertex, and per azimuth one vertex per ring"), Mesh.Positions.Num(), 1 + P.AzimuthCount * 3);
 
 	// Every grid sample is a vertex at its place, and so is every horizon point.
 	double WorstCm = 0.0;
@@ -132,22 +137,22 @@ bool FLsnTerrainGridMeshTest::RunTest(const FString& Parameters)
 	const double EyeHeightM = P.ObserverHeightsM[P.DefaultHeightIndex];
 	for (int32 A = 0; A < P.AzimuthCount; A += 37)
 	{
-		TArray<FVector> Expected;
+		FVector HorizonPoint;
+		const double HorizonDistanceM = P.HorizonDistanceAt(P.DefaultHeightIndex, A);
+		TestTrue(TEXT("horizon point exists"), LsnMesh::HorizonPointUnreal(Frame, EyeHeightM, P.AzimuthDegAt(A), P.HorizonElevationAt(P.DefaultHeightIndex, A), HorizonDistanceM, HorizonPoint));
+		// The ring nearest to the horizon point by ratio of distances, found here independently.
+		int32 CrestRing = 0;
+		for (int32 R = 1; R < 3; ++R)
+		{
+			if (FMath::Abs(FMath::Loge(Grid.RingDistanceM[R] / HorizonDistanceM)) < FMath::Abs(FMath::Loge(Grid.RingDistanceM[CrestRing] / HorizonDistanceM)))
+			{
+				CrestRing = R;
+			}
+		}
 		for (int32 R = 0; R < 3; ++R)
 		{
-			Expected.Add(Frame.SurfacePointUnreal(P.AzimuthDegAt(A), Grid.RingDistanceM[R], Grid.HeightsM[A * 3 + R]));
-		}
-		FVector HorizonPoint;
-		TestTrue(TEXT("horizon point exists"), LsnMesh::HorizonPointUnreal(Frame, EyeHeightM, P.AzimuthDegAt(A), P.HorizonElevationAt(P.DefaultHeightIndex, A), P.HorizonDistanceAt(P.DefaultHeightIndex, A), HorizonPoint));
-		Expected.Add(HorizonPoint);
-		for (const FVector& Point : Expected)
-		{
-			double Nearest = TNumericLimits<double>::Max();
-			for (int32 K = 0; K < 4; ++K)
-			{
-				Nearest = FMath::Min(Nearest, FVector::Dist(Mesh.Positions[1 + A * 4 + K], Point));
-			}
-			WorstCm = FMath::Max(WorstCm, Nearest);
+			const FVector Expected = R == CrestRing ? HorizonPoint : Frame.SurfacePointUnreal(P.AzimuthDegAt(A), Grid.RingDistanceM[R], Grid.HeightsM[A * 3 + R]);
+			WorstCm = FMath::Max(WorstCm, FVector::Dist(Mesh.Positions[1 + A * 3 + R], Expected));
 			++Found;
 		}
 	}
@@ -158,9 +163,9 @@ bool FLsnTerrainGridMeshTest::RunTest(const FString& Parameters)
 	bool bOrdered = true;
 	for (int32 A = 0; A < P.AzimuthCount && bOrdered; ++A)
 	{
-		for (int32 K = 1; K < 4; ++K)
+		for (int32 K = 1; K < 3; ++K)
 		{
-			bOrdered &= Mesh.Positions[1 + A * 4 + K].Size2D() >= Mesh.Positions[1 + A * 4 + K - 1].Size2D();
+			bOrdered &= Mesh.Positions[1 + A * 3 + K].Size2D() >= Mesh.Positions[1 + A * 3 + K - 1].Size2D();
 		}
 	}
 	TestTrue(TEXT("vertices of an azimuth are ordered outwards"), bOrdered);

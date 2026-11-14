@@ -29,8 +29,9 @@ class UCameraComponent;
  *   O, H, L               obstacle view, package horizon line, weak fill light (a display aid)
  *   Esc                   quit
  *
- * Command line: -LsnPlayFrom=<sample> -LsnPlayTo=<sample> -LsnPlaySeconds=<s>
- * plays that stretch of the timeline once, for recordings.
+ * Command line: -LsnPlayFrom=<sample> -LsnPlayTo=<sample> (or -LsnPlayFromUtc=<utc>
+ * -LsnPlayToUtc=<utc>) -LsnPlaySeconds=<s> plays that stretch of the timeline once,
+ * for recordings.
  */
 UCLASS()
 class LUNARSITENAVIGATOR_API ALsnObserverPawn : public APawn

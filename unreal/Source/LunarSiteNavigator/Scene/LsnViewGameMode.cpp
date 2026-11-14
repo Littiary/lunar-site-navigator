@@ -285,6 +285,19 @@ void ALsnViewGameMode::StartPlay()
 		{
 			Scenes[0]->SetTimeIndex(Index);
 		}
+		FString Utc;
+		double Position = 0.0;
+		if (FParse::Value(FCommandLine::Get(), TEXT("LsnUtc="), Utc))
+		{
+			if (LsnPlanner::PositionOfUtc(Scenes[0]->GetPackage(), Utc, Position))
+			{
+				Scenes[0]->SetTimePosition(Position);
+			}
+			else
+			{
+				UE_LOG(LogLsn, Error, TEXT("-LsnUtc=%s is not a time of this package."), *Utc);
+			}
+		}
 	}
 
 	FString PageName;

@@ -84,9 +84,10 @@ namespace LsnMesh
 	/**
 	 * The site terrain from real elevation samples (FLsnTerrainGrid). Along every azimuth
 	 * sample the vertices are the grid's ring points, at their height above the reference
-	 * sphere, plus the package's horizon point of that azimuth, in order of distance. The
-	 * horizon point is the terrain point the science core found to set the horizon, so
-	 * the crest of the mesh is the package horizon and the rest is elevation data.
+	 * sphere; the ring nearest in distance to the package's horizon point of that azimuth
+	 * is replaced by that point. The horizon point is the terrain point the science core
+	 * found to set the horizon, so the crest of the mesh is the package horizon and the
+	 * rest is elevation data, and every azimuth has the same number of vertices.
 	 *
 	 * Origin: the site's ground point. OutSkippedAzimuths counts horizon samples that could
 	 * not be placed, OutUnknownSamples grid samples without data (drawn at the height of

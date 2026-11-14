@@ -262,3 +262,20 @@ void LsnPlanner::BuildPairLines(const FLsnSitePair& Pair, TArray<FString>& OutLi
 			Name, 100.0 * W.EitherFraction, W.GainOverBetterS / 3600.0, *Covered, W.LongestNeitherS / 3600.0));
 	}
 }
+
+bool LsnPlanner::PositionOfUtc(const FLsnSitePackage& Package, const FString& Utc, double& OutPosition)
+{
+	FDateTime Start, When;
+	if (!Package.bHasTimeline || Package.Time.LeapSecondsInRange != 0 || !(Package.Time.StepS > 0.0)
+		|| !FDateTime::ParseIso8601(*Package.Time.StartUtc, Start) || !FDateTime::ParseIso8601(*Utc, When))
+	{
+		return false;
+	}
+	const double Position = (When - Start).GetTotalSeconds() / Package.Time.StepS;
+	if (Position < 0.0 || Position > Package.Time.Count - 1)
+	{
+		return false;
+	}
+	OutPosition = Position;
+	return true;
+}

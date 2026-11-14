@@ -241,6 +241,21 @@ bool FLsnPlannerLogicTest::RunTest(const FString& Parameters)
 	}
 	TestFalse(TEXT("a folder without index.json has no site list"), LsnPlanner::ListSites(LsnTest::FixtureRoot() / TEXT("site"), Sites, Error));
 
+	// A time given by UTC: only on the package's axis and only without a leap second in the range.
+	FLsnSitePackage Clock;
+	Clock.bHasTimeline = true;
+	Clock.Time.StartUtc = TEXT("2026-11-14T00:00:00.000Z");
+	Clock.Time.StepS = 3600.0;
+	Clock.Time.Count = 49;
+	double ClockPosition = -1.0;
+	TestTrue(TEXT("a UTC time on the axis is found"), LsnPlanner::PositionOfUtc(Clock, TEXT("2026-11-14T12:30:00Z"), ClockPosition));
+	TestEqual(TEXT("12:30 is position 12.5"), ClockPosition, 12.5, 1e-9);
+	TestTrue(TEXT("the last sample"), LsnPlanner::PositionOfUtc(Clock, TEXT("2026-11-16T00:00:00Z"), ClockPosition) && FMath::Abs(ClockPosition - 48.0) < 1e-9);
+	TestFalse(TEXT("a time before the axis is refused"), LsnPlanner::PositionOfUtc(Clock, TEXT("2026-11-13T23:00:00Z"), ClockPosition));
+	TestFalse(TEXT("a time after the axis is refused"), LsnPlanner::PositionOfUtc(Clock, TEXT("2026-11-16T00:30:00Z"), ClockPosition));
+	Clock.Time.LeapSecondsInRange = 1;
+	TestFalse(TEXT("with a leap second in the range a UTC time is not converted"), LsnPlanner::PositionOfUtc(Clock, TEXT("2026-11-14T12:30:00Z"), ClockPosition));
+
 	// Panorama: azimuth 0 at the left edge, 360 wraps to it; elevation range clamps.
 	FLsnPanorama Pano;
 	Pano.Box = FBox2D(FVector2D(100.0, 50.0), FVector2D(460.0, 150.0));

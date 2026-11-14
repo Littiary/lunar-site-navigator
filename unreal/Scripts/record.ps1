@@ -6,8 +6,11 @@
 #   unreal\Scripts\record.ps1 -Out docs\unreal\sunset.mp4 -Site de-gerlache-rim-crest -From 2088 -To 2100 -Seconds 25 -Yaw 213 -Pitch -2 -Fov 25
 param(
     [Parameter(Mandatory = $true)][string]$Out,
-    [Parameter(Mandatory = $true)][double]$From,
-    [Parameter(Mandatory = $true)][double]$To,
+    # The stretch by sample positions, or by UTC (for example 2027-07-28T11:00:00Z).
+    [double]$From = [double]::NaN,
+    [double]$To = [double]::NaN,
+    [string]$FromUtc = "",
+    [string]$ToUtc = "",
     [double]$Seconds = 25,
     [string]$Site = "",
     [string]$EngineRoot = "C:\Program Files\Epic Games\UE_5.8",
@@ -33,10 +36,12 @@ $log = Join-Path $root "Saved\Logs\Record.log"
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
 $args = @(
     "`"$project`"", "-game", "-windowed", "-ResX=$ResX", "-ResY=$ResY", "-RenderOffscreen", "-ForceRes",
-    "-benchmark", "-fps=$Fps", "-LsnFov=$($Fov.ToString($inv))",
-    "-LsnPlayFrom=$($From.ToString($inv))", "-LsnPlayTo=$($To.ToString($inv))", "-LsnPlaySeconds=$($Seconds.ToString($inv))",
+    "-benchmark", "-fps=$Fps", "-LsnFov=$($Fov.ToString($inv))", "-LsnPlaySeconds=$($Seconds.ToString($inv))",
     "-LsnMovieDir=`"$frames`"", "-abslog=`"$log`"", "-unattended", "-nopause", "-nosplash", "-nosound"
 )
+if ($FromUtc -ne "" -and $ToUtc -ne "") { $args += @("-LsnPlayFromUtc=$FromUtc", "-LsnPlayToUtc=$ToUtc") }
+elseif (-not [double]::IsNaN($From) -and -not [double]::IsNaN($To)) { $args += @("-LsnPlayFrom=$($From.ToString($inv))", "-LsnPlayTo=$($To.ToString($inv))") }
+else { Write-Host "Give -From and -To, or -FromUtc and -ToUtc."; exit 1 }
 if ($Site -ne "") { $args += "-LsnSite=$Site" }
 if ($Height -ge 0) { $args += "-LsnHeight=$Height" }
 if (-not [double]::IsNaN($Yaw)) { $args += "-LsnYaw=$($Yaw.ToString($inv))" }
