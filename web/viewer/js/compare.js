@@ -6,6 +6,7 @@
 // package unchanged; this file selects, compares and formats. No trigonometry, no science.
 
 import { loadIndex, loadSite, PackageError } from "./package.js";
+import { bandNote, createSky } from "./sky.js";
 import {
   canLabelUtc, esc, etOfUtc, eventsHtml, footerHtml, inWindow, loadNotice, loadSiteData, metricText,
   metricsAtHeight, nearestSample, readoutHtml, renderHorizon, sampleEt, sampleUtc,
@@ -24,7 +25,7 @@ const SUMMARY = [
 // Windows shown as status chips at the shared time.
 const CHIPS = [["sun_visible", "Sun visible"], ["earth_visible", "Earth visible"], ["earth_network_dsn", "DSN two-way link"], ["sun_eclipsed_by_earth", "Sun eclipsed by the Earth"]];
 
-const state = { index: null, panes: [], i: 0, timer: null };
+const state = { index: null, panes: [], i: 0, timer: null, view: params.get("view") === "sky" ? "sky" : "chart" };
 
 function showError(message) {
   $("error").textContent = message;
@@ -74,7 +75,19 @@ function renderPane(pane) {
     const v = inWindow(site, pane.h, id, sampleEt(site, i));
     return v === null ? "" : `<span class="chip ${v ? "on" : "off"}" title="window ${id}">${label}: ${v ? "yes" : "no"}</span>`;
   }).join("");
-  renderHorizon(pane.q("horizon"), site, pane.data, i);
+  const sky = state.view === "sky";
+  pane.q("chart").hidden = sky;
+  pane.q("sky").hidden = !sky;
+  pane.q("band").hidden = !sky;
+  if (sky) {
+    // The same panorama module as the single-site viewer, one instance per pane.
+    if (!pane.sky) pane.sky = createSky(pane.q("sky"), { onPick: (j) => setSample(nearestSample(reference(), sampleEt(site, j))) });
+    const v = $("sky-span").value;
+    pane.sky.update({ site, data: pane.data, h: pane.h, i, spanSamples: v === "all" ? site.timeline.time.count : Number(v) });
+    pane.q("band").innerHTML = bandNote(site, pane.h);
+  } else {
+    renderHorizon(pane.q("horizon"), site, pane.data, i);
+  }
   pane.q("readout").innerHTML = readoutHtml(site, pane.data, pane.h, i);
   const metrics = Object.fromEntries(metricsAtHeight(site, pane.h).map((m) => [m.id, m]));
   const rows = SUMMARY.filter((id) => metrics[id]).map((id) => `<tr><td>${esc(metrics[id].label)}</td><td class="num">${metricText(metrics[id])}</td>
@@ -92,7 +105,7 @@ function render() {
   state.panes.forEach(renderPane);
   const q = new URLSearchParams(location.search);
   q.set("a", state.panes[0].site.manifest.site.site_id); q.set("b", state.panes[1].site.manifest.site.site_id);
-  q.set("ha", String(state.panes[0].h)); q.set("hb", String(state.panes[1].h)); q.set("i", String(state.i));
+  q.set("ha", String(state.panes[0].h)); q.set("hb", String(state.panes[1].h)); q.set("i", String(state.i)); q.set("view", state.view);
   history.replaceState(null, "", `?${q}`);
 }
 
@@ -128,7 +141,18 @@ function togglePlay(force) {
   }, 150);
 }
 
+function setView(view) {
+  state.view = view;
+  $("view-chart").setAttribute("aria-pressed", String(view === "chart"));
+  $("view-sky").setAttribute("aria-pressed", String(view === "sky"));
+  $("span-label").hidden = view !== "sky";
+  if (state.panes.every((p) => p.site)) render();
+}
+
 function wire() {
+  $("view-chart").addEventListener("click", () => setView("chart"));
+  $("view-sky").addEventListener("click", () => setView("sky"));
+  $("sky-span").addEventListener("change", () => render());
   $("play").addEventListener("click", () => togglePlay());
   $("slider").addEventListener("input", (ev) => setSample(Number(ev.target.value)));
   document.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => setSample(state.i + Number(b.dataset.step))));
@@ -173,6 +197,7 @@ async function main() {
     if (!reference().timeline) throw new PackageError("site A has no time window");
     const wantedI = Number(params.get("i"));
     state.i = Number.isInteger(wantedI) ? wantedI : 0;
+    setView(state.view);
     configureTimeline(null);
     if (state.panes.some((p) => p.site.manifest.synthetic)) {
       const box = $("notice");
