@@ -1,0 +1,42 @@
+PDS_VERSION_ID            = "PDS3"
+PRODUCT_VERSION_ID        = "SYNTHETIC-1"
+DATA_SET_ID               = "KESTRO-SYNTHETIC-TEST"
+TARGET_NAME               = MOON
+DESCRIPTION               = "SYNTHETIC TEST DEM. NOT LOLA DATA. Analytic surface for unit
+   tests of the reader, see lsn_data/synthetic.py. Same layout as LDEM_80S_20M."
+
+OBJECT                    = UNCOMPRESSED_FILE
+FILE_NAME                 = "SYNTH_S90_100M.DAT"
+RECORD_TYPE               = FIXED_LENGTH
+FILE_RECORDS              = 400
+RECORD_BYTES              = 800
+^IMAGE                    = "SYNTH_S90_100M.DAT"
+  OBJECT                  = IMAGE
+    NAME                  = HEIGHT
+    LINES                 = 400
+    LINE_SAMPLES          = 400
+    DERIVED_MINIMUM       = -800
+    DERIVED_MAXIMUM       = 2605
+    SAMPLE_TYPE           = LSB_INTEGER
+    SAMPLE_BITS           = 16
+    UNIT                  = METER
+    SCALING_FACTOR        = 0.5
+    OFFSET                = 1737400.
+  END_OBJECT              = IMAGE
+END_OBJECT                = UNCOMPRESSED_FILE
+
+OBJECT                    = IMAGE_MAP_PROJECTION
+ MAP_PROJECTION_TYPE          = "POLAR STEREOGRAPHIC"
+ KEYWORD_LATITUDE_TYPE        = "PLANETOCENTRIC"
+ A_AXIS_RADIUS                = 1737.4 <km>
+ B_AXIS_RADIUS                = 1737.4 <km>
+ C_AXIS_RADIUS                = 1737.4 <km>
+ POSITIVE_LONGITUDE_DIRECTION = "EAST"
+ CENTER_LATITUDE              = -90 <deg>
+ CENTER_LONGITUDE             = 0 <deg>
+ MAP_SCALE                    = 100 <m/pix>
+ LINE_PROJECTION_OFFSET       = 199.5 <pix>
+ SAMPLE_PROJECTION_OFFSET     = 199.5 <pix>
+END_OBJECT                    = IMAGE_MAP_PROJECTION
+
+END
