@@ -1,0 +1,14 @@
+{
+  "description": "LROC browse image read by the image check, as downloaded. Written by validation/lro_images/fetch.py; do not edit by hand.",
+  "data_page": "https://data.lroc.im-ldi.com/lroc/view_lroc/LRO-L-LROC-2-EDR-V1.0/M146846913LE",
+  "files": [
+    {
+      "name": "M146846913LC_pyr.tif",
+      "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-3-CDR-V1.0/LROLRC_1005/EXTRAS/BROWSE/2010347/M146846913LC_pyr.tif",
+      "bytes": 7783997,
+      "sha256": "dd110a326cfc11dbb2c3a1783ab11a9dbec7390e773b689bad3eb9163d0b3840",
+      "server_last_modified": null,
+      "retrieved_utc": "2026-11-14T12:34:18Z"
+    }
+  ]
+}

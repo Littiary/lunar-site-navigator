@@ -1,0 +1,820 @@
+{
+ "generated_utc": "2026-11-14T14:11:50Z",
+ "criterion": "data/checkpoints/thresholds_llr.json",
+ "results": {
+  "LDEM_128": {
+   "product": "LDEM_128",
+   "pixel_m": 236.90117518866782,
+   "reflectors": [
+    {
+     "name": "Apollo 11",
+     "lon_deg_east": 23.4730729,
+     "lat_deg": 0.6734398,
+     "reflector_radius_m": 1735472.732,
+     "dem_radius_m": 1735465.9352703332,
+     "difference_m": -6.796729666879401,
+     "sigma_local_m": 3.4641016151377544,
+     "tolerance_m": 11.928203230275509,
+     "passed": true,
+     "difference_at_PA_position_m": 3.070163462078199
+    },
+    {
+     "name": "Apollo 14",
+     "lon_deg_east": -17.4786483,
+     "lat_deg": -3.6441703,
+     "reflector_radius_m": 1736336.135,
+     "dem_radius_m": 1736337.6895140843,
+     "difference_m": 1.554514084244147,
+     "sigma_local_m": 3.865804501581067,
+     "tolerance_m": 12.731609003162134,
+     "passed": true,
+     "difference_at_PA_position_m": -4.365551298251376
+    },
+    {
+     "name": "Apollo 15",
+     "lon_deg_east": 3.6285073,
+     "lat_deg": 26.1333959,
+     "reflector_radius_m": 1735477.34,
+     "dem_radius_m": 1735477.2336085339,
+     "difference_m": -0.10639146622270346,
+     "sigma_local_m": 3.7891984233288736,
+     "tolerance_m": 12.578396846657746,
+     "passed": true,
+     "difference_at_PA_position_m": 4.177106910618022
+    },
+    {
+     "name": "Lunokhod 1",
+     "lon_deg_east": -35.0080312,
+     "lat_deg": 38.3151827,
+     "reflector_radius_m": 1734928.585,
+     "dem_radius_m": 1734926.2729646997,
+     "difference_m": -2.3120353003032506,
+     "sigma_local_m": 0.4969039949999533,
+     "tolerance_m": 5.993807989999906,
+     "passed": true,
+     "difference_at_PA_position_m": -4.558714515296742
+    },
+    {
+     "name": "Lunokhod 2",
+     "lon_deg_east": 30.9221489,
+     "lat_deg": 25.832307,
+     "reflector_radius_m": 1734639.009,
+     "dem_radius_m": 1734643.958253497,
+     "difference_m": 4.949253496946767,
+     "sigma_local_m": 19.266807637572185,
+     "tolerance_m": 43.53361527514437,
+     "passed": true,
+     "difference_at_PA_position_m": -53.027109196875244
+    }
+   ],
+   "mean_difference_m": -0.5422777704428882,
+   "radius_or_datum_problem_indicated": false,
+   "passed": true,
+   "provisional": false
+  },
+  "SLDEM2015_256": {
+   "product": "SLDEM2015_256",
+   "pixel_m": 118.45058759433391,
+   "reflectors": [
+    {
+     "name": "Apollo 11",
+     "lon_deg_east": 23.4730729,
+     "lat_deg": 0.6734398,
+     "reflector_radius_m": 1735472.732,
+     "dem_radius_m": 1735471.441798702,
+     "difference_m": -1.2902012979611754,
+     "sigma_local_m": 3.0388611621627497,
+     "tolerance_m": 11.0777223243255,
+     "passed": true,
+     "difference_at_PA_position_m": -0.8304763869382441
+    },
+    {
+     "name": "Apollo 14",
+     "lon_deg_east": -17.4786483,
+     "lat_deg": -3.6441703,
+     "reflector_radius_m": 1736336.135,
+     "dem_radius_m": 1736338.5575442289,
+     "difference_m": 2.4225442288443446,
+     "sigma_local_m": 2.1537683355118693,
+     "tolerance_m": 9.307536671023739,
+     "passed": true,
+     "difference_at_PA_position_m": -1.7203165262471884
+    },
+    {
+     "name": "Apollo 15",
+     "lon_deg_east": 3.6285073,
+     "lat_deg": 26.1333959,
+     "reflector_radius_m": 1735477.34,
+     "dem_radius_m": 1735477.0810674226,
+     "difference_m": -0.2589325774461031,
+     "sigma_local_m": 2.194747553162197,
+     "tolerance_m": 9.389495106324393,
+     "passed": true,
+     "difference_at_PA_position_m": 1.0469663499388844
+    },
+    {
+     "name": "Lunokhod 1",
+     "lon_deg_east": -35.0080312,
+     "lat_deg": 38.3151827,
+     "reflector_radius_m": 1734928.585,
+     "dem_radius_m": 1734921.6805018724,
+     "difference_m": -6.904498127521947,
+     "sigma_local_m": 1.6077912714428095,
+     "tolerance_m": 8.215582542885619,
+     "passed": true,
+     "difference_at_PA_position_m": -5.687964107841253
+    },
+    {
+     "name": "Lunokhod 2",
+     "lon_deg_east": 30.9221489,
+     "lat_deg": 25.832307,
+     "reflector_radius_m": 1734639.009,
+     "dem_radius_m": 1734639.2785118474,
+     "difference_m": 0.26951184729114175,
+     "sigma_local_m": 3.055572612657382,
+     "tolerance_m": 11.111145225314765,
+     "passed": true,
+     "difference_at_PA_position_m": -40.12741366191767
+    }
+   ],
+   "mean_difference_m": -1.1523151853587479,
+   "radius_or_datum_problem_indicated": false,
+   "passed": true,
+   "provisional": true,
+   "provisional_why": "values read by HTTP byte ranges from the MIT mirror and PDS (identical copies); the whole tiles are not yet downloaded and checksummed",
+   "ranges": [
+    {
+     "product_id": "SLDEM2015_256_60S_0S_240_360_FLOAT",
+     "product_version": "V2.0",
+     "read_by": "HTTP byte ranges",
+     "sources": [
+      "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_256_60S_0S_240_360_FLOAT.IMG",
+      "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/sldem2015_256_60s_0s_240_360_float.img"
+     ],
+     "ranges": [
+      {
+       "bytes": [
+        114260488,
+        114260515
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114383368,
+        114383395
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114506248,
+        114506275
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114629128,
+        114629155
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114752008,
+        114752035
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114874888,
+        114874915
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114997768,
+        114997795
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        113646068,
+        113646095
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        113768948,
+        113768975
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        113891828,
+        113891855
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114014708,
+        114014735
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114137588,
+        114137615
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114260468,
+        114260495
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        114383348,
+        114383375
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      }
+     ]
+    },
+    {
+     "product_id": "SLDEM2015_256_0N_60N_000_120_FLOAT",
+     "product_version": "V2.0",
+     "read_by": "HTTP byte ranges",
+     "sources": [
+      "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_256_0N_60N_000_120_FLOAT.IMG",
+      "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/sldem2015_256_0n_60n_000_120_float.img"
+     ],
+     "ranges": [
+      {
+       "bytes": [
+        1865833944,
+        1865833971
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865956824,
+        1865956851
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1866079704,
+        1866079731
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1866202584,
+        1866202611
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1866325464,
+        1866325491
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1866448344,
+        1866448371
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1866571224,
+        1866571251
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064881780,
+        1064881807
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065004660,
+        1065004687
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065127540,
+        1065127567
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065250420,
+        1065250447
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065373300,
+        1065373327
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065496180,
+        1065496207
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065619060,
+        1065619087
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074371492,
+        1074371519
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074494372,
+        1074494399
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074617252,
+        1074617279
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074740132,
+        1074740159
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074863012,
+        1074863039
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074985892,
+        1074985919
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1075108772,
+        1075108799
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865219524,
+        1865219551
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865342404,
+        1865342431
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865465284,
+        1865465311
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865588164,
+        1865588191
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865711044,
+        1865711071
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865833924,
+        1865833951
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1865956804,
+        1865956831
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064267364,
+        1064267391
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064390244,
+        1064390271
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064513124,
+        1064513151
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064636004,
+        1064636031
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064758884,
+        1064758911
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1064881764,
+        1064881791
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1065004644,
+        1065004671
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1073879956,
+        1073879983
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074002836,
+        1074002863
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074125716,
+        1074125743
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074248596,
+        1074248623
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074371476,
+        1074371503
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074494356,
+        1074494383
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        1074617236,
+        1074617263
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      }
+     ]
+    },
+    {
+     "product_id": "SLDEM2015_256_0N_60N_240_360_FLOAT",
+     "product_version": "V2.0",
+     "read_by": "HTTP byte ranges",
+     "sources": [
+      "https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_256_0N_60N_240_360_FLOAT.IMG",
+      "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/sldem2015_256_0n_60n_240_360_float.img"
+     ],
+     "ranges": [
+      {
+       "bytes": [
+        681825256,
+        681825283
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681948136,
+        681948163
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        682071016,
+        682071043
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        682193896,
+        682193923
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        682316776,
+        682316803
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        682439656,
+        682439683
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        682562536,
+        682562563
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681210828,
+        681210855
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681333708,
+        681333735
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681456588,
+        681456615
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681579468,
+        681579495
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681702348,
+        681702375
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681825228,
+        681825255
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      },
+      {
+       "bytes": [
+        681948108,
+        681948135
+       ],
+       "sources_identical": true,
+       "n_sources": 2
+      }
+     ]
+    }
+   ]
+  },
+  "LDEM_16_reported_only": {
+   "product": "LDEM_16",
+   "pixel_m": 1895.2094015093426,
+   "reflectors": [
+    {
+     "name": "Apollo 11",
+     "lon_deg_east": 23.4730729,
+     "lat_deg": 0.6734398,
+     "reflector_radius_m": 1735472.732,
+     "dem_radius_m": 1735478.6174953054,
+     "difference_m": 5.885495305294171,
+     "sigma_local_m": 22.701090418145988,
+     "tolerance_m": 50.402180836291976,
+     "passed": true,
+     "difference_at_PA_position_m": 7.547836894867942
+    },
+    {
+     "name": "Apollo 14",
+     "lon_deg_east": -17.4786483,
+     "lat_deg": -3.6441703,
+     "reflector_radius_m": 1736336.135,
+     "dem_radius_m": 1736350.2623212729,
+     "difference_m": 14.127321272855625,
+     "sigma_local_m": 33.355825744704795,
+     "tolerance_m": 71.71165148940959,
+     "passed": true,
+     "difference_at_PA_position_m": 2.993286409880966
+    },
+    {
+     "name": "Apollo 15",
+     "lon_deg_east": 3.6285073,
+     "lat_deg": 26.1333959,
+     "reflector_radius_m": 1735477.34,
+     "dem_radius_m": 1735461.4293780255,
+     "difference_m": -15.910621974617243,
+     "sigma_local_m": 20.45832861884233,
+     "tolerance_m": 45.91665723768466,
+     "passed": true,
+     "difference_at_PA_position_m": -4.8849739853758365
+    },
+    {
+     "name": "Lunokhod 1",
+     "lon_deg_east": -35.0080312,
+     "lat_deg": 38.3151827,
+     "reflector_radius_m": 1734928.585,
+     "dem_radius_m": 1734928.5150018015,
+     "difference_m": -0.06999819842167199,
+     "sigma_local_m": 6.72658260785125,
+     "tolerance_m": 18.453165215702498,
+     "passed": true,
+     "difference_at_PA_position_m": 0.329151748213917
+    },
+    {
+     "name": "Lunokhod 2",
+     "lon_deg_east": 30.9221489,
+     "lat_deg": 25.832307,
+     "reflector_radius_m": 1734639.009,
+     "dem_radius_m": 1734681.5952956402,
+     "difference_m": 42.58629564009607,
+     "sigma_local_m": 63.64169570414325,
+     "tolerance_m": 132.2833914082865,
+     "passed": true,
+     "difference_at_PA_position_m": 7.89939871430397
+    }
+   ],
+   "mean_difference_m": 9.32369840904139,
+   "radius_or_datum_problem_indicated": false,
+   "passed": true
+  }
+ },
+ "passed": true,
+ "complete": false,
+ "LDEM_128_minus_SLDEM2015_256_m": {
+  "Apollo 11": -5.506528368918225,
+  "Apollo 14": -0.8680301446001977,
+  "Apollo 15": 0.15254111122339964,
+  "Lunokhod 1": 4.5924628272186965,
+  "Lunokhod 2": 4.679741649655625
+ }
+}

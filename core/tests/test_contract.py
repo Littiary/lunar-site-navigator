@@ -47,7 +47,7 @@ def test_schema_is_a_valid_json_schema():
 
 def test_skeleton_writes_valid_packages(generated):
     out, paths = generated
-    assert len(paths) == 2
+    assert len(paths) == 4  # direction table, two sites, their comparison
     for path in paths:
         validate_package(path)
     validate_document(json.loads((out / "index.json").read_text()))
@@ -163,7 +163,7 @@ def test_validator_rejects_damaged_packages(generated, tmp_path, case):
 def test_committed_sample_is_valid_and_marked_synthetic():
     index = json.loads((SAMPLE / "packages" / "index.json").read_text())
     validate_document(index)
-    assert {e["kind"] for e in index["packages"]} == {"site", "direction_table"}
+    assert {e["kind"] for e in index["packages"]} == {"site", "direction_table", "site_pairs"}
     for entry in index["packages"]:
         manifest = validate_package(SAMPLE / "packages" / entry["path"])
         assert manifest["synthetic"] is True
@@ -193,7 +193,7 @@ def test_committed_sample_matches_a_fresh_run(generated):
         committed = read_package(SAMPLE / "packages" / entry["path"])
         fresh = read_package(out / entry["path"])  # same id, hence the same path
         refs = list(_array_refs(committed.manifest))
-        assert refs
+        assert refs or entry["kind"] == "site_pairs"  # a comparison holds no arrays
         for where, ref in refs:
             np.testing.assert_allclose(
                 committed.array(ref), fresh.array(_lookup(fresh.manifest, where)), rtol=0, atol=1e-6, err_msg=where

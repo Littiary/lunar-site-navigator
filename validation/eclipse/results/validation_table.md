@@ -1,6 +1,6 @@
 # Validation table: eclipse of the Sun by the Earth, 14 March 2025, at the Blue Ghost landing point
 
-Generated 2026-11-14T11:24:09Z by `validation/eclipse/compare.py`. Do not edit by hand.
+Generated 2026-11-14T13:52:21Z by `validation/eclipse/compare.py`. Do not edit by hand.
 
 **8 of 8 pass/fail checks pass; 0 fail; 2 comparisons are reported without a verdict.**
 Published values, sources and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit a8bbc5a). The test is not blind: see the disclosure in `thresholds.json`.
@@ -35,7 +35,7 @@ Computed contacts (UTC): C1 2025-03-14T05:00:42.422Z, C2 2025-03-14T06:17:23.203
 - *Eclipse-aware power line at the site (fraction of the Sun's disc that is lit)*, computed:
   - hours without any sunlight: 2.284
   - hours with reduced sunlight: 4.841
-  - lit fraction every 10 min: [1.0, 1.0, 1.0, 1.0, 0.9265, 0.7996, 0.6469, 0.4822, 0.3172, 0.1649, 0.0434, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0412, 0.1617, 0.3135, 0.4784, 0.6433, 0.7964, 0.924, 0.9997, 1.0, 1.0, 1.0]
+  - lit fraction every 10 min: [1.0, 1.0, 1.0, 1.0, 0.9266, 0.7998, 0.6472, 0.4825, 0.3175, 0.1652, 0.0438, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0401, 0.1598, 0.3111, 0.4757, 0.6405, 0.7937, 0.9218, 0.9993, 1.0, 1.0, 1.0]
   - first sample utc: 2025-03-14T04:30:42.422Z
   - smallest separation deg: 0.370
   - time of smallest separation: 2025-03-14T07:25:55.070Z

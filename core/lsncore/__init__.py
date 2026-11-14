@@ -8,4 +8,4 @@ __version__ = "0.1.0"
 
 # Incremented by a human decision whenever a change can alter computed numbers.
 # It is part of every package id, so a change here invalidates cached packages.
-SCIENCE_VERSION = 0
+SCIENCE_VERSION = 1

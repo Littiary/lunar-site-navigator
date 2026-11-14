@@ -1,0 +1,43 @@
+{
+ "note": "Checkpoints for the whole-Moon products (north-polar LDEM_80N_20M and LDEM_60N_60M, cylindrical LDEM_128 and any SLDEM2015 mosaic) and for the seams between products. Written and committed BEFORE any of these was measured; not to be edited afterwards. The commit time is the authoritative time of writing.",
+ "checkpoint_1_checksums": {
+  "rule": "as data/checkpoints/thresholds.json: every new file exists with the size and SHA-256 recorded in data/manifest/manifest.json, and every data file was re-read from its second source (the PDS Geosciences Node when it came from the MIT mirror) with an identical SHA-256"
+ },
+ "checkpoint_2_georeferencing": {
+  "reference": "LOLA RDR laser returns of the 13 LRO_SM_06 files already used for the south (thresholds_independent.json, part B); SHOT_FLAG = 0",
+  "polar_north": {
+   "regions": {"LDEM_80N_20M": [80.5, 89.8], "LDEM_60N_60M": [60.5, 79.5]},
+   "model": "as thresholds_independent.json displacement_model (translation, rotation about the pole, radial scale)",
+   "pass_if": {"abs_mean_d_m": 1.0, "median_abs_d_m": 3.0, "abs_translation_component_m": 10.0, "abs_rotation_deg": 0.005, "abs_radial_scale": 5.0e-5, "radial_scale_se_at_most": 2.0e-5, "mirror_rms_ratio_at_least": 3.0}
+  },
+  "cylindrical": {
+   "region": "returns with |latitude| <= 59.5 (and <= 89.5 for LDEM_128 in a second, reported-only run)",
+   "model": "d = c + g_east * T_east + g_north * T_north, g from central differences of +-1 pixel in local east/north metres; least squares over |d| <= 50 m (10 x pixel for LDEM_128) and 0.02 <= |g| <= 0.5; block bootstrap over 1 x 1 degree blocks",
+   "pass_if_in_pixels": {"abs_translation_component_px": 0.1, "median_abs_d_m_is_at_most_0.1_px_plus_m": 3.0, "abs_mean_d_m": 2.0, "mirror_rms_ratio_at_least": 3.0},
+   "mirror": "longitude mirrored as lon -> -lon"
+  }
+ },
+ "checkpoint_3_values_and_reference_radius": {
+  "label_min_max": "polar files: measured minimum and maximum DN equal DERIVED_MINIMUM and DERIVED_MAXIMUM exactly (as for the south). Cylindrical files carry MINIMUM/MAXIMUM keys that need not be the extremes of the file (LDEM_16: label MAXIMUM 21580 DN, file maximum 21371 DN, seen while working on the spot heights): the measured extremes must lie inside [MINIMUM, MAXIMUM]",
+  "reference_radius": "every label: A = B = C axis radius = OFFSET = 1737.4 km; MoonTerrain refuses products with different reference radii",
+  "north_overlap_20m_vs_60m": {"method": "as the south (thresholds.json overlap_20m_vs_60m)", "abs_mean_difference_m_max": 3, "median_abs_difference_m_max": 10},
+  "published_spot_heights": "data/checkpoints/thresholds_spot_heights.json, for every product that covers the points"
+ },
+ "seams": {
+  "polar_60m_vs_LDEM_128": {
+   "bands": {"LDEM_60S_60M": [-60.0, -55.0], "LDEM_60N_60M": [55.0, 60.0]},
+   "method": "as thresholds_independent.json part A (cells of LDEM_128 against the mean of the polar product over the cell), 20 000 cells per band",
+   "pass_if": {"abs_mean_d_m": 3.0, "median_abs_d_m": 10.0, "p95_abs_d_m": 60.0, "abs_translation_component_m": 24.0, "abs_rotation_deg": 0.01, "abs_radial_scale": 1.0e-4, "radial_scale_se_at_most": 3.0e-5, "mirror_rms_ratio_at_least": 3.0}
+  },
+  "SLDEM_vs_LDEM_128": {
+   "region": "|latitude| <= 55, 20 000 LDEM_128 cells drawn by area",
+   "method": "LDEM_128 cell against the mean of the SLDEM mosaic over the cell",
+   "pass_if": {"abs_mean_d_m": 3.0, "median_abs_d_m": 10.0, "p95_abs_d_m": 60.0}
+  },
+  "moon_terrain_continuity": {
+   "method": "2000 points on each boundary where MoonTerrain switches product (edge of the 20 m squares, edge of the 60 m squares, and the +-60 deg edge of SLDEM when present); heights 0.5 m on either side of the boundary along the boundary normal, at max_pixel_m = None",
+   "pass_if": {"median_abs_jump_m": 10.0, "p95_abs_jump_m": 60.0},
+   "tile_seams": "inside a mosaic: points 0.5 m either side of every tile edge; the jump must not exceed 1 m (bilinear interpolation is continuous across tiles)"
+  }
+ }
+}

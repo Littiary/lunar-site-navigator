@@ -218,6 +218,23 @@ def compute_timeline(
             windows.append(_window("sun_totally_eclipsed_by_earth", "SUN", h, "The whole disc of the Sun is hidden by the Earth (opaque Earth disc, no atmosphere)", total, None))
             lit = any_part[("SUN", h)].intersection(total.complement())
             windows.append(_window("sun_lit", "SUN", h, "Some part of the Sun's disc is above the terrain horizon and the Sun is not totally eclipsed by the Earth", lit, None))
+        # Lit fraction of the Sun: the visible fraction, reduced at the samples at which the
+        # Earth covers part of the disc. Outside an eclipse the two are the same numbers.
+        sun = series["SUN"]
+        lit_series = sun.visible_fraction.copy()
+        eclipsed = np.zeros(t.size, dtype=bool)
+        for e in found:
+            eclipsed |= (t >= e.partial_start_et_s) & (t <= e.partial_end_et_s)
+        if eclipsed.any():
+            for h in range(len(heights)):
+                profile = finder.Horizon(0.0, step_deg, np.asarray(horizon.elevation_deg[h], dtype=np.float64), np.asarray(horizon.distance_m[h], dtype=np.float64))
+                lit_series[h, eclipsed] = np.clip(eclipse.power_line(ground, table, profile, t[eclipsed], n_strips), 0.0, sun.visible_fraction[h, eclipsed])
+            # Between the second and the third contact the whole disc is hidden: exactly zero, not the rounding residue of the quadrature.
+            for e in found:
+                if e.total_start_et_s is not None:
+                    lit_series[:, (t >= e.total_start_et_s) & (t <= e.total_end_et_s)] = 0.0
+        sun.lit_fraction = lit_series
+
         totals = [e.total_end_et_s - e.total_start_et_s for e in found if e.total_start_et_s is not None]
         metrics.append(_metric("sun_eclipse_count", "Number of eclipses of the Sun by the Earth in the window (partial or total at the site)", len(found), "1", None))
         metrics.append(_metric("sun_eclipse_total_count", "Number of those eclipses that are total at the site", len(totals), "1", None))
@@ -357,7 +374,28 @@ def timeline_methods(
             parameters={"disc_strips": int(n_strips)},
             status="analytic-test-passed",
             evidence=["core/tests/events/test_events.py::test_visible_fraction_matches_closed_form_on_flat_horizon: within 0.002 of the closed form for a straight horizon (measured 0.00006)."],
-            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "This fraction is cut by the terrain only. Eclipses of the Sun by the Earth are given as the windows 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth'."],
+            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "This fraction is cut by the terrain only. Eclipses of the Sun by the Earth are in the channel 'lit_fraction' of the Sun and in the windows 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth'."],
+        ),
+        pk.M_LIT: pk.method_card(
+            title="Lit fraction of the Sun's disc",
+            definition="Fraction of the area of the Sun's disc that is above the terrain horizon and not hidden by the Earth, 0 to 1. Outside an eclipse of the Sun by the Earth it equals the visible fraction. Stored for the Sun only.",
+            algorithm=f"At the samples inside an eclipse (between the first and the last contact at the site) the part of the disc hidden by the Earth is subtracted from the visible fraction: in each of the {n_strips} strips, the overlap of the Earth's disc with what the horizon left visible, integrated on 511 finer strips because the Earth's limb is steep where it crosses the Sun. The Earth is an opaque disc of its equatorial radius, without atmosphere. {horizon_note}",
+            frame=local,
+            time_scale="TDB",
+            data=data,
+            parameters={"disc_strips": int(n_strips), "earth_strips": 511},
+            status="analytic-test-passed",
+            evidence=[
+                "core/tests/events/test_eclipse.py: within 0.002 of the closed form for two overlapping discs at Sun elevations from 1 to 85 deg and every position angle of the Earth (measured 0.00007); with terrain and the Earth together within 0.003 of pixel counting; the eclipse contacts from the table agree with exact SPICE geometry within 1 s.",
+                "core/tests/events/test_site_timeline.py::test_lit_fraction_drops_during_the_eclipse_of_march_2025: zero in totality, equal to the visible fraction outside the eclipse.",
+                "validation/eclipse: the contacts of the eclipse of 14 March 2025 at a lander site are within 0.9 min of the operator's predicted times. No measured power curve of a lander was compared.",
+            ],
+            limits=[
+                terrain_limit,
+                "Uniform disc (no limb darkening) and an opaque Earth without atmosphere: the light that the Earth's atmosphere refracts into the shadow is not modelled, and the real edge of the shadow is soft over about a minute.",
+                "This is a fraction of disc area, not electrical power: panel orientation, temperature and the spectrum are not part of it.",
+                "Sampled at the step of the series; the contacts themselves are in the windows 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth'.",
+            ],
         ),
         pk.M_EVENTS: pk.method_card(
             title="Rise and set events",
@@ -375,7 +413,7 @@ def timeline_methods(
             limits=[
                 f"Numerical accuracy 0.25 s for the given inputs; two crossings closer together than {scan_step_s:g} s can be missed.",
                 terrain_limit,
-                "Not yet compared with published event times of real landers.",
+                "No published sunrise or sunset clock time of a real lander was found to compare with; the operational records of two landers bound the computed events from one side only (validation/landers).",
             ],
         ),
         pk.M_WINDOWS: pk.method_card(
@@ -389,6 +427,8 @@ def timeline_methods(
             status="analytic-test-passed",
             evidence=[
                 "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+                "validation/pgda: the long-term share of time with any part of the Sun, and of the Earth, above the terrain horizon agrees with the published LOLA illumination maps at 100 points on terrain of the same 60 m resolution (median absolute difference 0.0006 and 0.0004; permanent shadow agrees at all 98 points compared). This checks long-term shares, not individual window edges.",
+                "validation/lro_images: sunlit or shadowed state against two dated LROC images. The shadowed state of the south pole on 18 May 2022 agrees. Along an image strip of 13 December 2010 the agreement is 89.3 % of 298 points against a registered criterion of 90 %: a failed check, in which every disagreement is ground this method calls sunlit at grazing incidence and the image rule reads as shadow.",
                 "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts).",
             ],
             limits=[terrain_limit, "Eclipses: the Earth's atmosphere is not modelled; the real edge of the shadow is soft over about a minute and totality is dim, not black."],

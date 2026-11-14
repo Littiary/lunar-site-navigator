@@ -18,7 +18,7 @@ TOL_MOON_END_ARCSEC = 1.0  # station seen from the lunar site: fast path against
 TOL_EARTH_END_DEG = 0.012  # lunar site seen from the station: fast path against exact path (light time ignored)
 TOL_EVENT_S = 1.0
 
-pytestmark = pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded")
+pytestmark = pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded (python -m lsncore.ephem.fetch_kernels)")
 
 
 @pytest.fixture(scope="module")

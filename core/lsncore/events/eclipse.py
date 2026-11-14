@@ -113,11 +113,21 @@ def lit_fraction(
         a, e, r = az[touching], el[touching], radius[touching]
         x, half, top, bottom, weights, stretch = _strips(a, e, r, horizon, n_earth_strips)
         visible = np.maximum(top - bottom, 0.0)
-        # Earth's disc in the same flat patch of sky centred on the Sun.
-        dx = ((e_az[touching] - a + 180.0) % 360.0 - 180.0) / stretch
+        # Earth's centre in the plane tangent to the sky at the Sun's centre: x to the right
+        # (increasing azimuth), y up, at its true angular distance and position angle. Taking
+        # the differences of azimuth and elevation instead puts the Earth's limb in the wrong
+        # place by a few hundredths of a degree when the Sun stands high (1 to 2 percent of
+        # the disc at 60 deg elevation); near the horizon both are the same.
+        delta = np.radians(e_az[touching] - a)
+        el_s, el_e = np.radians(e), np.radians(e_el[touching])
+        px = np.cos(el_e) * np.sin(delta)
+        py = np.sin(el_e) * np.cos(el_s) - np.cos(el_e) * np.sin(el_s) * np.cos(delta)
+        norm = np.hypot(px, py)
+        scale = np.where(norm > 0.0, separation[touching] / np.where(norm > 0.0, norm, 1.0), 0.0)
+        dx, dy = px * scale, py * scale
         chord_sq = e_radius[touching][:, None] ** 2 - (x - dx[:, None]) ** 2
         reach = np.sqrt(np.maximum(chord_sq, 0.0))
-        centre = e_el[touching][:, None]
+        centre = e[:, None] + dy[:, None]
         hidden = np.minimum(top, centre + reach) - np.maximum(bottom, centre - reach)
         hidden = np.where(chord_sq > 0.0, np.clip(hidden, 0.0, None), 0.0)
         hidden = np.minimum(hidden, visible)

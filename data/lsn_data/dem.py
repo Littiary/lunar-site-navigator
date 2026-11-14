@@ -117,6 +117,59 @@ class PolarDEM:
         if pyramid_dir is not None:
             self._attach_pyramid(Path(pyramid_dir))
 
+    @classmethod
+    def from_geotiff(cls, path, product_id: str, pyramid_dir=None, product_version=None, data_set_id=None) -> "PolarDEM":
+        """A polar stereographic GeoTIFF in metres (e.g. the PGDA 5 m/pixel LOLA site DEMs) as a polar product.
+
+        Accepted only if its GeoKeys say: polar stereographic (CT 15), origin latitude +-90, scale 1 at the origin
+        (true at the pole), straight vertical pole longitude 0, sphere 1737.4 km. NaN pixels are "no data":
+        ``Terrain`` falls back to the next product there.
+        """
+        from . import geotiff as gt
+
+        path = Path(path)
+        info = gt.read_header(path)
+        k = info.geokeys
+        problems = []
+        if k.get(3075) != 15:
+            problems.append(f"projection {k.get(3075)} is not polar stereographic (15)")
+        if k.get(3081) not in (-90.0, 90.0):
+            problems.append(f"origin latitude {k.get(3081)}")
+        if k.get(3092, 1.0) != 1.0:
+            problems.append(f"scale at origin {k.get(3092)} (not true at the pole)")
+        if k.get(3095, 0.0) != 0.0:
+            problems.append(f"pole longitude {k.get(3095)}")
+        if k.get(2057) != 1737400.0 or k.get(2058, k.get(2057)) != 1737400.0:
+            problems.append(f"body radii {k.get(2057)}, {k.get(2058)}")
+        if info.pixel_scale[0] != info.pixel_scale[1]:
+            problems.append("non-square pixels")
+        if tuple(info.tiepoint[:2]) != (0.0, 0.0):
+            problems.append("tie point is not at pixel (0, 0)")
+        if problems:
+            raise ValueError(f"{path.name}: " + "; ".join(problems))
+        px = info.pixel_scale[0]
+        half = 0.0 if info.raster_type == "PixelIsArea" else 0.5 * px
+        self = cls.__new__(cls)
+        self.label = {"source": "GeoTIFF", "geokeys": {str(a): b for a, b in k.items()}, "raster_type": info.raster_type}
+        self.grid0 = PolarGrid(info.height, info.width, px, info.tiepoint[3] - half, info.tiepoint[4] + half,
+                               float(k[2057]), -1 if k[3081] < 0 else 1)
+        self.product_id = product_id
+        self.product_version = product_version
+        self.data_set_id = data_set_id
+        self.scale = 1.0
+        self.reference_radius_m = float(k[2057])
+        self.label_path = path
+        self.data_path = path
+        self.may_have_nodata = True
+        self._levels = {("mean", 0): gt.open_array(path, info)}
+        self._pyr_meta = None
+        self._pyr_dir = None
+        self._touched = set()
+        self._hash_cache = {}
+        if pyramid_dir is not None:
+            self._attach_pyramid(Path(pyramid_dir))
+        return self
+
     # -- pyramid ---------------------------------------------------------------------------
     def _attach_pyramid(self, d: Path) -> None:
         meta_path = d / "pyramid.json"
@@ -200,7 +253,8 @@ class PolarDEM:
         files = []
 
         def entry(path: Path, role: str, read: bool) -> dict:
-            rec = m.get(f"raw/lola/{self.product_id}/{path.name}")
+            rec = m.get(f"raw/lola/{self.product_id}/{path.name}") or next(
+                (r for key, r in m.items() if key.endswith(f"/{self.product_id}/{path.name}")), None)
             e = {"name": path.name, "role": role, "size_bytes": path.stat().st_size, "read": read}
             if rec and rec["size_bytes"] == e["size_bytes"]:
                 e.update(
@@ -369,26 +423,90 @@ class Terrain:
         lat = np.broadcast_to(lat, shape).ravel()
         want = np.broadcast_to(want_in, shape).ravel()  # 0 means "finest available"
         x, y = lonlat_to_xy(lon, lat, self.products[0].grid0.radius_m, self.pole)
-        out = np.full(lon.shape, np.nan)
-        todo = np.ones(lon.shape, dtype=bool)
-        # Rule: a point is read from the (product, level) pair with the coarsest pixel that is
-        # not larger than the request and that covers the point. If the request is finer than
-        # anything covering the point, the finest covering product is used at level 0.
-        pairs = [(p, k) for p in self.products for k in p.levels if (statistic, k) in p._levels]
-        pairs.sort(key=lambda pk: -pk[0].pixel_m(pk[1]))  # coarsest first
-        for p, k in pairs:
-            sel = todo & (want >= p.pixel_m(k)) & p.grid(k).covers_xy(x, y)
+        out, _, _ = self._read(x, y, want, statistic, method)
+        return out.reshape(shape)
+
+    def _read(self, x, y, want, statistic: str, method: str = "bilinear"):
+        """Heights with the product choice of ``_select``. Where a product that may have no-data pixels (NaN)
+        returns NaN, the point is read again with that product left out. Returns (heights, product index, level)."""
+        out = np.full(x.shape, np.nan)
+        exclude = np.zeros((len(self.products),) + x.shape, dtype=bool)
+        todo = np.ones(x.shape, dtype=bool)
+        prod_all = np.full(x.shape, -1, dtype=np.int64)
+        level_all = np.zeros(x.shape, dtype=np.int64)
+        nodata = np.array([getattr(p, "may_have_nodata", False) for p in self.products] + [False])
+        for _ in range(len(self.products)):
+            idx = np.flatnonzero(todo)
+            if idx.size == 0:
+                break
+            xi, yi = x[idx], y[idx]
+            prod, level, stat = self._select(xi, yi, want[idx], statistic, exclude[:, idx])
+            prod_all[idx], level_all[idx] = prod, level
+            vals = np.full(idx.size, np.nan)
+            for i, p in enumerate(self.products):
+                for k in np.unique(level[prod == i]):
+                    for st in ("mean", "max"):
+                        sel = (prod == i) & (level == k) & (stat == (st == "max"))
+                        if sel.any():
+                            vals[sel] = p.height_xy(xi[sel], yi[sel], int(k), st, method)
+            out[idx] = vals
+            redo = np.isnan(vals) & nodata[prod]
+            todo[:] = False
+            if redo.any():
+                r = idx[redo]
+                exclude[prod[redo], r] = True
+                todo[r] = True
+        return out, prod_all, level_all
+
+    def _select(self, x, y, want, statistic: str, exclude=None):
+        """Per point: index of the product (-1: none), level, and whether the 'max' statistic is read.
+
+        Rule: a point is read from the (product, level) pair with the coarsest pixel that is not larger than the
+        request and that covers the point. If the request is finer than anything covering the point, the finest
+        covering product is used at level 0.
+        """
+        prod = np.full(x.shape, -1, dtype=np.int64)
+        level = np.zeros(x.shape, dtype=np.int64)
+        is_max = np.zeros(x.shape, dtype=bool)
+        todo = np.ones(x.shape, dtype=bool)
+        pairs = [(i, p, k) for i, p in enumerate(self.products) for k in p.levels if (statistic, k) in p._levels]
+        pairs.sort(key=lambda ipk: -ipk[1].pixel_m(ipk[2]))  # coarsest first
+        ok = (lambda i: ~exclude[i]) if exclude is not None else (lambda i: True)
+        for i, p, k in pairs:
+            sel = todo & (want >= p.pixel_m(k)) & p.grid(k).covers_xy(x, y) & ok(i)
             if sel.any():
-                out[sel] = p.height_xy(x[sel], y[sel], k, statistic, method)
+                prod[sel], level[sel], is_max[sel] = i, k, statistic == "max"
                 todo &= ~sel
-        for p in self.products:  # finest first
+        for i, p in enumerate(self.products):  # finest first
             if not todo.any():
                 break
-            sel = todo & p.grid(0).covers_xy(x, y)
+            sel = todo & p.grid(0).covers_xy(x, y) & ok(i)
             if sel.any():
-                out[sel] = p.height_xy(x[sel], y[sel], 0, "mean", method)
+                prod[sel], level[sel], is_max[sel] = i, 0, False
                 todo &= ~sel
-        return out.reshape(shape)
+        return prod, level, is_max
+
+    def source(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean"):
+        """Which product and level ``height_m`` reads for each point: (product ids, levels); '' and -1 where none."""
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        want_in = np.asarray(0.0 if max_pixel_m is None else max_pixel_m, dtype=np.float64)
+        shape = np.broadcast(lon, lat, want_in).shape
+        x, y = lonlat_to_xy(np.broadcast_to(lon, shape).ravel(), np.broadcast_to(lat, shape).ravel(), self.products[0].grid0.radius_m, self.pole)
+        want = np.broadcast_to(want_in, shape).ravel()
+        if any(getattr(p, "may_have_nodata", False) for p in self.products):
+            _, prod, level = self._read(x, y, want, statistic)
+        else:
+            prod, level, _ = self._select(x, y, want, statistic)
+        ids = np.array([""] + [p.product_id for p in self.products], dtype=object)[prod + 1]
+        return ids.reshape(shape), np.where(prod >= 0, level, -1).reshape(shape)
+
+    def covers(self, lon_deg, lat_deg):
+        x, y = lonlat_to_xy(lon_deg, lat_deg, self.products[0].grid0.radius_m, self.pole)
+        out = np.zeros(np.shape(x), dtype=bool)
+        for p in self.products:
+            out |= p.grid(0).covers_xy(x, y)
+        return out
 
     def radius_m(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean", method: str = "bilinear") -> np.ndarray:
         return self.height_m(lon_deg, lat_deg, max_pixel_m, statistic, method) + self.reference_radius_m

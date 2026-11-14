@@ -9,17 +9,18 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Item | Value |
 |---|---|
 | Command | `python -m validation.sites.run data/sites/sites.json --publish` |
-| Code | commit `d1af9e6` (clean working tree, as recorded in the provenance of every package) |
-| Generated | 2026-11-14T12:11:39Z |
-| Scenario | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z, series step 3600 s |
-| Contract | `lsn-package` version 0.1 |
+| Code | commit `c9b2aab` (clean working tree, as recorded in the provenance of every package) |
+| Generated | 2026-11-14T14:16:13Z |
+| Scenario | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z, series step 3600 s |
+| Stated inputs of the scenario | requirements `example-standard`, `example-strict`, `example-loose` (the examples of `docs/contract/presets/requirements.json`; not requirements of NASA or of any mission); horizon error 0.05 deg; terrain height error 1 m; landing circle of 100 m radius, 13 points; planned landing 2027-01-10T00:00:00.000Z at every site. All chosen by the team to show what follows from them |
+| Contract | `lsn-package` version 0.6 |
 | Terrain | `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0` |
-| Terrain layer | LDEM_80S_20M V2.0, 20 m; checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json` |
-| Terrain layer | LDEM_60S_60M V2.0, 60 m; checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json` |
+| Terrain layer | LDEM_80S_20M V2.0, 20 m; data file sha256 `db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG |
+| Terrain layer | LDEM_60S_60M V2.0, 60 m; data file sha256 `e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG |
 | Kernel set | `bfe870fccfa5`: naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf |
 | Station kernel group | `bacdf4d6169a`: earth_1962_260806_2126_combined.bpc, earth_000101_270208_261113.bpc, earthstns_itrf93_260814.bsp, earth_topo_260814.tf |
 | Body-fixed frame | `MOON_ME_DE440_ME421`, aberration correction `LT+S` |
-| Size | 9.7 MB in 51 files (without this file) |
+| Size | 26.2 MB in 70 files (without this file) |
 
 Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain files are described in `data/manifest/manifest.json`.
 
@@ -29,24 +30,36 @@ Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain f
 
 | Kind | Package | Site | Status | Path |
 |---|---|---|---|---|
-| direction table | `dirtab-250a3fe71759fa79` | all sites | ok | `direction_table/dirtab-250a3fe71759fa79` |
-| site | `site-3d084d7f181d1b64` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-3d084d7f181d1b64` |
-| site | `site-08105a0f3060aee8` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-08105a0f3060aee8` |
-| site | `site-b425911bcc8e34f8` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-b425911bcc8e34f8` |
+| direction table | `dirtab-296ce1d712205623` | all sites | ok | `direction_table/dirtab-296ce1d712205623` |
+| site | `site-a4f5f765a5d43bbf` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-a4f5f765a5d43bbf` |
+| site | `site-6ded733f4be837e5` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-6ded733f4be837e5` |
+| site | `site-1275539289e03655` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-1275539289e03655` |
+| site pairs | `pairs-e039b2b260dd7d83` | every two of the 3 sites | ok | `site_pairs/pairs-e039b2b260dd7d83` |
 
-Every site package holds the 360 degree terrain horizon for six observer heights and, for the time window, the direction series of the Sun and the Earth, rise and set events, visibility windows (including eclipses of the Sun by the Earth and per-station direct-to-Earth windows) and metrics, each with its method card.
+Every site package holds, each with its method card:
+
+- the 360 degree terrain horizon for six observer heights, with the position and height of the limiting terrain at every azimuth and the list of obstacles (`horizon.obstacles`);
+- for the time window, the direction series of the Sun and the Earth, the visible fraction of each disc, the lit fraction of the Sun (terrain and eclipses by the Earth together) and, for every sample, the horizon sample that limits the view (`blocker_azimuth_index`);
+- rise and set events with their range for the stated horizon error, visibility windows (including eclipses of the Sun by the Earth and per-station direct-to-Earth windows) and metrics;
+- the obstacles that cost visible time compared with a smooth sphere (`timeline.blockers`);
+- the lunar-day calendar (`timeline.calendar`) and, for each example requirement and observer height, the landing windows and the slip report of the planned landing (`timeline.opportunities`);
+- the uncertainty band for the stated horizon error and the survey of the stated landing circle (`timeline.uncertainty`, `series.<BODY>.ellipse_visible_share`);
+- the mast-height trade (`timeline.height_trade`).
+
+The site-pairs package compares every two sites at their default observer height: when at least one of them sees the Sun or the Earth, and the joint outages.
 
 ## What these numbers are
 
 - The sites are project candidate points derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.
-- **Unverified against an independent illumination product or mission record.** The ephemeris, the eclipse contacts and the ground-station geometry are validated (`validation/card/validation_card.md`); the terrain horizon has passed the core stream's own tests. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
-- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid limits its accuracy; the event carries `obstacle_distance_m`.
+- The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution, and the ephemeris, the eclipse contacts and the ground-station geometry are validated against independent sources (`validation/card/validation_card.md`). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. **The numbers of these sites themselves have no independent counterpart**: they use the finer 20 m terrain, a 24-month window and several observer heights, and no source gives rise and set times for these points. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
+- **The requirements, the horizon error, the terrain height error, the landing circle and the planned landing time are inputs chosen by the team**, not requirements of NASA or of any mission and not measured errors. A viewer must show the label of a requirement next to every number derived from it, and must present the uncertainty band and the landing-circle survey as what follows from stated assumptions.
+- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid limits its accuracy; the event carries `obstacle_distance_m`, and an obstacle within 1 km carries `near_field`.
 - A summary per site and observer height is in `validation/sites/results/site_summary.md`.
 
 ## Checking and regenerating
 
 ```
-python -m lsncore validate packages/index.json packages/direction_table/* packages/site/*/*
+python -m lsncore validate packages/index.json packages/direction_table/* packages/site/*/* packages/site_pairs/*
 python -m validation.sites.run data/sites/sites.json --publish
 ```
 

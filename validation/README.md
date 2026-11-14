@@ -2,32 +2,97 @@
 
 Independent checks of the science core. Each check has a threshold file that is written and committed before the comparison is run and is not edited afterwards.
 
+Setup from a fresh clone, where the downloaded inputs go (never into the repository) and what the tests do without them: [`docs/setup.md`](../docs/setup.md). All commands below are run from the repository root with the environment that `python scripts/bootstrap.py` creates.
+
 ## `card/` — the validation card
 
-`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code; `tests/test_card.py` fails if the committed card and a fresh build disagree.
+`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree.
+
+The card has 32 checks; 31 pass and one fails: the comparison with an LROC image strip (`lro_images/`, below). The failed check stays on the card as `FAIL` with its cause; a viewer that shows the card must show it too.
 
 ## `sites/` — end-to-end results for the south-polar site records, and the published packages
 
-`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, eclipses, ground-station windows, countdowns) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
+`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline of contract 0.6 over 24 months (LOLA terrain horizon with its obstacles, direction table, events, windows, eclipses and the lit fraction of the Sun, ground-station windows, countdowns, what each obstacle costs, the lunar-day calendar, landing windows for the three example requirements, the uncertainty band and the landing-circle survey for stated assumptions, the mast-height trade and the site pairs) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
 
-The published packages are regenerated, never edited by hand, and are republished in the same commit as any change that alters results. These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
+The published packages are regenerated, never edited by hand, and are republished whenever a change alters results (the code change is committed first, the regenerated packages in the commit that follows, so that their provenance names a clean commit). The method behind them reproduces the published LOLA illumination maps on terrain of the same resolution (`pgda/`), but the numbers of these three sites themselves have no independent counterpart; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
+
+## `pgda/` — terrain-dependent results versus the published LOLA illumination maps
+
+**What is compared.** The share of time, over one 18.6-year nodal cycle at hourly steps, during which any part of the Sun's disc, and any part of the Earth's disc, is above the terrain horizon. The reference is an independent computation by the LOLA Science Team at NASA Goddard (Mazarico et al. 2011), published as 60 m maps of the south pole through the Planetary Geodesy Data Archive: `AVGVISIB_85S_060M_201608`, `..._EARTH` and the permanent-shadow map `LPSR_85S_060M_201608`. Their labels define the values exactly as that share. This checks the whole terrain chain at once: reading the elevation model, the horizon, the ephemeris and the disc test.
+
+**Points.** 100 pixel centres of the published grid, chosen from the elevation model alone by a seeded rule before any map value was read (`points.json`): 33 ridges and rims, 33 floors, 31 plains and slopes, and the three site records. Thresholds in `thresholds.json` (commit d044186).
+
+**Result** (`pgda/results/validation_table.md`), run A, the like-for-like run on the 60 m LOLA product, observer on the surface:
+
+| Quantity | Threshold | Sun | Earth |
+|---|---|---|---|
+| Correlation over the 100 points | at least 0.90 | 0.9973 | 0.9993 |
+| Median absolute difference | at most 0.05 | 0.0006 | 0.0004 |
+| Median signed difference | within 0.02 | +0.0000 | +0.0000 |
+| 10th to 90th percentile of the difference | reported | -0.004 to +0.007 | -0.002 to +0.001 |
+| Largest absolute difference | reported | 0.079 | 0.044 |
+| Points beyond 0.05 / 0.10 / 0.20 | reported | 2 / 0 / 0 | 0 / 0 / 0 |
+
+Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %; all 14 points published as permanently shadowed are never lit in our period, and no other point is.
+
+**How comparable the two are.**
+
+| Aspect | Published maps | Our run A | Effect |
+|---|---|---|---|
+| Quantity | share of timesteps lit "by any fraction" of the disc | the same (upper limb above the horizon) | none |
+| Light source | finite disc | finite disc | none |
+| Time step | hourly | hourly | none |
+| Period | one nodal cycle of about 18.6 years; dates not stated | 2020-01-01 plus 6798.38 days | a second cycle starting 2000-01-01 changes the share by at most 0.001 (Sun) and 0.005 (Earth) at the 10 points tried |
+| Observer height | not stated | 0 m | at 2 m our Sun shares are higher by +0.013 on average, at 0 m by +0.002: the maps behave like a surface-level product |
+| Elevation model | LDEM_85S_060M of 2016, 60 m | LDEM_60S_60M V2.0, 60 m | not separable from the method; part of the 0.08 largest difference |
+| Location | value of a 60 m pixel | horizon computed at the pixel centre | none at this resolution |
+
+**Where the differences are.** Six of the 100 points differ by more than 0.02 in the Sun share (largest 0.079). Their cause was not traced: terrain closer than 1 km sets a somewhat larger part of their horizon (median 50 % of the azimuths against 34 % for the other points), which fits a difference between the two 60 m elevation models, but the model of 2016 that the reference used is not available to test this.
+
+**Resolution effect (run B, reported, not judged).** With the terrain the tool actually uses (20 m near the pole) the median difference stays at -0.000 (Sun) and +0.000 (Earth), but the mean drops to -0.012 and -0.011, 4 Sun points and 3 Earth points differ by more than 0.10, and the largest differences are 0.18 and 0.32. At the three site records, which sit on crests, the 20 m terrain gives a Sun share lower by 0.075 in the median. Finer terrain resolves small obstacles that a 60 m grid smooths away, so crests come out less lit; this is a property of the data, not a disagreement between the methods.
+
+**Limits.**
+
+* The like-for-like run shows that the method reproduces an independent computation on terrain of the same resolution. It does not show that 60 m, or 20 m, terrain is the truth: both sides rest on LOLA elevation data.
+* 100 points; with that number a correlation is known to about ±0.04, and the many points in permanent shadow raise it. It is therefore also given per stratum in the table of results.
+* The published maps are long-term shares. They do not test individual rise and set times.
+* The period, observer height, disc sampling and horizon settings of the reference are not stated by its sources.
+
+## `lro_images/` — sunlit or shadowed state against dated LROC images
+
+**What is compared.** Whether a point is sunlit or in shadow at the moment a Lunar Reconnaissance Orbiter Camera image was taken: the state the terrain horizon gives (sunlit if at least half of the Sun's disc is above the horizon at the surface) against the image. Two cases, with the reading rule and the criteria committed before any computation and before the image was downloaded (`lro_images/cases.json`, commit fb05da0). `python -m validation.lro_images.fetch` downloads the image to the data root, outside the repository; `files.json` records its URL, checksum and retrieval time, and a download that differs from that record is refused.
+
+**Result** (`lro_images/results/validation_table.md`): 3 of 4 registered checks pass, 1 fail, 0 not decided.
+
+* **South pole, 18 May 2022, 14:40:49 UTC (NAC M1407524099).** The camera team marks the pole, just inside the rim of Shackleton crater, as "now in shadows". Our state: shadow (visible fraction of the Sun 0.000; upper limb -8.794°, centre -9.057° against a horizon set by terrain 0.12 km away): **PASS**.
+* **Nadir strip across the pole, 13 December 2010, 02:34:25 UTC (NAC M146846913L).** State read from the calibrated browse image by a fixed rule (averaged to 20 m, Otsu threshold, every pixel within 300 m must agree) at points every 500 m along three rows: 298 of 366 points could be read (68 lie within 300 m of a shadow edge or outside the image); our state agrees with the image at 266 of them (89.3 %; criterion 90 %): **FAIL**. Image sunlit and ours sunlit 6, image shadow and ours shadow 260, image sunlit but ours shadow 0, image shadow but ours sunlit 32.
+  Cause, looked for after the result: all 32 disagreements are points the image rule reads as shadow and we call sunlit. There the image is dim, not black (brightness 6 to 37 of 255, median 23, against 3 in agreed shadow), and our Sun is only +0.02° to +0.46° above the terrain horizon: ground lit at a grazing angle. One brightness threshold for the whole image (69.5) cannot tell that from shadow. Threshold-free, a point we call sunlit is brighter in the image than a point we call shadow with probability 0.996. That number was computed after the fact and does not turn the failed check into a pass.
+* **Sub-solar point at both image times** against the values printed on the LROC data pages (0.01° printed): largest difference 0.004° (criterion 0.02°).
+
+**Limits.**
+
+* The first case rests on the camera team's own reading of its image. The pole lies just inside the crater rim and the terrain that hides the Sun is only 0.12 km away, so the result depends on where the pole falls on the 20 m elevation grid to about that distance.
+* The second case reads a lossy browse product, georeferenced from four corners that the data page prints to 0.01° (300 m in latitude), without a camera model. It can test broad sunlit and shadowed areas, not where a shadow edge lies; that is why points near an edge are not judged.
+* Two images, both near Shackleton crater, both with the Sun within half a degree of the horizon.
 
 ## `landers/` — published records of real lunar landers
 
-**What is compared.** Four missions, each with the published time and place of a real event and what the source says about the Sun or the Earth at that moment. Every published value is in `landers/cases.json` as printed, with its source URL, retrieval time, page checksum, printed precision and whether the source calls it approximate. `cases.json` and `thresholds.json` were committed before the core was run on these cases (commit eaf5634). The test is **not blind**: research before the hackathon had compared some of these values with Horizons, so the thresholds follow fixed rules derived from each source's printed precision and wording.
+**What is compared.** Eight cases from eight missions (six Apollo landings, Blue Ghost Mission 1, Chandrayaan-3), each with the published time and place of a real event and what the source says about the Sun or the Earth at that moment. Every published value is in `landers/cases.json` and `landers/cases_second_batch.json` as printed, with its source URL, retrieval time, page checksum, printed precision and whether the source calls it approximate. `cases.json` and `thresholds.json` were committed before the core was run on these cases (commit eaf5634); the second batch of four Apollo landings was committed before it was computed (commit af10faa) and is judged by the same, unchanged rules. The test is **not blind**: research before the hackathon had compared some of these values with Horizons, so the thresholds follow fixed rules derived from each source's printed precision and wording.
 
-**Result** (`landers/results/validation_table.md`): 20 of 20 pass/fail checks pass; 5 further comparisons are reported without a verdict.
+**Result** (`landers/results/validation_table.md`): 52 of 52 pass/fail checks pass; 13 further comparisons are reported without a verdict.
 
 | Case | What the source published | Result |
 |---|---|---|
 | Apollo 11 landing, 20 July 1969 20:17:39 UT | Sun and Earth altitude, azimuth and sub-points (Apollo Lunar Surface Journal, computed from the Nautical Almanac, printed to 0.01°) | 8 angles agree within 0.035° (threshold 0.05°) |
 | Apollo 16 landing, 21 April 1972 02:23:35 UT | The same eight angles; and the Sun angle the launch window was targeted for (NASA SP-4029: 11.9°) | 8 angles within 0.015°. At the planned landing time the core gives 11.88° (threshold 0.1°); the landing slipped by 5 h 45 min and the Sun was then at 14.76°: a change of 2.88°, while the NASA table still lists 11.9° |
+| Apollo 12, 14, 15 and 17 landings (19 November 1969 06:54:36, 5 February 1971 09:18:13, 30 July 1971 22:16:29, 11 December 1972 19:54:58 UT; times from NASA SP-4029, printed to 1 s) | The same eight angles for each landing (Apollo Lunar Surface Journal, printed to 0.01°) | All 32 angles within the 0.05° threshold; largest differences 0.012°, 0.047°, 0.010° and 0.041° (the largest is the latitude of the sub-Earth point at the Apollo 14 landing) |
 | Blue Ghost Mission 1, end of the lunar day, 16 March 2025 | "lunar sunset on March 16"; 346 hours of daylight operations after the landing at 08:34 UTC on 2 March | Computed last light (smooth local sphere) 16 March 20:54:55 UTC: on the published day, and after the end of recorded daylight (18:34 UTC), as it must be. The 2.3 h between them is not explained: local terrain is not in the project's data for this site |
 | Chandrayaan-3, lunar night, September 2023 | In sleep mode on 4 September; awakening awaited "around September 22" (ISRO) | With the LOLA terrain horizon: last light 4 September 07:14:41 UTC, first light 20 September 00:05:04 UTC, 66 h before the end of the expected wake-up day, as it must be. ISRO published no sunrise time; its wake-up date is 1.8 days after the computed sunrise |
 
 **Limits.**
 
 * The Apollo angles are another computation (a 1960s almanac), not a measurement; what the missions contribute is the real time and place. The comparison uses the source's own site coordinates and its definition without parallax; with parallax the Earth stands 0.21° lower at the Apollo 11 site, which is reported, not judged.
+* Six of the eight cases are Apollo landings checked against one source computed with one almanac; they test Sun and Earth directions at a known time and place, not event times and not terrain.
 * No operator published a sunrise or sunset clock time for its site. Operational records only bound the computed events from one side: they can show the core wrong, they cannot confirm an event time.
 * Only the Chandrayaan-3 case uses terrain (60 m grid). Its sunrise is set by terrain 0.5 km from the lander, where the grid limits the accuracy.
 * The reference frame of the LROC coordinates is not stated on the two LROC pages (unverified; assumed mean-Earth/polar-axis).
@@ -54,7 +119,7 @@ Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie 
 * The operator's times are predictions; its images of the eclipse are timed to about half an hour, which is too coarse to test contacts. No measured power curve was found.
 * The operator labels its predicted times "CST". They are read as local Texas time on that date (UTC−5); read as UTC−6 the eclipse would end after the Moon has left the Earth's penumbra, which the NASA chart excludes.
 * One eclipse, one site.
-* The package does not yet carry the power line as a time series (a contract field is needed); it carries the eclipse windows and metrics.
+* The package carries the power line as the series `lit_fraction` of the Sun, sampled at the step of the series (one hour in the published packages), next to the eclipse windows and metrics. Between the Sun and the Earth the lit fraction is computed in the plane tangent to the sky at the Sun; an earlier version took differences of azimuth and elevation instead, which was wrong by up to 0.011 of the disc with the Sun 60° high and by less than 0.001 at the polar sites.
 
 ## `stations/` — ground-station geometry versus JPL Horizons
 

@@ -1,0 +1,44 @@
+{
+ "note": "Independent checks of the polar products and of lsn_data's mapping. Written and committed BEFORE any of these comparisons was run; not to be edited afterwards.",
+ "written_utc": "2026-11-14T12:50Z",
+ "displacement_model": {
+  "what": "For each comparison point i, d_i = h_reference_i - h_ours_i (metres). Model d_i = c + g_i . (T + delta (z x r_i) + eps r_i): g_i the gradient of our DEM at the point in the polar stereographic plane (central differences of +-1 pixel of the product being tested), r_i the point's plane position relative to the pole, c a common height offset, T = (Tx, Ty) a common translation of our reading relative to the reference, delta a rotation about the pole, eps a radial scale.",
+  "fit": "ordinary least squares over points with |d_i| <= 50 m and |g_i| between 0.02 and 0.5; standard errors by bootstrap over blocks of 10 km x 10 km in the plane (500 resamples), because neighbouring points are not independent",
+  "mirror_test": "the same comparison with our longitudes mirrored (lon -> -lon) must have a root-mean-square of d at least 3 times larger than the correct mapping; it shows the east-west orientation with data"
+ },
+ "A_cylindrical_LDEM_128": {
+  "reference": "LDEM_128 (LOLA, 128 pixel/degree, simple cylindrical, its own label's grid), each cell compared with the mean of our product sampled on a sub-grid of about 10 m spacing covering the same latitude/longitude cell",
+  "points": "20 000 cells drawn at random (seed 20261114) with probability proportional to cell area: 80.5 S to 89.5 S for LDEM_80S_20M; 60.5 S to 79.5 S for LDEM_60S_60M",
+  "pass_if": {
+   "abs_mean_d_m": 3.0,
+   "median_abs_d_m": 10.0,
+   "p95_abs_d_m": 60.0,
+   "abs_translation_component_m": 24.0,
+   "abs_rotation_deg": 0.01,
+   "abs_radial_scale": 1.0e-4,
+   "radial_scale_se_at_most": 3.0e-5,
+   "mirror_rms_ratio_at_least": 3.0
+  },
+  "why": "24 m is a tenth of an LDEM_128 cell in latitude; 1e-4 is 15 m at 150 km and separates the reader from the catalogue's -3.6e-4; a 0.01 deg rotation is 26 m at 150 km"
+ },
+ "A2_cylindrical_LDEM_16": {
+  "reference": "LDEM_16 (16 pixel/degree), same procedure",
+  "pass_if": null,
+  "note": "reported only; a 1.9 km cell is too coarse for a criterion at the levels above"
+ },
+ "B_lola_rdr_shots": {
+  "reference": "individual LOLA laser returns from 13 RDR files of mission phase LRO_SM_06 (Feb-Mar 2011, GRGM900C orbits as stated in each label), spread over the phase so that all longitudes are crossed; spots with SHOT_FLAG = 0; height = RADIUS - 1 737 400 m; compared with our bilinear height at the shot's latitude and longitude",
+  "regions": "80.5 S to 89.8 S for LDEM_80S_20M; 60.5 S to 79.5 S for LDEM_60S_60M",
+  "pass_if": {
+   "abs_mean_d_m": 1.0,
+   "median_abs_d_m": 3.0,
+   "abs_translation_component_m": 10.0,
+   "abs_rotation_deg": 0.005,
+   "abs_radial_scale": 5.0e-5,
+   "radial_scale_se_at_most": 2.0e-5,
+   "mirror_rms_ratio_at_least": 3.0
+  },
+  "why": "the gridded products were made from these returns, so heights agree to the gridding error (metres) and any error of our mapping shows directly as a displacement; 5e-5 is 7.5 m at 150 km",
+  "independence": "the shots' positions come from LOLA's geolocation, not from any projection; our projection code is the only mapping involved, so this tests lsn_data's mapping and the products' gridding together, without images or a hand-made catalogue"
+ }
+}

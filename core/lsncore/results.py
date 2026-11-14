@@ -36,6 +36,9 @@ class HorizonResult:
     warnings: list[str] = field(default_factory=list)
     # how much of each ray was walked on the finest data and how much was proven irrelevant
     search_stats: dict = field(default_factory=dict)
+    # grouping of the profile into obstacles (lsncore.obstacles): [H, A] ids and the records
+    obstacle_id: np.ndarray | None = None
+    obstacles: list | None = None
 
 
 @dataclass
@@ -47,6 +50,13 @@ class BodySeries:
     margin_deg: np.ndarray  # [H, N]
     visible_fraction: np.ndarray  # [H, N]
     angular_radius_deg: np.ndarray | None = None  # [N]
+    # [H, N] fraction of the disc that is above the terrain horizon and not hidden by another
+    # body (for the Sun: not eclipsed by the Earth); None = not computed
+    lit_fraction: np.ndarray | None = None
+    # [N] share of the sample points of the landing ellipse at which the body is visible
+    ellipse_visible_share: np.ndarray | None = None
+    # [H, N] index of the horizon sample that limits the view of the disc (lsncore.blocking)
+    blocker_azimuth_index: np.ndarray | None = None
 
 
 @dataclass
@@ -66,3 +76,23 @@ class TimelineResult:
     windows: list[dict]
     metrics: list[dict]
     thresholds: dict[str, dict] = field(default_factory=dict)
+    # obstacles that cost visible time compared with a smooth sphere; None = not computed
+    blockers: list | None = None
+    # what was assumed for the uncertainty band and the landing ellipse; None = not computed
+    uncertainty: dict | None = None
+    # visible time and longest outage per observer height (lsncore.trade); None = not computed
+    height_trade: dict | None = None
+    # visible time per lunar day (lsncore.calendar); None = not computed
+    calendar: dict | None = None
+    # landing windows and slip tolerance per stated requirement; None = no requirement stated
+    opportunities: list | None = None
+
+    def window(self, window_id: str, height_index: int):
+        """The window with this id and observer height as an IntervalSet over the series range."""
+        from .timeline import IntervalSet, TimeGrid
+
+        grid = TimeGrid.from_contract(self.time)
+        for record in self.windows:
+            if record["id"] == window_id and record["height_index"] == height_index:
+                return IntervalSet(record["intervals_et_s"], (grid.start_et_s, grid.end_et_s))
+        raise KeyError(f"no window {window_id!r} for height index {height_index}")

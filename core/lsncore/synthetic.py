@@ -16,7 +16,13 @@ from pathlib import Path
 import numpy as np
 
 from . import packaging as pk
+from .blocking import add_blocking_to_timeline
+from .calendar import add_calendar_to_timeline
+from .uncertainty import Band, add_uncertainty_to_timeline, ellipse_points, horizon_error_profile
 from .contract import format_utc, read_package, write_index
+from .obstacles import segment_obstacles
+from .pairs import build_pairs_package
+from .trade import add_height_trade_to_timeline
 from .geometry import DEG, destination, site_frame, topocentric_az_el
 from .results import BodySeries, HorizonResult, TimelineResult
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
@@ -94,6 +100,16 @@ def synthetic_methods() -> dict:
         pk.M_EVENTS: _card("rise and set events", "Times at which a body crosses its visibility threshold.", local, "TDB"),
         pk.M_WINDOWS: _card("visibility windows", "Intervals during which the stated condition holds.", local, "TDB"),
         pk.M_METRICS: _card("window statistics", "Summary numbers derived from the visibility windows.", local, "TDB"),
+        pk.M_LIT: _card("lit disc fraction", "Fraction of the disc above the terrain horizon and not hidden by another body.", local, "TDB"),
+        pk.M_HORIZON_ERROR: _card("band for a stated horizon error", "Windows that hold with the horizon higher or lower by the stated angle.", local, "TDB"),
+        pk.M_ELLIPSE: _card("survey of the landing ellipse", "Windows at sample points of the stated landing ellipse.", local, "TDB"),
+        pk.M_HEIGHT_TRADE: _card("mast-height trade", "Visible time and longest outage per observer height.", local, "TDB"),
+        pk.M_PAIRS: _card("site pairs", "What two sites achieve together: time with the body visible at one of them at least.", local, "TDB"),
+        pk.M_CALENDAR: _card("lunar-day calendar", "Visible time per lunar day.", local, "TDB"),
+        pk.M_OPPORTUNITY: _card("landing windows", "Landing times for which a stated requirement holds, and how far a planned landing can slip.", local, "TDB"),
+        pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
+        pk.M_SMOOTH_SPHERE: _card("visibility over a smooth sphere", "The visibility condition evaluated without terrain.", local, "TDB"),
+        pk.M_BLOCKING: _card("time lost to terrain", "Time in which a smooth sphere would show the body and the terrain hides it, and the obstacle that hides it.", local, "TDB"),
         pk.M_DIRTAB_POSITIONS: _card("body positions", "Position of each body relative to the centre of the Moon.", SYNTHETIC_FRAME, "TDB"),
         pk.M_DIRTAB_RADII: _card("body radii", "Radius used for the disc of each body.", "none", "none"),
         pk.M_DIRTAB_INTERP: _card("table interpolation error", "Largest error of the recommended interpolation between table records.", SYNTHETIC_FRAME, "TDB"),
@@ -101,18 +117,23 @@ def synthetic_methods() -> dict:
 
 
 def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_m: float) -> HorizonResult:
-    """An invented horizon: two triangle waves, obstacles between 2 km and 82 km away."""
+    """An invented horizon: two triangle waves; the limiting terrain is 5 to 45 km away,
+    except for an invented far ridge (azimuth 40 to 70) and an invented near rock field
+    (azimuth 200 to 215), so that the profile falls into several obstacles."""
     site = canonical_site(site)
     heights = np.asarray(canonical_heights(heights_m), dtype=np.float64)
     n_az = int(round(360.0 / azimuth_step_deg))
     az = np.arange(n_az) * azimuth_step_deg
     base_deg = 3.0 * _tri(az / 360.0) + 1.5 * _tri(az / 45.0) - 1.0
-    dist_m = np.minimum(2000.0 + 80000.0 * _tri(az / 120.0 + 0.25), max_range_m)
+    dist_m = 5000.0 + 40000.0 * _tri(az / 120.0 + 0.25)
+    dist_m = np.where((az >= 40.0) & (az < 70.0), 150000.0, dist_m)
+    dist_m = np.where((az >= 200.0) & (az < 215.0), 300.0 + 2.0 * (az - 200.0), dist_m)
+    dist_m = np.minimum(dist_m, max_range_m)
     elevation = base_deg[None, :] - (heights[:, None] / dist_m[None, :]) / DEG
     obstacle_height = _SURFACE_HEIGHT_M + dist_m * base_deg * DEG + dist_m**2 / (2.0 * _RADIUS_M)
     lat, lon = destination(site["lat_deg"], site["lon_deg"], az, dist_m / _RADIUS_M)
     tile = lambda a: np.broadcast_to(a, (heights.size, n_az)).copy()  # noqa: E731
-    return HorizonResult(
+    result = HorizonResult(
         azimuth_step_deg=azimuth_step_deg,
         observer_heights_m=[float(h) for h in heights],
         max_range_m=max_range_m,
@@ -124,6 +145,9 @@ def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_
         obstacle_lat_deg=tile(lat),
         obstacle_lon_deg=tile(lon),
     )
+    grouping = segment_obstacles(result)
+    result.obstacle_id, result.obstacles = grouping.obstacle_id, grouping.obstacles
+    return result
 
 
 def synthetic_positions_km(et_s: np.ndarray) -> np.ndarray:
@@ -189,6 +213,8 @@ def synthetic_timeline(
     window: dict,
     bodies: list[str],
     thresholds: dict[str, dict],
+    uncertainty: dict | None = None,
+    default_height_index: int = 0,
 ) -> TimelineResult:
     """Series, events, windows and metrics from the synthetic table and horizon."""
     clock = SyntheticClock()
@@ -217,6 +243,21 @@ def synthetic_timeline(
     windows: list[dict] = []
     metrics: list[dict] = []
     visible: dict[tuple[str, int], IntervalSet] = {}
+    visible_smooth: dict[tuple[str, int], IntervalSet] = {}
+    uncertainty = uncertainty or {}
+    has_band = bool(uncertainty.get("horizon_error_deg") or uncertainty.get("dem_height_error_m"))
+    error_profile = [
+        horizon_error_profile(horizon.distance_m[h], uncertainty.get("horizon_error_deg"), uncertainty.get("dem_height_error_m"))
+        for h in range(len(heights))
+    ]
+    bands: dict[tuple[str, int], Band] = {}
+    spec = uncertainty.get("landing_ellipse")
+    ellipse = None
+    if spec:
+        points = ellipse_points(site["lat_deg"], site["lon_deg"], spec["semi_major_m"], spec["semi_minor_m"], spec["azimuth_deg"], spec["points"], horizon.reference_radius_m)
+        ellipse = {"spec": spec, "height_index": default_height_index, "points": points, "surface_height_m": [horizon.surface_height_m] * len(points), "sets": {}}
+    r_site = horizon.reference_radius_m + horizon.surface_height_m
+    dip = np.degrees(np.arccos(r_site / (r_site + np.asarray(heights, dtype=np.float64))))  # [H]
 
     for body in bodies:
         b = table.manifest["bodies"].index(body)
@@ -228,6 +269,8 @@ def synthetic_timeline(
         )
         fraction = _disc_fraction(margin, ang_radius[None, :])
         series[body] = BodySeries(az, el, margin, fraction, ang_radius)
+        if body == "SUN":
+            series[body].lit_fraction = fraction.copy()  # no eclipse is invented for the sample
 
         threshold = thresholds[body]
         if threshold["quantity"] == "visible_fraction":
@@ -241,6 +284,13 @@ def synthetic_timeline(
         for h in range(len(heights)):
             iv = IntervalSet.from_samples(grid, signal[h], level)
             visible[(body, h)] = iv
+            # the same condition over a smooth sphere: the horizon is flat, dip[h] below horizontal
+            visible_smooth[(body, h)] = IntervalSet.from_samples(grid, signal[h] - margin[h] + el + dip[h], level)
+            if has_band:
+                error = np.interp(az, az_grid, error_profile[h], period=360.0)  # at the azimuth of the body
+                certain = IntervalSet.from_samples(grid, signal[h] - error, level).intersection(iv)
+                possible = IntervalSet.from_samples(grid, signal[h] + error, level).union(iv)
+                bands[(body, h)] = Band(iv, certain, possible, possible.intersection(certain.complement()), float(error_profile[h].max()))
             windows.append(_window(f"{body.lower()}_visible", body, h, f"{body} visible: {threshold['quantity']} {threshold['op']} {threshold['value']}", iv, clock, threshold))
             for a, e in iv.intervals:
                 for kind, when in (("rise", a), ("set", e)):
@@ -265,13 +315,25 @@ def synthetic_timeline(
             metrics.append(_metric(f"{tag}_longest_visible_s", f"Longest continuous {body} visibility", iv.longest_s(), "s", h))
             metrics.append(_metric(f"{tag}_longest_outage_s", f"Longest continuous interval without {body}", iv.complement().longest_s(), "s", h))
 
+        if ellipse is not None:
+            # the same body seen from every sample point: each point has its own local frame
+            hd = default_height_index
+            offset = _fraction_to_x(threshold["value"]) * ang_radius if threshold["quantity"] == "visible_fraction" else 0.0
+            sets = []
+            for plat, plon in ellipse["points"]:
+                pframe = site_frame(float(plat), float(plon))
+                paz, pel, _ = topocentric_az_el(pos, pframe[2] * radius_km, pframe)
+                psignal = pel - np.interp(paz, az_grid, horizon.elevation_deg[hd], period=360.0) - offset
+                sets.append(IntervalSet.from_samples(grid, psignal, level))
+            ellipse["sets"][body] = sets
+
     if set(bodies) >= {"SUN", "EARTH"}:
         for h in range(len(heights)):
             both = visible[("SUN", h)].intersection(visible[("EARTH", h)])
             windows.append(_window("sun_and_earth_visible", "COMBINED", h, "SUN visible and EARTH visible at the same time", both, clock, None))
 
     events.sort(key=lambda ev: (ev["et_s"], ev["body"], ev["height_index"]))
-    return TimelineResult(
+    result = TimelineResult(
         direction_table_id=table.package_id,
         direction_table_sha256=table.manifest["content_sha256"],
         time=grid.to_contract(clock.et_to_utc(t[0]), clock.et_to_utc(t[-1])),
@@ -282,6 +344,14 @@ def synthetic_timeline(
         metrics=metrics,
         thresholds=thresholds,
     )
+    add_blocking_to_timeline(result, horizon, visible_smooth, clock.et_to_utc)
+    if bands or ellipse:
+        applied = error_profile[default_height_index]
+        add_uncertainty_to_timeline(
+            result, uncertainty, bands, ellipse, clock.et_to_utc,
+            {"min": applied.min(), "median": np.median(applied), "max": applied.max()} if has_band else None,
+        )
+    return result
 
 
 def _window(wid: str, subject: str, h: int, definition: str, iv: IntervalSet, clock, threshold) -> dict:
@@ -334,6 +404,10 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
             "bodies": list(scenario["bodies"]),
             "thresholds": {b: thresholds[b] for b in scenario["bodies"]},
         }
+        if scenario.get("requirements"):
+            timeline_request["requirements"] = scenario["requirements"]
+        if scenario.get("uncertainty"):
+            timeline_request["uncertainty"] = scenario["uncertainty"]
 
     dem_input = {"dem_set_id": SYNTHETIC_DEM_SET_ID, "layers": []}
     for site in scenario["sites"]:
@@ -347,7 +421,15 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
         t1 = _time.perf_counter()
         timeline = None
         if table_dir is not None:
-            timeline = synthetic_timeline(site, horizon, table_dir, window, scenario["bodies"], thresholds)
+            default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
+            hd = int(np.argmin(np.abs(np.asarray(horizon.observer_heights_m) - default_height)))
+            timeline = synthetic_timeline(site, horizon, table_dir, window, scenario["bodies"], thresholds, scenario.get("uncertainty"), hd)
+            landing = site.get("landing_utc")
+            add_calendar_to_timeline(
+                timeline, read_package(table_dir), len(horizon.observer_heights_m), scenario.get("requirements"),
+                clock.utc_to_et(landing) if landing else None, clock.et_to_utc,
+            )
+            add_height_trade_to_timeline(timeline, horizon.observer_heights_m)
         t2 = _time.perf_counter()
         written.append(
             pk.build_site_package(
@@ -360,11 +442,14 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 synthetic=True,
                 synthetic_notice=SYNTHETIC_NOTICE,
                 timeline=timeline,
-                timeline_request=timeline_request,
+                timeline_request=None if timeline_request is None else {**timeline_request, "landing_utc": site.get("landing_utc")},
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
             )
         )
+    pairs = build_pairs_package(out_root, written, synthetic_methods(), scenario_id=scenario_id)  # it picks the site packages
+    if pairs is not None:
+        written.append(pairs)
     write_index(out_root, scenario_id)
     return written
