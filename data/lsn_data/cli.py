@@ -27,6 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     pp = sub.add_parser("pyramid", help="build overview levels for the polar products")
     pp.add_argument("products", nargs="*", default=["LDEM_80S_20M", "LDEM_60S_60M"])
     pp.add_argument("--levels", type=int, default=6)
+    pp.add_argument("--hash-only", action="store_true", help="only record SHA-256 of existing level files in pyramid.json")
 
     sub.add_parser("checkpoints", help="run the three data checkpoints and write data/checkpoints/report.json")
 
@@ -57,6 +58,11 @@ def main(argv: list[str] | None = None) -> int:
         from .paths import derived_dir, raw_dir
 
         m = mf.load(manifest_path())
+        if a.hash_only:
+            for pid in a.products:
+                meta = pyramid.add_file_hashes(derived_dir(root) / pid)
+                print(f"{pid}: recorded {len(meta['files'])} file hashes")
+            return 0
         for pid in a.products:
             rel = f"raw/lola/{pid}/{pid.lower()}.img"
             sha = m["files"].get(rel, {}).get("sha256")

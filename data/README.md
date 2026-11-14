@@ -46,7 +46,8 @@ terrain = open_terrain(label_paths=[...])        # or any list of PDS3 labels, e
 terrain.reference_radius_m                       # 1_737_400.0, from the labels
 h = terrain.height_m(lon_deg, lat_deg, max_pixel_m=None)   # metres above the reference sphere
 r = terrain.radius_m(lon_deg, lat_deg, max_pixel_m=None)   # distance from the Moon's centre, m
-terrain.provenance()                             # product ids, versions, file names used
+terrain.provenance(manifest=None)                # per product: ids, version and, for EVERY file behind it, name, role,
+                                                 # size_bytes, sha256, source_url, manifest_path, retrieved_utc, read (bool)
 ```
 
 * `lon_deg` east positive, planetocentric `lat_deg`; scalars or arrays (they broadcast). Result is `float64`, **NaN where no product covers the point**.
@@ -71,6 +72,21 @@ checks the committed bytes equal the generator output.
 from lsn_data import open_terrain
 t = open_terrain(label_paths=["data/fixtures/synth_s90_100m.lbl"])
 ```
+
+### Pyramid levels and blocks (many samples at once)
+
+```python
+terrain.levels()                                 # [{product_id, level, statistic, pixel_m, n_rows, n_cols, x_ul_m, y_ul_m}, ...]
+dem = terrain.product("LDEM_80S_20M")            # a PolarDEM
+v = dem.level_view(level=3, statistic="max")     # LevelView: dn (read-only memmap int16, zero copy), grid, scale, ...; v.heights_m() -> float32 m
+w = dem.level_window(level=2, statistic="mean", rows=(100, 900), cols=(0, 500))   # Window: float32 metres + georeferenced grid
+w = terrain.window_around(lon, lat, half_width_m, max_pixel_m=None, statistic="mean")  # level chosen automatically
+w.heights_m, w.grid.rowcol_to_xy(r, c), w.grid.lonlat_to_rowcol(lon, lat), w.radius_m()
+dem.height_xy(x_m, y_m, level=3, statistic="max")  # vectorised sampling of one level
+```
+
+`rows`/`cols` are `(start, stop)` or slices in the level's own pixel indices; `None` is the whole level (level 0 of the 20 m product is 3.7 GB as float32).
+Level `k` has `2**k` times larger pixels and the same upper-left corner, so `grid.x_ul_m`/`y_ul_m` are shared by all levels.
 
 ## Checkpoints (status is in `data/checkpoints/report.json`, produced by `python -m lsn_data checkpoints`)
 

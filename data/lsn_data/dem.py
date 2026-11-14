@@ -18,7 +18,9 @@ from pathlib import Path
 
 import numpy as np
 
+from . import manifest as mf
 from .georef import PolarGrid, lonlat_to_xy
+from .paths import manifest_path
 from .pdslabel import parse_label
 
 
@@ -37,6 +39,39 @@ class Window:
     product_id: str
     level: int
     statistic: str
+
+    def radius_m(self) -> np.ndarray:
+        """Distance from the Moon's centre in metres (height plus the reference radius), float64."""
+        return self.heights_m.astype(np.float64) + self.grid.radius_m
+
+
+def _span(spec, n: int, what: str) -> tuple[int, int]:
+    if spec is None:
+        return 0, n
+    if isinstance(spec, slice):
+        a, b = spec.start or 0, n if spec.stop is None else spec.stop
+    else:
+        a, b = spec
+    if not (0 <= a < b <= n):
+        raise ValueError(f"{what} {spec!r} outside 0..{n}")
+    return int(a), int(b)
+
+
+@dataclass(frozen=True)
+class LevelView:
+    """Zero-copy, read-only view of one pyramid level as stored (int16 DN) with its georeferencing."""
+
+    dn: np.ndarray
+    grid: PolarGrid
+    scale: float
+    reference_radius_m: float
+    product_id: str
+    level: int
+    statistic: str
+
+    def heights_m(self) -> np.ndarray:
+        """Heights above the reference sphere in metres (float32 copy of the whole view)."""
+        return np.asarray(self.dn).astype(np.float32) * np.float32(self.scale)
 
 
 class PolarDEM:
@@ -67,6 +102,7 @@ class PolarDEM:
             data_path = label_path.with_name(str(lab["FILE_NAME"]).lower())
             if not data_path.exists():
                 data_path = label_path.with_suffix(".img")
+        self.label_path = label_path
         self.data_path = Path(data_path)
         expect = self.grid0.n_rows * self.grid0.n_cols * 2
         if self.data_path.stat().st_size != expect:
@@ -75,6 +111,9 @@ class PolarDEM:
             ("mean", 0): np.memmap(self.data_path, dtype="<i2", mode="r", shape=(self.grid0.n_rows, self.grid0.n_cols))
         }
         self._pyr_meta: dict | None = None
+        self._pyr_dir: Path | None = None
+        self._touched: set[tuple[str, int]] = set()
+        self._hash_cache: dict[str, str] = {}
         if pyramid_dir is not None:
             self._attach_pyramid(Path(pyramid_dir))
 
@@ -85,6 +124,7 @@ class PolarDEM:
             return
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         self._pyr_meta = meta
+        self._pyr_dir = d
         for stat in meta["statistics"]:
             for k in meta["levels"]:
                 arr = np.load(d / f"{stat}_L{k}.npy", mmap_mode="r")
@@ -114,12 +154,113 @@ class PolarDEM:
 
     def _array(self, level: int, statistic: str) -> np.ndarray:
         try:
-            return self._levels[(statistic, level)]
+            arr = self._levels[(statistic, level)]
+            self._touched.add((statistic, level))
+            return arr
         except KeyError:
             raise KeyError(
                 f"{self.product_id}: no {statistic!r} level {level}; available {sorted(self._levels)}. "
                 "Build pyramids with `python -m lsn_data pyramid`."
             ) from None
+
+    # -- whole levels and blocks of levels ---------------------------------------------------
+    def level_view(self, level: int = 0, statistic: str = "mean") -> LevelView:
+        """The stored array of a level (int16 DN, memory-mapped, read-only) with its grid. No copy."""
+        arr = self._array(level, statistic)
+        return LevelView(arr, self.grid(level), self.scale, self.reference_radius_m, self.product_id, level, statistic)
+
+    def level_window(self, level: int = 0, statistic: str = "mean", rows=None, cols=None) -> Window:
+        """A block of a level as float32 metres, by pixel index.
+
+        ``rows`` and ``cols`` are ``(start, stop)`` tuples or slices in the level's own pixel indices
+        (``None`` = the whole level; level 0 is 3.7 GB as float32 for the 20 m product). The returned
+        ``Window.grid`` carries the georeferencing of the block.
+        """
+        arr = self._array(level, statistic)
+        g = self.grid(level)
+        r0, r1 = _span(rows, g.n_rows, "rows")
+        c0, c1 = _span(cols, g.n_cols, "cols")
+        out = np.asarray(arr[r0:r1, c0:c1]).astype(np.float32) * np.float32(self.scale)
+        wg = PolarGrid(r1 - r0, c1 - c0, g.pixel_m, g.x_ul_m + c0 * g.pixel_m, g.y_ul_m - r0 * g.pixel_m, g.radius_m, g.pole)
+        return Window(out, wg, self.product_id, level, statistic)
+
+    # -- provenance ----------------------------------------------------------------------
+    def _sha256(self, path: Path) -> str:
+        key = str(path)
+        if key not in self._hash_cache:
+            self._hash_cache[key] = mf.sha256_file(path)
+        return self._hash_cache[key]
+
+    def provenance(self, manifest: dict | None = None) -> dict:
+        """Every file behind this product, with SHA-256, source URL (from the manifest) and whether it was read."""
+        try:
+            m = (manifest if manifest is not None else mf.load(manifest_path()))["files"]
+        except Exception:
+            m = {}
+        files = []
+
+        def entry(path: Path, role: str, read: bool) -> dict:
+            rec = m.get(f"raw/lola/{self.product_id}/{path.name}")
+            e = {"name": path.name, "role": role, "size_bytes": path.stat().st_size, "read": read}
+            if rec and rec["size_bytes"] == e["size_bytes"]:
+                e.update(
+                    sha256=rec["sha256"],
+                    sha256_from="manifest",
+                    source_url=rec["source_url"],
+                    manifest_path=rec["path"],
+                    retrieved_utc=rec["retrieved_utc"],
+                )
+            else:
+                e.update(sha256=self._sha256(path), sha256_from="computed", source_url=None, manifest_path=None, retrieved_utc=None)
+            return e
+
+        files.append(entry(self.data_path, "data", ("mean", 0) in self._touched or ("max", 0) in self._touched))
+        files.append(entry(self.label_path, "label", True))
+        if self._pyr_dir is not None and self._pyr_meta is not None:
+            meta_file = self._pyr_dir / "pyramid.json"
+            files.append(
+                {
+                    "name": "pyramid.json",
+                    "role": "pyramid_meta",
+                    "size_bytes": meta_file.stat().st_size,
+                    "sha256": self._sha256(meta_file),
+                    "sha256_from": "computed",
+                    "source_url": None,
+                    "manifest_path": None,
+                    "retrieved_utc": None,
+                    "read": True,
+                    "base_sha256": self._pyr_meta.get("base_sha256"),
+                    "built_utc": self._pyr_meta.get("built_utc"),
+                    "method": self._pyr_meta.get("method"),
+                }
+            )
+            recorded = self._pyr_meta.get("files", {})
+            for stat in self._pyr_meta["statistics"]:
+                for k in self._pyr_meta["levels"]:
+                    f = self._pyr_dir / f"{stat}_L{k}.npy"
+                    files.append(
+                        {
+                            "name": f.name,
+                            "role": "pyramid",
+                            "size_bytes": f.stat().st_size,
+                            "sha256": recorded.get(f.name, {}).get("sha256") or self._sha256(f),
+                            "sha256_from": "pyramid.json" if f.name in recorded else "computed",
+                            "source_url": None,
+                            "manifest_path": None,
+                            "retrieved_utc": None,
+                            "derived_from_sha256": self._pyr_meta.get("base_sha256"),
+                            "read": (stat, k) in self._touched,
+                        }
+                    )
+        return {
+            "product_id": self.product_id,
+            "product_version": self.product_version,
+            "data_set_id": self.data_set_id,
+            "pixel_m": self.grid0.pixel_m,
+            "reference_radius_m": self.reference_radius_m,
+            "file": self.data_path.name,
+            "files": files,
+        }
 
     # -- point sampling --------------------------------------------------------------------
     def height_xy(self, x_m, y_m, level: int = 0, statistic: str = "mean", method: str = "bilinear") -> np.ndarray:
@@ -252,15 +393,53 @@ class Terrain:
     def radius_m(self, lon_deg, lat_deg, max_pixel_m=None, statistic: str = "mean", method: str = "bilinear") -> np.ndarray:
         return self.height_m(lon_deg, lat_deg, max_pixel_m, statistic, method) + self.reference_radius_m
 
-    def provenance(self) -> list[dict]:
-        return [
-            {
-                "product_id": p.product_id,
-                "product_version": p.product_version,
-                "data_set_id": p.data_set_id,
-                "pixel_m": p.grid0.pixel_m,
-                "reference_radius_m": p.reference_radius_m,
-                "file": p.data_path.name,
-            }
+    def product(self, product_id: str) -> PolarDEM:
+        for p in self.products:
+            if p.product_id == product_id:
+                return p
+        raise KeyError(product_id)
+
+    def levels(self) -> list[dict]:
+        """Every readable (product, level, statistic): pixel size, shape and corner of its grid."""
+        out = []
+        for p in self.products:
+            for (stat, k) in sorted(p._levels, key=lambda sk: (sk[1], sk[0])):
+                if stat == "max" and k == 0:
+                    continue  # level 0 is the same array for both statistics
+                g = p.grid(k)
+                out.append(
+                    {
+                        "product_id": p.product_id,
+                        "level": k,
+                        "statistic": stat,
+                        "pixel_m": g.pixel_m,
+                        "n_rows": g.n_rows,
+                        "n_cols": g.n_cols,
+                        "x_ul_m": g.x_ul_m,
+                        "y_ul_m": g.y_ul_m,
+                    }
+                )
+        return sorted(out, key=lambda d: (d["pixel_m"], d["product_id"], d["statistic"]))
+
+    def window_around(self, lon_deg: float, lat_deg: float, half_width_m: float, max_pixel_m=None, statistic: str = "mean") -> Window:
+        """A square block around a point from the coarsest level whose pixel is <= ``max_pixel_m``
+        (finest if None) among the products that cover the point. For many samples at once, read a
+        block and index it instead of calling ``radius_m`` point by point."""
+        x, y = lonlat_to_xy(lon_deg, lat_deg, self.products[0].grid0.radius_m, self.pole)
+        cands = [
+            (p.pixel_m(k), p, k)
             for p in self.products
+            for k in p.levels
+            if (statistic, k) in p._levels and p.grid(k).covers_xy(x, y)
         ]
+        if not cands:
+            raise ValueError("point is outside every product")
+        limit = 0.0 if max_pixel_m is None else float(max_pixel_m)
+        ok = [c for c in cands if c[0] <= limit]
+        _, p, k = max(ok, key=lambda c: c[0]) if ok else min(cands, key=lambda c: c[0])
+        return p.window_around(lon_deg, lat_deg, half_width_m, k, statistic)
+
+    def provenance(self, manifest: dict | None = None) -> list[dict]:
+        """One record per product: ids, version and, for every file behind it, SHA-256, source URL and
+        whether the file was read so far. The keys of the earlier version are kept."""
+        return [p.provenance(manifest) for p in self.products]

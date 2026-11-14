@@ -65,12 +65,18 @@ def build(dem: PolarDEM, out_dir: str | Path, levels: int = 6, source_sha256: st
     for a in mm.values():
         a.flush()
     del mm
+    files = {}
+    for stat in ("mean", "max"):
+        for k in range(1, top + 1):
+            f = out / f"{stat}_L{k}.npy"
+            files[f.name] = {"size_bytes": f.stat().st_size, "sha256": mf.sha256_file(f)}
     meta = {
         "product_id": dem.product_id,
         "product_version": dem.product_version,
         "base_file": dem.data_path.name,
         "base_sha256": source_sha256,
         "base_size_bytes": dem.data_path.stat().st_size,
+        "files": files,
         "levels": list(range(1, top + 1)),
         "statistics": ["mean", "max"],
         "dtype": "<i2",
@@ -84,4 +90,23 @@ def build(dem: PolarDEM, out_dir: str | Path, levels: int = 6, source_sha256: st
         "numpy": np.__version__,
     }
     (out / "pyramid.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    return meta
+
+
+def add_file_hashes(out_dir: str | Path) -> dict:
+    """Record size and SHA-256 of the existing level files in ``pyramid.json`` (read-only on the arrays).
+
+    ``build`` does this itself; this is for pyramids built before the hashes were recorded.
+    """
+    out = Path(out_dir)
+    meta_path = out / "pyramid.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    files = {}
+    for stat in meta["statistics"]:
+        for k in meta["levels"]:
+            f = out / f"{stat}_L{k}.npy"
+            files[f.name] = {"size_bytes": f.stat().st_size, "sha256": mf.sha256_file(f)}
+    meta["files"] = files
+    meta["hashes_added_utc"] = mf.utc_now()
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     return meta
