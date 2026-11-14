@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -603,6 +604,16 @@ def main() -> None:
         if args.write_scenario:
             print((HERE / "scenario.json").relative_to(REPO).as_posix())
             return
+        # The packages record the commit and whether the working tree differs from it. A
+        # published package must name a clean commit, so stop before the long computation.
+        changed = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True).stdout.strip()
+        if changed:
+            parser.error(
+                "the working tree differs from the last commit, so the packages would record uncommitted changes:\n"
+                + changed
+                + "\nCommit first. If validation/sites/scenario.json is listed, the scenario itself changed (for example its contract version after a merge): "
+                "commit it and publish again."
+            )
     else:
         out.mkdir(parents=True, exist_ok=True)
         (out / "scenario.json").write_text(json.dumps(scenario, indent=2) + "\n", encoding="utf-8", newline="\n")
