@@ -98,3 +98,9 @@ Post-hoc diagnostics (not pass/fail rules) are in `data/checkpoints/diagnostics.
 `data/sites/sites.json`: three south-polar sites (Shackleton rim crest, de Gerlache rim crest, Mons Malapert summit), each anchored on an
 IAU Gazetteer feature with URL and retrieval time (`data/sites/gazetteer_records.json`), located on the 20 m DEM by a stated rule, with reference
 frame and terrain product checksum. They are the project's own candidate sites, not NASA landing sites.
+
+### Supplementary georeferencing check (checkpoint 2)
+
+Criterion `data/checkpoints/thresholds_supplementary.json` (committed before measuring), result `data/checkpoints/supplementary_report.json`.
+Best-fit translation of each IAU outline onto its rim crest: no common translation (mean 936 m, standard error 658 m); the rotation rule is flagged
+(-0.87 deg +- 0.35 deg), driven by Cabeus alone. Checkpoint 2 itself is unchanged: 2 of 6.
