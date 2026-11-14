@@ -49,6 +49,37 @@ THRESHOLDS = {
 }
 
 
+class TerrainWithFileProvenance:
+    """The core's terrain adapter, with the checksum and source of each elevation file.
+
+    The data reader reports provenance per file of a product (data file, label, overview
+    levels); the core's adapter looks for one checksum per product and finds none. This
+    wrapper fills the layer entry of the package with the SHA-256 and the source URL of
+    the product's data file. Everything else is passed through unchanged.
+    """
+
+    def __init__(self, terrain, provenance: list):
+        self._terrain = terrain
+        self._data_files = {}
+        for item in provenance:
+            data = [f for f in item.get("files", []) if f.get("role") == "data"]
+            if len(data) == 1:
+                self._data_files[str(item["product_id"])] = data[0]
+
+    def __getattr__(self, name):
+        return getattr(self._terrain, name)
+
+    def describe(self) -> dict:
+        described = self._terrain.describe()
+        layers = []
+        for layer in described["layers"]:
+            data = self._data_files.get(layer["product_id"])
+            if data is not None and not layer.get("sha256"):
+                layer = {**layer, "sha256": data["sha256"], "source_url": data["source_url"] or ""}
+            layers.append(layer)
+        return {**described, "layers": layers}
+
+
 def build_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str) -> dict:
     scenario = {
         "contract": contract_header(),
@@ -272,7 +303,7 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
         f"| Terrain | `{sites[0]['inputs']['dem']['dem_set_id']}` |",
     ]
     for layer in sites[0]["inputs"]["dem"]["layers"]:
-        recorded = f"sha256 `{layer['sha256']}`, {layer['source_url']}" if layer["sha256"] else "checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json`"
+        recorded = f"data file sha256 `{layer['sha256']}`, {layer['source_url']}" if layer["sha256"] else "checksum and source URL are not recorded in the package; see `data/manifest/manifest.json`"
         lines.append(f"| Terrain layer | {layer['product_id']} {layer['version']}, {layer['pixel_m']:g} m; {recorded} |")
     lines += [
         f"| Kernel set | `{kernels.kernel_set_id()}`: " + ", ".join(entry["name"] for entry in kernel_manifest["kernels"]) + " |",
@@ -325,7 +356,9 @@ def main() -> None:
     parser.add_argument("--end", default=DEFAULT_END)
     args = parser.parse_args()
     records = json.loads(Path(args.sites_file).read_text(encoding="utf-8"))["sites"]
-    terrain = open_lola()
+    import lsn_data
+
+    terrain = TerrainWithFileProvenance(open_lola(), lsn_data.open_terrain().provenance())
     scenario = build_scenario(records, terrain.describe()["dem_set_id"], args.start, args.end)
     (HERE / "scenario.json").write_text(json.dumps(scenario, indent=2) + "\n", encoding="utf-8")
     out = STAGING if args.publish else Path(args.out)
