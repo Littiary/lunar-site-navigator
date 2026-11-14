@@ -1,4 +1,5 @@
 #include "Scene/LsnViewGameMode.h"
+#include "HAL/FileManager.h"
 
 #include "LunarSiteNavigator.h"
 #include "Engine/World.h"
@@ -39,7 +40,8 @@ FString ALsnViewGameMode::ResolvePackageDirectory(FString& OutError)
 	}
 	else
 	{
-		// The sample that ships with the contract, then the copy pinned for the tests.
+		// Packages imported for the demo, the sample that ships with the contract, then the copy pinned for the tests.
+		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("LsnPackages"))));
 		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../docs/contract/sample/packages"))));
 		Roots.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("TestData/contract-sample/packages"))));
 	}
@@ -52,9 +54,11 @@ FString ALsnViewGameMode::ResolvePackageDirectory(FString& OutError)
 			OutError = IndexError;
 			continue;
 		}
+		FString WantedSite;
+		FParse::Value(FCommandLine::Get(), TEXT("LsnSite="), WantedSite);
 		for (const FLsnIndexEntry& Entry : Entries)
 		{
-			if (Entry.Kind == TEXT("site"))
+			if (Entry.Kind == TEXT("site") && (WantedSite.IsEmpty() || Entry.SiteId == WantedSite))
 			{
 				OutError.Reset();
 				return FPaths::Combine(Candidate, Entry.Path);
@@ -102,8 +106,16 @@ void ALsnViewGameMode::StartPlay()
 			Scene->SetTimeIndex(Index);
 		}
 		Scene->SetHorizonLineVisible(FParse::Param(FCommandLine::Get(), TEXT("LsnHorizonLine")));
+		Scene->SetFillLightVisible(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoFillLight")));
 	}
 
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnMovieDir="), MovieDir))
+	{
+		MovieDir = FPaths::ConvertRelativePathToFull(MovieDir);
+		IFileManager::Get().MakeDirectory(*MovieDir, true);
+		// Leave time for shaders and shadow pages before the first frame is kept.
+		MovieWarmUpFrames = 240;
+	}
 	if (FParse::Value(FCommandLine::Get(), TEXT("LsnShot="), ShotPath))
 	{
 		ShotPath = FPaths::ConvertRelativePathToFull(ShotPath);
@@ -123,6 +135,24 @@ void ALsnViewGameMode::Tick(float DeltaSeconds)
 		FramesUntilShot = 60;
 	}
 #endif
+	if (!MovieDir.IsEmpty())
+	{
+		const APlayerController* Player = GetWorld()->GetFirstPlayerController();
+		const ALsnObserverPawn* Pawn = Player ? Cast<ALsnObserverPawn>(Player->GetPawn()) : nullptr;
+		if (MovieWarmUpFrames > 0)
+		{
+			--MovieWarmUpFrames;
+		}
+		else if (FramesUntilQuit < 0)
+		{
+			FScreenshotRequest::RequestScreenshot(FPaths::Combine(MovieDir, FString::Printf(TEXT("frame_%05d.png"), MovieFrame++)), true, false);
+			if (!Pawn || Pawn->HasFinishedCommandLinePlay())
+			{
+				FramesUntilQuit = 30;
+				UE_LOG(LogLsn, Display, TEXT("%d movie frames requested in %s"), MovieFrame, *MovieDir);
+			}
+		}
+	}
 	if (FramesUntilShot > 0 && --FramesUntilShot == 0)
 	{
 		FScreenshotRequest::RequestScreenshot(ShotPath, true, false);

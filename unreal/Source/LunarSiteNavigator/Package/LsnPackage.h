@@ -62,6 +62,57 @@ struct FLsnMethodCard
 	FString ValidationStatus;
 };
 
+/** An interval set of a site timeline (SPEC 5.4, "Window"). Interval i is [StartsEtS[i], EndsEtS[i]). */
+struct FLsnWindow
+{
+	FString Id;
+	FString Subject;
+	int32 HeightIndex = 0;
+	TArray<double> StartsEtS;
+	TArray<double> EndsEtS;
+	/** The same instants as the package's own UTC strings. */
+	TArray<FString> StartsUtc;
+	TArray<FString> EndsUtc;
+	/** The first interval starts, or the last interval ends, at the edge of the computed range: its true start or end is unknown. */
+	bool bClippedStart = false;
+	bool bClippedEnd = false;
+	FString Method;
+};
+
+/** A summary number of a site timeline (SPEC 5.4, "Metric"). */
+struct FLsnMetric
+{
+	FString Id;
+	FString Label;
+	/** -1 when the metric does not depend on the observer height. */
+	int32 HeightIndex = -1;
+	/** False when the package gives null. */
+	bool bHasValue = false;
+	double Value = 0.0;
+	FString Unit;
+	FString Method;
+};
+
+/**
+ * Time from a selected instant to the next set or rise of a body, read from a
+ * visibility window of the package. No rise or set is found here: the
+ * interval boundaries are the package's event times.
+ */
+struct FLsnCountdown
+{
+	/** False when the package has no "<body>_visible" window for the height. */
+	bool bAvailable = false;
+	bool bVisibleNow = false;
+	/** To the next set while visible, to the next rise while not. */
+	double SecondsToChange = 0.0;
+	/** The package has no such event inside its computed range; the true time is at least SecondsToChange. */
+	bool bLowerBound = false;
+	/** UTC string of that event as the package gives it; empty for a lower bound. */
+	FString ChangeUtc;
+	FString WindowId;
+	FString Method;
+};
+
 struct LUNARSITENAVIGATOR_API FLsnSitePackage
 {
 	// --- header ---
@@ -112,7 +163,18 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	TArray<FString> Bodies;
 	TMap<FString, FLsnBodySeries> Series;
 	TArray<FLsnEvent> Events;
+	TArray<FLsnWindow> Windows;
+	TArray<FLsnMetric> Metrics;
 	FString DirectionMethod;
+
+	/** TDB seconds past J2000 of a (possibly fractional) sample position on the time axis. */
+	double EtOfPosition(double SamplePosition) const { return Time.StartEtS + Time.StepS * SamplePosition; }
+
+	const FLsnWindow* FindWindow(const FString& Id, int32 InHeightIndex) const;
+	const FLsnMetric* FindMetric(const FString& Id, int32 InHeightIndex) const;
+
+	/** Countdown for "SUN" or "EARTH" from the window "<body>_visible" of the observer height. */
+	FLsnCountdown CountdownAt(const FString& Body, int32 InHeightIndex, double EtS) const;
 
 	int32 NumHeights() const { return ObserverHeightsM.Num(); }
 	double AzimuthDegAt(int32 AzimuthIndex) const { return AzimuthStartDeg + AzimuthStepDeg * AzimuthIndex; }

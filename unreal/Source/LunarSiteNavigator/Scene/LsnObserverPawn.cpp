@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "Misc/CommandLine.h"
+#include "Scene/LsnHud.h"
 #include "Scene/LsnSiteScene.h"
 
 ALsnObserverPawn::ALsnObserverPawn()
@@ -82,15 +83,61 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		ElevationDeg = 0.0;
 		FParse::Value(FCommandLine::Get(), TEXT("LsnYaw="), AzimuthDeg);
 		FParse::Value(FCommandLine::Get(), TEXT("LsnPitch="), ElevationDeg);
+
+		// A stretch of the timeline to play once, for recordings.
+		double PlayFrom = 0.0, PlaySeconds = 25.0;
+		if (FParse::Value(FCommandLine::Get(), TEXT("LsnPlayFrom="), PlayFrom) && FParse::Value(FCommandLine::Get(), TEXT("LsnPlayTo="), PlayTo) && PlayTo > PlayFrom)
+		{
+			FParse::Value(FCommandLine::Get(), TEXT("LsnPlaySeconds="), PlaySeconds);
+			Scene->SetTimePosition(PlayFrom);
+			PlayRate = (PlayTo - PlayFrom) / FMath::Max(PlaySeconds, 1.0);
+			bPlaying = true;
+		}
+		else
+		{
+			PlayTo = -1.0;
+		}
 	}
 
-	if (const APlayerController* PC = Cast<APlayerController>(GetController()))
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		const double LookRate = 0.08 * FovDeg / 60.0;
-		float MouseX = 0.0f, MouseY = 0.0f;
-		PC->GetInputMouseDelta(MouseX, MouseY);
-		AzimuthDeg += MouseX * LookRate;
-		ElevationDeg += MouseY * LookRate;
+		const FLsnSitePackage& Package = Scene->GetPackage();
+		const double LastPosition = FMath::Max(Package.Time.Count - 1, 0);
+
+		// Tab: mouse cursor for the time strips instead of mouse look.
+		if (PC->WasInputKeyJustPressed(EKeys::Tab))
+		{
+			PC->bShowMouseCursor = !PC->bShowMouseCursor;
+			if (PC->bShowMouseCursor)
+			{
+				PC->SetInputMode(FInputModeGameAndUI().SetHideCursorDuringCapture(false));
+			}
+			else
+			{
+				PC->SetInputMode(FInputModeGameOnly());
+			}
+		}
+		if (PC->bShowMouseCursor)
+		{
+			int32 SizeX = 0, SizeY = 0;
+			float MouseX = 0.0f, MouseY = 0.0f;
+			PC->GetViewportSize(SizeX, SizeY);
+			double Position = 0.0;
+			if (Package.bHasTimeline && PC->IsInputKeyDown(EKeys::LeftMouseButton) && PC->GetMousePosition(MouseX, MouseY)
+				&& FLsnTimeStripLayout::Make(SizeX, SizeY, Package).PositionAt(FVector2D(MouseX, MouseY), Package, Scene->GetTimePosition(), Position))
+			{
+				bPlaying = false;
+				Scene->SetTimePosition(Position);
+			}
+		}
+		else
+		{
+			const double LookRate = 0.08 * FovDeg / 60.0;
+			float MouseX = 0.0f, MouseY = 0.0f;
+			PC->GetInputMouseDelta(MouseX, MouseY);
+			AzimuthDeg += MouseX * LookRate;
+			ElevationDeg += MouseY * LookRate;
+		}
 
 		const double KeyRate = 30.0 * FovDeg / 60.0 * DeltaSeconds;
 		if (PC->IsInputKeyDown(EKeys::Left)) { AzimuthDeg -= KeyRate; }
@@ -100,12 +147,38 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		if (PC->IsInputKeyDown(EKeys::Z)) { FovDeg *= FMath::Pow(0.5, static_cast<double>(DeltaSeconds)); }
 		if (PC->IsInputKeyDown(EKeys::X)) { FovDeg *= FMath::Pow(2.0, static_cast<double>(DeltaSeconds)); }
 
+		// Stepping lands on whole samples, where the scene shows the package values unchanged.
 		const int32 Step = (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)) ? 24 : 1;
-		if (PC->WasInputKeyJustPressed(EKeys::E)) { Scene->SetTimeIndex(Scene->GetTimeIndex() + Step); }
-		if (PC->WasInputKeyJustPressed(EKeys::Q)) { Scene->SetTimeIndex(Scene->GetTimeIndex() - Step); }
+		if (PC->WasInputKeyJustPressed(EKeys::E))
+		{
+			bPlaying = false;
+			Scene->SetTimeIndex(FMath::Min(Scene->GetTimeIndex() + Step, static_cast<int32>(LastPosition)));
+		}
+		if (PC->WasInputKeyJustPressed(EKeys::Q))
+		{
+			bPlaying = false;
+			const bool bBetween = Scene->GetTimePosition() > Scene->GetTimeIndex();
+			Scene->SetTimeIndex(FMath::Max(Scene->GetTimeIndex() - (bBetween ? Step - 1 : Step), 0));
+		}
+		if (PC->WasInputKeyJustPressed(EKeys::SpaceBar)) { bPlaying = !bPlaying; PlayTo = -1.0; }
+		if (PC->WasInputKeyJustPressed(EKeys::LeftBracket)) { PlayRate = FMath::Max(PlayRate * 0.5, 0.125); }
+		if (PC->WasInputKeyJustPressed(EKeys::RightBracket)) { PlayRate = FMath::Min(PlayRate * 2.0, 768.0); }
 		if (PC->WasInputKeyJustPressed(EKeys::H)) { Scene->SetHorizonLineVisible(!Scene->IsHorizonLineVisible()); }
+		if (PC->WasInputKeyJustPressed(EKeys::L)) { Scene->SetFillLightVisible(!Scene->IsFillLightVisible()); }
 		if (PC->WasInputKeyJustPressed(EKeys::PageUp)) { Scene->SetHeightIndex(Scene->GetHeightIndex() + 1); }
 		if (PC->WasInputKeyJustPressed(EKeys::PageDown)) { Scene->SetHeightIndex(Scene->GetHeightIndex() - 1); }
+
+		if (bPlaying && Package.bHasTimeline)
+		{
+			const double End = PlayTo >= 0.0 ? FMath::Min(PlayTo, LastPosition) : LastPosition;
+			const double Next = FMath::Min(Scene->GetTimePosition() + PlayRate * DeltaSeconds, End);
+			Scene->SetTimePosition(Next);
+			if (Next >= End)
+			{
+				bPlaying = false;
+				bCommandLinePlayDone = PlayTo >= 0.0;
+			}
+		}
 	}
 	ApplyView();
 }

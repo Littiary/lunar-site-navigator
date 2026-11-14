@@ -11,6 +11,16 @@ class UDirectionalLightComponent;
 class UMaterialInterface;
 class UProceduralMeshComponent;
 
+/** Direction and angular size of a body at a position on the package's time axis. */
+struct FLsnBodyAtTime
+{
+	bool bValid = false;
+	double AzimuthDeg = 0.0;
+	double ElevationDeg = 0.0;
+	bool bHasAngularRadius = false;
+	double AngularRadiusDeg = 0.0;
+};
+
 /**
  * The view scene of one site package.
  *
@@ -48,7 +58,20 @@ public:
 	/** Moves the Sun, the Earth and the light to a timeline sample of the package. */
 	bool SetTimeIndex(int32 NewTimeIndex);
 
+	/**
+	 * The same for a position between samples (0 .. Count - 1). A whole position shows the
+	 * package values unchanged; between two samples the series are interpolated linearly
+	 * over that one step, for a smooth display only.
+	 */
+	bool SetTimePosition(double NewTimePosition);
+	double GetTimePosition() const { return TimePosition; }
+
+	/** What the scene shows for "SUN" or "EARTH" at a time position. False if the package has no value there. */
+	bool SampleBody(const TCHAR* Body, double SamplePosition, FLsnBodyAtTime& Out) const;
+
 	void SetHorizonLineVisible(bool bVisible);
+	void SetFillLightVisible(bool bVisible);
+	bool IsFillLightVisible() const;
 	bool IsHorizonLineVisible() const;
 
 	bool HasPackage() const { return bHasPackage; }
@@ -76,7 +99,7 @@ public:
 
 private:
 	void RebuildGeometry();
-	void PlaceDisc(UProceduralMeshComponent* Disc, const FLsnBodySeries* Series, double ProxyDistanceM);
+	void PlaceDisc(UProceduralMeshComponent* Disc, const FLsnBodyAtTime& Body, double ProxyDistanceM);
 	void ApplyMesh(UProceduralMeshComponent* Component, const FLsnMeshData& Mesh, UMaterialInterface* Material);
 	void EnsureUnitSphere(UProceduralMeshComponent* Component, const FColor& Color, UMaterialInterface* Material);
 
@@ -98,6 +121,14 @@ private:
 	UPROPERTY()
 	TObjectPtr<UDirectionalLightComponent> SunLight;
 
+	/**
+	 * A very weak light from the zenith without shadows, so that terrain the Sun does not
+	 * reach is still told apart from the sky. It is a display aid: it stands for no
+	 * computed quantity (no earthshine, no reflected light) and comes from no package field.
+	 */
+	UPROPERTY()
+	TObjectPtr<UDirectionalLightComponent> FillLight;
+
 	UPROPERTY()
 	TObjectPtr<UMaterialInterface> SurfaceMaterial;
 
@@ -111,5 +142,6 @@ private:
 	bool bHasPackage = false;
 	int32 HeightIndex = 0;
 	int32 TimeIndex = 0;
+	double TimePosition = 0.0;
 	int32 SkippedHorizonSamples = 0;
 };

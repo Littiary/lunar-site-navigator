@@ -10,6 +10,7 @@ namespace
 {
 	/** Display values of stage 1. They are not photometry. */
 	constexpr float SunLightLux = 10.0f;
+	constexpr float FillLightLux = 0.25f;
 	constexpr float SunDiscEmissive = 30.0f;
 	constexpr float HorizonLineEmissive = 3.0f;
 	constexpr float RegolithAlbedo = 0.13f;
@@ -60,6 +61,27 @@ ALsnSiteScene::ALsnSiteScene()
 	// The terrain reaches out to the package's horizon search radius; shadows must not be cut off before it.
 	SunLight->DynamicShadowDistanceMovableLight = 1.0e9f;
 	SunLight->SetVisibility(false);
+
+	FillLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("FillLight"));
+	FillLight->SetupAttachment(Root);
+	FillLight->SetMobility(EComponentMobility::Movable);
+	FillLight->SetIntensity(FillLightLux);
+	FillLight->SetCastShadows(false);
+	FillLight->SetAtmosphereSunLight(false);
+	FillLight->SetWorldRotation(FRotator(-90.0, 0.0, 0.0));
+	// The Sun is the light the engine treats as the main directional light.
+	SunLight->ForwardShadingPriority = 1;
+	FillLight->ForwardShadingPriority = 0;
+}
+
+void ALsnSiteScene::SetFillLightVisible(bool bVisible)
+{
+	FillLight->SetVisibility(bVisible);
+}
+
+bool ALsnSiteScene::IsFillLightVisible() const
+{
+	return FillLight->IsVisible();
 }
 
 FVector ALsnSiteScene::GetEyeUnreal() const
@@ -86,6 +108,7 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	bHasPackage = true;
 	HeightIndex = Package.DefaultHeightIndex;
 	TimeIndex = 0;
+	TimePosition = 0.0;
 
 	if (!SurfaceMaterial)
 	{
@@ -122,7 +145,7 @@ bool ALsnSiteScene::SetHeightIndex(int32 NewHeightIndex)
 	}
 	HeightIndex = NewHeightIndex;
 	RebuildGeometry();
-	SetTimeIndex(TimeIndex);
+	SetTimePosition(TimePosition);
 	return true;
 }
 
@@ -198,32 +221,67 @@ void ALsnSiteScene::EnsureUnitSphere(UProceduralMeshComponent* Component, const 
 	ApplyMesh(Component, Sphere, Material);
 }
 
-void ALsnSiteScene::PlaceDisc(UProceduralMeshComponent* Disc, const FLsnBodySeries* Series, double ProxyDistanceM)
+bool ALsnSiteScene::SampleBody(const TCHAR* Body, double SamplePosition, FLsnBodyAtTime& Out) const
+{
+	Out = FLsnBodyAtTime();
+	const FLsnBodySeries* S = (bHasPackage && Package.bHasTimeline) ? Package.FindSeries(Body) : nullptr;
+	if (!S || SamplePosition < 0.0 || SamplePosition > Package.Time.Count - 1)
+	{
+		return false;
+	}
+	const int32 T0 = FMath::Min(static_cast<int32>(FMath::FloorToDouble(SamplePosition)), Package.Time.Count - 1);
+	const double F = SamplePosition - T0;
+	if (!S->AzimuthDeg.IsValidIndex(T0) || !S->ElevationDeg.IsValidIndex(T0) || FMath::IsNaN(S->AzimuthDeg[T0]) || FMath::IsNaN(S->ElevationDeg[T0]))
+	{
+		return false;
+	}
+	Out.AzimuthDeg = S->AzimuthDeg[T0];
+	Out.ElevationDeg = S->ElevationDeg[T0];
+	Out.bHasAngularRadius = S->AngularRadiusDeg.IsValidIndex(T0) && !FMath::IsNaN(S->AngularRadiusDeg[T0]);
+	Out.AngularRadiusDeg = Out.bHasAngularRadius ? S->AngularRadiusDeg[T0] : 0.0;
+	if (F > 0.0)
+	{
+		// Between two samples: linear interpolation of the package series over one time
+		// step, the azimuth along the shorter way round. A whole position never gets here,
+		// so it shows the package values unchanged.
+		const int32 T1 = T0 + 1;
+		if (!S->AzimuthDeg.IsValidIndex(T1) || FMath::IsNaN(S->AzimuthDeg[T1]) || FMath::IsNaN(S->ElevationDeg[T1]))
+		{
+			return false;
+		}
+		const double DeltaAz = FMath::Fmod(static_cast<double>(S->AzimuthDeg[T1]) - Out.AzimuthDeg + 540.0, 360.0) - 180.0;
+		Out.AzimuthDeg = FMath::Fmod(Out.AzimuthDeg + F * DeltaAz + 360.0, 360.0);
+		Out.ElevationDeg = (1.0 - F) * Out.ElevationDeg + F * S->ElevationDeg[T1];
+		Out.bHasAngularRadius = Out.bHasAngularRadius && S->AngularRadiusDeg.IsValidIndex(T1) && !FMath::IsNaN(S->AngularRadiusDeg[T1]);
+		Out.AngularRadiusDeg = Out.bHasAngularRadius ? (1.0 - F) * Out.AngularRadiusDeg + F * S->AngularRadiusDeg[T1] : 0.0;
+	}
+	Out.bValid = true;
+	return true;
+}
+
+void ALsnSiteScene::PlaceDisc(UProceduralMeshComponent* Disc, const FLsnBodyAtTime& Body, double ProxyDistanceM)
 {
 	// A disc needs a direction and an angular radius; both are optional parts
 	// of a package. Without them the disc is hidden rather than guessed.
-	if (!Series || !Series->AzimuthDeg.IsValidIndex(TimeIndex) || !Series->AngularRadiusDeg.IsValidIndex(TimeIndex))
-	{
-		Disc->SetVisibility(false);
-		return;
-	}
-	const double Az = Series->AzimuthDeg[TimeIndex];
-	const double El = Series->ElevationDeg[TimeIndex];
-	const double AngularRadiusDeg = Series->AngularRadiusDeg[TimeIndex];
-	if (FMath::IsNaN(Az) || FMath::IsNaN(El) || FMath::IsNaN(AngularRadiusDeg))
+	if (!Body.bValid || !Body.bHasAngularRadius)
 	{
 		Disc->SetVisibility(false);
 		return;
 	}
 	const double DistanceCm = ProxyDistanceM * FLsnSiteFrame::CmPerM;
 	// A sphere of radius r at distance d subtends an angular radius asin(r / d).
-	const double RadiusCm = DistanceCm * FMath::Sin(FMath::DegreesToRadians(AngularRadiusDeg));
-	Disc->SetWorldLocation(GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(Az, El) * DistanceCm);
+	const double RadiusCm = DistanceCm * FMath::Sin(FMath::DegreesToRadians(Body.AngularRadiusDeg));
+	Disc->SetWorldLocation(GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(Body.AzimuthDeg, Body.ElevationDeg) * DistanceCm);
 	Disc->SetWorldScale3D(FVector(RadiusCm));
 	Disc->SetVisibility(true);
 }
 
 bool ALsnSiteScene::SetTimeIndex(int32 NewTimeIndex)
+{
+	return SetTimePosition(static_cast<double>(NewTimeIndex));
+}
+
+bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 {
 	if (!bHasPackage || !Package.bHasTimeline)
 	{
@@ -233,24 +291,25 @@ bool ALsnSiteScene::SetTimeIndex(int32 NewTimeIndex)
 		EarthDisc->SetVisibility(false);
 		return false;
 	}
-	if (NewTimeIndex < 0 || NewTimeIndex >= Package.Time.Count)
+	if (FMath::IsNaN(NewTimePosition) || NewTimePosition < 0.0 || NewTimePosition > Package.Time.Count - 1)
 	{
 		return false;
 	}
-	TimeIndex = NewTimeIndex;
+	TimePosition = NewTimePosition;
+	TimeIndex = static_cast<int32>(FMath::FloorToDouble(TimePosition));
 
-	const FLsnBodySeries* Sun = Package.FindSeries(TEXT("SUN"));
-	const FLsnBodySeries* Earth = Package.FindSeries(TEXT("EARTH"));
-
-	if (Sun && Sun->AzimuthDeg.IsValidIndex(TimeIndex) && !FMath::IsNaN(Sun->AzimuthDeg[TimeIndex]) && !FMath::IsNaN(Sun->ElevationDeg[TimeIndex]))
+	FLsnBodyAtTime Sun, Earth;
+	SampleBody(TEXT("SUN"), TimePosition, Sun);
+	SampleBody(TEXT("EARTH"), TimePosition, Earth);
+	if (Sun.bValid)
 	{
-		const FVector ToSun = FLsnSiteFrame::AzElToUnrealDir(Sun->AzimuthDeg[TimeIndex], Sun->ElevationDeg[TimeIndex]);
+		const FVector ToSun = FLsnSiteFrame::AzElToUnrealDir(Sun.AzimuthDeg, Sun.ElevationDeg);
 		// A directional light shines along its forward axis: away from the Sun.
 		SunLight->SetWorldRotation((-ToSun).Rotation());
-		if (Sun->AngularRadiusDeg.IsValidIndex(TimeIndex) && !FMath::IsNaN(Sun->AngularRadiusDeg[TimeIndex]))
+		if (Sun.bHasAngularRadius)
 		{
 			// The engine's source angle is the angular diameter of the light source.
-			SunLight->SetLightSourceAngle(2.0f * Sun->AngularRadiusDeg[TimeIndex]);
+			SunLight->SetLightSourceAngle(static_cast<float>(2.0 * Sun.AngularRadiusDeg));
 		}
 		SunLight->SetVisibility(true);
 	}

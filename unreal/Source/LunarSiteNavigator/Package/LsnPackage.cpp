@@ -77,6 +77,17 @@ namespace
 		return Value;
 	}
 
+	/** A number that the contract allows to be null or absent: NaN in that case. */
+	double GetNumberOrNaN(const FJsonObjectPtr& Parent, const TCHAR* Field)
+	{
+		double Value = 0.0;
+		if (!Parent.IsValid() || !Parent->HasTypedField<EJson::Number>(Field) || !Parent->TryGetNumberField(Field, Value))
+		{
+			return std::numeric_limits<double>::quiet_NaN();
+		}
+		return Value;
+	}
+
 	/** A quantity is {"value", "unit", "method"}; the unit is checked against what the reader expects. */
 	double GetQuantity(FLsnReadContext& Ctx, const FJsonObjectPtr& Parent, const TCHAR* Field, const TCHAR* ExpectedUnit, const TCHAR* Where)
 	{
@@ -299,6 +310,60 @@ FString FLsnSitePackage::UtcLabelOfSample(int32 SampleIndex) const
 		Sample.GetHour(), Sample.GetMinute(), Sample.GetSecond(), Sample.GetMillisecond());
 }
 
+const FLsnWindow* FLsnSitePackage::FindWindow(const FString& Id, int32 InHeightIndex) const
+{
+	return Windows.FindByPredicate([&](const FLsnWindow& W) { return W.HeightIndex == InHeightIndex && W.Id == Id; });
+}
+
+const FLsnMetric* FLsnSitePackage::FindMetric(const FString& Id, int32 InHeightIndex) const
+{
+	return Metrics.FindByPredicate([&](const FLsnMetric& M) { return M.HeightIndex == InHeightIndex && M.Id == Id; });
+}
+
+FLsnCountdown FLsnSitePackage::CountdownAt(const FString& Body, int32 InHeightIndex, double EtS) const
+{
+	FLsnCountdown Out;
+	const FLsnWindow* Window = bHasTimeline ? FindWindow(Body.ToLower() + TEXT("_visible"), InHeightIndex) : nullptr;
+	if (!Window)
+	{
+		return Out;
+	}
+	Out.bAvailable = true;
+	Out.WindowId = Window->Id;
+	Out.Method = Window->Method;
+	const double RangeEndEtS = Time.StartEtS + Time.StepS * (Time.Count - 1);
+	const int32 Num = Window->StartsEtS.Num();
+	for (int32 I = 0; I < Num; ++I)
+	{
+		if (EtS < Window->StartsEtS[I])
+		{
+			// Not visible; this interval is the next rise.
+			Out.SecondsToChange = Window->StartsEtS[I] - EtS;
+			Out.ChangeUtc = Window->StartsUtc[I];
+			return Out;
+		}
+		// An interval is open at its end, except a last interval cut off by the end of the
+		// computed range: there the condition still holds at the very last instant.
+		const bool bCutOffAtRangeEnd = (I == Num - 1) && Window->bClippedEnd;
+		if (EtS < Window->EndsEtS[I] || (bCutOffAtRangeEnd && EtS <= Window->EndsEtS[I]))
+		{
+			Out.bVisibleNow = true;
+			Out.SecondsToChange = Window->EndsEtS[I] - EtS;
+			// A last interval that touches the end of the computed range has no known end.
+			Out.bLowerBound = (I == Num - 1) && Window->bClippedEnd;
+			if (!Out.bLowerBound)
+			{
+				Out.ChangeUtc = Window->EndsUtc[I];
+			}
+			return Out;
+		}
+	}
+	// After the last interval: no rise inside the computed range.
+	Out.bLowerBound = true;
+	Out.SecondsToChange = FMath::Max(RangeEndEtS - EtS, 0.0);
+	return Out;
+}
+
 bool FLsnDirectionTable::PositionKm(const FString& Body, int32 RecordIndex, FVector& OutPositionKm) const
 {
 	const int32 BodyIndex = Bodies.IndexOfByKey(Body);
@@ -489,9 +554,76 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 				Event.Utc = GetString(Ctx, *EventObject, TEXT("utc"), TEXT("event"));
 				Event.AzimuthDeg = GetNumber(Ctx, *EventObject, TEXT("azimuth_deg"), TEXT("event"));
 				Event.HorizonElevationDeg = GetNumber(Ctx, *EventObject, TEXT("horizon_elevation_deg"), TEXT("event"));
-				Event.ObstacleDistanceM = GetNumber(Ctx, *EventObject, TEXT("obstacle_distance_m"), TEXT("event"));
+				// The terrain point of an event may be unknown (null in the package).
+				Event.ObstacleDistanceM = GetNumberOrNaN(*EventObject, TEXT("obstacle_distance_m"));
 				Event.Method = GetString(Ctx, *EventObject, TEXT("method"), TEXT("event"));
 				P.Events.Add(Event);
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Windows = nullptr;
+		if (!Ctx.Failed() && Timeline->TryGetArrayField(TEXT("windows"), Windows) && Windows)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Windows)
+			{
+				const FJsonObjectPtr* WindowObject = nullptr;
+				if (!Value.IsValid() || !Value->TryGetObject(WindowObject) || !WindowObject)
+				{
+					continue;
+				}
+				FLsnWindow Window;
+				Window.Id = GetString(Ctx, *WindowObject, TEXT("id"), TEXT("window"));
+				Window.Subject = GetString(Ctx, *WindowObject, TEXT("subject"), TEXT("window"));
+				Window.HeightIndex = static_cast<int32>(GetNumber(Ctx, *WindowObject, TEXT("height_index"), TEXT("window")));
+				Window.Method = GetString(Ctx, *WindowObject, TEXT("method"), TEXT("window"));
+				(*WindowObject)->TryGetBoolField(TEXT("clipped_start"), Window.bClippedStart);
+				(*WindowObject)->TryGetBoolField(TEXT("clipped_end"), Window.bClippedEnd);
+				const TArray<TSharedPtr<FJsonValue>>* IntervalsEt = nullptr;
+				const TArray<TSharedPtr<FJsonValue>>* IntervalsUtc = nullptr;
+				if (Ctx.Failed() || !(*WindowObject)->TryGetArrayField(TEXT("intervals_et_s"), IntervalsEt) || !IntervalsEt
+					|| !(*WindowObject)->TryGetArrayField(TEXT("intervals_utc"), IntervalsUtc) || !IntervalsUtc || IntervalsUtc->Num() != IntervalsEt->Num())
+				{
+					Ctx.Fail(FString::Printf(TEXT("window '%s' has no matching intervals_et_s and intervals_utc"), *Window.Id));
+					break;
+				}
+				for (int32 I = 0; I < IntervalsEt->Num(); ++I)
+				{
+					const TArray<TSharedPtr<FJsonValue>>& Et = (*IntervalsEt)[I]->AsArray();
+					const TArray<TSharedPtr<FJsonValue>>& Utc = (*IntervalsUtc)[I]->AsArray();
+					if (Et.Num() != 2 || Utc.Num() != 2 || !(Et[1]->AsNumber() > Et[0]->AsNumber())
+						|| (I > 0 && !(Et[0]->AsNumber() >= Window.EndsEtS.Last())))
+					{
+						Ctx.Fail(FString::Printf(TEXT("window '%s' has intervals that are not sorted pairs"), *Window.Id));
+						break;
+					}
+					Window.StartsEtS.Add(Et[0]->AsNumber());
+					Window.EndsEtS.Add(Et[1]->AsNumber());
+					Window.StartsUtc.Add(Utc[0]->AsString());
+					Window.EndsUtc.Add(Utc[1]->AsString());
+				}
+				P.Windows.Add(MoveTemp(Window));
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Metrics = nullptr;
+		if (!Ctx.Failed() && Timeline->TryGetArrayField(TEXT("metrics"), Metrics) && Metrics)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Metrics)
+			{
+				const FJsonObjectPtr* MetricObject = nullptr;
+				if (!Value.IsValid() || !Value->TryGetObject(MetricObject) || !MetricObject)
+				{
+					continue;
+				}
+				FLsnMetric Metric;
+				Metric.Id = GetString(Ctx, *MetricObject, TEXT("id"), TEXT("metric"));
+				Metric.Unit = GetString(Ctx, *MetricObject, TEXT("unit"), TEXT("metric"));
+				Metric.Method = GetString(Ctx, *MetricObject, TEXT("method"), TEXT("metric"));
+				(*MetricObject)->TryGetStringField(TEXT("label"), Metric.Label);
+				const double Height = GetNumberOrNaN(*MetricObject, TEXT("height_index"));
+				Metric.HeightIndex = FMath::IsNaN(Height) ? -1 : static_cast<int32>(Height);
+				const double Number = GetNumberOrNaN(*MetricObject, TEXT("value"));
+				Metric.bHasValue = !FMath::IsNaN(Number);
+				Metric.Value = Metric.bHasValue ? Number : 0.0;
+				P.Metrics.Add(MoveTemp(Metric));
 			}
 		}
 	}
