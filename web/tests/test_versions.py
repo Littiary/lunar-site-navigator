@@ -20,7 +20,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 INDEX_03 = FIXTURES / "contract-sample-0.3" / "packages" / "index.json"
 SITE_03 = INDEX_03.parent / "site" / "synthetic-sample-site" / "site-0c0ce671f55e8cb1"
 REPO = Path(__file__).resolve().parents[2]
-REAL_INDEX = REPO / "build" / "packages" / "provisional-0.1" / "sites" / "index.json"
+REAL_INDEX = REPO / "packages" / "index.json"  # published by the core stream (main, 945546d)
 SVG = "{http://www.w3.org/2000/svg}"
 NOTICE = "PROVISIONAL TEST NOTICE"
 
@@ -106,9 +106,9 @@ class CommandLineTests(unittest.TestCase):
             self.assertIn(NOTICE, (Path(tmp) / "window_strip.svg").read_text(encoding="utf-8"))
 
 
-@unittest.skipUnless(REAL_INDEX.exists(), "real packages not present under build/packages/provisional-0.1")
+@unittest.skipUnless(REAL_INDEX.exists(), "published packages/ not present on this branch")
 class RealPackageTests(unittest.TestCase):
-    """Runs only where the provisional real packages have been extracted (not in git)."""
+    """Reads and draws the real packages published in packages/ by the core stream."""
 
     def test_every_real_package_is_read_and_drawn(self):
         sites = package.load_index(REAL_INDEX)

@@ -55,13 +55,15 @@ The page loads nothing from the network: the charts are embedded as data URIs an
 
 ## Provisional outputs from the real site packages
 
-The core stream handed over the three south-polar site packages and their direction table as `packages_sites.zip` (contract 0.1, written 2026-11-14 by core commit `6f74153` with uncommitted changes; they match `validation/sites/results/site_summary.json` of ephem commit `b90be63`). They are kept outside git under `build/packages/provisional-0.1/sites/` and the outputs under `web/dist/provisional-0.1/` (both folders are ignored). Every chart and the page carry a "PROVISIONAL RESULTS, NOT FINAL" banner. When the core stream commits updated packages, the outputs are rebuilt from those with the same two commands.
+The core stream publishes the real packages of the three south-polar sites in `packages/` at the repository root (commit `945546d`: contract 0.1, generated from core commit `d1af9e6` with a clean working tree; see `packages/README.md`). The outputs are built from there into `web/dist/provisional-0.1/`, a folder that git ignores. Every chart and the page carry a "PROVISIONAL RESULTS, NOT FINAL" banner until the packages are final. When updated packages are published, fetch and rebuild with the same two commands:
 
 ```
 cd web
-python -m lsn_web.charts ../build/packages/provisional-0.1/sites/index.json --out ../web/dist/provisional-0.1 --notice "<text>"
-python -m lsn_web.evidence ../build/packages/provisional-0.1/sites/index.json --card <validation_card.json> --notice "<text>" --out ../web/dist/provisional-0.1/evidence.html
+python -m lsn_web.charts ../packages/index.json --out ../web/dist/provisional-0.1 --notice "<text>"
+python -m lsn_web.evidence ../packages/index.json --card ../validation/card/validation_card.json --notice "<text>" --out ../web/dist/provisional-0.1/evidence.html
 ```
+
+Before publication the same packages arrived as `packages_sites.zip`; their content digests are identical to the published ones.
 
 ## Tests
 
@@ -77,4 +79,4 @@ Fixtures are byte-for-byte copies; refresh them only by copying again from their
 | `tests/fixtures/contract-sample-0.3/` | the same folder at `ad40648` (contract 0.3, synthetic) |
 | `tests/fixtures/validation-card/validation_card.json` | `validation/card/validation_card.json` of the ephemeris branch at `a8bbc5a` |
 
-`tests/test_versions.py` also has a test that reads and draws the real packages. It runs only where they have been extracted under `build/packages/provisional-0.1/`, and is skipped elsewhere.
+`tests/test_versions.py` also reads and draws the published real packages in `packages/`, checking every array against its manifest.
