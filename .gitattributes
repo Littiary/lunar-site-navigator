@@ -1,0 +1,6 @@
+# Package arrays are raw binary: never convert line endings.
+*.f4 binary
+*.f8 binary
+*.i4 binary
+*.u1 binary
+CREDITS.md merge=union

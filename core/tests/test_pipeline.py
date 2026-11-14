@@ -1,0 +1,100 @@
+"""The real horizon, end to end: scenario or command line in, valid package out."""
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from lsncore import cli
+from lsncore.contract import read_package, validate_package
+from lsncore.dem import AnalyticTerrain
+from lsncore.pipeline import BODY_FIXED_FRAME, run_scenario
+from lsncore.scenario import single_site_scenario
+
+R = 1_737_400.0
+
+
+def _ridge(lon, lat):
+    # a smooth east-west ridge system, enough relief for a non-trivial horizon
+    return 800.0 * np.sin(np.radians(lon) * 3.0) * np.cos(np.radians(lat) * 40.0)
+
+
+def test_scenario_with_real_horizon_writes_a_valid_package(tmp_path):
+    terrain = AnalyticTerrain(_ridge, R, ceiling_height_m=800.0, dem_set_id="ANALYTIC-ridges")
+    scenario = single_site_scenario(
+        "ridge-site", "Analytic ridge site", -86.0, 20.0, dem_set_id="ANALYTIC-ridges", synthetic=False,
+        azimuth_step_deg=1.0, max_range_m=150_000.0,
+    )
+    (path,) = run_scenario(scenario, tmp_path, terrain)
+    manifest = validate_package(path)
+    pkg = read_package(path)
+    hz = manifest["horizon"]
+
+    assert manifest["status"] == "ok" and manifest["synthetic"] is False
+    assert manifest["site"]["frame"] == BODY_FIXED_FRAME
+    assert manifest["site"]["reference_radius_m"]["value"] == R
+    assert manifest["inputs"]["dem"]["dem_set_id"] == "ANALYTIC-ridges"
+    assert hz["observer_heights_m"] == [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]
+    elevation = pkg.array(hz["elevation_deg"])
+    assert elevation.shape == (6, 360) and np.isfinite(elevation).all()
+    # every number has a card, and the horizon cards state how they were checked
+    card = manifest["methods"][hz["elevation_deg"]["method"]]
+    assert card["validation"]["status"] == "analytic-test-passed"
+    assert card["parameters"]["max_range_m"] == 150_000.0
+    assert card["data"] == ["ANALYTIC-ridges"]
+    # search radius and its error bound are part of the package
+    bounds = hz["error_bounds"]
+    assert {"far_field_max_deg", "far_field_open_azimuth_fraction", "ceiling_height_m", "shortest_reach_m"} <= bounds.keys()
+    assert bounds["shortest_reach_m"]["value"] == 150_000.0
+    assert manifest["methods"][bounds["far_field_max_deg"]["method"]]["title"].startswith("Bound")
+    # site position is the ground point on the radial through the site
+    position = np.array(manifest["site"]["position_km"])
+    assert np.linalg.norm(position) * 1000.0 == pytest.approx(manifest["site"]["radius_m"]["value"], abs=1e-6)
+    assert np.allclose(position / np.linalg.norm(position), manifest["site"]["enu"]["up"], atol=1e-12)
+
+
+def test_same_request_gives_the_same_package(tmp_path):
+    terrain = AnalyticTerrain(_ridge, R, ceiling_height_m=800.0, dem_set_id="ANALYTIC-ridges")
+    scenario = single_site_scenario(
+        "ridge-site", "Analytic ridge site", -86.0, 20.0, dem_set_id="ANALYTIC-ridges", synthetic=False,
+        azimuth_step_deg=5.0, max_range_m=50_000.0,
+    )
+    (a,) = run_scenario(scenario, tmp_path / "a", terrain)
+    (b,) = run_scenario(scenario, tmp_path / "b", terrain)
+    assert a.name == b.name
+    assert read_package(a).manifest["content_sha256"] == read_package(b).manifest["content_sha256"]
+
+
+def test_scenario_naming_other_data_gets_a_warning(tmp_path):
+    terrain = AnalyticTerrain(_ridge, R, dem_set_id="ANALYTIC-ridges")
+    scenario = single_site_scenario(
+        "ridge-site", "Analytic ridge site", -86.0, 20.0, dem_set_id="something-else", synthetic=False,
+        azimuth_step_deg=5.0, max_range_m=50_000.0,
+    )
+    (path,) = run_scenario(scenario, tmp_path, terrain)
+    warnings = validate_package(path)["warnings"]
+    assert any("something-else" in w for w in warnings)
+    assert any("ceiling" in w for w in warnings)  # no ceiling supplied: the assumption is stated
+
+
+def test_cli_site_on_the_data_streams_synthetic_dem(tmp_path):
+    lsn_data = pytest.importorskip("lsn_data")
+    label = Path(lsn_data.__file__).resolve().parents[1] / "fixtures" / "synth_s90_100m.lbl"
+    if not label.exists():
+        pytest.skip("synthetic DEM fixture of the data stream not found")
+    code = cli.main([
+        "site", "--lat", "-90", "--lon", "0", "--name", "Fixture pole", "--out", str(tmp_path),
+        "--dem-label", str(label), "--max-range-km", "19", "--azimuth-step", "1",
+    ])
+    assert code == 0
+    index = json.loads((tmp_path / "index.json").read_text())
+    (entry,) = index["packages"]
+    manifest = validate_package(tmp_path / entry["path"])
+    # a test surface is not the Moon: the package must say so even though the algorithm is real
+    assert manifest["synthetic"] is True and "SYNTHETIC TERRAIN" in manifest["synthetic_notice"]
+    assert manifest["inputs"]["dem"]["layers"][0]["product_id"] == "SYNTH_S90_100M"
+    pkg = read_package(tmp_path / entry["path"])
+    elevation = pkg.array(manifest["horizon"]["elevation_deg"])
+    h = manifest["horizon"]["default_height_index"]
+    assert abs(int(np.argmax(elevation[h])) - 90) <= 1  # the cone lies towards 90 deg east

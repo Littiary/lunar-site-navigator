@@ -1,0 +1,25 @@
+{
+  "title": "Acceptance thresholds: eclipse of the Sun by the Earth seen from a lunar site, against the published eclipse of 14 March 2025",
+  "written_utc": "2026-11-14T11:24:00Z",
+  "rule": "Written and committed together with cases.json before the eclipse code of the core was run on this eclipse. Not edited afterwards. If a check fails, the cause is looked for and reported; the threshold stays.",
+  "disclosure": "Not a blind test. Research done before the hackathon had computed the contact times of this eclipse at the Blue Ghost site with JPL Horizons, so their rough values were known when this file was written. The thresholds follow from the fixed rules below, which use only the printed precision of each source and a stated allowance for the edge of the Earth.",
+  "model_under_test": "The Earth is an opaque disc of its equatorial radius (no atmosphere); the Sun is a uniform disc. Contacts: C1 and C4 when the two discs touch from outside (separation = Earth radius + Sun radius), C2 and C3 when the Sun's disc touches the Earth's limb from inside (separation = Earth radius - Sun radius). All angles as seen from the site, with parallax.",
+  "rules": {
+    "E1_contact_time_at_the_site": {
+      "threshold_minutes": 2.0,
+      "applies_to": "A contact time at the landing site that the operator printed to the minute.",
+      "why_this_value": "0.5 min for a time printed to the minute, plus 1.5 min for the unknown edge convention of the source: an opaque atmosphere layer of up to 90 km changes the Earth's angular radius by up to 0.013 degree, which the Sun crosses relative to the Earth in about 1.5 min."
+    },
+    "E2_duration_of_totality": {
+      "threshold_minutes": 3.5,
+      "applies_to": "A duration of totality printed to the minute and called approximate by the source.",
+      "why_this_value": "0.5 min for rounding plus the 1.5 min edge allowance at each of the two contacts."
+    },
+    "E3_nesting_inside_whole_moon_contacts": {
+      "allowance_minutes": 2.0,
+      "applies_to": "The contact times that NASA publishes for the Moon as a whole (first and last contact of the Moon with the penumbra and the umbra, and the Moon entirely inside the umbra).",
+      "comparison": "A point on the Moon can enter the penumbra no earlier than the Moon does (P1) and leave it no later (P4); it enters the umbra between U1 and U2 and leaves it between U3 and U4. The contacts at the site must respect these inequalities, each with the allowance.",
+      "why_this_value": "NASA's chart enlarges the Earth's shadow for the atmosphere (Danjon rule) and assumes Delta T = 75 s; the core uses the solid Earth. The enlargement moves the whole-Moon contacts by about 1.5 min; the Delta T assumption by about 6 s."
+    }
+  }
+}

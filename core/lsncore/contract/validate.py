@@ -1,0 +1,260 @@
+"""Validation of contract documents and of whole package directories.
+
+Two layers:
+1. the JSON Schema (structure, types, required fields);
+2. checks a schema cannot express: array files exist with the stated size, digest and NaN
+   count; every 'method' points at a method card; array shapes agree with the axes; the
+   package id and the content digest can be recomputed; synthetic data is labelled.
+"""
+
+from __future__ import annotations
+
+import functools
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Iterator
+
+import numpy as np
+from jsonschema import Draft202012Validator
+
+from .io import (
+    CONTRACT_VERSION,
+    compute_content_sha256,
+    compute_package_id,
+    contract_dir,
+)
+
+KINDS = ("site", "direction_table", "scenario", "index")
+
+
+class ContractError(ValueError):
+    """Raised when a document or a package does not satisfy the contract."""
+
+    def __init__(self, errors: list[str]):
+        self.errors = errors
+        super().__init__("contract violation:\n  " + "\n  ".join(errors))
+
+
+@functools.lru_cache(maxsize=1)
+def load_schema() -> dict:
+    path = contract_dir() / "schemas" / "lsn-contract.schema.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@functools.lru_cache(maxsize=None)
+def _validator(kind: str) -> Draft202012Validator:
+    schema = load_schema()
+    sub = {"$schema": schema["$schema"], "$defs": schema["$defs"], "$ref": f"#/$defs/{kind}"}
+    Draft202012Validator.check_schema(sub)
+    return Draft202012Validator(sub)
+
+
+def _schema_errors(doc: Any) -> list[str]:
+    if not isinstance(doc, dict) or doc.get("kind") not in KINDS:
+        return [f"'kind' must be one of {KINDS}"]
+    errors = []
+    for err in sorted(_validator(doc["kind"]).iter_errors(doc), key=lambda e: list(e.absolute_path)):
+        where = "/".join(str(p) for p in err.absolute_path) or "<root>"
+        errors.append(f"{where}: {err.message}")
+    version = doc.get("contract", {}).get("version")
+    if version != CONTRACT_VERSION:
+        errors.append(f"contract/version: found {version!r}, this reader implements {CONTRACT_VERSION!r}")
+    return errors
+
+
+def validate_document(doc: Any) -> None:
+    """Validate a JSON document (manifest, scenario or index) against the schema only."""
+    errors = _schema_errors(doc)
+    if errors:
+        raise ContractError(errors)
+
+
+def _walk(node: Any, path: str = "") -> Iterator[tuple[str, dict]]:
+    if isinstance(node, dict):
+        yield path, node
+        for key, value in node.items():
+            yield from _walk(value, f"{path}/{key}")
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            yield from _walk(value, f"{path}/{i}")
+
+
+def _is_array_ref(node: dict) -> bool:
+    return {"file", "dtype", "shape", "sha256"} <= node.keys()
+
+
+def _check_arrays(path: Path, manifest: dict, errors: list[str]) -> None:
+    seen: set[str] = set()
+    for where, node in _walk(manifest):
+        if not _is_array_ref(node):
+            continue
+        file = node["file"]
+        if file in seen:
+            errors.append(f"{where}: file {file} is referenced more than once")
+        seen.add(file)
+        fpath = path / file
+        if not fpath.is_file():
+            errors.append(f"{where}: missing array file {file}")
+            continue
+        dtype = np.dtype(node["dtype"])
+        expected = int(np.prod(node["shape"])) * dtype.itemsize
+        data = fpath.read_bytes()
+        if len(data) != expected:
+            errors.append(f"{where}: {file} has {len(data)} bytes, shape and dtype need {expected}")
+            continue
+        if hashlib.sha256(data).hexdigest() != node["sha256"]:
+            errors.append(f"{where}: sha256 of {file} does not match the manifest")
+        if dtype.kind == "f":
+            nan_count = int(np.isnan(np.frombuffer(data, dtype=dtype)).sum())
+            if nan_count != node["nan_count"]:
+                errors.append(f"{where}: {file} holds {nan_count} NaN, manifest says {node['nan_count']}")
+    stray = {p.name for p in path.iterdir() if p.is_file()} - seen - {"manifest.json"}
+    if stray:
+        errors.append(f"files not referenced by the manifest: {sorted(stray)}")
+
+
+def _check_methods(manifest: dict, errors: list[str]) -> None:
+    cards = manifest.get("methods", {})
+    used: set[str] = set()
+    for where, node in _walk(manifest):
+        if where.startswith("/methods"):
+            continue
+        method = node.get("method")
+        if isinstance(method, str):
+            used.add(method)
+            if method not in cards:
+                errors.append(f"{where}: method card '{method}' is not defined in 'methods'")
+    for unused in sorted(set(cards) - used):
+        errors.append(f"methods/{unused}: card is not referenced by any number")
+    if manifest.get("synthetic"):
+        for name, card in cards.items():
+            if card["validation"]["status"] != "synthetic":
+                errors.append(f"methods/{name}: synthetic package, validation status must be 'synthetic'")
+    else:
+        for name, card in cards.items():
+            if card["validation"]["status"] == "synthetic":
+                errors.append(f"methods/{name}: status 'synthetic' in a package not marked synthetic")
+
+
+def _expect_shape(ref: dict | None, shape: list[int], where: str, errors: list[str]) -> None:
+    if ref is not None and ref["shape"] != shape:
+        errors.append(f"{where}: shape {ref['shape']} but the axes require {shape}")
+
+
+def _check_site(manifest: dict, errors: list[str]) -> None:
+    hz = manifest["horizon"]
+    az = hz["azimuth"]
+    if abs(az["count"] * az["step_deg"] - 360.0) > 1e-9:
+        errors.append("horizon/azimuth: count * step_deg must equal 360")
+    heights = hz["observer_heights_m"]
+    if heights != manifest["request"]["observer_heights_m"]:
+        errors.append("horizon/observer_heights_m differs from request/observer_heights_m")
+    if heights != sorted(set(heights)):
+        errors.append("horizon/observer_heights_m must be strictly increasing")
+    if hz["default_height_index"] >= len(heights):
+        errors.append("horizon/default_height_index is out of range")
+    shape = [len(heights), az["count"]]
+    for name in (
+        "elevation_deg", "distance_m", "obstacle_height_m", "obstacle_lat_deg",
+        "obstacle_lon_deg", "obstacle_dem_layer", "elevation_sigma_deg",
+        "elevation_lower_deg", "elevation_upper_deg",
+    ):
+        _expect_shape(hz.get(name), shape, f"horizon/{name}", errors)
+
+    site = manifest["site"]
+    req_site = manifest["request"]["site"]
+    for key in ("site_id", "lat_deg", "lon_deg"):
+        if site[key] != req_site[key]:
+            errors.append(f"site/{key} differs from request/site/{key}")
+
+    tl = manifest.get("timeline")
+    if tl is None:
+        return
+    n = tl["time"]["count"]
+    dt_input = manifest["inputs"]["direction_table"]
+    if dt_input is None or dt_input["package_id"] != tl["direction_table_id"]:
+        errors.append("timeline/direction_table_id must match inputs/direction_table/package_id")
+    for body in tl["bodies"]:
+        series = tl["series"].get(body)
+        if series is None:
+            errors.append(f"timeline/series/{body}: missing series for a listed body")
+            continue
+        for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg"):
+            _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
+        for name in ("margin_deg", "visible_fraction"):
+            _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
+    t0 = tl["time"]["start_et_s"]
+    t1 = t0 + (n - 1) * tl["time"]["step_s"]
+    last = None
+    for i, ev in enumerate(tl["events"]):
+        if ev["height_index"] >= len(heights):
+            errors.append(f"timeline/events/{i}: height_index out of range")
+        if not (t0 <= ev["et_s"] <= t1):
+            errors.append(f"timeline/events/{i}: et_s outside the time grid")
+        if last is not None and ev["et_s"] < last:
+            errors.append(f"timeline/events/{i}: events must be sorted by et_s")
+        last = ev["et_s"]
+    for i, win in enumerate(tl["windows"]):
+        if win["height_index"] >= len(heights):
+            errors.append(f"timeline/windows/{i}: height_index out of range")
+        if len(win["intervals_et_s"]) != len(win["intervals_utc"]):
+            errors.append(f"timeline/windows/{i}: intervals_et_s and intervals_utc differ in length")
+        prev_end = None
+        for a, b in win["intervals_et_s"]:
+            if not a < b or (prev_end is not None and a <= prev_end):
+                errors.append(f"timeline/windows/{i}: intervals must be non-empty, sorted and disjoint")
+                break
+            prev_end = b
+
+
+def _check_direction_table(manifest: dict, errors: list[str]) -> None:
+    n = manifest["time"]["count"]
+    bodies = manifest["bodies"]
+    _expect_shape(manifest["positions_km"], [n, len(bodies), 3], "positions_km", errors)
+    if manifest["positions_km"]["dtype"] != "<f8":
+        errors.append("positions_km: dtype must be <f8")
+    for body in bodies:
+        if body not in manifest["body_radii_km"]:
+            errors.append(f"body_radii_km: missing radius for {body}")
+    req = manifest["request"]
+    for key in ("frame", "center", "aberration_correction", "bodies"):
+        if manifest[key] != req[key]:
+            errors.append(f"{key} differs from request/{key}")
+    for key in ("start_et_s", "step_s", "count"):
+        if manifest["time"][key] != req[key]:
+            errors.append(f"time/{key} differs from request/{key}")
+
+
+def validate_package(path: Path | str) -> dict:
+    """Validate a package directory completely. Returns the manifest; raises ContractError."""
+    path = Path(path)
+    manifest_path = path / "manifest.json"
+    if not manifest_path.is_file():
+        raise ContractError([f"{path}: manifest.json not found"])
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    errors = _schema_errors(manifest)
+    if errors:
+        raise ContractError(errors)
+    if manifest["kind"] not in ("site", "direction_table"):
+        raise ContractError([f"kind '{manifest['kind']}' is a document, not a package"])
+
+    _check_arrays(path, manifest, errors)
+    _check_methods(manifest, errors)
+    if manifest["kind"] == "site":
+        _check_site(manifest, errors)
+    else:
+        _check_direction_table(manifest, errors)
+
+    expected_id = compute_package_id(
+        manifest["kind"], manifest["synthetic"], manifest["request"], manifest["inputs"]
+    )
+    if manifest["package_id"] != expected_id:
+        errors.append(f"package_id is {manifest['package_id']}, request and inputs give {expected_id}")
+    if manifest["content_sha256"] != compute_content_sha256(manifest):
+        errors.append("content_sha256 does not match the manifest content")
+    if path.name != manifest["package_id"]:
+        errors.append(f"directory name '{path.name}' differs from package_id")
+    if errors:
+        raise ContractError(errors)
+    return manifest

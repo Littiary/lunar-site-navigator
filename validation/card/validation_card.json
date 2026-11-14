@@ -1,0 +1,670 @@
+{
+  "title": "Validation card: ephemeris, time and event finding",
+  "generated_utc": "2026-11-14T11:48:38Z",
+  "generated_from": {
+    "commit": "6f74153",
+    "uncommitted_changes": true
+  },
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "reference_radius_km": 1737.4,
+    "kernel_set_id": "bfe870fccfa5",
+    "kernels": [
+      "naif0012.tls",
+      "pck00011.tpc",
+      "de440s.bsp",
+      "moon_pa_de440_200625.bpc",
+      "moon_de440_250416.tf"
+    ]
+  },
+  "summary": {
+    "checks": 24,
+    "passed": 24,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "id": "direction_exact",
+      "group": "Independent source",
+      "quantity": "Direction of the Sun and the Earth from a lunar surface point (observer at the site)",
+      "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons/thresholds.json (commit f25145f)"
+      },
+      "measured": {
+        "value": 0.004917975121611816,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
+      "limits": [
+        "No terrain on either side.",
+        "Both sides use JPL ephemerides of the same family (DE440, DE441)."
+      ]
+    },
+    {
+      "id": "direction_table",
+      "group": "Independent source",
+      "quantity": "Same direction through the site-independent direction table that viewers read",
+      "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons/thresholds.json (commit f25145f)"
+      },
+      "measured": {
+        "value": 0.0987982426998585,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
+      "limits": [
+        "No terrain on either side.",
+        "Both sides use JPL ephemerides of the same family (DE440, DE441).",
+        "The table applies light time and stellar aberration for the Moon's centre; that is the measured difference."
+      ]
+    },
+    {
+      "id": "angular_diameter",
+      "group": "Independent source",
+      "quantity": "Apparent angular diameter of the Sun and the Earth",
+      "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
+      "threshold": {
+        "value": 0.1,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons/thresholds.json (commit f25145f)"
+      },
+      "measured": {
+        "value": 0.0005720018889405765,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
+      "limits": [
+        "Equatorial width; the flattening of the Earth's disc (0.3 %) is not modelled."
+      ]
+    },
+    {
+      "id": "range",
+      "group": "Independent source",
+      "quantity": "Distance from the site to the Sun and to the Earth",
+      "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
+      "threshold": {
+        "value": 1.0,
+        "unit": "km",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons/thresholds.json (commit f25145f)"
+      },
+      "measured": {
+        "value": 0.004247566452249885,
+        "unit": "km"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
+      "limits": []
+    },
+    {
+      "id": "tdb_minus_utc",
+      "group": "Independent source",
+      "quantity": "Time scales: TDB minus UTC",
+      "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
+      "threshold": {
+        "value": 0.002,
+        "unit": "s",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons/thresholds.json (commit f25145f)"
+      },
+      "measured": {
+        "value": 3.803738438534765e-05,
+        "unit": "s"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
+      "limits": [
+        "For dates after the last announced leap second both sides assume that no further leap second is introduced."
+      ]
+    },
+    {
+      "id": "sun_rise_set_time",
+      "group": "Independent source",
+      "quantity": "Sunrise and sunset times on a smooth sphere (upper limb, with the dip of the horizon)",
+      "compared_against": "JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31",
+      "threshold": {
+        "value": 120.0,
+        "unit": "s",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons_rts/thresholds.json (commit 48afcd5)"
+      },
+      "measured": {
+        "value": 56.485689759254456,
+        "unit": "s"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons_rts/results/validation_table.md; test validation/tests/test_horizons_rts.py",
+      "limits": [
+        "No terrain.",
+        "The reference resolves one minute: a Horizons row is the first search step after the event, so 0 to 60 s is what agreement looks like.",
+        "Sun only."
+      ]
+    },
+    {
+      "id": "sun_rise_set_unmatched",
+      "group": "Independent source",
+      "quantity": "Sunrise and sunset events without a counterpart on the other side",
+      "compared_against": "JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31",
+      "threshold": {
+        "value": 0,
+        "unit": "events",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/horizons_rts/thresholds.json (commit 48afcd5)"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "events"
+      },
+      "status": "PASS",
+      "evidence": "validation/horizons_rts/results/validation_table.md",
+      "limits": []
+    },
+    {
+      "id": "station_earth_end",
+      "group": "Independent source",
+      "quantity": "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.42422114960522356,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_moon_end",
+      "group": "Independent source",
+      "quantity": "Moon end of a direct link: direction of a ground station seen from a lunar site (observer at the site)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.1930506168742497,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_fast_path_earth_end",
+      "group": "Independent source",
+      "quantity": "Elevation of the lunar site at the station through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 0.012,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 8.79670786204656e-05,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin.",
+        "The fast path evaluates both ends at one instant."
+      ]
+    },
+    {
+      "id": "station_fast_path_moon_end",
+      "group": "Independent source",
+      "quantity": "Direction of the station seen from the lunar site through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.2102176762149692,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "apollo_landing_angles",
+      "group": "Published mission record",
+      "quantity": "Sun and Earth altitude, azimuth and sub-points at the Apollo 11 and Apollo 16 landings, at the published landing times",
+      "compared_against": "Apollo Lunar Surface Journal table computed from the Nautical Almanac (https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt), retrieved 2026-11-14",
+      "cases": "16 published angles, 2 landings",
+      "threshold": {
+        "value": 0.05,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the core was run on these cases; not blind (earlier research had compared some of the published values with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/landers/thresholds.json and cases.json (commit eaf5634)"
+      },
+      "measured": {
+        "value": 0.03466784924627575,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "validation/landers/results/validation_table.md; test validation/tests/test_landers.py",
+      "limits": [
+        "The published angles are themselves computed (1960s almanac), not measured; the landing times and places are the mission record.",
+        "Smooth sphere; the site coordinates and the no-parallax definition of the source are used."
+      ]
+    },
+    {
+      "id": "apollo16_targeted_sun_angle",
+      "group": "Published mission record",
+      "quantity": "Sun elevation at the planned Apollo 16 landing time against the targeted angle of the launch window (the landing then slipped by 5 h 45 min, which raised the Sun by 2.88 deg)",
+      "compared_against": "NASA SP-2000-4029, Apollo by the Numbers, tables 'Launch Windows' and 'LM Lunar Landing', retrieved 2026-11-14",
+      "cases": "1 published angle and 2 published times",
+      "threshold": {
+        "value": 0.1,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the core was run on these cases; not blind (earlier research had compared some of the published values with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/landers/thresholds.json and cases.json (commit eaf5634)"
+      },
+      "measured": {
+        "value": 0.01705970534806056,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "validation/landers/results/validation_table.md; test validation/tests/test_landers.py",
+      "limits": [
+        "The planned landing time is derived from two published values."
+      ]
+    },
+    {
+      "id": "lander_operational_bounds",
+      "group": "Published mission record",
+      "quantity": "Physical bounds from operational records that are violated: Blue Ghost Mission 1 (sunset day; recorded daylight must end before geometric last light) and Chandrayaan-3 (sunrise over the terrain horizon must precede the expected wake-up day)",
+      "compared_against": "Firefly Aerospace press release of 17 March 2025; ISRO Chandrayaan-3 mission updates; LROC landing coordinates; retrieved 2026-11-14",
+      "cases": "3 bounds; Blue Ghost on a smooth sphere, Chandrayaan-3 with the LOLA terrain horizon",
+      "threshold": {
+        "value": 0,
+        "unit": "bounds violated",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the core was run on these cases; not blind (earlier research had compared some of the published values with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/landers/thresholds.json and cases.json (commit eaf5634)"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "bounds violated"
+      },
+      "status": "PASS",
+      "evidence": "validation/landers/results/validation_table.md; test validation/tests/test_landers.py",
+      "limits": [
+        "One-sided checks: they can show the core wrong, they do not confirm an event time.",
+        "Blue Ghost recorded 346 h of daylight, ending 2.3 h before smooth-sphere last light; local terrain is not in the project data for that site.",
+        "ISRO expected the wake-up about 1.8 days after the computed sunrise; ISRO published no sunrise time."
+      ]
+    },
+    {
+      "id": "eclipse_contact_times",
+      "group": "Published mission record",
+      "quantity": "Eclipse of the Sun by the Earth on 14 March 2025 at the Blue Ghost landing point: start of the partial phase, start of totality, end of the partial phase",
+      "compared_against": "Contact times predicted by the operator, Firefly Aerospace, printed to the minute (https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/), retrieved 2026-11-14",
+      "cases": "3 contact times at one site",
+      "threshold": {
+        "value": 2.0,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.8320313612620036,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Opaque Earth without atmosphere; the real edge of the shadow is soft over about a minute.",
+        "The operator's times are predictions, not measurements; its images of the eclipse are timed only to about half an hour.",
+        "The operator labels the times CST; they are read as local Texas time (UTC-5), which the NASA chart confirms independently."
+      ]
+    },
+    {
+      "id": "eclipse_totality_duration",
+      "group": "Published mission record",
+      "quantity": "Duration of totality at the Blue Ghost landing point, 14 March 2025 (the operator: approximately 2 hours and 16 minutes)",
+      "compared_against": "Firefly Aerospace, Blue Ghost Mission 1 live updates, retrieved 2026-11-14",
+      "cases": "1 duration",
+      "threshold": {
+        "value": 3.5,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 1.0234375,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Called approximate by the source."
+      ]
+    },
+    {
+      "id": "eclipse_inside_whole_moon_contacts",
+      "group": "Independent source",
+      "quantity": "Contacts at the site that fall outside the whole-Moon contacts of the same eclipse (a point of the Moon cannot enter the shadow before the Moon does or leave it after)",
+      "compared_against": "NASA GSFC eclipse chart, F. Espenak, 'Total Lunar Eclipse of 2025 Mar 14' (https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2025Mar14T.pdf), retrieved 2026-11-14",
+      "cases": "4 inequalities, allowance 2 min for NASA's enlarged shadow",
+      "threshold": {
+        "value": 0,
+        "unit": "contacts outside",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "contacts outside"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "One-sided: the margins are 9 to 63 min, so this only excludes gross errors."
+      ]
+    },
+    {
+      "id": "projection_vs_azlcpo",
+      "group": "Independent implementation",
+      "quantity": "East-North-Up projection of the core against the SPICE routine azlcpo (same kernels, separate code)",
+      "compared_against": "NAIF SPICE Toolkit N0067, routine azlcpo",
+      "cases": "3668 rows: 7 points, Sun and Earth, 60 days",
+      "threshold": {
+        "value": 1e-06,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/ephem/test_directions.py (commit aa86a5a)"
+      },
+      "measured": {
+        "value": 1.0177747901725484e-13,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/ephem/test_directions.py::test_exact_path_matches_azlcpo",
+      "limits": [
+        "Checks the projection only; ephemeris and frame are shared."
+      ]
+    },
+    {
+      "id": "table_shortcut",
+      "group": "Internal consistency",
+      "quantity": "Direction table (observer at the Moon's centre, site vector subtracted) against the observer at the site",
+      "compared_against": "the core's own exact path (SPICE spkcpo)",
+      "cases": "3668 rows: 7 points, Sun and Earth, 60 days",
+      "threshold": {
+        "value": 0.2,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/ephem/test_directions.py (commit aa86a5a)"
+      },
+      "measured": {
+        "value": 0.09640801747528174,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/ephem/test_directions.py::test_table_path_matches_exact_path",
+      "limits": []
+    },
+    {
+      "id": "table_interpolation",
+      "group": "Internal consistency",
+      "quantity": "Hourly direction table, 4-point interpolation, against direct SPICE at random times",
+      "compared_against": "direct SPICE evaluation",
+      "cases": "20000 vectors over 90 days",
+      "threshold": {
+        "value": 0.01,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/events/test_events.py (commit 5a14bcb)"
+      },
+      "measured": {
+        "value": 1.4008512275818465e-05,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/events/test_events.py::test_table_interpolation_error_is_below_threshold",
+      "limits": [
+        "Valid inside the table only."
+      ]
+    },
+    {
+      "id": "visible_fraction",
+      "group": "Closed form",
+      "quantity": "Visible fraction of a disc cut by a straight horizon",
+      "compared_against": "area of a circular segment (closed form)",
+      "cases": "481 disc positions from fully hidden to fully visible",
+      "threshold": {
+        "value": 0.002,
+        "unit": "fraction of the disc",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/events/test_events.py (commit 5a14bcb)"
+      },
+      "measured": {
+        "value": 5.6727616731699904e-05,
+        "unit": "fraction of the disc"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/events/test_events.py::test_visible_fraction_matches_closed_form_on_flat_horizon",
+      "limits": [
+        "Uniform disc: no limb darkening."
+      ]
+    },
+    {
+      "id": "event_time_analytic",
+      "group": "Closed form",
+      "quantity": "Rise and set times in cases with a known answer (linear motion, diurnal arc, terrain ramp, short occultation)",
+      "compared_against": "closed-form event times",
+      "cases": "14 events in 4 cases",
+      "threshold": {
+        "value": 1.0,
+        "unit": "s",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/events/test_events.py (commit 5a14bcb)"
+      },
+      "measured": {
+        "value": 0.234375,
+        "unit": "s"
+      },
+      "status": "PASS",
+      "evidence": "tests core/tests/events/test_events.py (analytic cases)",
+      "limits": [
+        "Numerical accuracy for a given horizon profile; not the physical accuracy of an event time on real terrain."
+      ]
+    },
+    {
+      "id": "event_time_sphere",
+      "group": "Internal consistency",
+      "quantity": "Sun events on a smooth sphere from the interpolated table against the zero crossing of the exact SPICE elevation",
+      "compared_against": "direct SPICE evaluation at the site",
+      "cases": "11 events, three thresholds, 45 days",
+      "threshold": {
+        "value": 1.0,
+        "unit": "s",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "written in the acceptance test before the implementation was run; committed together with it",
+        "where": "core/tests/events/test_events.py (commit 5a14bcb)"
+      },
+      "measured": {
+        "value": 0.23394286632537842,
+        "unit": "s"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/events/test_events.py::test_smooth_sphere_events_match_direct_spice_crossings",
+      "limits": [
+        "No terrain."
+      ]
+    },
+    {
+      "id": "scan_completeness",
+      "group": "Internal consistency",
+      "quantity": "Events found by a 5 s scan but not by the default 60 s scan, other than pairs of opposite crossings closer than 60 s (the stated limit)",
+      "compared_against": "the same finder with a 5 s scan step",
+      "cases": "171 events on an invented rough polar horizon, 30 days; 1 pair(s) closer than 60 s were not reported by the default scan",
+      "threshold": {
+        "value": 0,
+        "unit": "events",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "stated limit of the finder (two crossings closer than the scan step can be missed), written in the module before the test",
+        "where": "core/lsncore/events/finder.py (commit 5a14bcb); test added in commit d93504e"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "events"
+      },
+      "status": "PASS",
+      "evidence": "test core/tests/events/test_events.py::test_scan_step_does_not_lose_events_on_a_rough_polar_horizon",
+      "limits": [
+        "Invented profile, not terrain.",
+        "Pairs of crossings closer than 60 s are not reported by the default scan."
+      ]
+    }
+  ],
+  "not_validated": [
+    {
+      "item": "Event times and visibility shares on real terrain",
+      "state": "unverified",
+      "reason": "No independent illumination product or mission record has been compared yet. The terrain horizon has passed analytic tests of the core stream only (docs/method/horizon.md)."
+    },
+    {
+      "item": "Exact rise and set times at a real lander",
+      "state": "not available",
+      "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."
+    },
+    {
+      "item": "Direct-to-Earth windows",
+      "state": "geometry validated, windows not",
+      "reason": "Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source."
+    },
+    {
+      "item": "Earth rise and set against an independent source",
+      "state": "not done",
+      "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."
+    },
+    {
+      "item": "Sunlight during an eclipse",
+      "state": "partly modelled",
+      "reason": "Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared."
+    }
+  ],
+  "limits": [
+    "Every check on this card except the Chandrayaan-3 bound is terrain-free. Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes.",
+    "The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.",
+    "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; only the Horizons thresholds have a commit of their own that predates the data."
+  ]
+}
