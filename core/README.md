@@ -3,7 +3,8 @@
 Python package `lsncore`. It computes every number of the project and writes it to
 versioned packages; see [the contract](../docs/contract/SPEC.md). The horizon method, its
 checks and its limits are in [docs/method/horizon.md](../docs/method/horizon.md); the obstacle
-report in [docs/method/obstacles.md](../docs/method/obstacles.md).
+report in [docs/method/obstacles.md](../docs/method/obstacles.md); the calendar and the slip tolerance in
+[docs/method/calendar.md](../docs/method/calendar.md).
 
 ## Setup
 
@@ -43,6 +44,7 @@ computation and writes invented numbers (the walking skeleton behind the contrac
 | `lsncore/dem.py` | Terrain interface; adapter for the data stream's reader; analytic terrain for tests | A |
 | `lsncore/pipeline.py` | Scenario in, packages out; method cards of the horizon | A |
 | `lsncore/obstacles.py`, `lsncore/blocking.py` | Obstacles of the horizon; which one limits a body; time lost to terrain against a smooth sphere | A |
+| `lsncore/calendar.py` | Visible time per lunar day; landing windows of a stated requirement; slip tolerance | A |
 | `lsncore/timeline.py` | `TimeGrid`, `IntervalSet` (window algebra) | A |
 | `lsncore/geometry.py` | Site frame, great-circle steps, topocentric direction | A |
 | `lsncore/scenario.py` | Scenario file | A |
