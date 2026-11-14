@@ -1,0 +1,4243 @@
+{
+ "generated_utc": "2026-11-14T12:35:09Z",
+ "our_settings": {
+  "period_start_utc": "2020-01-01T00:00:00",
+  "second_period_start_utc": "2000-01-01T00:00:00",
+  "hourly_steps": 163161,
+  "observer_heights_m": [
+   0.0,
+   2.0
+  ],
+  "azimuth_step_deg": 0.25,
+  "max_range_m": 300000.0,
+  "quantity": "share of timesteps with any part of the disc above the terrain horizon",
+  "frame": "MOON_ME_DE440_ME421",
+  "aberration_correction": "LT+S",
+  "kernel_set_id": "bfe870fccfa5"
+ },
+ "our_terrain": {
+  "run_A_60m": "lola:LDEM_60S_60M@V2.0",
+  "run_B_production": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0"
+ },
+ "published_maps": {
+  "sun": {
+   "file": "AVGVISIB_85S_060M_201608.IMG",
+   "sha256": "82dadf321dee28f1947c1fed81858d4cf50fe8eb2aa405aae114e8ab21c1efe1",
+   "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608.IMG",
+   "retrieved_utc": "2026-11-14T12:27:00Z"
+  },
+  "earth": {
+   "file": "AVGVISIB_85S_060M_201608_EARTH.IMG",
+   "sha256": "0958313069d6039b2474c875ff662f28dbcba2bd853d9ea458aa807b7948c11f",
+   "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/AVGVISIB_85S_060M_201608_EARTH.IMG",
+   "retrieved_utc": "2026-11-14T12:27:03Z"
+  },
+  "permanent_shadow": {
+   "file": "LPSR_85S_060M_201608.IMG",
+   "sha256": "f8203cab342c817fc7851431e264def3cc64a3b8c30f032d61e0a44f1e4ef761",
+   "url": "http://imbrium.mit.edu/EXTRAS/ILLUMINATION/IMG/LPSR_85S_060M_201608.IMG",
+   "retrieved_utc": "2026-11-14T12:27:19Z"
+  }
+ },
+ "summary": {
+  "checks": 7,
+  "passed": 7,
+  "failed": 0
+ },
+ "checks": [
+  {
+   "id": "sun_correlation",
+   "measured": 0.9973053705655213,
+   "threshold": 0.9,
+   "rule": ">=",
+   "status": "PASS"
+  },
+  {
+   "id": "sun_median_absolute_difference",
+   "measured": 0.0005805934016094721,
+   "threshold": 0.05,
+   "rule": "<=",
+   "status": "PASS"
+  },
+  {
+   "id": "sun_median_signed_difference",
+   "measured": 0.0,
+   "threshold": 0.02,
+   "rule": "abs <=",
+   "status": "PASS"
+  },
+  {
+   "id": "earth_correlation",
+   "measured": 0.999294689916243,
+   "threshold": 0.9,
+   "rule": ">=",
+   "status": "PASS"
+  },
+  {
+   "id": "earth_median_absolute_difference",
+   "measured": 0.0003557736223730179,
+   "threshold": 0.05,
+   "rule": "<=",
+   "status": "PASS"
+  },
+  {
+   "id": "earth_median_signed_difference",
+   "measured": 0.0,
+   "threshold": 0.02,
+   "rule": "abs <=",
+   "status": "PASS"
+  },
+  {
+   "id": "sun_permanent_shadow_agreement",
+   "measured": 1.0,
+   "threshold": 0.95,
+   "rule": ">=",
+   "status": "PASS"
+  }
+ ],
+ "distribution": {
+  "run_A/0m/sun": {
+   "all": {
+    "points": 100,
+    "mean_signed": 0.001716579846899671,
+    "median_signed": 0.0,
+    "p10_signed": -0.003910718664386753,
+    "p90_signed": 0.007104468420762314,
+    "median_absolute": 0.0005805934016094721,
+    "max_absolute": 0.07870296308554126,
+    "beyond_0.05": 2,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9973053705655213
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": 0.0008107462697655014,
+    "median_signed": 0.0,
+    "p10_signed": -0.003991202750657352,
+    "p90_signed": 0.005413702686303691,
+    "median_absolute": 0.002185207004124723,
+    "max_absolute": 0.03824555132660376,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.998754996606931
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": 0.0002492658527861977,
+    "median_signed": 0.0,
+    "p10_signed": -0.012830209179889807,
+    "p90_signed": 0.003009319383921405,
+    "median_absolute": 0.0005883702600499308,
+    "max_absolute": 0.07870296308554126,
+    "beyond_0.05": 2,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9925551669099913
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0028674230714299015,
+    "median_signed": 0.0,
+    "p10_signed": -0.0002888850154142253,
+    "p90_signed": 0.008462090082801622,
+    "median_absolute": 0.0002139827532314717,
+    "max_absolute": 0.04483321529041867,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9975682135058404
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.014183718331382211,
+    "median_signed": 0.013582213886896954,
+    "p10_signed": 0.00192167383136892,
+    "p90_signed": 0.026686364609189606,
+    "median_absolute": 0.013582213886896954,
+    "max_absolute": 0.02996240228976277,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9994266458355324
+   }
+  },
+  "run_A/0m/earth": {
+   "all": {
+    "points": 100,
+    "mean_signed": -0.00038571066124872455,
+    "median_signed": 0.0,
+    "p10_signed": -0.0024373243851165626,
+    "p90_signed": 0.0012982172455427619,
+    "median_absolute": 0.0003557736223730179,
+    "max_absolute": 0.043737354392287375,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.999294689916243
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": -0.0013627264016783805,
+    "median_signed": 0.0,
+    "p10_signed": -0.008599987693137533,
+    "p90_signed": 0.001368666335705216,
+    "median_absolute": 0.00043519566563082757,
+    "max_absolute": 0.043737354392287375,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9985107012365851
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": -0.0006021981217444024,
+    "median_signed": 0.0,
+    "p10_signed": -0.0022416955032146177,
+    "p90_signed": 0.0015054158775686943,
+    "median_absolute": 0.0006267321234853518,
+    "max_absolute": 0.033140824829462956,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9991935452872015
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0006911459047792986,
+    "median_signed": 0.0,
+    "p10_signed": -0.0008162736928555403,
+    "p90_signed": 0.0006075118441293937,
+    "median_absolute": 0.0,
+    "max_absolute": 0.02900815758667819,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9995400421825258
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.000753077348957909,
+    "median_signed": 0.0008734550535972607,
+    "p10_signed": 0.00047491353938740045,
+    "p90_signed": 0.000983090076672677,
+    "median_absolute": 0.0008734550535972607,
+    "max_absolute": 0.001010498832441531,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9999999924767966
+   }
+  },
+  "run_A/2m/sun": {
+   "all": {
+    "points": 100,
+    "mean_signed": 0.012853861427669587,
+    "median_signed": 0.0019194140756675637,
+    "p10_signed": 0.0,
+    "p90_signed": 0.039833530463775045,
+    "median_absolute": 0.0019194140756675637,
+    "max_absolute": 0.11276036528337041,
+    "beyond_0.05": 5,
+    "beyond_0.10": 3,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9917289049037843
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": 0.012489859278240308,
+    "median_signed": 0.0028354501382070185,
+    "p10_signed": 0.0,
+    "p90_signed": 0.04002087945035883,
+    "median_absolute": 0.0028354501382070185,
+    "max_absolute": 0.0502459680928653,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9945449742516967
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": 0.017861396835225668,
+    "median_signed": 0.004958314548206999,
+    "p10_signed": 0.00010411532167609039,
+    "p90_signed": 0.04845712615147002,
+    "median_absolute": 0.004958314548206999,
+    "max_absolute": 0.11276036528337041,
+    "beyond_0.05": 3,
+    "beyond_0.10": 2,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9794719822594873
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0047926454721335734,
+    "median_signed": 0.0007128419168796196,
+    "p10_signed": 0.0,
+    "p90_signed": 0.014218957422423208,
+    "median_absolute": 0.0007128419168796196,
+    "max_absolute": 0.048737334534600774,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9966991968359847
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.05378672803754159,
+    "median_signed": 0.037368535373036416,
+    "p10_signed": 0.024702853157310755,
+    "p90_signed": 0.08943787998357448,
+    "median_absolute": 0.037368535373036416,
+    "max_absolute": 0.102455216136209,
+    "beyond_0.05": 1,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9999601080147693
+   }
+  },
+  "run_A/2m/earth": {
+   "all": {
+    "points": 100,
+    "mean_signed": 0.01012838278019868,
+    "median_signed": 0.00016908734317630514,
+    "p10_signed": -0.0002985650492458691,
+    "p90_signed": 0.02839066968209317,
+    "median_absolute": 0.000533720925956549,
+    "max_absolute": 0.22475094121757036,
+    "beyond_0.05": 8,
+    "beyond_0.10": 2,
+    "beyond_0.20": 1,
+    "pearson_r": 0.9921643578052841
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": 0.01392000326132598,
+    "median_signed": 0.00046971126678554964,
+    "p10_signed": -0.00015785438922293334,
+    "p90_signed": 0.057121874369487805,
+    "median_absolute": 0.0005518367747194275,
+    "max_absolute": 0.10792561555763935,
+    "beyond_0.05": 5,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.99181198596899
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": 0.01257279566531452,
+    "median_signed": 0.0002875267986834906,
+    "p10_signed": -0.00046754726926165335,
+    "p90_signed": 0.021857489228430782,
+    "median_absolute": 0.0008044721471430205,
+    "max_absolute": 0.22475094121757036,
+    "beyond_0.05": 2,
+    "beyond_0.10": 1,
+    "beyond_0.20": 1,
+    "pearson_r": 0.9810315982763372
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0020569654624461764,
+    "median_signed": 0.0,
+    "p10_signed": -0.0001297410042841118,
+    "p90_signed": 0.007178237397417267,
+    "median_absolute": 0.0,
+    "max_absolute": 0.030650706970415723,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9994658876796196
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.031947214836878866,
+    "median_signed": 0.0010350144948854112,
+    "p10_signed": 0.000994023326652771,
+    "p90_signed": 0.07526528648390235,
+    "median_absolute": 0.0010350144948854112,
+    "max_absolute": 0.09382285448115657,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9993676479012071
+   }
+  },
+  "run_B/0m/sun": {
+   "all": {
+    "points": 100,
+    "mean_signed": -0.01157452525787414,
+    "median_signed": -0.00045111429814725934,
+    "p10_signed": -0.03599834195671763,
+    "p90_signed": 0.001794483853371814,
+    "median_absolute": 0.0017698419352664002,
+    "max_absolute": 0.17889724848462563,
+    "beyond_0.05": 9,
+    "beyond_0.10": 4,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9813569030007547
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": -0.012665439085729249,
+    "median_signed": -0.0058077253755493,
+    "p10_signed": -0.02769137168808725,
+    "p90_signed": 0.00046534831240308856,
+    "median_absolute": 0.0058077253755493,
+    "max_absolute": 0.07858996696514488,
+    "beyond_0.05": 2,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9917004481029944
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": -0.01610446035985436,
+    "median_signed": -0.0004662295524053284,
+    "p10_signed": -0.0435685417471087,
+    "p90_signed": 0.0030184718161815616,
+    "median_absolute": 0.00144037141228609,
+    "max_absolute": 0.17889724848462563,
+    "beyond_0.05": 4,
+    "beyond_0.10": 3,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9492536614933728
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": -0.00020279220023056965,
+    "median_signed": 0.0,
+    "p10_signed": -0.0031672676191001553,
+    "p90_signed": 0.0028777948161631665,
+    "median_absolute": 0.0004359990438891903,
+    "max_absolute": 0.05095351977494622,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9949698183244128
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": -0.0778542073984184,
+    "median_signed": -0.07508108236649697,
+    "p10_signed": -0.10757712208187012,
+    "p90_signed": -0.049240542727735245,
+    "median_absolute": 0.07508108236649697,
+    "max_absolute": 0.11570113201071341,
+    "beyond_0.05": 2,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.971346874734956
+   }
+  },
+  "run_B/0m/earth": {
+   "all": {
+    "points": 100,
+    "mean_signed": -0.01066739562272849,
+    "median_signed": 0.0,
+    "p10_signed": -0.02371927786664707,
+    "p90_signed": 0.0009909286900668518,
+    "median_absolute": 0.00040379404391985285,
+    "max_absolute": 0.316,
+    "beyond_0.05": 5,
+    "beyond_0.10": 3,
+    "beyond_0.20": 2,
+    "pearson_r": 0.9835496352786965
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": -0.026372973762855193,
+    "median_signed": 0.0,
+    "p10_signed": -0.07120355472202304,
+    "p90_signed": 0.0009288865353852651,
+    "median_absolute": 0.0005089343654426925,
+    "max_absolute": 0.316,
+    "beyond_0.05": 4,
+    "beyond_0.10": 3,
+    "beyond_0.20": 2,
+    "pearson_r": 0.9554798464080789
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": -0.004456890627128461,
+    "median_signed": 0.0,
+    "p10_signed": -0.01706504765231888,
+    "p90_signed": 0.0011587457787093913,
+    "median_absolute": 0.000602216461041527,
+    "max_absolute": 0.05767707895881988,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9976520828949468
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": -0.0009837195794523935,
+    "median_signed": 0.0,
+    "p10_signed": -0.00260256796660967,
+    "p90_signed": 0.0005173965837423471,
+    "median_absolute": 0.0,
+    "max_absolute": 0.023349017718695048,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9996534433783776
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": -0.0086016908452388,
+    "median_signed": 0.00028507915494502267,
+    "p10_signed": -0.02158427952758324,
+    "p90_signed": 0.0008261898370321097,
+    "median_absolute": 0.0009614675075538814,
+    "max_absolute": 0.027051619198215304,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9999129704408183
+   }
+  },
+  "run_B/2m/sun": {
+   "all": {
+    "points": 100,
+    "mean_signed": 0.006992718139751516,
+    "median_signed": 0.0007470552399163888,
+    "p10_signed": -0.000528497104087397,
+    "p90_signed": 0.024884472000048983,
+    "median_absolute": 0.00189210534380152,
+    "max_absolute": 0.14110635482744038,
+    "beyond_0.05": 5,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9900291247235289
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": 0.005632902782583384,
+    "median_signed": 0.0017408861186190006,
+    "p10_signed": -0.001617169397098589,
+    "p90_signed": 0.023611454158775684,
+    "median_absolute": 0.0044633244464057364,
+    "max_absolute": 0.049107358498660825,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9949578768185618
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": 0.008789020075361918,
+    "median_signed": 0.0025575709881650033,
+    "p10_signed": 0.0,
+    "p90_signed": 0.047423160191467334,
+    "median_absolute": 0.004897025392097354,
+    "max_absolute": 0.14110635482744038,
+    "beyond_0.05": 4,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9684093683945044
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0038649505182926673,
+    "median_signed": 0.00040994453331372194,
+    "p10_signed": -0.0002228556088771309,
+    "p90_signed": 0.014939717898272245,
+    "median_absolute": 0.0005187948100342787,
+    "max_absolute": 0.0482654080325568,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9970162981675897
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.037794344236674125,
+    "median_signed": 0.01692135914832582,
+    "p10_signed": 0.016417227499218458,
+    "p90_signed": 0.06752065500946912,
+    "median_absolute": 0.01692135914832582,
+    "max_absolute": 0.08017047897475493,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9973265556659201
+   }
+  },
+  "run_B/2m/earth": {
+   "all": {
+    "points": 100,
+    "mean_signed": 0.004546595465828212,
+    "median_signed": 0.0,
+    "p10_signed": -0.001182082433914927,
+    "p90_signed": 0.013573366723665582,
+    "median_absolute": 0.00038974068558050856,
+    "max_absolute": 0.19896835640870061,
+    "beyond_0.05": 7,
+    "beyond_0.10": 2,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9912749079730555
+   },
+   "ridge_or_rim": {
+    "points": 33,
+    "mean_signed": 0.0006397574806664983,
+    "median_signed": 0.00017743553912996646,
+    "p10_signed": -0.0021904062367845145,
+    "p90_signed": 0.04406526270370982,
+    "median_absolute": 0.000557965690330342,
+    "max_absolute": 0.19896835640870061,
+    "beyond_0.05": 4,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9823917732426639
+   },
+   "plain_or_slope": {
+    "points": 31,
+    "mean_signed": 0.010252704546133019,
+    "median_signed": 0.00018284026207238124,
+    "p10_signed": -0.0008331422337445882,
+    "p90_signed": 0.01303222044483665,
+    "median_absolute": 0.0007064080264278516,
+    "max_absolute": 0.1735499802036026,
+    "beyond_0.05": 2,
+    "beyond_0.10": 1,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9873378464629712
+   },
+   "floor": {
+    "points": 33,
+    "mean_signed": 0.0011071692674627111,
+    "median_signed": 0.0,
+    "p10_signed": -0.00040638177015343,
+    "p90_signed": 0.0007849505702954952,
+    "median_absolute": 0.0,
+    "max_absolute": 0.030013299746875784,
+    "beyond_0.05": 0,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9995569666220104
+   },
+   "site_record": {
+    "points": 3,
+    "mean_signed": 0.026392374321477896,
+    "median_signed": 0.0009982410012195908,
+    "p10_signed": 0.000927831038054383,
+    "p90_signed": 0.062014570933004734,
+    "median_absolute": 0.0009982410012195908,
+    "max_absolute": 0.07726865341595102,
+    "beyond_0.05": 1,
+    "beyond_0.10": 0,
+    "beyond_0.20": 0,
+    "pearson_r": 0.9995297639813665
+   }
+  }
+ },
+ "permanent_shadow": {
+  "points_compared": 98,
+  "points_left_out_as_boundary": 2,
+  "agreement": 1.0,
+  "published_shadow_and_ours_never_lit": 14,
+  "published_shadow_but_ours_lit": [],
+  "published_lit_but_ours_never_lit": []
+ },
+ "period_sensitivity": {
+  "points": 10,
+  "largest_change_between_two_nodal_cycles": {
+   "sun": 0.0009990132445866218,
+   "earth": 0.004584428876998781
+  }
+ },
+ "points": [
+  {
+   "id": "ridge_or_rim_01",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 97.44970943334174,
+   "lat_deg": -87.59675189205116,
+   "published_sun": 0.42172000000000004,
+   "published_earth": 0.49616000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.4188500928530715,
+     "earth": 0.4966566765342208
+    },
+    "2m": {
+     "sun": 0.42179197234633276,
+     "earth": 0.4967118367747195
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.4208848928359105,
+     "earth": 0.49666893436544274
+    },
+    "2m": {
+     "sun": 0.42382064341356085,
+     "earth": 0.4967179656903304
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.4178510796084849,
+     "earth": 0.49732472833581554
+    },
+    "2m": {
+     "sun": 0.42084199042663384,
+     "earth": 0.4973615018294813
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.49027777777777776,
+    "run_B": 0.4840277777777778
+   }
+  },
+  {
+   "id": "ridge_or_rim_02",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 3.9261652301667236,
+   "lat_deg": -87.84735090792873,
+   "published_sun": 0.0,
+   "published_earth": 0.28088,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.2812927108806639
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.2813969024460502
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.2812007771464995
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.28135400003677347
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.28134787112116255
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.2815317385894914
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.24583333333333332,
+    "run_B": 0.27569444444444446
+   }
+  },
+  {
+   "id": "ridge_or_rim_03",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 303.67946308791596,
+   "lat_deg": -88.51753946925933,
+   "published_sun": 0.21832000000000001,
+   "published_earth": 0.48508000000000007,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.21144758857815288,
+     "earth": 0.4749480574401971
+    },
+    "2m": {
+     "sun": 0.23740967510618347,
+     "earth": 0.5050410330900154
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.20555157176040842,
+     "earth": 0.44234222638988485
+    },
+    "2m": {
+     "sun": 0.24271731602527566,
+     "earth": 0.5101893222032226
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.21171726086503515,
+     "earth": 0.47603900441894814
+    },
+    "2m": {
+     "sun": 0.23727483896274232,
+     "earth": 0.5062484294653747
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5326388888888889,
+    "run_B": 0.5395833333333333
+   }
+  },
+  {
+   "id": "ridge_or_rim_04",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 216.61533679973283,
+   "lat_deg": -87.63995121690357,
+   "published_sun": 0.31436000000000003,
+   "published_earth": 0.38924000000000003,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.31761879370682944,
+     "earth": 0.38919227021163144
+    },
+    "2m": {
+     "sun": 0.3247957538872647,
+     "earth": 0.38929033286140685
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.30025557578097706,
+     "earth": 0.3872494039629568
+    },
+    "2m": {
+     "sun": 0.3191510226095697,
+     "earth": 0.38919227021163144
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4527777777777778,
+    "run_B": 0.5875
+   }
+  },
+  {
+   "id": "ridge_or_rim_05",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 4.204347053434666,
+   "lat_deg": -85.88593497979987,
+   "published_sun": 0.46684000000000003,
+   "published_earth": 1.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.46292312501149174,
+     "earth": 1.0
+    },
+    "2m": {
+     "sun": 0.4781841248827845,
+     "earth": 1.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.44145966254190644,
+     "earth": 1.0
+    },
+    "2m": {
+     "sun": 0.4826214597851202,
+     "earth": 1.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5763888888888888,
+    "run_B": 0.6180555555555556
+   }
+  },
+  {
+   "id": "ridge_or_rim_06",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 8.66311834625866,
+   "lat_deg": -85.28011214420462,
+   "published_sun": 0.22080000000000002,
+   "published_earth": 0.6430400000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.21616072468298184,
+     "earth": 0.6431622752986315
+    },
+    "2m": {
+     "sun": 0.22262060173693468,
+     "earth": 0.6433277560201274
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.2151004222822856,
+     "earth": 0.6430887283112999
+    },
+    "2m": {
+     "sun": 0.21973388248417208,
+     "earth": 0.64321743553913
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.2611111111111111,
+    "run_B": 0.2881944444444444
+   }
+  },
+  {
+   "id": "ridge_or_rim_07",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 233.3105667053893,
+   "lat_deg": -86.92250297805015,
+   "published_sun": 0.09620000000000001,
+   "published_earth": 0.34668000000000004,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.09604623653936908,
+     "earth": 0.34666985370278436
+    },
+    "2m": {
+     "sun": 0.1360067663228345,
+     "earth": 0.3468475922555022
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0938459558350341,
+     "earth": 0.3466330802091186
+    },
+    "2m": {
+     "sun": 0.12863980975845943,
+     "earth": 0.34680468984622553
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.3125,
+    "run_B": 0.38819444444444445
+   }
+  },
+  {
+   "id": "ridge_or_rim_08",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 325.1097832543367,
+   "lat_deg": -86.21530029359573,
+   "published_sun": 0.36552,
+   "published_earth": 0.59616,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3651791788478864,
+     "earth": 0.5964109070182213
+    },
+    "2m": {
+     "sun": 0.36543659330354683,
+     "earth": 0.5966009034021611
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3601166945532327,
+     "earth": 0.5962760708747801
+    },
+    "2m": {
+     "sun": 0.36532014390693857,
+     "earth": 0.5964844540055528
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.1840277777777778,
+    "run_B": 0.2611111111111111
+   }
+  },
+  {
+   "id": "ridge_or_rim_09",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 303.18475099068826,
+   "lat_deg": -88.53778433434704,
+   "published_sun": 0.0182,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0194470492335791,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.033316785261183736,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.005718278265026569,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.026133696165137502,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5145833333333333,
+    "run_B": 0.5368055555555555
+   }
+  },
+  {
+   "id": "ridge_or_rim_10",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 315.7791165914163,
+   "lat_deg": -85.57772839500966,
+   "published_sun": 0.1426,
+   "published_earth": 0.43236,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.14299985903494095,
+     "earth": 0.4329282120114488
+    },
+    "2m": {
+     "sun": 0.14328791806865612,
+     "earth": 0.43298337225194744
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.14230729157090236,
+     "earth": 0.43292208309583785
+    },
+    "2m": {
+     "sun": 0.1432143710813246,
+     "earth": 0.4329588565895036
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.052083333333333336,
+    "run_B": 0.23958333333333334
+   }
+  },
+  {
+   "id": "ridge_or_rim_11",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 319.9635551874713,
+   "lat_deg": -86.07202848957915,
+   "published_sun": 0.22268000000000002,
+   "published_earth": 0.5241600000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.22265737523060045,
+     "earth": 0.5241509919649916
+    },
+    "2m": {
+     "sun": 0.22284737161454024,
+     "earth": 0.5242306678679342
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.22254705474960315,
+     "earth": 0.5241142184713259
+    },
+    "2m": {
+     "sun": 0.22276769571159774,
+     "earth": 0.5242061522054903
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.007638888888888889
+   }
+  },
+  {
+   "id": "ridge_or_rim_12",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 242.33941262635545,
+   "lat_deg": -87.7093497936023,
+   "published_sun": 0.21320000000000003,
+   "published_earth": 0.23256000000000002,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2190229282733006,
+     "earth": 0.2015861633601167
+    },
+    "2m": {
+     "sun": 0.25767799903163136,
+     "earth": 0.2606995544278351
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.1957146622048161,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.22027322705793664,
+     "earth": 0.22881080650400526
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.3229166666666667,
+    "run_B": 0.34652777777777777
+   }
+  },
+  {
+   "id": "ridge_or_rim_13",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 43.820611856834134,
+   "lat_deg": -86.33055068117572,
+   "published_sun": 0.36528000000000005,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3670178535311747,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.3675388113581064,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.36219439694534844,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.36566336318115233,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.3888888888888889,
+    "run_B": 0.44583333333333336
+   }
+  },
+  {
+   "id": "ridge_or_rim_14",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 265.42763530994614,
+   "lat_deg": -88.54805714328178,
+   "published_sun": 0.0,
+   "published_earth": 0.049800000000000004,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.05131741041057606
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.05182611040628582
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.05140934414474047
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0519854622121708
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.31805555555555554,
+    "run_B": 0.3159722222222222
+   }
+  },
+  {
+   "id": "ridge_or_rim_15",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 200.06454566808435,
+   "lat_deg": -87.80000489530084,
+   "published_sun": 0.54696,
+   "published_earth": 0.3608,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.5447747929958753,
+     "earth": 0.36248858489467456
+    },
+    "2m": {
+     "sun": 0.5658766494444138,
+     "earth": 0.41593885793786506
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.551878206188979,
+     "earth": 0.3690036221891261
+    },
+    "2m": {
+     "sun": 0.5671453349758827,
+     "earth": 0.4118937736346308
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5243055555555556,
+    "run_B": 0.4798611111111111
+   }
+  },
+  {
+   "id": "ridge_or_rim_16",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 67.73472529486007,
+   "lat_deg": -87.79910681405828,
+   "published_sun": 0.08268,
+   "published_earth": 0.46636000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.08288745472263592,
+     "earth": 0.4671336900362219
+    },
+    "2m": {
+     "sun": 0.08300390411924419,
+     "earth": 0.46718272136110955
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.08280777881969344,
+     "earth": 0.467115303289389
+    },
+    "2m": {
+     "sun": 0.08294261496313457,
+     "earth": 0.46715207678305476
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.36736111111111114,
+    "run_B": 0.45555555555555555
+   }
+  },
+  {
+   "id": "ridge_or_rim_17",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 27.22823390367469,
+   "lat_deg": -85.6061712779529,
+   "published_sun": 0.39104000000000005,
+   "published_earth": 0.58384,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.38200918111558524,
+     "earth": 0.5837975986908637
+    },
+    "2m": {
+     "sun": 0.3946470051053867,
+     "earth": 0.5847046782012858
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3780866751245702,
+     "earth": 0.5833379300200415
+    },
+    "2m": {
+     "sun": 0.3904241822494346,
+     "earth": 0.5841469468806884
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4305555555555556,
+    "run_B": 0.4666666666666667
+   }
+  },
+  {
+   "id": "ridge_or_rim_18",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 159.0672953056158,
+   "lat_deg": -88.2915626447897,
+   "published_sun": 0.09752000000000001,
+   "published_earth": 0.23504000000000003,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0962791353325856,
+     "earth": 0.2325678317735243
+    },
+    "2m": {
+     "sun": 0.09880424856430152,
+     "earth": 0.23550971126678558
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.09928843289756743,
+     "earth": 0.23601228234688437
+    },
+    "2m": {
+     "sun": 0.10190547986344776,
+     "earth": 0.23896641967136756
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.48541666666666666,
+    "run_B": 0.4798611111111111
+   }
+  },
+  {
+   "id": "ridge_or_rim_19",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 264.51099384459775,
+   "lat_deg": -85.75106357639048,
+   "published_sun": 0.38592000000000004,
+   "published_earth": 0.46980000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.38575394855388234,
+     "earth": 0.4699591201328749
+    },
+    "2m": {
+     "sun": 0.38685715336385534,
+     "earth": 0.4700387960358174
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3850062208493451,
+     "earth": 0.46993460447043106
+    },
+    "2m": {
+     "sun": 0.3861584569842058,
+     "earth": 0.4699775068797078
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.37777777777777777,
+    "run_B": 0.3840277777777778
+   }
+  },
+  {
+   "id": "ridge_or_rim_20",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 49.609040212089525,
+   "lat_deg": -85.99695178942954,
+   "published_sun": 0.33168000000000003,
+   "published_earth": 0.34836,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3276702153088054,
+     "earth": 0.346884365749168
+    },
+    "2m": {
+     "sun": 0.3307591887767297,
+     "earth": 0.3470559753862749
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.31487303951311896,
+     "earth": 0.3467434006901159
+    },
+    "2m": {
+     "sun": 0.3272166755535943,
+     "earth": 0.3468966235803899
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4486111111111111,
+    "run_B": 0.49444444444444446
+   }
+  },
+  {
+   "id": "ridge_or_rim_21",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 96.32401487574174,
+   "lat_deg": -85.35902760561629,
+   "published_sun": 0.31816,
+   "published_earth": 0.4186,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.31869748285435856,
+     "earth": 0.41834139285736177
+    },
+    "2m": {
+     "sun": 0.3188936081539093,
+     "earth": 0.41840268201347136
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3187097406855805,
+     "earth": 0.41832300611052886
+    },
+    "2m": {
+     "sun": 0.31888747923829835,
+     "earth": 0.41840268201347136
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "ridge_or_rim_22",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 78.94792823945443,
+   "lat_deg": -86.46595198098034,
+   "published_sun": 0.16160000000000002,
+   "published_earth": 0.49484000000000006,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.19984555132660378,
+     "earth": 0.49481187293532153
+    },
+    "2m": {
+     "sun": 0.21184596809286532,
+     "earth": 0.49486090426020923
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.08301003303485514,
+     "earth": 0.4946831657074914
+    },
+    "2m": {
+     "sun": 0.1353754880149055,
+     "earth": 0.4947321970323791
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.41388888888888886,
+    "run_B": 0.6395833333333333
+   }
+  },
+  {
+   "id": "ridge_or_rim_23",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 239.8814131165518,
+   "lat_deg": -85.35546159644521,
+   "published_sun": 0.39252000000000004,
+   "published_earth": 0.42292,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3954560219660336,
+     "earth": 0.4354900987368305
+    },
+    "2m": {
+     "sun": 0.4252241650884709,
+     "earth": 0.4805376284773935
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.39454894245561134,
+     "earth": 0.43708361679568036
+    },
+    "2m": {
+     "sun": 0.41737915310644086,
+     "earth": 0.47172424782883166
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5104166666666666,
+    "run_B": 0.5159722222222223
+   }
+  },
+  {
+   "id": "ridge_or_rim_24",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 243.36639086862493,
+   "lat_deg": -85.93430914884877,
+   "published_sun": 0.27888,
+   "published_earth": 0.25652,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2856197253020023,
+     "earth": 0.22303123908286906
+    },
+    "2m": {
+     "sun": 0.2999736456628729,
+     "earth": 0.33886774413003107
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.26922487604268175,
+     "earth": 0.22766469928475555
+    },
+    "2m": {
+     "sun": 0.2860242337323257,
+     "earth": 0.33865323208364745
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5701388888888889,
+    "run_B": 0.5875
+   }
+  },
+  {
+   "id": "ridge_or_rim_25",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 286.80502093753785,
+   "lat_deg": -86.4594190200343,
+   "published_sun": 0.35848,
+   "published_earth": 0.07832,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3601779837093423,
+     "earth": 0.12205735439228738
+    },
+    "2m": {
+     "sun": 0.36086442225776993,
+     "earth": 0.15786860830713223
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3500101127107581,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.360220886118619,
+     "earth": 0.13923670484981093
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4375,
+    "run_B": 0.48333333333333334
+   }
+  },
+  {
+   "id": "ridge_or_rim_26",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 251.86261865019924,
+   "lat_deg": -88.67478446979716,
+   "published_sun": 0.38468,
+   "published_earth": 0.37064,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.38845680033831614,
+     "earth": 0.37107519566563085
+    },
+    "2m": {
+     "sun": 0.39853273760273594,
+     "earth": 0.37131422337445835
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.36698108003750896,
+     "earth": 0.37098326193146647
+    },
+    "2m": {
+     "sun": 0.3974111460459301,
+     "earth": 0.3711977739778501
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.41388888888888886,
+    "run_B": 0.48680555555555555
+   }
+  },
+  {
+   "id": "ridge_or_rim_27",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 145.3299369910752,
+   "lat_deg": -85.43010030576299,
+   "published_sun": 0.18596000000000001,
+   "published_earth": 0.2686,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.18366521411366687,
+     "earth": 0.26616654715281224
+    },
+    "2m": {
+     "sun": 0.22603440773223993,
+     "earth": 0.26639944594602877
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.15769086975441435,
+     "earth": 0.26557817125416
+    },
+    "2m": {
+     "sun": 0.20642800669277583,
+     "earth": 0.2662278363089219
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.44305555555555554,
+    "run_B": 0.5152777777777777
+   }
+  },
+  {
+   "id": "ridge_or_rim_28",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 149.53292552076812,
+   "lat_deg": -88.12117413588726,
+   "published_sun": 0.12532000000000001,
+   "published_earth": 0.316,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.12544051580953783,
+     "earth": 0.31468917204479013
+    },
+    "2m": {
+     "sun": 0.1262617905014066,
+     "earth": 0.34047352002010284
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.10539283284608454,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.12356506763258376,
+     "earth": 0.11703164359129939
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4305555555555556,
+    "run_B": 0.5958333333333333
+   }
+  },
+  {
+   "id": "ridge_or_rim_29",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 333.03428556712987,
+   "lat_deg": -88.79789226001883,
+   "published_sun": 0.07104,
+   "published_earth": 0.19024000000000002,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.06937932471607798,
+     "earth": 0.1658791010106582
+    },
+    "2m": {
+     "sun": 0.094176917278026,
+     "earth": 0.2981656155576394
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.03604415270806136,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.08286293906019208,
+     "earth": 0.14041345664711544
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.44722222222222224,
+    "run_B": 0.5402777777777777
+   }
+  },
+  {
+   "id": "ridge_or_rim_30",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 24.41254385380722,
+   "lat_deg": -85.82001332924891,
+   "published_sun": 0.33792000000000005,
+   "published_earth": 0.67296,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3351413634385668,
+     "earth": 0.6722010774633644
+    },
+    "2m": {
+     "sun": 0.34075545013820707,
+     "earth": 0.6724094605941371
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.2603195616599555,
+     "earth": 0.6710978726533914
+    },
+    "2m": {
+     "sun": 0.3009910456542924,
+     "earth": 0.671802697948652
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4166666666666667,
+    "run_B": 0.8201388888888889
+   }
+  },
+  {
+   "id": "ridge_or_rim_31",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 43.37271667760641,
+   "lat_deg": -86.30607807148348,
+   "published_sun": 0.39556,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3916499653716268,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.40950349654635604,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.37991922089224756,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.4034236122602828,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5701388888888889,
+    "run_B": 0.5833333333333334
+   }
+  },
+  {
+   "id": "ridge_or_rim_32",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 200.92805771586828,
+   "lat_deg": -86.06022063370463,
+   "published_sun": 0.15748,
+   "published_earth": 0.20672000000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.16359914440338072,
+     "earth": 0.20682025729187734
+    },
+    "2m": {
+     "sun": 0.19835622483314028,
+     "earth": 0.20735347295003095
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.1516722746244507,
+     "earth": 0.2069060621104308
+    },
+    "2m": {
+     "sun": 0.20658735849866083,
+     "earth": 0.20741476210614057
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5270833333333333,
+    "run_B": 0.5402777777777777
+   }
+  },
+  {
+   "id": "ridge_or_rim_33",
+   "stratum": "ridge_or_rim",
+   "lon_deg": 77.77067113207002,
+   "lat_deg": -87.14689261034988,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.3784722222222222,
+    "run_B": 0.36736111111111114
+   }
+  },
+  {
+   "id": "floor_01",
+   "stratum": "floor",
+   "lon_deg": 289.15380419474354,
+   "lat_deg": -87.50673733282596,
+   "published_sun": 0.16620000000000001,
+   "published_earth": 0.42484000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.16585458534821435,
+     "earth": 0.4247828831644817
+    },
+    "2m": {
+     "sun": 0.1670681106391846,
+     "earth": 0.4255367397846299
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.16465944680407696,
+     "earth": 0.42419450726582947
+    },
+    "2m": {
+     "sun": 0.16594651908237876,
+     "earth": 0.42500965304208727
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.1661426443819295,
+     "earth": 0.4256960915905149
+    },
+    "2m": {
+     "sun": 0.16736229858851073,
+     "earth": 0.4264131747169973
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.12708333333333333,
+    "run_B": 0.125
+   }
+  },
+  {
+   "id": "floor_02",
+   "stratum": "floor",
+   "lon_deg": 15.612141621475853,
+   "lat_deg": -86.51976802906799,
+   "published_sun": 0.035160000000000004,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.035584484037239295,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.035688675602625626,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.035492550303074875,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.03562125753090506,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.03532094066596797,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.035406745484521426,
+     "earth": 0.0
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.07361111111111111,
+    "run_B": 0.10972222222222222
+   }
+  },
+  {
+   "id": "floor_03",
+   "stratum": "floor",
+   "lon_deg": 242.87119940531153,
+   "lat_deg": -86.71824084169704,
+   "published_sun": 0.01872,
+   "published_earth": 0.12428000000000002,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.018644161288543216,
+     "earth": 0.11437782313175329
+    },
+    "2m": {
+     "sun": 0.019391888993080454,
+     "earth": 0.13807221088372834
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.01781675768106349,
+     "earth": 0.10093098228130497
+    },
+    "2m": {
+     "sun": 0.018619645626099374,
+     "earth": 0.12064770380176636
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.018870931166148772,
+     "earth": 0.10979339425475451
+    },
+    "2m": {
+     "sun": 0.019606401039464087,
+     "earth": 0.13436421693909698
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4479166666666667,
+    "run_B": 0.4527777777777778
+   }
+  },
+  {
+   "id": "floor_04",
+   "stratum": "floor",
+   "lon_deg": 85.39370214935815,
+   "lat_deg": -86.85938975720649,
+   "published_sun": 0.0,
+   "published_earth": 0.06812,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0769424065800038
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.07761658729720951
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.07637241742818443
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0770036957361134
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.014583333333333334,
+    "run_B": 0.003472222222222222
+   }
+  },
+  {
+   "id": "floor_05",
+   "stratum": "floor",
+   "lon_deg": 282.1397642014004,
+   "lat_deg": -85.34043933809,
+   "published_sun": 0.14216,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.18699321529041868,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.19089733453460078,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.18623935867027047,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.1904254080325568,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5770833333333333,
+    "run_B": 0.5645833333333333
+   }
+  },
+  {
+   "id": "floor_06",
+   "stratum": "floor",
+   "lon_deg": 86.27955561480171,
+   "lat_deg": -86.29633126308268,
+   "published_sun": 0.20060000000000003,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.200599407946752,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.202168410343158,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.20079553324630273,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.20225421516171144,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.34930555555555554,
+    "run_B": 0.34652777777777777
+   }
+  },
+  {
+   "id": "floor_07",
+   "stratum": "floor",
+   "lon_deg": 286.09302283321637,
+   "lat_deg": -88.57601615713153,
+   "published_sun": 0.25284,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.25229681112520763,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.2529893785892462,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.2018864802250538,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.2463517629825755,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.28541666666666665
+   }
+  },
+  {
+   "id": "floor_08",
+   "stratum": "floor",
+   "lon_deg": 27.406159316920192,
+   "lat_deg": -86.05320126165982,
+   "published_sun": 0.04476,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.04497398275323147,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.04509656106545069,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.04505978757178492,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.04517623696839318,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.35208333333333336,
+    "run_B": 0.3125
+   }
+  },
+  {
+   "id": "floor_09",
+   "stratum": "floor",
+   "lon_deg": 46.67647104680675,
+   "lat_deg": -87.41793087665327,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.17152777777777778,
+    "run_B": 1.0
+   }
+  },
+  {
+   "id": "floor_10",
+   "stratum": "floor",
+   "lon_deg": 270.0600962434465,
+   "lat_deg": -85.28649001530476,
+   "published_sun": 0.12940000000000002,
+   "published_earth": 0.42092,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.12925270131955552,
+     "earth": 0.42154681572189434
+    },
+    "2m": {
+     "sun": 0.1345603422386477,
+     "earth": 0.42170003861216837
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.11239818338941292,
+     "earth": 0.41881331935940574
+    },
+    "2m": {
+     "sun": 0.13323649646668015,
+     "earth": 0.4216693940341135
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.24930555555555556,
+    "run_B": 0.3909722222222222
+   }
+  },
+  {
+   "id": "floor_11",
+   "stratum": "floor",
+   "lon_deg": 70.10347955060264,
+   "lat_deg": -85.8069897771729,
+   "published_sun": 0.2136,
+   "published_earth": 0.44636000000000003,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.21202983556119415,
+     "earth": 0.4460134468408504
+    },
+    "2m": {
+     "sun": 0.21885744755180467,
+     "earth": 0.4460686070813491
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.2063238151273895,
+     "earth": 0.44597667334718466
+    },
+    "2m": {
+     "sun": 0.21373980301665227,
+     "earth": 0.44602570467207237
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.33958333333333335,
+    "run_B": 0.3888888888888889
+   }
+  },
+  {
+   "id": "floor_12",
+   "stratum": "floor",
+   "lon_deg": 130.3346462446193,
+   "lat_deg": -86.74970748038102,
+   "published_sun": 0.13436,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.13502613982508074,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.1555947806154657,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.132476510930921,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.15292257340908674,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.29305555555555557,
+    "run_B": 0.29583333333333334
+   }
+  },
+  {
+   "id": "floor_13",
+   "stratum": "floor",
+   "lon_deg": 237.2578519972234,
+   "lat_deg": -85.57372323407208,
+   "published_sun": 0.17200000000000001,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.1723757515582768,
+     "earth": 0.02900815758667819
+    },
+    "2m": {
+     "sun": 0.17271284191687963,
+     "earth": 0.030650706970415723
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.17233897806461101,
+     "earth": 0.005129902366374318
+    },
+    "2m": {
+     "sun": 0.17266381059199196,
+     "earth": 0.030013299746875784
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.04513888888888889,
+    "run_B": 0.14444444444444443
+   }
+  },
+  {
+   "id": "floor_14",
+   "stratum": "floor",
+   "lon_deg": 74.74067934032821,
+   "lat_deg": -85.27004823931834,
+   "published_sun": 0.27096000000000003,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.271075808557192,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.27167644228706617,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.27098387482302755,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.27156612180606887,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_15",
+   "stratum": "floor",
+   "lon_deg": 164.9093520285517,
+   "lat_deg": -89.33499516366545,
+   "published_sun": 0.27556,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3016161950466104,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.3098228130496871,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.27888404704555625,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.3006723420425224,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4375,
+    "run_B": 0.51875
+   }
+  },
+  {
+   "id": "floor_16",
+   "stratum": "floor",
+   "lon_deg": 100.539462671874,
+   "lat_deg": -85.35639196031335,
+   "published_sun": 0.2908,
+   "published_earth": 0.47044,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.30300745889029856,
+     "earth": 0.47018589001048045
+    },
+    "2m": {
+     "sun": 0.3033813227425672,
+     "earth": 0.4702778237446449
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.30290939624052315,
+     "earth": 0.47021040567292427
+    },
+    "2m": {
+     "sun": 0.30330777575523565,
+     "earth": 0.4702778237446449
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.04861111111111111,
+    "run_B": 0.025694444444444443
+   }
+  },
+  {
+   "id": "floor_17",
+   "stratum": "floor",
+   "lon_deg": 313.79746636396925,
+   "lat_deg": -87.60030878198691,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_18",
+   "stratum": "floor",
+   "lon_deg": 13.34021247708109,
+   "lat_deg": -85.28179583574317,
+   "published_sun": 0.15072000000000002,
+   "published_earth": 0.5771200000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.15085712884819288,
+     "earth": 0.5776502963330697
+    },
+    "2m": {
+     "sun": 0.15219936136699333,
+     "earth": 0.5778035192233438
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.1516416300463959,
+     "earth": 0.577766745729678
+    },
+    "2m": {
+     "sun": 0.15280612401247848,
+     "earth": 0.5779138397043411
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4673611111111111,
+    "run_B": 0.47638888888888886
+   }
+  },
+  {
+   "id": "floor_19",
+   "stratum": "floor",
+   "lon_deg": 322.0046472412945,
+   "lat_deg": -87.9350796777457,
+   "published_sun": 0.0,
+   "published_earth": 0.16208,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.16176046972009242
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.17013869736027604
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.15135357101268074
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.160571460091566
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4048611111111111,
+    "run_B": 0.4215277777777778
+   }
+  },
+  {
+   "id": "floor_20",
+   "stratum": "floor",
+   "lon_deg": 269.04589253911604,
+   "lat_deg": -86.139544982254,
+   "published_sun": 0.29156000000000004,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3019471564896023,
+     "earth": 0.0009193373416441429
+    },
+    "2m": {
+     "sun": 0.30618836609238725,
+     "earth": 0.0025251132317159124
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3054651540502939,
+     "earth": 0.001556744565184082
+    },
+    "2m": {
+     "sun": 0.30710770343403143,
+     "earth": 0.004143146953009604
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.14930555555555555,
+    "run_B": 0.13402777777777777
+   }
+  },
+  {
+   "id": "floor_21",
+   "stratum": "floor",
+   "lon_deg": 267.02197934805025,
+   "lat_deg": -89.4858434083439,
+   "published_sun": 0.0,
+   "published_earth": 0.35888000000000003,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.35861511022854725
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.359436384920416
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.35823511746066766
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.3590502632369255
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_22",
+   "stratum": "floor",
+   "lon_deg": 78.79991802818739,
+   "lat_deg": -86.15586272002638,
+   "published_sun": 0.38856,
+   "published_earth": 0.00736,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3891983991272424,
+     "earth": 0.004707007189218012
+    },
+    "2m": {
+     "sun": 0.38937613767996027,
+     "earth": 0.005037968632209903
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3892842039457959,
+     "earth": 0.0046334602018864805
+    },
+    "2m": {
+     "sun": 0.3893883955111822,
+     "earth": 0.004976679476100293
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.001388888888888889,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_23",
+   "stratum": "floor",
+   "lon_deg": 95.88462716727297,
+   "lat_deg": -85.3032524222899,
+   "published_sun": 0.29488000000000003,
+   "published_earth": 0.40128,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2956037288322577,
+     "earth": 0.4008126942100134
+    },
+    "2m": {
+     "sun": 0.29572630714447695,
+     "earth": 0.40091688577539975
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.29554856859175904,
+     "earth": 0.40075140505390383
+    },
+    "2m": {
+     "sun": 0.29564663124153445,
+     "earth": 0.40085559661929016
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.08125,
+    "run_B": 0.08611111111111111
+   }
+  },
+  {
+   "id": "floor_24",
+   "stratum": "floor",
+   "lon_deg": 203.80859200549497,
+   "lat_deg": -87.12094062950989,
+   "published_sun": 0.028200000000000003,
+   "published_earth": 0.28732,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.027904952776705218,
+     "earth": 0.28641648433142725
+    },
+    "2m": {
+     "sun": 0.031294243109566626,
+     "earth": 0.2909763975459822
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.02471178774339456,
+     "earth": 0.2823591421969711
+    },
+    "2m": {
+     "sun": 0.027488186515159874,
+     "earth": 0.2870232469769124
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.33402777777777776,
+    "run_B": 0.51875
+   }
+  },
+  {
+   "id": "floor_25",
+   "stratum": "floor",
+   "lon_deg": 179.8350187790527,
+   "lat_deg": -87.59526584972946,
+   "published_sun": 0.31564000000000003,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.31568818528937675,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.3160743069728673,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.31520400095611084,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.31566979854254384,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.24097222222222223,
+    "run_B": 0.26180555555555557
+   }
+  },
+  {
+   "id": "floor_26",
+   "stratum": "floor",
+   "lon_deg": 72.58411836668814,
+   "lat_deg": -86.44778690949538,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.9708333333333333,
+    "run_B": 0.9722222222222222
+   }
+  },
+  {
+   "id": "floor_27",
+   "stratum": "floor",
+   "lon_deg": 260.50895589048673,
+   "lat_deg": -85.78400579791497,
+   "published_sun": 0.29064,
+   "published_earth": 0.03792,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.290375763816108,
+     "earth": 0.035988992467562715
+    },
+    "2m": {
+     "sun": 0.2908783348962068,
+     "earth": 0.038042179197234634
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.290535115621993,
+     "earth": 0.03617285993589154
+    },
+    "2m": {
+     "sun": 0.29104994453331373,
+     "earth": 0.03827507799045115
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.02361111111111111,
+    "run_B": 0.011111111111111112
+   }
+  },
+  {
+   "id": "floor_28",
+   "stratum": "floor",
+   "lon_deg": 284.60193778841847,
+   "lat_deg": -88.61477226096959,
+   "published_sun": 0.24228000000000002,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2422392606076207,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.24267441361599892,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.24082961001709968,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.24176120518996574,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.05277777777777778,
+    "run_B": 0.07430555555555556
+   }
+  },
+  {
+   "id": "floor_29",
+   "stratum": "floor",
+   "lon_deg": 343.85247286597865,
+   "lat_deg": -88.65183127195283,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_30",
+   "stratum": "floor",
+   "lon_deg": 48.0543880006167,
+   "lat_deg": -86.45628726690948,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.0
+   }
+  },
+  {
+   "id": "floor_31",
+   "stratum": "floor",
+   "lon_deg": 187.0716402483072,
+   "lat_deg": -86.97106523543457,
+   "published_sun": 0.0,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": true,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.8243055555555555,
+    "run_B": 0.8326388888888889
+   }
+  },
+  {
+   "id": "floor_32",
+   "stratum": "floor",
+   "lon_deg": 83.00457207504948,
+   "lat_deg": -85.6074529620986,
+   "published_sun": 0.24236000000000002,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.24312182445559907,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.2449850148013312,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.24345278589859096,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.24529146058187926,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4326388888888889,
+    "run_B": 0.4340277777777778
+   }
+  },
+  {
+   "id": "floor_33",
+   "stratum": "floor",
+   "lon_deg": 71.36554880036289,
+   "lat_deg": -85.33037115415179,
+   "published_sun": 0.32392000000000004,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3242380225666673,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.32473446473115514,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3242502803978892,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.32470994906871126,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.014583333333333334
+   }
+  },
+  {
+   "id": "plain_or_slope_01",
+   "stratum": "plain_or_slope",
+   "lon_deg": 124.11447294534128,
+   "lat_deg": -86.25988292731179,
+   "published_sun": 0.36236,
+   "published_earth": 0.23492000000000002,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3596754126292435,
+     "earth": 0.23289879321651621
+    },
+    "2m": {
+     "sun": 0.3744644859984923,
+     "earth": 0.23609195824982684
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.3728709679396424,
+     "earth": 0.2367109787265339
+    },
+    "2m": {
+     "sun": 0.39113513646030607,
+     "earth": 0.23984285460373497
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.3589215560090953,
+     "earth": 0.23414909200115225
+    },
+    "2m": {
+     "sun": 0.37383933660617424,
+     "earth": 0.23737903052812867
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.45555555555555555,
+    "run_B": 0.3923611111111111
+   }
+  },
+  {
+   "id": "plain_or_slope_02",
+   "stratum": "plain_or_slope",
+   "lon_deg": 186.7274696364538,
+   "lat_deg": -86.0576170174365,
+   "published_sun": 0.13644,
+   "published_earth": 0.17668,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.12111963030381034,
+     "earth": 0.17607148767168626
+    },
+    "2m": {
+     "sun": 0.18489712615147003,
+     "earth": 0.17621245273073835
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.09287145825289131,
+     "earth": 0.17600406959996567
+    },
+    "2m": {
+     "sun": 0.19475242245389524,
+     "earth": 0.17616955032146162
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.12102156765403498,
+     "earth": 0.17791016235497453
+    },
+    "2m": {
+     "sun": 0.18536905265351403,
+     "earth": 0.17811241657013624
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.2520833333333333,
+    "run_B": 0.3958333333333333
+   }
+  },
+  {
+   "id": "plain_or_slope_03",
+   "stratum": "plain_or_slope",
+   "lon_deg": 211.1985156757541,
+   "lat_deg": -87.26745357440173,
+   "published_sun": 0.0036400000000000004,
+   "published_earth": 0.03088,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.003744767438297142,
+     "earth": 0.0622820404385852
+    },
+    "2m": {
+     "sun": 0.11640036528337042,
+     "earth": 0.25563094121757035
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.002862203590318765,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.10289836419242343,
+     "earth": 0.2044299802036026
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.00373250960707522,
+     "earth": 0.0597078958819816
+    },
+    "2m": {
+     "sun": 0.1168110026293048,
+     "earth": 0.25581480868589923
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.9027777777777778,
+    "run_B": 0.8916666666666667
+   }
+  },
+  {
+   "id": "plain_or_slope_04",
+   "stratum": "plain_or_slope",
+   "lon_deg": 97.84606611473393,
+   "lat_deg": -85.99390642408918,
+   "published_sun": 0.35636,
+   "published_earth": 0.43712,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3502920428288623,
+     "earth": 0.4357781577705457
+    },
+    "2m": {
+     "sun": 0.37046843302014576,
+     "earth": 0.4367526553526884
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.17746275151537438,
+     "earth": 0.43529397343727977
+    },
+    "2m": {
+     "sun": 0.21525364517255963,
+     "earth": 0.4362868577662554
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5368055555555555,
+    "run_B": 0.6972222222222222
+   }
+  },
+  {
+   "id": "plain_or_slope_05",
+   "stratum": "plain_or_slope",
+   "lon_deg": 61.2273610435155,
+   "lat_deg": -87.85235778533215,
+   "published_sun": 0.0,
+   "published_earth": 0.35224000000000005,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.35316650425040297
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.3533810162967866
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.35227168257120267
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.3531358596723482
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.29791666666666666,
+    "run_B": 0.4111111111111111
+   }
+  },
+  {
+   "id": "plain_or_slope_06",
+   "stratum": "plain_or_slope",
+   "lon_deg": 31.05907069578308,
+   "lat_deg": -88.3682236707312,
+   "published_sun": 0.0,
+   "published_earth": 0.26968000000000003,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.2684526326757007
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.268875527852857
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.2676803893087196
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.26827489412298283
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.18680555555555556,
+    "run_B": 0.2604166666666667
+   }
+  },
+  {
+   "id": "plain_or_slope_07",
+   "stratum": "plain_or_slope",
+   "lon_deg": 293.752713356881,
+   "lat_deg": -86.13293916686604,
+   "published_sun": 0.14544,
+   "published_earth": 0.54444,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": true,
+   "run_A": {
+    "0m": {
+     "sun": 0.1422214867523489,
+     "earth": 0.5459454158775687
+    },
+    "2m": {
+     "sun": 0.16197498176647607,
+     "earth": 0.5460005761180674
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.14073828917449635,
+     "earth": 0.5459454158775687
+    },
+    "2m": {
+     "sun": 0.1591434227542121,
+     "earth": 0.5459883182868455
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.25763888888888886,
+    "run_B": 0.2569444444444444
+   }
+  },
+  {
+   "id": "plain_or_slope_08",
+   "stratum": "plain_or_slope",
+   "lon_deg": 109.87169920041306,
+   "lat_deg": -85.95893511205313,
+   "published_sun": 0.24416000000000002,
+   "published_earth": 0.27044,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2313297908201102,
+     "earth": 0.27100226156986046
+    },
+    "2m": {
+     "sun": 0.3515300837822764,
+     "earth": 0.27141289891579484
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.08035621257530905,
+     "earth": 0.2701442133843259
+    },
+    "2m": {
+     "sun": 0.29158316019146735,
+     "earth": 0.2706467844644247
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.47708333333333336,
+    "run_B": 0.5145833333333333
+   }
+  },
+  {
+   "id": "plain_or_slope_09",
+   "stratum": "plain_or_slope",
+   "lon_deg": 121.54235126200021,
+   "lat_deg": -85.49938815368142,
+   "published_sun": 0.42572000000000004,
+   "published_earth": 0.27708000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.42390031931650335,
+     "earth": 0.2633595038029921
+    },
+    "2m": {
+     "sun": 0.42848474819350213,
+     "earth": 0.29234314572722647
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.4202965169372583,
+     "earth": 0.21940292104118017
+    },
+    "2m": {
+     "sun": 0.42774927832018683,
+     "earth": 0.2901122204448367
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.25625,
+    "run_B": 0.34097222222222223
+   }
+  },
+  {
+   "id": "plain_or_slope_10",
+   "stratum": "plain_or_slope",
+   "lon_deg": 35.84257484925056,
+   "lat_deg": -89.48130992839529,
+   "published_sun": 0.29456000000000004,
+   "published_earth": 0.5116,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2941756914949038,
+     "earth": 0.5116296173717985
+    },
+    "2m": {
+     "sun": 0.2965782264144005,
+     "earth": 0.5117705824308505
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.29484374329649854,
+     "earth": 0.5116602619498533
+    },
+    "2m": {
+     "sun": 0.29711757098816505,
+     "earth": 0.5117828402620724
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.34305555555555556,
+    "run_B": 0.3402777777777778
+   }
+  },
+  {
+   "id": "plain_or_slope_11",
+   "stratum": "plain_or_slope",
+   "lon_deg": 185.781962183557,
+   "lat_deg": -88.34046977234081,
+   "published_sun": 0.08120000000000001,
+   "published_earth": 0.33244,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0814471595540601,
+     "earth": 0.3322730309326371
+    },
+    "2m": {
+     "sun": 0.08256875111086595,
+     "earth": 0.3324139959916892
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.07860947162618517,
+     "earth": 0.3320891634643083
+    },
+    "2m": {
+     "sun": 0.08149619087894779,
+     "earth": 0.33229141767946996
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.003472222222222222,
+    "run_B": 0.14583333333333334
+   }
+  },
+  {
+   "id": "plain_or_slope_12",
+   "stratum": "plain_or_slope",
+   "lon_deg": 140.84314298858703,
+   "lat_deg": -86.02980104822336,
+   "published_sun": 0.47428000000000003,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.4736916297399501,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.4802189248656235,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.47250874902703466,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.4793486188488671,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.48819444444444443,
+    "run_B": 0.47847222222222224
+   }
+  },
+  {
+   "id": "plain_or_slope_13",
+   "stratum": "plain_or_slope",
+   "lon_deg": 255.98955050142823,
+   "lat_deg": -86.27034444829806,
+   "published_sun": 0.11764000000000001,
+   "published_earth": 0.45336000000000004,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.06416361753115021,
+     "earth": 0.4500278865660299
+    },
+    "2m": {
+     "sun": 0.15590735531162472,
+     "earth": 0.4591538419107507
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.007881785475695785,
+     "earth": 0.44337801312813724
+    },
+    "2m": {
+     "sun": 0.10413027623022658,
+     "earth": 0.45288396124073765
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.55625,
+    "run_B": 0.64375
+   }
+  },
+  {
+   "id": "plain_or_slope_14",
+   "stratum": "plain_or_slope",
+   "lon_deg": 152.3205112095482,
+   "lat_deg": -85.29370237020832,
+   "published_sun": 0.30024,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3002494468653661,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.30044557216491685,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.30017589987803456,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.30033525168391956,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.0,
+    "run_B": 0.12916666666666668
+   }
+  },
+  {
+   "id": "plain_or_slope_15",
+   "stratum": "plain_or_slope",
+   "lon_deg": 243.8898293269038,
+   "lat_deg": -86.26741154623222,
+   "published_sun": 0.11836,
+   "published_earth": 0.53288,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.11833710261643407,
+     "earth": 0.5327069581578932
+    },
+    "2m": {
+     "sun": 0.11853935683159579,
+     "earth": 0.5327743762296137
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.11833097370082311,
+     "earth": 0.5327130870735041
+    },
+    "2m": {
+     "sun": 0.11850258333793003,
+     "earth": 0.5327805051452247
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.3548611111111111,
+    "run_B": 0.3972222222222222
+   }
+  },
+  {
+   "id": "plain_or_slope_16",
+   "stratum": "plain_or_slope",
+   "lon_deg": 317.87180529649424,
+   "lat_deg": -88.29664012212912,
+   "published_sun": 0.27004,
+   "published_earth": 0.47616,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2730493193839214,
+     "earth": 0.4767867321234854
+    },
+    "2m": {
+     "sun": 0.274998314548207,
+     "earth": 0.4768909236888717
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.27059775313953705,
+     "earth": 0.47676221646104155
+    },
+    "2m": {
+     "sun": 0.27493702539209736,
+     "earth": 0.4768664080264279
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.41041666666666665,
+    "run_B": 0.43194444444444446
+   }
+  },
+  {
+   "id": "plain_or_slope_17",
+   "stratum": "plain_or_slope",
+   "lon_deg": 0.6582212586082452,
+   "lat_deg": -85.95403904248255,
+   "published_sun": 0.36168000000000006,
+   "published_earth": 1.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3628195463376665,
+     "earth": 1.0
+    },
+    "2m": {
+     "sun": 0.36649076678863207,
+     "earth": 1.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.36121377044759473,
+     "earth": 1.0
+    },
+    "2m": {
+     "sun": 0.36585335956509213,
+     "earth": 1.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5819444444444445,
+    "run_B": 0.5819444444444445
+   }
+  },
+  {
+   "id": "plain_or_slope_18",
+   "stratum": "plain_or_slope",
+   "lon_deg": 130.21450776199023,
+   "lat_deg": -88.1721110644939,
+   "published_sun": 0.10716,
+   "published_earth": 0.42772000000000004,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.10756246897236472,
+     "earth": 0.42742444579280586
+    },
+    "2m": {
+     "sun": 0.10813858703979505,
+     "earth": 0.4276512156704114
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.1068269990990494,
+     "earth": 0.4272957385649757
+    },
+    "2m": {
+     "sun": 0.10776472318752643,
+     "earth": 0.4274979927801374
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.2798611111111111,
+    "run_B": 0.3277777777777778
+   }
+  },
+  {
+   "id": "plain_or_slope_19",
+   "stratum": "plain_or_slope",
+   "lon_deg": 92.54600658253462,
+   "lat_deg": -86.86049958008056,
+   "published_sun": 0.037880000000000004,
+   "published_earth": 0.46584000000000003,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.03845281654316902,
+     "earth": 0.46579758643303243
+    },
+    "2m": {
+     "sun": 0.03878377798616091,
+     "earth": 0.46590177799841875
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.03857539485538824,
+     "earth": 0.4658404888423091
+    },
+    "2m": {
+     "sun": 0.03897990328571166,
+     "earth": 0.46593242257647355
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.43333333333333335,
+    "run_B": 0.4083333333333333
+   }
+  },
+  {
+   "id": "plain_or_slope_20",
+   "stratum": "plain_or_slope",
+   "lon_deg": 26.44112394528836,
+   "lat_deg": -86.93237133278244,
+   "published_sun": 0.0,
+   "published_earth": 0.40612000000000004,
+   "published_permanent_shadow": 1,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.40419585562726384
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.41195506279074046
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.0,
+     "earth": 0.40281684961479763
+    },
+    "2m": {
+     "sun": 0.0,
+     "earth": 0.411084756773984
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.08819444444444445,
+    "run_B": 0.09305555555555556
+   }
+  },
+  {
+   "id": "plain_or_slope_21",
+   "stratum": "plain_or_slope",
+   "lon_deg": 115.76578523540316,
+   "lat_deg": -85.53004410054436,
+   "published_sun": 0.36012000000000005,
+   "published_earth": 0.28508,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.36010443672201076,
+     "earth": 0.28635519517531766
+    },
+    "2m": {
+     "sun": 0.36698108003750896,
+     "earth": 0.28652680481242454
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.36102377406365493,
+     "earth": 0.2862387457787094
+    },
+    "2m": {
+     "sun": 0.3676981631639914,
+     "earth": 0.286459386740704
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.4625,
+    "run_B": 0.4527777777777778
+   }
+  },
+  {
+   "id": "plain_or_slope_22",
+   "stratum": "plain_or_slope",
+   "lon_deg": 170.70141792013408,
+   "lat_deg": -86.52936997745158,
+   "published_sun": 0.32320000000000004,
+   "published_earth": 0.04048,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3083825178811113,
+     "earth": 0.038238304496785384
+    },
+    "2m": {
+     "sun": 0.3441999007115671,
+     "earth": 0.03866732858955265
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.29859463965040667,
+     "earth": 0.03809733943773328
+    },
+    "2m": {
+     "sun": 0.3420363935008979,
+     "earth": 0.03842830088072517
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.2798611111111111,
+    "run_B": 0.3034722222222222
+   }
+  },
+  {
+   "id": "plain_or_slope_23",
+   "stratum": "plain_or_slope",
+   "lon_deg": 230.18800345306698,
+   "lat_deg": -86.61239601225921,
+   "published_sun": 0.19592,
+   "published_earth": 0.09584000000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.19845428748291566,
+     "earth": 0.09925778831951262
+    },
+    "2m": {
+     "sun": 0.20190486697188667,
+     "earth": 0.12666629893173
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.19893847181618157,
+     "earth": 0.07877495234768113
+    },
+    "2m": {
+     "sun": 0.20235840672709776,
+     "earth": 0.10570540754224356
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5847222222222223,
+    "run_B": 0.5895833333333333
+   }
+  },
+  {
+   "id": "plain_or_slope_24",
+   "stratum": "plain_or_slope",
+   "lon_deg": 325.7268847292548,
+   "lat_deg": -87.06147297294993,
+   "published_sun": 0.026560000000000004,
+   "published_earth": 0.39820000000000005,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.026875294954063777,
+     "earth": 0.40026109180502695
+    },
+    "2m": {
+     "sun": 0.027273674468776238,
+     "earth": 0.42005748922843084
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.026905939532118582,
+     "earth": 0.39714760267465876
+    },
+    "2m": {
+     "sun": 0.027267545553165278,
+     "earth": 0.41664368323312556
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.36944444444444446,
+    "run_B": 0.3701388888888889
+   }
+  },
+  {
+   "id": "plain_or_slope_25",
+   "stratum": "plain_or_slope",
+   "lon_deg": 45.407877637319714,
+   "lat_deg": -86.65973159204206,
+   "published_sun": 0.21496,
+   "published_earth": 0.26292000000000004,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.23301524261312445,
+     "earth": 0.2297791751705371
+    },
+    "2m": {
+     "sun": 0.24158346663724786,
+     "earth": 0.34374636095635597
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.22054902826042988,
+     "earth": 0.2920734734403442
+    },
+    "2m": {
+     "sun": 0.23943834617341153,
+     "earth": 0.3559429030221683
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.5256944444444445,
+    "run_B": 0.5361111111111111
+   }
+  },
+  {
+   "id": "plain_or_slope_26",
+   "stratum": "plain_or_slope",
+   "lon_deg": 302.75591229159653,
+   "lat_deg": -86.21453081433343,
+   "published_sun": 0.26940000000000003,
+   "published_earth": 0.53644,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.2842345903739251,
+     "earth": 0.5366846243894068
+    },
+    "2m": {
+     "sun": 0.2968846721949486,
+     "earth": 0.5367275267986835
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.2341552209167632,
+     "earth": 0.5366294641489081
+    },
+    "2m": {
+     "sun": 0.2788227578894466,
+     "earth": 0.5366662376425739
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.23541666666666666,
+    "run_B": 0.5118055555555555
+   }
+  },
+  {
+   "id": "plain_or_slope_27",
+   "stratum": "plain_or_slope",
+   "lon_deg": 131.51813693951053,
+   "lat_deg": -85.55597124891165,
+   "published_sun": 0.46652000000000005,
+   "published_earth": 0.31124,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.4667291816058985,
+     "earth": 0.3100924853365694
+    },
+    "2m": {
+     "sun": 0.467115303289389,
+     "earth": 0.31030699738295303
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.4640876189775743,
+     "earth": 0.2661175158279246
+    },
+    "2m": {
+     "sun": 0.4667536972683423,
+     "earth": 0.3102947395517311
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.005555555555555556,
+    "run_B": 0.24444444444444444
+   }
+  },
+  {
+   "id": "plain_or_slope_28",
+   "stratum": "plain_or_slope",
+   "lon_deg": 348.9080592940848,
+   "lat_deg": -89.38804695552422,
+   "published_sun": 0.042440000000000005,
+   "published_earth": 0.42688000000000004,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.04141308278326316,
+     "earth": 0.42717928916836745
+    },
+    "2m": {
+     "sun": 0.048289726098761344,
+     "earth": 0.42772476265774295
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.04149888760181661,
+     "earth": 0.4271670313371455
+    },
+    "2m": {
+     "sun": 0.04889035982863552,
+     "earth": 0.4276757313328553
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.1909722222222222,
+    "run_B": 0.19166666666666668
+   }
+  },
+  {
+   "id": "plain_or_slope_29",
+   "stratum": "plain_or_slope",
+   "lon_deg": 59.771003967626264,
+   "lat_deg": -86.87825162640488,
+   "published_sun": 0.004200000000000001,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.004296369843283628,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.004510881889667261,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.003726380691464259,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.003873474666127322,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.39444444444444443,
+    "run_B": 0.41597222222222224
+   }
+  },
+  {
+   "id": "plain_or_slope_30",
+   "stratum": "plain_or_slope",
+   "lon_deg": 184.30576824345738,
+   "lat_deg": -89.06443577274267,
+   "published_sun": 0.15544000000000002,
+   "published_earth": 0.0,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.23414296308554128,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.23988575701301168,
+     "earth": 0.0
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.21161919821525976,
+     "earth": 0.0
+    },
+    "2m": {
+     "sun": 0.24023510520283647,
+     "earth": 0.0
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.27569444444444446,
+    "run_B": 0.38263888888888886
+   }
+  },
+  {
+   "id": "plain_or_slope_31",
+   "stratum": "plain_or_slope",
+   "lon_deg": 259.0602687739917,
+   "lat_deg": -85.61785997628776,
+   "published_sun": 0.32604000000000005,
+   "published_earth": 0.4152,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.3258070249630733,
+     "earth": 0.41556499408559644
+    },
+    "2m": {
+     "sun": 0.32614411532167614,
+     "earth": 0.41600014709397465
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.32459962858771396,
+     "earth": 0.4154608025202101
+    },
+    "2m": {
+     "sun": 0.32606443941873364,
+     "earth": 0.41588982661297735
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.07708333333333334,
+    "run_B": 0.15208333333333332
+   }
+  },
+  {
+   "id": "site_shackleton_rim_crest",
+   "stratum": "site_record",
+   "lon_deg": 205.65152846505256,
+   "lat_deg": -89.80574224049278,
+   "published_sun": 0.7684000000000001,
+   "published_earth": 0.5660000000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.781982213886897,
+     "earth": 0.5670104988324416
+    },
+    "2m": {
+     "sun": 0.8057685353730365,
+     "earth": 0.5670350144948855
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.6526988679892867,
+     "earth": 0.5669614675075539
+    },
+    "2m": {
+     "sun": 0.7846911945869417,
+     "earth": 0.5669982410012196
+    }
+   },
+   "run_A_second_cycle": {
+    "0m": {
+     "sun": 0.7812896464228584,
+     "earth": 0.5673598470222664
+    },
+    "2m": {
+     "sun": 0.8052414486304939,
+     "earth": 0.567408878347154
+    }
+   },
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.23125,
+    "run_B": 0.43680555555555556
+   }
+  },
+  {
+   "id": "site_de_gerlache_rim_crest",
+   "stratum": "site_record",
+   "lon_deg": 291.60435503042095,
+   "lat_deg": -88.66462682251607,
+   "published_sun": 0.8269200000000001,
+   "published_earth": 0.6142000000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.825926538817487,
+     "earth": 0.6150734550535973
+    },
+    "2m": {
+     "sun": 0.8484564326033794,
+     "earth": 0.6151837755345947
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.7841395921819553,
+     "earth": 0.6144850791549451
+    },
+    "2m": {
+     "sun": 0.8438413591483259,
+     "earth": 0.6151102285472632
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.1909722222222222,
+    "run_B": 0.5847222222222223
+   }
+  },
+  {
+   "id": "site_malapert_massif_summit",
+   "stratum": "site_record",
+   "lon_deg": 2.0479284246516705,
+   "lat_deg": -85.98731706125785,
+   "published_sun": 0.5556800000000001,
+   "published_earth": 0.8748400000000001,
+   "published_permanent_shadow": 0,
+   "permanent_shadow_neighbourhood_mixed": false,
+   "run_A": {
+    "0m": {
+     "sun": 0.5856424022897628,
+     "earth": 0.875215278160835
+    },
+    "2m": {
+     "sun": 0.6581352161362091,
+     "earth": 0.9686628544811566
+    }
+   },
+   "run_B": {
+    "0m": {
+     "sun": 0.4805989176335031,
+     "earth": 0.8477883808017848
+    },
+    "2m": {
+     "sun": 0.635850478974755,
+     "earth": 0.9521086534159511
+    }
+   },
+   "run_A_second_cycle": null,
+   "share_of_horizon_set_closer_than_1km": {
+    "run_A": 0.9673611111111111,
+    "run_B": 1.0
+   }
+  }
+ ]
+}

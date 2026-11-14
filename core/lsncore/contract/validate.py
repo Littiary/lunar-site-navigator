@@ -25,7 +25,7 @@ from .io import (
     contract_dir,
 )
 
-KINDS = ("site", "direction_table", "scenario", "index")
+KINDS = ("site", "direction_table", "site_pairs", "scenario", "index")
 
 
 class ContractError(ValueError):
@@ -57,9 +57,15 @@ def _schema_errors(doc: Any) -> list[str]:
     for err in sorted(_validator(doc["kind"]).iter_errors(doc), key=lambda e: list(e.absolute_path)):
         where = "/".join(str(p) for p in err.absolute_path) or "<root>"
         errors.append(f"{where}: {err.message}")
-    version = doc.get("contract", {}).get("version")
-    if version != CONTRACT_VERSION:
-        errors.append(f"contract/version: found {version!r}, this reader implements {CONTRACT_VERSION!r}")
+    version = str(doc.get("contract", {}).get("version"))
+    try:
+        found = tuple(int(part) for part in version.split("."))
+        mine = tuple(int(part) for part in CONTRACT_VERSION.split("."))
+        readable = len(found) == 2 and found[0] == mine[0] and found[1] <= mine[1]
+    except ValueError:
+        readable = False
+    if not readable:
+        errors.append(f"contract/version: found {version!r}, this reader implements {CONTRACT_VERSION!r} and older minor versions")
     return errors
 
 
@@ -162,6 +168,15 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     ):
         _expect_shape(hz.get(name), shape, f"horizon/{name}", errors)
 
+    _expect_shape(hz.get("obstacle_id"), shape, "horizon/obstacle_id", errors)
+    if ("obstacle_id" in hz) != ("obstacles" in hz):
+        errors.append("horizon: obstacle_id and obstacles must be given together")
+    for k, ob in enumerate(hz.get("obstacles", [])):
+        if ob["id"] != k:
+            errors.append(f"horizon/obstacles/{k}: id must equal the position in the list")
+        if ob["height_index"] >= len(heights) or ob["azimuth_start_index"] >= az["count"] or ob["azimuth_count"] > az["count"]:
+            errors.append(f"horizon/obstacles/{k}: index out of range")
+
     site = manifest["site"]
     req_site = manifest["request"]["site"]
     for key in ("site_id", "lat_deg", "lon_deg"):
@@ -171,6 +186,13 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     tl = manifest.get("timeline")
     if tl is None:
         return
+    trade = tl.get("height_trade")
+    if trade is not None:
+        if trade["observer_heights_m"] != heights:
+            errors.append("timeline/height_trade: observer_heights_m differs from the horizon")
+        for quantity in trade["quantities"]:
+            if len(quantity["values"]) != len(heights) or len(quantity["change_s"]) != len(heights):
+                errors.append(f"timeline/height_trade/{quantity['id']}: one value per observer height is required")
     n = tl["time"]["count"]
     dt_input = manifest["inputs"]["direction_table"]
     if dt_input is None or dt_input["package_id"] != tl["direction_table_id"]:
@@ -180,10 +202,41 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
         if series is None:
             errors.append(f"timeline/series/{body}: missing series for a listed body")
             continue
-        for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg"):
+        for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg", "ellipse_visible_share"):
             _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
-        for name in ("margin_deg", "visible_fraction"):
+        for name in ("margin_deg", "visible_fraction", "lit_fraction", "blocker_azimuth_index"):
             _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
+    calendar = tl.get("calendar")
+    n_periods = None
+    if calendar is not None:
+        n_periods = len(calendar["periods"])
+        for k, period in enumerate(calendar["periods"]):
+            if period["index"] != k or not period["start_et_s"] < period["end_et_s"]:
+                errors.append(f"timeline/calendar/periods/{k}: index or time order is wrong")
+            if k and period["start_et_s"] != calendar["periods"][k - 1]["end_et_s"]:
+                errors.append(f"timeline/calendar/periods/{k}: periods must follow each other without gaps")
+        for quantity in calendar["quantities"]:
+            rows = quantity["values"]
+            if len(rows) != len(heights) or any(len(row) != n_periods for row in rows):
+                errors.append(f"timeline/calendar/quantities/{quantity['id']}: values must be [heights][periods]")
+    stated = {r["id"] for r in (manifest["request"]["timeline"] or {}).get("requirements", [])}
+    for i, opportunity in enumerate(tl.get("opportunities", [])):
+        if opportunity["requirement_id"] not in stated:
+            errors.append(f"timeline/opportunities/{i}: requirement_id is not in request/timeline/requirements")
+        if opportunity["height_index"] >= len(heights):
+            errors.append(f"timeline/opportunities/{i}: height_index out of range")
+        if len(opportunity["landing_windows_et_s"]) != len(opportunity["landing_windows_utc"]):
+            errors.append(f"timeline/opportunities/{i}: landing windows differ in length")
+        if n_periods is not None and len(opportunity["feasible_s_per_period"]) != n_periods:
+            errors.append(f"timeline/opportunities/{i}: feasible_s_per_period must have one value per calendar period")
+    n_obstacles = len(hz.get("obstacles", []))
+    for i, blocker in enumerate(tl.get("blockers", [])):
+        if blocker["height_index"] >= len(heights) or blocker["body"] not in tl["bodies"]:
+            errors.append(f"timeline/blockers/{i}: body or height_index not in this package")
+        if blocker["obstacle_id"] >= n_obstacles:
+            errors.append(f"timeline/blockers/{i}: obstacle_id is not in horizon/obstacles")
+        if len(blocker["intervals_et_s"]) != len(blocker["intervals_utc"]):
+            errors.append(f"timeline/blockers/{i}: intervals_et_s and intervals_utc differ in length")
     t0 = tl["time"]["start_et_s"]
     t1 = t0 + (n - 1) * tl["time"]["step_s"]
     last = None
@@ -192,6 +245,8 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             errors.append(f"timeline/events/{i}: height_index out of range")
         if not (t0 <= ev["et_s"] <= t1):
             errors.append(f"timeline/events/{i}: et_s outside the time grid")
+        if "earliest_et_s" in ev and not ev["earliest_et_s"] <= ev["et_s"] <= ev["latest_et_s"]:
+            errors.append(f"timeline/events/{i}: the event must lie between its earliest and latest time")
         if last is not None and ev["et_s"] < last:
             errors.append(f"timeline/events/{i}: events must be sorted by et_s")
         last = ev["et_s"]
@@ -226,6 +281,25 @@ def _check_direction_table(manifest: dict, errors: list[str]) -> None:
             errors.append(f"time/{key} differs from request/{key}")
 
 
+def _check_site_pairs(manifest: dict, errors: list[str]) -> None:
+    known = [s["site_id"] for s in manifest["sites"]]
+    if len(set(known)) != len(known):
+        errors.append("sites: site_id values must be unique")
+    if [s["package_id"] for s in manifest["sites"]] != manifest["request"]["site_package_ids"]:
+        errors.append("sites: package ids differ from request/site_package_ids")
+    if len(manifest["pairs"]) != len(known) * (len(known) - 1) // 2:
+        errors.append("pairs: there must be one entry for every pair of sites")
+    total = (manifest["time"]["count"] - 1) * manifest["time"]["step_s"]
+    for i, pair in enumerate(manifest["pairs"]):
+        if pair["site_a"] not in known or pair["site_b"] not in known or pair["site_a"] == pair["site_b"]:
+            errors.append(f"pairs/{i}: site ids must be two different sites of this package")
+        for row in pair["windows"]:
+            if abs(row["either_s"] + row["neither_s"] - total) > 1e-3:
+                errors.append(f"pairs/{i}/{row['window']}: either_s + neither_s must equal the length of the time range")
+            if len(row["neither_intervals_et_s"]) != len(row["neither_intervals_utc"]):
+                errors.append(f"pairs/{i}/{row['window']}: neither intervals differ in length")
+
+
 def validate_package(path: Path | str) -> dict:
     """Validate a package directory completely. Returns the manifest; raises ContractError."""
     path = Path(path)
@@ -236,13 +310,15 @@ def validate_package(path: Path | str) -> dict:
     errors = _schema_errors(manifest)
     if errors:
         raise ContractError(errors)
-    if manifest["kind"] not in ("site", "direction_table"):
+    if manifest["kind"] not in ("site", "direction_table", "site_pairs"):
         raise ContractError([f"kind '{manifest['kind']}' is a document, not a package"])
 
     _check_arrays(path, manifest, errors)
     _check_methods(manifest, errors)
     if manifest["kind"] == "site":
         _check_site(manifest, errors)
+    elif manifest["kind"] == "site_pairs":
+        _check_site_pairs(manifest, errors)
     else:
         _check_direction_table(manifest, errors)
 

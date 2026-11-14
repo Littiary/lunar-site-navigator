@@ -23,6 +23,16 @@ M_FRACTION = "timeline.visible_fraction"
 M_EVENTS = "timeline.events"
 M_WINDOWS = "timeline.windows"
 M_METRICS = "timeline.metrics"
+M_LIT = "timeline.lit_fraction"
+M_HORIZON_ERROR = "timeline.horizon_error"
+M_ELLIPSE = "timeline.landing_ellipse"
+M_HEIGHT_TRADE = "timeline.height_trade"
+M_PAIRS = "pairs.complementarity"
+M_CALENDAR = "timeline.calendar"
+M_OPPORTUNITY = "timeline.opportunity"
+M_OBSTACLES = "horizon.obstacles"
+M_SMOOTH_SPHERE = "timeline.smooth_sphere"
+M_BLOCKING = "timeline.blocking"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
@@ -51,6 +61,28 @@ def method_card(
         "validation": {"status": status, "evidence": evidence},
         "limits": limits,
     }
+
+
+def window_record(wid: str, subject: str, height_index: int, definition: str, intervals, et_to_utc, method: str, threshold: dict | None = None) -> dict:
+    """A window in the form the contract defines, from an IntervalSet."""
+    record = {
+        "id": wid,
+        "subject": subject,
+        "height_index": height_index,
+        "definition": definition,
+        "intervals_et_s": intervals.as_list(),
+        "intervals_utc": [[et_to_utc(a), et_to_utc(b)] for a, b in intervals.intervals],
+        "clipped_start": bool(intervals.clipped_start),
+        "clipped_end": bool(intervals.clipped_end),
+        "method": method,
+    }
+    if threshold is not None:
+        record["threshold"] = threshold
+    return record
+
+
+def metric_record(mid: str, label: str, value, unit: str, height_index, method: str) -> dict:
+    return {"id": mid, "label": label, "value": None if value is None else float(value), "unit": unit, "height_index": height_index, "method": method}
 
 
 def _quantity(value, unit: str, method: str) -> dict:
@@ -166,6 +198,9 @@ def build_site_package(
     for name, values, dtype, unit in optional:
         if values is not None:
             horizon_block[name] = writer.array(f"horizon_{name}", values, dtype, unit, M_OBSTACLE)
+    if horizon.obstacle_id is not None and horizon.obstacles is not None:
+        horizon_block["obstacle_id"] = writer.array("horizon_obstacle_id", horizon.obstacle_id, "<i4", "1", M_OBSTACLES)
+        horizon_block["obstacles"] = [{**record, "method": M_OBSTACLES} for record in horizon.obstacles]
     if horizon.error_bounds:
         horizon_block["error_bounds"] = {
             name: _quantity(value, unit, method)
@@ -196,6 +231,16 @@ def build_site_package(
             block["visible_fraction"] = writer.array(
                 f"series_{tag}_visible_fraction", s.visible_fraction, "<f4", "1", M_FRACTION
             )
+            if s.lit_fraction is not None:
+                block["lit_fraction"] = writer.array(f"series_{tag}_lit_fraction", s.lit_fraction, "<f4", "1", M_LIT)
+            if s.ellipse_visible_share is not None:
+                block["ellipse_visible_share"] = writer.array(
+                    f"series_{tag}_ellipse_visible_share", s.ellipse_visible_share, "<f4", "1", M_ELLIPSE
+                )
+            if s.blocker_azimuth_index is not None:
+                block["blocker_azimuth_index"] = writer.array(
+                    f"series_{tag}_blocker_azimuth_index", s.blocker_azimuth_index, "<i4", "1", M_BLOCKING
+                )
             series[body] = block
         sections["timeline"] = {
             "direction_table_id": timeline.direction_table_id,
@@ -206,6 +251,16 @@ def build_site_package(
             "windows": timeline.windows,
             "metrics": timeline.metrics,
         }
+        if timeline.blockers is not None:
+            sections["timeline"]["blockers"] = timeline.blockers
+        if timeline.uncertainty is not None:
+            sections["timeline"]["uncertainty"] = timeline.uncertainty
+        if timeline.calendar is not None:
+            sections["timeline"]["calendar"] = timeline.calendar
+        if timeline.height_trade is not None:
+            sections["timeline"]["height_trade"] = timeline.height_trade
+        if timeline.opportunities is not None:
+            sections["timeline"]["opportunities"] = timeline.opportunities
 
     used = _used_methods(sections, set())
     missing = used - methods.keys()

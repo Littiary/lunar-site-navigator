@@ -203,6 +203,26 @@ def _strip_fraction(az, el, radius, stretch, horizon: Horizon, n_strips: int) ->
     return np.clip(top / (2.0 * half_height), 0.0, 1.0) @ weights
 
 
+def limb_margins(az_deg, el_deg, radius_deg, horizon: Horizon):
+    """Upper and lower limb margins of a disc for every epoch, without the visible fraction.
+
+    The same numbers as ``disc_signals(...).upper_margin_deg`` and ``.lower_margin_deg``;
+    for long series in which only "is any part visible" or "is the whole disc visible"
+    is needed, this avoids the strip integration.
+    """
+    az = np.atleast_1d(np.asarray(az_deg, dtype=np.float64))
+    el = np.atleast_1d(np.asarray(el_deg, dtype=np.float64))
+    radius = np.atleast_1d(np.asarray(radius_deg, dtype=np.float64))
+    upper = el + radius - float(horizon.elevation_deg.min())
+    lower = el - radius - float(horizon.elevation_deg.max())
+    contact = ~((lower > 0.0) | (upper < 0.0))
+    if np.any(contact):
+        e = el[contact]
+        stretch = np.minimum(1.0 / np.maximum(np.cos(np.radians(e)), 1e-12), _MAX_STRETCH)
+        upper[contact], lower[contact], _, _ = _limb_margins(az[contact], e, radius[contact], stretch, horizon)
+    return upper, lower
+
+
 def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = DEFAULT_STRIPS) -> DiscSignals:
     """Margins and visible fraction of a disc for every epoch (arrays of equal length).
 

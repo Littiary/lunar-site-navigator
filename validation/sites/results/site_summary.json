@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T12:11:39Z",
+  "generated_utc": "2026-11-14T13:09:14Z",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
     "end_utc": "2027-11-14T00:00:00.000Z",
@@ -20,8 +20,8 @@
   "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-250a3fe71759fa79",
-  "run_time_s": 419.6042324999871,
-  "status": "unverified against an independent illumination product or mission record",
+  "run_time_s": 190.23326860001544,
+  "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
   "sites": [
     {
       "site_id": "shackleton-rim-crest",
@@ -29,8 +29,8 @@
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
       "surface_height_m": 1701.0723774096787,
-      "package_id": "site-3d084d7f181d1b64",
-      "content_sha256": "580cecab24ac6cb694e36559775ff0951b3039d7cf6611ad1a3d837c136a8b89",
+      "package_id": "site-1bb3ba58499d4530",
+      "content_sha256": "461eae7727ec2fa87a80b6e98932fe7511a0571104514be7f37eb8f89e2de3ab",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -42,8 +42,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 2.627517,
-        "timeline": 147.551678
+        "horizon": 2.560361,
+        "timeline": 75.57922
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -268,8 +268,8 @@
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
       "surface_height_m": 1815.1855746334436,
-      "package_id": "site-08105a0f3060aee8",
-      "content_sha256": "3b53c94a6eee003467453c2d3433afcf221fd80bcaf76e6bddf8778d47cf51d7",
+      "package_id": "site-886457e9968ec44d",
+      "content_sha256": "638390e10c4f595315b3abfbc4bf32c8d40c64ced572dad07a4be45227e973d0",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -281,8 +281,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 9.505131,
-        "timeline": 125.135097
+        "horizon": 9.760563,
+        "timeline": 50.314806
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -507,8 +507,8 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "surface_height_m": 5173.498293993088,
-      "package_id": "site-b425911bcc8e34f8",
-      "content_sha256": "478f0dbf0cf30c8b0d228d39f4de7c74a4b453cac1102270f5b645a5feaef1f0",
+      "package_id": "site-1e8bb8bfac94b02e",
+      "content_sha256": "618d7c65e0ecca7e1aaeedb9a67327469ac5fcbea922e3f3504cbce77d6faa28",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-250a3fe71759fa79",
@@ -520,8 +520,8 @@
         "shortest_reach_m": 300000.0
       },
       "timings_s": {
-        "horizon": 8.350602,
-        "timeline": 124.72494
+        "horizon": 2.904864,
+        "timeline": 47.943509
       },
       "sun_centre_elevation_range_deg": [
         -5.536576271057129,

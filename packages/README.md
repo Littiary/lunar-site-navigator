@@ -9,13 +9,13 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Item | Value |
 |---|---|
 | Command | `python -m validation.sites.run data/sites/sites.json --publish` |
-| Code | commit `d1af9e6` (clean working tree, as recorded in the provenance of every package) |
-| Generated | 2026-11-14T12:11:39Z |
+| Code | commit `d8c2b3e` (clean working tree, as recorded in the provenance of every package) |
+| Generated | 2026-11-14T13:09:14Z |
 | Scenario | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, 2026-11-14T00:00:00.000Z to 2027-11-14T00:00:00.000Z, series step 3600 s |
 | Contract | `lsn-package` version 0.1 |
 | Terrain | `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0` |
-| Terrain layer | LDEM_80S_20M V2.0, 20 m; checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json` |
-| Terrain layer | LDEM_60S_60M V2.0, 60 m; checksum and source URL are not recorded in the package (the terrain reader does not supply them yet); see `data/manifest/manifest.json` |
+| Terrain layer | LDEM_80S_20M V2.0, 20 m; data file sha256 `db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG |
+| Terrain layer | LDEM_60S_60M V2.0, 60 m; data file sha256 `e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c`, https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG |
 | Kernel set | `bfe870fccfa5`: naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf |
 | Station kernel group | `bacdf4d6169a`: earth_1962_260806_2126_combined.bpc, earth_000101_270208_261113.bpc, earthstns_itrf93_260814.bsp, earth_topo_260814.tf |
 | Body-fixed frame | `MOON_ME_DE440_ME421`, aberration correction `LT+S` |
@@ -30,16 +30,16 @@ Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the terrain f
 | Kind | Package | Site | Status | Path |
 |---|---|---|---|---|
 | direction table | `dirtab-250a3fe71759fa79` | all sites | ok | `direction_table/dirtab-250a3fe71759fa79` |
-| site | `site-3d084d7f181d1b64` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-3d084d7f181d1b64` |
-| site | `site-08105a0f3060aee8` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-08105a0f3060aee8` |
-| site | `site-b425911bcc8e34f8` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-b425911bcc8e34f8` |
+| site | `site-1bb3ba58499d4530` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-1bb3ba58499d4530` |
+| site | `site-886457e9968ec44d` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-886457e9968ec44d` |
+| site | `site-1e8bb8bfac94b02e` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-1e8bb8bfac94b02e` |
 
 Every site package holds the 360 degree terrain horizon for six observer heights and, for the time window, the direction series of the Sun and the Earth, rise and set events, visibility windows (including eclipses of the Sun by the Earth and per-station direct-to-Earth windows) and metrics, each with its method card.
 
 ## What these numbers are
 
 - The sites are project candidate points derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.
-- **Unverified against an independent illumination product or mission record.** The ephemeris, the eclipse contacts and the ground-station geometry are validated (`validation/card/validation_card.md`); the terrain horizon has passed the core stream's own tests. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
+- The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution, and the ephemeris, the eclipse contacts and the ground-station geometry are validated against independent sources (`validation/card/validation_card.md`). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. **The numbers of these sites themselves have no independent counterpart**: they use the finer 20 m terrain, a twelve-month window and several observer heights, and no source gives rise and set times for these points. Every number carries a method card with its validation status and limits; a viewer must show `unverified` where a card says so.
 - Where an event is set by terrain closer than about 1 km, the 20 m elevation grid limits its accuracy; the event carries `obstacle_distance_m`.
 - A summary per site and observer height is in `validation/sites/results/site_summary.md`.
 

@@ -1,0 +1,136 @@
+{
+ "generated_utc": "2026-11-14T12:53:23Z",
+ "kind": "post-hoc diagnosis, not a pass/fail rule",
+ "craters_used": 192,
+ "radial_scale_as_in_catalogue_report": -0.0003616928851286616,
+ "radial_scale_with_detrended_rim_fit": -0.0002565763605328897,
+ "mean_radial_component_of_regional_slope": {
+  "value": -0.010042510481606098,
+  "se": 0.005931257131786991,
+  "sign": "negative = terrain rises towards the pole"
+ },
+ "fits": {
+  "catalogue_check_model": {
+   "Tx_m": {
+    "estimate": -20.676246563556667,
+    "se": 12.664844973679934
+   },
+   "Ty_m": {
+    "estimate": 24.45928658145893,
+    "se": 12.664844973679932
+   },
+   "rotation_rad": {
+    "estimate": -0.00022280874386382266,
+    "se": 5.828011455376842e-05
+   },
+   "radial_scale": {
+    "estimate": -0.0003616928851286616,
+    "se": 5.8280114553768426e-05
+   }
+  },
+  "plus_uphill_bias": {
+   "Tx_m": {
+    "estimate": -20.920549020409396,
+    "se": 8.810991303436285
+   },
+   "Ty_m": {
+    "estimate": 16.649945297829838,
+    "se": 8.819500479291046
+   },
+   "rotation_rad": {
+    "estimate": -0.000116616202193498,
+    "se": 4.088669526285942e-05
+   },
+   "radial_scale": {
+    "estimate": -0.0002622353584129655,
+    "se": 4.084496746765689e-05
+   },
+   "uphill_beta": {
+    "estimate": 0.8255534441473913,
+    "se": 0.04096560457355514
+   }
+  },
+  "plus_uphill_bias_and_constant_radial_offset": {
+   "Tx_m": {
+    "estimate": -21.041252380269395,
+    "se": 8.834243337379565
+   },
+   "Ty_m": {
+    "estimate": 16.46432871717221,
+    "se": 8.859606687825558
+   },
+   "rotation_rad": {
+    "estimate": -0.00011653566221170308,
+    "se": 4.093832299062861e-05
+   },
+   "radial_scale": {
+    "estimate": -0.0002949132543790256,
+    "se": 0.000133028531083339
+   },
+   "uphill_beta": {
+    "estimate": 0.8255982030896641,
+    "se": 0.041016507241579674
+   },
+   "radial_offset_m": {
+    "estimate": 7.480891566069395,
+    "se": 28.979234601105784
+   }
+  },
+  "plus_uphill_bias_and_radial_offset_per_diameter": {
+   "Tx_m": {
+    "estimate": -21.021770034999072,
+    "se": 8.761009502741253
+   },
+   "Ty_m": {
+    "estimate": 18.635683070336437,
+    "se": 8.811313013565366
+   },
+   "rotation_rad": {
+    "estimate": -0.00011906218086288334,
+    "se": 4.0668011931586427e-05
+   },
+   "radial_scale": {
+    "estimate": -0.00012672791400802907,
+    "se": 7.130189240895831e-05
+   },
+   "uphill_beta": {
+    "estimate": 0.8155925698108484,
+    "se": 0.04095988531042598
+   },
+   "radial_offset_per_D": {
+    "estimate": -0.00803226124806139,
+    "se": 0.003473845089299599
+   }
+  },
+  "plus_uphill_bias_and_latlon_fit_term": {
+   "Tx_m": {
+    "estimate": -21.104666607205793,
+    "se": 8.786718123120762
+   },
+   "Ty_m": {
+    "estimate": 18.238729392608093,
+    "se": 8.840032622182212
+   },
+   "rotation_rad": {
+    "estimate": -0.00011819499473908479,
+    "se": 4.0780918705342764e-05
+   },
+   "radial_scale": {
+    "estimate": -0.00022422593010062997,
+    "se": 4.6016771610888236e-05
+   },
+   "uphill_beta": {
+    "estimate": 0.8209088228356665,
+    "se": 0.04093364085544366
+   },
+   "D2_over_s_coefficient": {
+    "estimate": -0.0913056078502697,
+    "se": 0.05144500989347563
+   }
+  }
+ },
+ "predictions_of_conventions": {
+  "D2_over_s_coefficient_if_catalogue_circles_were_fitted_in_lat_lon_space": 0.125,
+  "radial_scale_if_catalogue_positions_used_a_1737.1513_km_sphere_against_1737.4_km_metres": -0.0001431449292045306
+ }
+}

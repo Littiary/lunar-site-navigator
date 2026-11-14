@@ -1,0 +1,21 @@
+{
+ "note": "Published spot heights against our products. Written and committed BEFORE any of our values at these points was looked at; not to be edited afterwards. The commit time is the authoritative time of writing.",
+ "source": {
+  "citation": "D. E. Smith et al. (2010), Initial observations from the Lunar Orbiter Laser Altimeter (LOLA), Geophys. Res. Lett. 37, L18204, doi:10.1029/2010GL043751, section 7.1",
+  "url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2010GL043751",
+  "retrieved_utc": "2026-11-14T12:47Z",
+  "what_it_says": "a global LOLA grid at 1/16 degree (about 2 km); highest elevation 10.7834 km at 201.378 E, 5.401 N; lowest elevation -9.117 km at 187.5074 E, 70.360 S, in Antoniadi crater",
+  "datum": "elevations relative to the 1737.4 km sphere, the LOLA convention also used by our products (stated as such in the LOLA GDR labels; the paper does not restate the datum in this sentence, so this is an assumption to be checked by the result)"
+ },
+ "points": [
+  {"name": "highest point", "lon_deg_east": 201.378, "lat_deg": 5.401, "height_m": 10783.4, "extremum": "max"},
+  {"name": "lowest point, Antoniadi floor", "lon_deg_east": 187.5074, "lat_deg": -70.360, "height_m": -9117.0, "extremum": "min"}
+ ],
+ "method": "for each product that covers the point: (a) our bilinear height at the stated coordinates; (b) the extreme (max or min as stated) of our heights on a 250 m grid within 5 km of the stated point, and its distance from the stated point. The published grid is from 2010 (less data, older orbits, 2 km cells), so the comparison is at the tens-of-metres level.",
+ "pass_if": {
+  "abs_extreme_difference_m": 50.0,
+  "extreme_within_km": 5.0,
+  "abs_point_difference_m": 100.0
+ },
+ "products": "LDEM_16, LDEM_128 and any SLDEM2015 mosaic for both points; LDEM_60S_60M for the Antoniadi point (70.36 S lies inside its square)"
+}
