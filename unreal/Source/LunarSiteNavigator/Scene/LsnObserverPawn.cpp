@@ -58,7 +58,7 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
 		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("next_sunset"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
 		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("page_sites"), TEXT("next_requirement"),
-		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("controls"), TEXT("look_at_sun"), TEXT("camera"), TEXT("arrival"), TEXT("first_day"), TEXT("help"), TEXT("quit"),
+		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("controls"), TEXT("controls_tab"), TEXT("look_at_sun"), TEXT("camera"), TEXT("arrival"), TEXT("first_day"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
 }
@@ -146,6 +146,19 @@ void ALsnObserverPawn::ApplyView()
 	Post.bOverride_FilmToe = true;
 	Post.FilmToe = LsnLook::FilmToe.GetValueOnGameThread();
 	Camera->SetFieldOfView(static_cast<float>(FovDeg));
+}
+
+bool ALsnObserverPawn::IsDrawerOpen() const
+{
+	const ALsnViewGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<ALsnViewGameMode>() : nullptr;
+	return bShowControls || bShowDetails || (GameMode && GameMode->GetPage() != ELsnPlannerPage::Summary);
+}
+
+bool ALsnObserverPawn::IsControlsTab() const
+{
+	const ALsnViewGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<ALsnViewGameMode>() : nullptr;
+	const bool bPage = GameMode && GameMode->GetPage() != ELsnPlannerPage::Summary;
+	return IsDrawerOpen() && !bPage && !bShowDetails;
 }
 
 void ALsnObserverPawn::SetCameraView(ELsnCameraView NewView)
@@ -326,10 +339,22 @@ bool ALsnObserverPawn::DoAction(FName Action)
 			bFollowSun = bFollowSun || GameMode->IsComparing();
 		}
 	}
-	else if (Action == TEXT("page_calendar")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Calendar); } }
-	else if (Action == TEXT("page_uncertainty")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Uncertainty); } }
-	else if (Action == TEXT("page_trade")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Trade); } }
-	else if (Action == TEXT("page_sites")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Sites); } }
+	else if (Action == TEXT("page_calendar") || Action == TEXT("page_uncertainty") || Action == TEXT("page_trade") || Action == TEXT("page_sites"))
+	{
+		// A page is a tab of the drawer: choosing it opens the drawer, choosing it again leaves the tab of the further controls.
+		if (GameMode)
+		{
+			GameMode->TogglePage(Action == TEXT("page_calendar") ? ELsnPlannerPage::Calendar : Action == TEXT("page_uncertainty") ? ELsnPlannerPage::Uncertainty : Action == TEXT("page_trade") ? ELsnPlannerPage::Trade : ELsnPlannerPage::Sites);
+		}
+		bShowDetails = false;
+		bShowControls = true;
+	}
+	else if (Action == TEXT("controls_tab"))
+	{
+		if (GameMode && GameMode->GetPage() != ELsnPlannerPage::Summary) { GameMode->TogglePage(GameMode->GetPage()); }
+		bShowDetails = false;
+		bShowControls = true;
+	}
 	else if (Action == TEXT("next_requirement")) { if (GameMode) { GameMode->NextRequirement(); } }
 	else if (Action == TEXT("obstacle")) { Scene->SetObstacleViewEnabled(!Scene->IsObstacleViewEnabled()); }
 	else if (Action == TEXT("horizon_line")) { Scene->SetHorizonLineVisible(!Scene->IsHorizonLineVisible()); }
@@ -340,8 +365,22 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("height_next")) { Scene->SetHeightIndex((Scene->GetHeightIndex() + 1) % FMath::Max(Package.NumHeights(), 1)); }
 	else if (Action == TEXT("scale_objects")) { Scene->SetScaleObjectsVisible(!Scene->AreScaleObjectsVisible()); }
 	else if (Action == TEXT("quality")) { if (GameMode) { GameMode->SetLowQuality(!GameMode->IsLowQuality()); } }
-	else if (Action == TEXT("details")) { bShowDetails = !bShowDetails; }
-	else if (Action == TEXT("controls")) { bShowControls = !bShowControls; }
+	else if (Action == TEXT("details"))
+	{
+		// The evidence is a tab of the drawer.
+		const bool bWasShown = bShowDetails && (!GameMode || GameMode->GetPage() == ELsnPlannerPage::Summary);
+		if (GameMode && GameMode->GetPage() != ELsnPlannerPage::Summary) { GameMode->TogglePage(GameMode->GetPage()); }
+		bShowDetails = !bWasShown;
+		bShowControls = true;
+	}
+	else if (Action == TEXT("controls"))
+	{
+		// "More" opens the drawer; "Less" closes it whatever tab it shows.
+		const bool bWasOpen = IsDrawerOpen();
+		if (GameMode && GameMode->GetPage() != ELsnPlannerPage::Summary) { GameMode->TogglePage(GameMode->GetPage()); }
+		bShowDetails = false;
+		bShowControls = !bWasOpen;
+	}
 	else if (Action == TEXT("camera"))
 	{
 		bArrival = false;
@@ -549,7 +588,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 	// Tab: hide the cursor and look with the mouse alone; Tab again brings the cursor back.
 	if (GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites && PC->WasInputKeyJustPressed(EKeys::Tab))
 	{
-		GameMode->SetCustomFocus(1 - GameMode->GetCustomEntry().Focus);
+		GameMode->SetCustomFocus((GameMode->GetCustomEntry().Focus + 1) % 3);
 	}
 	else if (PC->WasInputKeyJustPressed(EKeys::Tab))
 	{
@@ -586,7 +625,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		// A click on a button carries out its action.
 		if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton) && PC->GetMousePosition(CursorX, CursorY) && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoHud")))
 		{
-			FName Clicked = FLsnToolbar::Make(WindowSizeX, SizeY, GameMode && GameMode->IsComparing(), bShowControls).ActionAt(FVector2D(CursorX, CursorY));
+			FName Clicked = FLsnToolbar::Make(WindowSizeX, SizeY, GameMode && GameMode->IsComparing(), IsDrawerOpen(), IsControlsTab()).ActionAt(FVector2D(CursorX, CursorY));
 			if (Clicked.IsNone() && bSunOutOfView && FLsnToolbar::LookAtSunBox(WindowSizeX, SizeY, GameMode && GameMode->IsComparing()).IsInside(FVector2D(CursorX, CursorY)))
 			{
 				Clicked = TEXT("look_at_sun");
@@ -604,11 +643,14 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 					Groups.Add(Info.Group);
 				}
 				int32 Site = -1;
-				switch (FLsnSitePicker::Make(WindowSizeX, SizeY, GameMode->IsComparing(), Groups).HitAt(FVector2D(CursorX, CursorY), Site))
+				const TArray<bool> Hidden = GameMode->GetSitesHiddenBySearch();
+				switch (FLsnSitePicker::Make(WindowSizeX, SizeY, GameMode->IsComparing(), Groups, &Hidden, GameMode->GetPickerFirstRow()).HitAt(FVector2D(CursorX, CursorY), Site))
 				{
 				case ELsnPickerHit::Show:
-					if (GameMode->SelectSite(0, Site)) { GameMode->TogglePage(ELsnPlannerPage::Sites); }
+					// The site is shown and the drawer closes.
+					if (GameMode->SelectSite(0, Site)) { GameMode->TogglePage(ELsnPlannerPage::Sites); bShowControls = false; }
 					break;
+				case ELsnPickerHit::SearchField: GameMode->SetCustomFocus(2); break;
 				case ELsnPickerHit::PinLeft: GameMode->SelectSite(0, Site); break;
 				case ELsnPickerHit::PinRight: GameMode->SelectSite(1, Site); bFollowSun = true; break;
 				case ELsnPickerHit::LatField: GameMode->SetCustomFocus(0); break;
@@ -627,7 +669,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		}
 		double Position = 0.0;
 		if (Package.bHasTimeline && PC->IsInputKeyDown(EKeys::LeftMouseButton) && PC->GetMousePosition(CursorX, CursorY)
-			&& FLsnTimeStripLayout::Make(SizeX, SizeY, Package).PositionAt(FVector2D(CursorX, CursorY), Package, Scene->GetTimePosition(), Position))
+			&& FLsnTimeStripLayout::Make(WindowSizeX, SizeY, Package, GameMode && GameMode->IsComparing()).PositionAt(FVector2D(CursorX, CursorY), Package, Scene->GetTimePosition(), Position))
 		{
 			bPlaying = false;
 			Scene->SetTimePosition(Position);
@@ -638,8 +680,14 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		Turn += MouseX * LookRate;
 		ElevationDeg += MouseY * LookRate;
 	}
-	if (PC->WasInputKeyJustPressed(EKeys::MouseScrollUp)) { FovDeg *= 0.85; }
-	if (PC->WasInputKeyJustPressed(EKeys::MouseScrollDown)) { FovDeg /= 0.85; }
+	// The wheel zooms; over the open list of sites it scrolls the list.
+	float WheelX = 0.0f, WheelY = 0.0f;
+	int32 WheelSizeX = 0, WheelSizeY = 0;
+	PC->GetViewportSize(WheelSizeX, WheelSizeY);
+	const bool bOverList = GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites && PC->GetMousePosition(WheelX, WheelY)
+		&& FLsnToolbar::DrawerBox(WheelSizeX, WheelSizeY, GameMode->IsComparing()).IsInside(FVector2D(WheelX, WheelY));
+	if (PC->WasInputKeyJustPressed(EKeys::MouseScrollUp)) { if (bOverList) { GameMode->ScrollPicker(-3); } else { FovDeg *= 0.85; } }
+	if (PC->WasInputKeyJustPressed(EKeys::MouseScrollDown)) { if (bOverList) { GameMode->ScrollPicker(3); } else { FovDeg /= 0.85; } }
 
 	const double KeyRate = 30.0 * FovDeg / 60.0 * DeltaSeconds;
 	if (PC->IsInputKeyDown(EKeys::Left)) { Turn -= KeyRate; }
@@ -671,9 +719,26 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::T, TEXT("controls"), TEXT("controls") }, { EKeys::V, TEXT("camera"), TEXT("camera") }, { EKeys::A, TEXT("arrival"), TEXT("arrival") }, { EKeys::D, TEXT("first_day"), TEXT("first_day") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
 	const bool bTyping = GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites;
-	if (bTyping && PC->WasInputKeyJustPressed(EKeys::Period)) { GameMode->TypeCustom(TEXT('.')); }
+	// In the search field of the site list the letters are text, not shortcuts.
+	const bool bSearching = bTyping && GameMode->GetCustomEntry().Focus == 2;
+	if (bSearching)
+	{
+		static const FKey Letters[] = { EKeys::A, EKeys::B, EKeys::C, EKeys::D, EKeys::E, EKeys::F, EKeys::G, EKeys::H, EKeys::I, EKeys::J, EKeys::K, EKeys::L, EKeys::M,
+			EKeys::N, EKeys::O, EKeys::P, EKeys::Q, EKeys::R, EKeys::S, EKeys::T, EKeys::U, EKeys::V, EKeys::W, EKeys::X, EKeys::Y, EKeys::Z };
+		for (int32 I = 0; I < 26; ++I)
+		{
+			if (PC->WasInputKeyJustPressed(Letters[I])) { GameMode->TypeCustom(static_cast<TCHAR>((bShift ? TEXT('A') : TEXT('a')) + I)); }
+		}
+		if (PC->WasInputKeyJustPressed(EKeys::SpaceBar)) { GameMode->TypeCustom(TEXT(' ')); }
+		if (PC->WasInputKeyJustPressed(EKeys::Apostrophe)) { GameMode->TypeCustom(TEXT('\'')); }
+	}
+	if (bTyping && !bSearching && PC->WasInputKeyJustPressed(EKeys::Period)) { GameMode->TypeCustom(TEXT('.')); }
 	for (const FKeyAction& KeyAction : KeyActions)
 	{
+		if (bSearching)
+		{
+			break;
+		}
 		if (bTyping && (KeyAction.Key == EKeys::Period || KeyAction.Key == EKeys::Comma))
 		{
 			continue;
@@ -683,8 +748,8 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 			DoAction(bShift ? KeyAction.Shifted : KeyAction.Plain);
 		}
 	}
-	if (PC->WasInputKeyJustPressed(EKeys::E)) { StepSamples(Scene, bShift ? 24 : 1); }
-	if (PC->WasInputKeyJustPressed(EKeys::Q)) { StepSamples(Scene, bShift ? -24 : -1); }
+	if (!bSearching && PC->WasInputKeyJustPressed(EKeys::E)) { StepSamples(Scene, bShift ? 24 : 1); }
+	if (!bSearching && PC->WasInputKeyJustPressed(EKeys::Q)) { StepSamples(Scene, bShift ? -24 : -1); }
 	if (GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites)
 	{
 		// With the site picker open the number keys type into the field for custom coordinates.
@@ -700,7 +765,7 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		if (PC->WasInputKeyJustPressed(EKeys::Decimal)) { GameMode->TypeCustom(TEXT('.')); }
 		if (PC->WasInputKeyJustPressed(EKeys::Hyphen) || PC->WasInputKeyJustPressed(EKeys::Subtract)) { GameMode->TypeCustom(TEXT('-')); }
 		if (PC->WasInputKeyJustPressed(EKeys::BackSpace)) { GameMode->BackspaceCustom(); }
-		if (PC->WasInputKeyJustPressed(EKeys::Enter)) { GameMode->StartCustom(); }
+		if (!bSearching && PC->WasInputKeyJustPressed(EKeys::Enter)) { GameMode->StartCustom(); }
 	}
 	else if (GameMode)
 	{

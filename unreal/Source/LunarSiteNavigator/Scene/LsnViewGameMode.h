@@ -130,7 +130,13 @@ public:
 	/** Directory of a site of the list. */
 	FString SiteDirectory(int32 SiteIndex) const;
 	const FLsnCustomEntry& GetCustomEntry() const { return Custom; }
-	void SetCustomFocus(int32 Field) { Custom.Focus = FMath::Clamp(Field, 0, 1); }
+	/** 0: latitude, 1: longitude, 2: the search field of the site list. */
+	void SetCustomFocus(int32 Field) { Custom.Focus = FMath::Clamp(Field, 0, 2); }
+	const FString& GetSiteSearch() const { return SiteSearch; }
+	int32 GetPickerFirstRow() const { return PickerFirstRow; }
+	void ScrollPicker(int32 Rows) { PickerFirstRow = FMath::Clamp(PickerFirstRow + Rows, 0, FMath::Max(2 * Sites.Num(), 0)); }
+	/** For each site: whether the text in the search field takes it out of the list (name, programme and category are searched). */
+	TArray<bool> GetSitesHiddenBySearch() const;
 	/** A character typed into the focused field (digits, point, minus); others are ignored. */
 	void TypeCustom(TCHAR Character);
 	void BackspaceCustom();
@@ -205,6 +211,8 @@ private:
 	bool LaunchCustom(const FString& Arguments, int32 Step, double StatedS);
 	bool LoadCustomResult(bool bNeedTimeline, FString& OutPackageId, FString& OutError);
 	FString CustomPython, CustomTimelineTemplate, CustomStartDate;
+	FString SiteSearch;
+	int32 PickerFirstRow = 0;
 	void AddSiteInfo(int32 SiteIndex);
 
 	FString LoadError;

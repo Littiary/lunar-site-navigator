@@ -14,7 +14,7 @@ namespace LsnLook
 	TAutoConsoleVariable<float> HeroRightM(TEXT("lsn.Cam.HeroRightM"), 4.5f, TEXT("Camera near the lander: metres to its right."));
 	TAutoConsoleVariable<float> HeroUpM(TEXT("lsn.Cam.HeroUpM"), 5.5f, TEXT("Camera near the lander: metres above the ground."));
 	TAutoConsoleVariable<float> HeroYawDeg(TEXT("lsn.Cam.HeroYawDeg"), -7.0f, TEXT("Camera near the lander: turn from the Sun's azimuth."));
-	TAutoConsoleVariable<float> HeroPitchDeg(TEXT("lsn.Cam.HeroPitchDeg"), -9.0f, TEXT("Camera near the lander: pitch."));
+	TAutoConsoleVariable<float> HeroPitchDeg(TEXT("lsn.Cam.HeroPitchDeg"), -12.0f, TEXT("Camera near the lander: pitch."));
 	TAutoConsoleVariable<float> HeroFovDeg(TEXT("lsn.Cam.HeroFovDeg"), 52.0f, TEXT("Camera near the lander: field of view."));
 	TAutoConsoleVariable<float> WideBackM(TEXT("lsn.Cam.WideBackM"), 120.0f, TEXT("Wide view: metres behind the site, away from the Sun."));
 	TAutoConsoleVariable<float> WideUpM(TEXT("lsn.Cam.WideUpM"), 30.0f, TEXT("Wide view: metres above the site."));

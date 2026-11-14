@@ -17,6 +17,27 @@
 //    5. a point in the middle of a box gives that box's meaning and site; a point in a group
 //       header or outside the sheet gives nothing.
 //
+// V2. (Revision of 14 November 2026 for the interface pass, written before its first run.
+//    It replaces V.1 to V.5: the list moved into the drawer, in one column that scrolls,
+//    with a search field.)
+//    With a hand-made list of 20 sites in 7 groups, for the windows 1280 x 720, 1920 x 1080
+//    and 2560 x 1440, one view and side by side, and for every place the list can be
+//    scrolled to:
+//    1. the sheet is the content of the drawer; every row lies in the sheet, rows do not
+//       overlap, a row is at least 18 px high;
+//    2. the first row shown is a group header, the last row shown is never one (no header
+//       stands alone), and every site row stands under the header of its group;
+//    3. every site row has three boxes (show, pin left, pin right) that lie in the row and
+//       do not overlap each other;
+//    4. the search field and the boxes for the custom coordinates lie in the sheet and
+//       overlap no row and not each other;
+//    5. a point in the middle of a box gives that box's meaning and site; a point in a group
+//       header or outside the sheet gives nothing;
+//    6. scrolled through, every site is shown at some place, and the groups appear in the
+//       order of the list;
+//    7. with the sites of one group taken out by the search, neither they nor the header of
+//       their group are shown anywhere.
+//
 // W. Custom coordinates are handed to the science core, not computed here.
 //    1. A latitude is accepted from -90 to 90 and a longitude from -180 to 360, as plain
 //       decimal numbers; empty text, text with two points, letters and values outside the
@@ -60,82 +81,99 @@ bool FLsnPickerLayoutTest::RunTest(const FString& Parameters)
 		}
 	}
 	TestEqual(TEXT("the hand-made list has 20 sites"), GroupOfSite.Num(), 20);
-	FLsnSitePackage P;
-	FString Error;
-	if (!TestTrue(TEXT("the sample package loads"), LsnPackageIO::LoadSitePackage(LsnTest::FixturePackageDir(TEXT("site")), P, Error)))
+	// The search takes the three sites of the second group out.
+	TArray<bool> Hidden;
+	Hidden.Init(false, GroupOfSite.Num());
+	Hidden[6] = Hidden[7] = Hidden[8] = true;
+	for (const FVector2D& Size : { FVector2D(1280, 720), FVector2D(1920, 1080), FVector2D(2560, 1440) })
 	{
-		return false;
-	}
-	for (const FVector2D& Size : { FVector2D(1280, 720), FVector2D(1920, 1080) })
-	{
-		for (const bool bComparing : { false, true })
+		for (int32 Variant = 0; Variant < 4; ++Variant)
 		{
-			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""));
-			const FLsnSitePicker Picker = FLsnSitePicker::Make(Size.X, Size.Y, bComparing, GroupOfSite);
-			const FLsnToolbar Toolbar = FLsnToolbar::Make(Size.X, Size.Y, bComparing);
-			const FLsnTimeStripLayout Strips = FLsnTimeStripLayout::Make(bComparing ? 0.5 * Size.X : Size.X, Size.Y, P);
-			TestTrue(Where + TEXT(": the sheet lies in the window"), Picker.Sheet.Min.X >= 0.0 && Picker.Sheet.Max.X <= Size.X && Picker.Sheet.Min.Y > Toolbar.HeaderBottom && Picker.Sheet.Max.Y < Strips.Zoom.Min.Y);
-
-			TArray<FString> HeaderOrder;
+			const bool bComparing = (Variant & 1) != 0, bSearch = (Variant & 2) != 0;
+			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""), bSearch ? TEXT(", with a search") : TEXT(""));
+			const FBox2D Content = FLsnToolbar::DrawerContent(Size.X, Size.Y, bComparing);
 			TSet<int32> SitesSeen;
-			FString CurrentGroup;
-			for (int32 I = 0; I < Picker.Rows.Num(); ++I)
+			TArray<FString> HeaderOrder;
+			const int32 NumRows = FLsnSitePicker::Make(Size.X, Size.Y, bComparing, GroupOfSite, bSearch ? &Hidden : nullptr, 0).NumRows;
+			TestEqual(Where + TEXT(": rows of the whole list"), NumRows, bSearch ? 17 + 6 : 20 + 7);
+			for (int32 First = 0; First < NumRows; ++First)
 			{
-				const FLsnPickerRow& Row = Picker.Rows[I];
-				const FString Name = Where + FString::Printf(TEXT(": row %d"), I);
-				TestTrue(Name + TEXT(" lies in the sheet"), Picker.Sheet.IsInside(Row.Row.Min) && Picker.Sheet.IsInside(Row.Row.Max));
-				TestTrue(Name + TEXT(" is at least 18 px high"), Row.Row.Max.Y - Row.Row.Min.Y >= 18.0);
-				TestTrue(Name + TEXT(" does not lie across the middle"), !bComparing || Row.Row.Max.X <= 0.5 * Size.X || Row.Row.Min.X >= 0.5 * Size.X);
-				for (int32 J = I + 1; J < Picker.Rows.Num(); ++J)
+				const FLsnSitePicker Picker = FLsnSitePicker::Make(Size.X, Size.Y, bComparing, GroupOfSite, bSearch ? &Hidden : nullptr, First);
+				const FString At = Where + FString::Printf(TEXT(", scrolled to %d"), First);
+				TestTrue(At + TEXT(": the sheet is the content of the drawer"), Picker.Sheet.Min.Equals(Content.Min, 0.5) && Picker.Sheet.Max.Equals(Content.Max, 0.5));
+				if (!TestTrue(At + TEXT(": rows are shown"), Picker.Rows.Num() > 0))
 				{
-					TestFalse(Name + TEXT(" does not overlap another row"), Row.Row.ExpandBy(-0.5).Intersect(Picker.Rows[J].Row.ExpandBy(-0.5)));
-				}
-				for (const FBox2D& Box : { Picker.LatField, Picker.LonField, Picker.Compute })
-				{
-					TestFalse(Name + TEXT(" does not overlap the custom coordinates"), Row.Row.ExpandBy(-0.5).Intersect(Box));
-				}
-				int32 HitSite = -2;
-				if (Row.SiteIndex < 0)
-				{
-					HeaderOrder.Add(Row.Group);
-					CurrentGroup = Row.Group;
-					TestEqual(Name + TEXT(" (group header) gives nothing"), Picker.HitAt(Row.Row.GetCenter(), HitSite), ELsnPickerHit::None);
 					continue;
 				}
-				TestEqual(Name + TEXT(" follows the header of its group"), GroupOfSite[Row.SiteIndex], CurrentGroup);
-				TestFalse(Name + TEXT(": one row per site"), SitesSeen.Contains(Row.SiteIndex));
-				SitesSeen.Add(Row.SiteIndex);
-				const TPair<const FBox2D*, ELsnPickerHit> Boxes[] = { { &Row.Show, ELsnPickerHit::Show }, { &Row.PinLeft, ELsnPickerHit::PinLeft }, { &Row.PinRight, ELsnPickerHit::PinRight } };
-				for (int32 B = 0; B < 3; ++B)
+				TestTrue(At + TEXT(": the first row is a group header"), Picker.Rows[0].SiteIndex < 0);
+				TestTrue(At + TEXT(": the last row is not a group header"), Picker.Rows.Last().SiteIndex >= 0);
+				FString CurrentGroup;
+				for (int32 I = 0; I < Picker.Rows.Num(); ++I)
 				{
-					TestTrue(Name + TEXT(": a box lies in its row"), Row.Row.ExpandBy(0.5).IsInside(Boxes[B].Key->Min) && Row.Row.ExpandBy(0.5).IsInside(Boxes[B].Key->Max));
-					TestEqual(Name + TEXT(": the middle of a box gives its meaning"), Picker.HitAt(Boxes[B].Key->GetCenter(), HitSite), Boxes[B].Value);
-					TestEqual(Name + TEXT(": and its site"), HitSite, Row.SiteIndex);
-					for (int32 C = B + 1; C < 3; ++C)
+					const FLsnPickerRow& Row = Picker.Rows[I];
+					const FString Name = At + FString::Printf(TEXT(": row %d"), I);
+					// Half a pixel of slack: a row may touch the edge of the sheet.
+					TestTrue(Name + TEXT(" lies in the sheet"), Picker.Sheet.ExpandBy(0.5).IsInside(Row.Row.Min) && Picker.Sheet.ExpandBy(0.5).IsInside(Row.Row.Max));
+					TestTrue(Name + TEXT(" is at least 18 px high"), Row.Row.Max.Y - Row.Row.Min.Y >= 18.0);
+					for (int32 J = I + 1; J < Picker.Rows.Num(); ++J)
 					{
-						TestFalse(Name + TEXT(": boxes of a row do not overlap"), Boxes[B].Key->ExpandBy(-0.5).Intersect(Boxes[C].Key->ExpandBy(-0.5)));
+						TestFalse(Name + TEXT(" does not overlap another row"), Row.Row.ExpandBy(-0.5).Intersect(Picker.Rows[J].Row.ExpandBy(-0.5)));
+					}
+					for (const FBox2D& Box : { Picker.LatField, Picker.LonField, Picker.Compute, Picker.SearchField })
+					{
+						TestFalse(Name + TEXT(" does not overlap a field"), Row.Row.ExpandBy(-0.5).Intersect(Box));
+					}
+					int32 HitSite = -2;
+					if (Row.SiteIndex < 0)
+					{
+						CurrentGroup = Row.Group;
+						if (HeaderOrder.Num() == 0 || HeaderOrder.Last() != Row.Group)
+						{
+							HeaderOrder.AddUnique(Row.Group);
+						}
+						TestEqual(Name + TEXT(" (group header) gives nothing"), Picker.HitAt(Row.Row.GetCenter(), HitSite), ELsnPickerHit::None);
+						continue;
+					}
+					TestEqual(Name + TEXT(" stands under the header of its group"), GroupOfSite[Row.SiteIndex], CurrentGroup);
+					TestFalse(Name + TEXT(" is not a site the search took out"), bSearch && Hidden[Row.SiteIndex]);
+					SitesSeen.Add(Row.SiteIndex);
+					const TPair<const FBox2D*, ELsnPickerHit> Boxes[] = { { &Row.Show, ELsnPickerHit::Show }, { &Row.PinLeft, ELsnPickerHit::PinLeft }, { &Row.PinRight, ELsnPickerHit::PinRight } };
+					for (int32 B = 0; B < 3; ++B)
+					{
+						TestTrue(Name + TEXT(": a box lies in its row"), Row.Row.ExpandBy(0.5).IsInside(Boxes[B].Key->Min) && Row.Row.ExpandBy(0.5).IsInside(Boxes[B].Key->Max));
+						TestEqual(Name + TEXT(": the middle of a box gives its meaning"), Picker.HitAt(Boxes[B].Key->GetCenter(), HitSite), Boxes[B].Value);
+						TestEqual(Name + TEXT(": and its site"), HitSite, Row.SiteIndex);
+						for (int32 C = B + 1; C < 3; ++C)
+						{
+							TestFalse(Name + TEXT(": boxes of a row do not overlap"), Boxes[B].Key->ExpandBy(-0.5).Intersect(Boxes[C].Key->ExpandBy(-0.5)));
+						}
 					}
 				}
-			}
-			TestEqual(Where + TEXT(": every site has a row"), SitesSeen.Num(), GroupOfSite.Num());
-			TestEqual(Where + TEXT(": one header per group"), HeaderOrder.Num(), static_cast<int32>(UE_ARRAY_COUNT(GroupNames)));
-			for (int32 G = 0; G < HeaderOrder.Num() && G < UE_ARRAY_COUNT(GroupNames); ++G)
-			{
-				TestEqual(Where + TEXT(": groups in the order of the list"), HeaderOrder[G], FString(GroupNames[G]));
-			}
-			int32 Ignored = 0;
-			const TPair<const FBox2D*, ELsnPickerHit> Custom[] = { { &Picker.LatField, ELsnPickerHit::LatField }, { &Picker.LonField, ELsnPickerHit::LonField }, { &Picker.Compute, ELsnPickerHit::Compute } };
-			for (int32 B = 0; B < 3; ++B)
-			{
-				TestTrue(Where + TEXT(": a custom-coordinate box lies in the sheet"), Picker.Sheet.IsInside(Custom[B].Key->Min) && Picker.Sheet.IsInside(Custom[B].Key->Max));
-				TestTrue(Where + TEXT(": a custom-coordinate box does not lie across the middle"), !bComparing || Custom[B].Key->Max.X <= 0.5 * Size.X || Custom[B].Key->Min.X >= 0.5 * Size.X);
-				TestEqual(Where + TEXT(": the middle of a custom-coordinate box gives its meaning"), Picker.HitAt(Custom[B].Key->GetCenter(), Ignored), Custom[B].Value);
-				for (int32 C = B + 1; C < 3; ++C)
+				int32 Ignored = 0;
+				const TPair<const FBox2D*, ELsnPickerHit> Fields[] = { { &Picker.LatField, ELsnPickerHit::LatField }, { &Picker.LonField, ELsnPickerHit::LonField }, { &Picker.Compute, ELsnPickerHit::Compute }, { &Picker.SearchField, ELsnPickerHit::SearchField } };
+				for (int32 B = 0; B < 4; ++B)
 				{
-					TestFalse(Where + TEXT(": custom-coordinate boxes do not overlap"), Custom[B].Key->ExpandBy(-0.5).Intersect(Custom[C].Key->ExpandBy(-0.5)));
+					TestTrue(At + TEXT(": a field lies in the sheet"), Picker.Sheet.ExpandBy(0.5).IsInside(Fields[B].Key->Min) && Picker.Sheet.ExpandBy(0.5).IsInside(Fields[B].Key->Max));
+					TestEqual(At + TEXT(": the middle of a field gives its meaning"), Picker.HitAt(Fields[B].Key->GetCenter(), Ignored), Fields[B].Value);
+					for (int32 C = B + 1; C < 4; ++C)
+					{
+						TestFalse(At + TEXT(": fields do not overlap"), Fields[B].Key->ExpandBy(-0.5).Intersect(Fields[C].Key->ExpandBy(-0.5)));
+					}
 				}
+				TestEqual(At + TEXT(": outside the sheet gives nothing"), Picker.HitAt(FVector2D(2.0, 2.0), Ignored), ELsnPickerHit::None);
 			}
-			TestEqual(Where + TEXT(": outside the sheet gives nothing"), Picker.HitAt(FVector2D(Size.X - 2.0, 2.0), Ignored), ELsnPickerHit::None);
+			TestEqual(Where + TEXT(": scrolled through, every site of the list is shown"), SitesSeen.Num(), bSearch ? 17 : 20);
+			TestEqual(Where + TEXT(": the header of a group without sites is not shown"), HeaderOrder.Contains(FString(GroupNames[1])), !bSearch);
+			int32 Expected = 0;
+			for (int32 G = 0; G < UE_ARRAY_COUNT(GroupNames); ++G)
+			{
+				if (bSearch && G == 1)
+				{
+					continue;
+				}
+				TestTrue(Where + TEXT(": groups in the order of the list"), HeaderOrder.IsValidIndex(Expected) && HeaderOrder[Expected] == GroupNames[G]);
+				++Expected;
+			}
 		}
 	}
 	return true;

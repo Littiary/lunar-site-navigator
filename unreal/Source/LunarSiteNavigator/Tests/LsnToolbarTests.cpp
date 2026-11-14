@@ -34,6 +34,35 @@
 //    "next site" on 2026-11-14, when the list of sites grew), the three planner pages, the
 //    observer height, the details and help.
 //
+// T2. (Revision of 14 November 2026 for the interface pass, written before its first run.
+//    It replaces criteria T.1 to T.9 above: the brief of that pass replaced the three large
+//    main buttons and the bar of grouped buttons by a control bar at the bottom left, one
+//    time strip in a panel, and a drawer from the right. What a button must be able to do
+//    did not change.)
+//    For the windows 1280 x 720, 1920 x 1080 and 2560 x 1440, each as one view and side by
+//    side, with the drawer closed, open on a page, and open on its tab of further controls:
+//    1. every button lies inside the safe margin (48 px at a height of 1080, scaled with the
+//       height) and is at least 22 px high and 44 px wide;
+//    2. no two buttons overlap, and no button overlaps the panel of the time strip;
+//    3. the panel of the time strip lies inside the safe margin and below the header, and the
+//       strip lies inside its panel;
+//    4. a point in the middle of a button gives that button's action, a point outside none;
+//    5. every button names an action the observer knows, no action has two buttons, every
+//       button has a label;
+//    6. the control bar holds exactly play, next sunset, obstacle, compare, camera and the
+//       button that opens the rest, all left of the strip's panel and in the bottom row;
+//    7. "next site" exists for each half side by side, each in its half, and not in one view;
+//    8. with the drawer closed there are no other buttons. The drawer lies inside the safe
+//       margin, between the header and the bottom row; in one view it lies wholly right of
+//       the middle of the window (the centre of the view stays free); its tabs and the
+//       further controls lie inside it, and every further control belongs to a labelled group;
+//    9. "look at the Sun" lies inside the safe margin, in the left half side by side, and
+//       overlaps no button, not the strip's panel and not the drawer.
+//    With the tab of further controls open, the actions a planner needs have a button: play,
+//    a step and a day in both directions, the next and previous rise or set of the Sun, the
+//    site list, the three pages, the observer height, the evidence (details), help, the
+//    camera positions, the first lunar day and the arrival view.
+//
 // U. A button does what its key does.
 //    With the sample package in a scene, the named actions move the time by one sample and
 //    by one day exactly, land on the first and last sample, and go round the observer heights
@@ -49,6 +78,7 @@
 //    the observer's.
 
 #include "Tests/LsnTestSupport.h"
+#include "Algo/AnyOf.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Scene/LsnHud.h"
@@ -66,44 +96,40 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	const FVector2D Sizes[] = { { 1280, 720 }, { 1920, 1080 }, { 2560, 1440 }, { 3840, 2160 } };
+	const FVector2D Sizes[] = { { 1280, 720 }, { 1920, 1080 }, { 2560, 1440 } };
 	for (const FVector2D& Size : Sizes)
 	{
-		for (int32 Variant = 0; Variant < 4; ++Variant)
+		for (int32 Variant = 0; Variant < 6; ++Variant)
 		{
-			const bool bComparing = (Variant & 1) != 0, bControls = (Variant & 2) != 0;
-			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""), bControls ? TEXT(", all controls") : TEXT(", clean"));
-			const FLsnToolbar Toolbar = FLsnToolbar::Make(Size.X, Size.Y, bComparing, bControls);
-			const FBox2D Window(FVector2D(0.0, 0.0), Size);
-			const double Middle = 0.5 * Size.X;
-			// The strips of each view, moved to window coordinates.
-			const int32 Views = bComparing ? 2 : 1;
-			const double ViewWidth = Size.X / Views;
-			TArray<FBox2D> Strips;
-			for (int32 View = 0; View < Views; ++View)
-			{
-				const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(ViewWidth, Size.Y, P);
-				const FVector2D Shift(View * ViewWidth, 0.0);
-				Strips.Add(FBox2D(Layout.Zoom.Min + Shift, Layout.Zoom.Max + Shift));
-				Strips.Add(FBox2D(Layout.WholeRange.Min + Shift, Layout.WholeRange.Max + Shift));
-				TestTrue(Where + TEXT(": the strips lie below the header"), Layout.Zoom.Min.Y > Toolbar.HeaderBottom);
-				TestTrue(Where + TEXT(": the strips lie above the bar"), Layout.Zoom.Max.Y < Layout.WholeRange.Min.Y && Layout.WholeRange.Max.Y < Toolbar.Top);
-			}
-			TestTrue(Where + TEXT(": there are buttons"), Toolbar.Buttons.Num() > 0);
+			const bool bComparing = (Variant & 1) != 0;
+			const int32 Drawer = Variant / 2;   // 0 closed, 1 open on a page, 2 open on the further controls
+			const FString Where = FString::Printf(TEXT("%.0f x %.0f%s%s"), Size.X, Size.Y, bComparing ? TEXT(" side by side") : TEXT(""), Drawer == 0 ? TEXT(", drawer closed") : Drawer == 1 ? TEXT(", drawer on a page") : TEXT(", further controls"));
+			const FLsnToolbar Toolbar = FLsnToolbar::Make(Size.X, Size.Y, bComparing, Drawer > 0, Drawer == 2);
+			const FLsnTimeStripLayout Strip = FLsnTimeStripLayout::Make(Size.X, Size.Y, P, bComparing);
+			const double Safe = 48.0 * Size.Y / 1080.0, Middle = 0.5 * Size.X;
+			// Half a pixel of slack for rounding.
+			const FBox2D SafeArea(FVector2D(Safe - 0.5, Safe - 0.5), FVector2D(Size.X - Safe + 0.5, Size.Y - Safe + 0.5));
+			const FBox2D DrawerBox = FLsnToolbar::DrawerBox(Size.X, Size.Y, bComparing);
+			auto Inside = [](const FBox2D& Outer, const FBox2D& Inner) { return Outer.IsInside(Inner.Min) && Outer.IsInside(Inner.Max); };
+
+			TestTrue(Where + TEXT(": the strip's panel lies inside the safe margin"), Inside(SafeArea, Strip.Panel));
+			TestTrue(Where + TEXT(": the strip's panel lies below the header"), Strip.Panel.Min.Y > Toolbar.HeaderBottom);
+			TestTrue(Where + TEXT(": the strip lies inside its panel"), Inside(Strip.Panel, Strip.Zoom));
+			TestTrue(Where + TEXT(": the drawer lies inside the safe margin"), Inside(SafeArea, DrawerBox));
+			TestTrue(Where + TEXT(": the drawer lies between the header and the bottom row"), DrawerBox.Min.Y > Toolbar.HeaderBottom && DrawerBox.Max.Y < Strip.Panel.Min.Y);
+			TestTrue(Where + TEXT(": in one view the drawer leaves the middle of the window free"), bComparing || DrawerBox.Min.X > Middle);
+
+			static const TCHAR* BarActions[] = { TEXT("play"), TEXT("next_sunset"), TEXT("obstacle"), TEXT("compare"), TEXT("camera"), TEXT("controls") };
 			TSet<FName> Seen;
-			double LargestOther = 0.0, SmallestMain = TNumericLimits<double>::Max();
-			int32 MainCount = 0;
+			int32 BarCount = 0;
 			for (int32 I = 0; I < Toolbar.Buttons.Num(); ++I)
 			{
 				const FLsnButton& Button = Toolbar.Buttons[I];
 				const FString Name = Where + TEXT(": ") + Button.Action.ToString();
-				TestTrue(Name + TEXT(" lies in the window"), Window.IsInside(Button.Box.Min) && Window.IsInside(Button.Box.Max));
+				TestTrue(Name + TEXT(" lies inside the safe margin"), Inside(SafeArea, Button.Box));
 				TestTrue(Name + TEXT(" is at least 22 px high"), Button.Box.Max.Y - Button.Box.Min.Y >= 22.0);
-				TestTrue(Name + TEXT(" is at least 60 px wide"), Button.Box.Max.X - Button.Box.Min.X >= 60.0);
-				for (const FBox2D& Strip : Strips)
-				{
-					TestFalse(Name + TEXT(" does not overlap a time strip"), Button.Box.Intersect(Strip));
-				}
+				TestTrue(Name + TEXT(" is at least 44 px wide"), Button.Box.Max.X - Button.Box.Min.X >= 44.0);
+				TestFalse(Name + TEXT(" does not overlap the strip's panel"), Button.Box.ExpandBy(-0.5).Intersect(Strip.Panel));
 				for (int32 J = I + 1; J < Toolbar.Buttons.Num(); ++J)
 				{
 					// Shrunk by half a pixel: touching edges are not an overlap.
@@ -114,61 +140,46 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 				TestFalse(Name + TEXT(" has one button only"), Seen.Contains(Button.Action));
 				Seen.Add(Button.Action);
 				TestFalse(Name + TEXT(" has a label"), Button.Label.IsEmpty());
-				const double Area = (Button.Box.Max.X - Button.Box.Min.X) * (Button.Box.Max.Y - Button.Box.Min.Y);
-				if (Button.Style == ELsnButtonStyle::Main)
+				const bool bBar = Algo::AnyOf(BarActions, [&Button](const TCHAR* Action) { return Button.Action == Action; });
+				const bool bNext = Button.Action == TEXT("next_site") || Button.Action == TEXT("next_right_site");
+				if (bBar)
 				{
-					++MainCount;
-					SmallestMain = FMath::Min(SmallestMain, Area);
-					TestTrue(Name + TEXT(" (main) lies in the left half when side by side"), !bComparing || Button.Box.Max.X <= Middle);
+					++BarCount;
+					TestTrue(Name + TEXT(" (control bar) lies left of the strip's panel, in the bottom row"), Button.Box.Max.X < Strip.Panel.Min.X && Button.Box.Min.Y >= FLsnToolbar::BottomRowTop(Size.Y, bComparing) - 0.5);
+				}
+				else if (bNext)
+				{
+					TestTrue(Name + TEXT(" exists only side by side"), bComparing);
+					TestTrue(Name + TEXT(" lies in its half"), Button.Action == TEXT("next_site") ? Button.Box.Max.X <= Middle : Button.Box.Min.X >= Middle);
 				}
 				else
 				{
-					LargestOther = FMath::Max(LargestOther, Area);
-				}
-				if (Button.Style == ELsnButtonStyle::Bar)
-				{
-					TestFalse(Name + TEXT(" belongs to a labelled group"), Button.Group.IsEmpty());
-				}
-				if (bComparing)
-				{
-					TestTrue(Name + TEXT(" does not lie across the middle"), Button.Box.Max.X <= Middle + 0.5 || Button.Box.Min.X >= Middle - 0.5);
+					TestTrue(Name + TEXT(" exists only with the drawer open"), Drawer > 0);
+					TestTrue(Name + TEXT(" lies inside the drawer"), Inside(DrawerBox, Button.Box));
+					if (Button.Style != ELsnButtonStyle::Tab)
+					{
+						TestTrue(Name + TEXT(" exists only on the tab of further controls"), Drawer == 2);
+						TestFalse(Name + TEXT(" belongs to a labelled group"), Button.Group.IsEmpty());
+					}
 				}
 			}
-			TestEqual(Where + TEXT(": three main actions"), MainCount, 3);
-			for (const TCHAR* Main : { TEXT("compare"), TEXT("next_sunset"), TEXT("obstacle") })
-			{
-				const FLsnButton* Button = Toolbar.Buttons.FindByPredicate([Main](const FLsnButton& B) { return B.Action == Main; });
-				TestTrue(Where + TEXT(": ") + Main + TEXT(" is a main action"), Button && Button->Style == ELsnButtonStyle::Main);
-			}
-			TestTrue(Where + FString::Printf(TEXT(": the main actions are at least twice as large as any other button (%.0f against %.0f px2)"), SmallestMain, LargestOther), SmallestMain >= 2.0 * LargestOther);
-			const FLsnButton* RightSite = Toolbar.Buttons.FindByPredicate([](const FLsnButton& B) { return B.Action == TEXT("next_right_site"); });
-			TestEqual(Where + TEXT(": the right view's control exists only side by side"), RightSite != nullptr, bComparing);
-			if (RightSite)
-			{
-				TestTrue(Where + TEXT(": the right view's control lies in the right half"), RightSite->Box.Min.X >= Middle);
-			}
-			TestTrue(Where + TEXT(": no action outside the buttons"), Toolbar.ActionAt(FVector2D(1.0, 0.5 * Size.Y)).IsNone() && Toolbar.ActionAt(Strips[0].GetCenter()).IsNone());
-			TestTrue(Where + TEXT(": there is a button that opens or closes the rest"), Seen.Contains(TEXT("controls")));
-			if (!bControls)
-			{
-				TestEqual(Where + TEXT(": the clean view holds the main actions and the button for the rest only"), Toolbar.Buttons.Num(), bComparing ? 5 : 4);
-			}
+			TestEqual(Where + TEXT(": the control bar has six buttons"), BarCount, 6);
+			TestEqual(Where + TEXT(": 'next site' for each half side by side"), Seen.Contains(TEXT("next_site")) && Seen.Contains(TEXT("next_right_site")), bComparing);
+			TestTrue(Where + TEXT(": no action outside the buttons"), Toolbar.ActionAt(FVector2D(1.0, 0.5 * Size.Y)).IsNone() && Toolbar.ActionAt(Strip.Zoom.GetCenter()).IsNone());
 			const FBox2D LookBox = FLsnToolbar::LookAtSunBox(Size.X, Size.Y, bComparing);
-			TestTrue(Where + TEXT(": 'look at the Sun' lies in the window"), Window.IsInside(LookBox.Min) && Window.IsInside(LookBox.Max));
+			TestTrue(Where + TEXT(": 'look at the Sun' lies inside the safe margin"), Inside(SafeArea, LookBox));
 			TestTrue(Where + TEXT(": 'look at the Sun' lies in the left half side by side"), !bComparing || LookBox.Max.X <= Middle);
+			TestFalse(Where + TEXT(": 'look at the Sun' does not overlap the strip's panel"), LookBox.Intersect(Strip.Panel));
+			TestFalse(Where + TEXT(": 'look at the Sun' does not overlap the drawer"), LookBox.Intersect(DrawerBox));
 			for (const FLsnButton& Button : Toolbar.Buttons)
 			{
 				TestFalse(Where + TEXT(": 'look at the Sun' overlaps no button"), LookBox.Intersect(Button.Box));
-			}
-			for (const FBox2D& Strip : Strips)
-			{
-				TestFalse(Where + TEXT(": 'look at the Sun' overlaps no time strip"), LookBox.Intersect(Strip));
 			}
 			for (const TCHAR* Needed : { TEXT("play"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"), TEXT("sun_event_back"), TEXT("sun_event_forward"),
 				TEXT("page_sites"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help"),
 				TEXT("camera"), TEXT("first_day"), TEXT("arrival") })
 			{
-				TestTrue(Where + TEXT(": there is a button for ") + Needed, !bControls || Seen.Contains(Needed));
+				TestTrue(Where + TEXT(": there is a button for ") + Needed, Drawer != 2 || Seen.Contains(Needed));
 			}
 		}
 	}

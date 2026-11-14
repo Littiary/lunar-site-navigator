@@ -114,6 +114,28 @@ a window.
 
 ## Planner interface
 
+**Interface pass of 14 November 2026.** One design system (`Scene/LsnUi.h`): the engine's Roboto
+family (shipped with Unreal, no font was added) in four sizes at a window height of 1080 px
+(40 site name and countdown, 24 chip state and panel titles, 18 text, 14 footnotes, group
+labels and badges), scaled with the height of the window; Roboto's figures are tabular; the
+units of a duration are one size smaller than its digits. Panels are dark at 75 % opacity with
+the picture blurred behind them, a 1 px hairline and 8 px corners, on an 8 px grid inside a
+48 px safe margin. Colour carries state only (amber Sun, blue Earth, green requirement met,
+red not met). One quiet button style with hover, pressed, on and not-available states; the one
+accent button is **Compute and show**. Fades and slides take 150 to 200 ms.
+
+How it is built: the HUD of each view still decides what is on screen and reads every text
+from the package; instead of drawing on the canvas it adds boxes, text and lines to a list
+of the frame, and one Slate widget over the game view paints that list (rounded boxes,
+`SBackgroundBlur` behind panels, Slate fonts). This keeps the layout in C++ where it is tested
+(`Planner.ButtonsOnScreen`, `Planner.SitePicker` at 1280 x 720, 1920 x 1080 and 2560 x 1440);
+no widget asset was made in the editor. Not done in this pass: a keyboard-focus ring, since
+the keys are shortcuts and there is no focus that moves from button to button.
+
+The sections below describe the pages; where they speak of a sheet over the view, the page is
+now a tab of the drawer, and where they speak of three main buttons and a bar of grouped
+buttons, read the control bar and the tab **Controls** (see `KEYS.md`).
+
 One site fills the screen; with a second site the screen is split left and right. Both
 halves show the same instant (matched by the TDB time of the packages), the same observer
 height, zoom and elevation of the view. By default each half keeps its view on its own

@@ -8,17 +8,19 @@
 #include "Planner/LsnPlanner.h"
 #include "Scene/LsnObserverPawn.h"
 #include "Scene/LsnSiteScene.h"
+#include "Scene/LsnUi.h"
 #include "Scene/LsnViewGameMode.h"
 
 namespace
 {
-	const FLinearColor White(0.92f, 0.92f, 0.92f);
-	const FLinearColor Dim(0.6f, 0.6f, 0.6f);
-	const FLinearColor Alert(1.0f, 0.35f, 0.2f);
-	const FLinearColor SunColor(1.0f, 0.82f, 0.25f);
-	const FLinearColor EarthColor(0.35f, 0.65f, 1.0f);
-	const FLinearColor Good(0.55f, 1.0f, 0.6f);
-	const FLinearColor Lost(1.0f, 0.55f, 0.25f);
+	// The colours of the design system (Scene/LsnUi.h): colour carries state only.
+	const FLinearColor White = FLsnUi::Ink();
+	const FLinearColor Dim = FLsnUi::InkDim();
+	const FLinearColor Alert = FLsnUi::Red();
+	const FLinearColor SunColor = FLsnUi::Amber();
+	const FLinearColor EarthColor = FLsnUi::Blue();
+	const FLinearColor Good = FLsnUi::Green();
+	const FLinearColor Lost = FLsnUi::Red();
 }
 
 FString LsnHudText::FormatDuration(double Seconds)
@@ -172,84 +174,125 @@ void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double Time
 float FLsnToolbar::TextScale(float SizeX, float SizeY)
 {
 	// Sized for the height of the view, and smaller where the view is narrow (the two halves of a comparison).
-	return FMath::Clamp(FMath::Min(SizeY / 720.0f, SizeX / 1000.0f), 0.55f, 4.0f);
+	// By the height of the window alone: the type has four sizes and does not shrink in a narrow view.
+	return FMath::Clamp(SizeY / 720.0f, 0.55f, 4.0f);
+}
+
+float FLsnToolbar::HeaderBottomOf(float SizeY, bool bComparing)
+{
+	// One view: name on the left, chips on the right, in one band. Side by side: the chips under the name.
+	return (bComparing ? 360.0f : 244.0f) * SizeY / 1080.0f;
+}
+
+float FLsnToolbar::BottomRowTop(float SizeY, bool bComparing)
+{
+	// The bottom row holds the control bar and the time strip; side by side the strip has the rows of two sites.
+	return SizeY - (48.0f + (bComparing ? 140.0f : 96.0f)) * SizeY / 1080.0f;
 }
 
 float FLsnToolbar::BarTop(float SizeY)
 {
-	const float ButtonHeight = FMath::Max(0.036f * SizeY, 23.0f), LabelHeight = 0.021f * SizeY, Gap = 0.004f * SizeY;
-	return 0.992f * SizeY - 2.0f * (ButtonHeight + LabelHeight) - Gap;
+	return BottomRowTop(SizeY, false);
+}
+
+FBox2D FLsnToolbar::DrawerBox(float WindowSizeX, float SizeY, bool bComparing)
+{
+	// From the right edge, between the header and the bottom row: the centre of the view stays free.
+	const float U = SizeY / 1080.0f;
+	return FBox2D(FVector2D(WindowSizeX - 808.0f * U, HeaderBottomOf(SizeY, bComparing) + 16.0f * U), FVector2D(WindowSizeX - 48.0f * U, BottomRowTop(SizeY, bComparing) - 52.0f * U));
+}
+
+FBox2D FLsnToolbar::DrawerContent(float WindowSizeX, float SizeY, bool bComparing)
+{
+	const float U = SizeY / 1080.0f;
+	const FBox2D Drawer = DrawerBox(WindowSizeX, SizeY, bComparing);
+	return FBox2D(FVector2D(Drawer.Min.X + 16.0f * U, Drawer.Min.Y + 68.0f * U), FVector2D(Drawer.Max.X - 16.0f * U, Drawer.Max.Y - 12.0f * U));
 }
 
 FBox2D FLsnToolbar::LookAtSunBox(float WindowSizeX, float SizeY, bool bComparing)
 {
-	// At the right end of the left (or only) view, above the time strip.
-	const float ViewRight = bComparing ? 0.5f * WindowSizeX : WindowSizeX;
-	const float StripTop = BarTop(SizeY) - 0.126f * SizeY;
-	return FBox2D(FVector2D(ViewRight - 0.012f * WindowSizeX - 0.205f * WindowSizeX, StripTop - 0.082f * SizeY), FVector2D(ViewRight - 0.012f * WindowSizeX, StripTop - 0.032f * SizeY));
+	// On the left, above the hint line over the control bar.
+	const float U = SizeY / 1080.0f, Top = BottomRowTop(SizeY, bComparing) - 106.0f * U;
+	return FBox2D(FVector2D(48.0f * U, Top), FVector2D(48.0f * U + 380.0f * U, Top + 44.0f * U));
 }
 
-FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing, bool bAllControls)
+FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing, bool bDrawerOpen, bool bControlsTab)
 {
 	FLsnToolbar Toolbar;
-	const float W = WindowSizeX, H = SizeY;
-	// The header holds the site name, the time and the state chips: one line of chips beside
-	// the name in a wide view, a line of their own in the half views.
-	Toolbar.HeaderBottom = (bComparing ? 0.190f : 0.122f) * H;
-	Toolbar.Top = BarTop(H);
+	const float W = WindowSizeX, H = SizeY, U = H / 1080.0f, M = 48.0f * U;
+	Toolbar.HeaderBottom = HeaderBottomOf(H, bComparing);
+	Toolbar.Top = BottomRowTop(H, bComparing);
 
-	// The three main actions, under the header on the left.
-	static const TPair<const TCHAR*, const TCHAR*> Main[] = {
-		{ TEXT("compare"), TEXT("Compare two sites") }, { TEXT("next_sunset"), TEXT("Jump to next sunset") }, { TEXT("obstacle"), TEXT("What blocks the Sun?") },
+	// The control bar, bottom left: two rows of three quiet buttons.
+	static const TPair<const TCHAR*, const TCHAR*> Bar[] = {
+		{ TEXT("play"), TEXT("Play") }, { TEXT("next_sunset"), TEXT("Next sunset") }, { TEXT("obstacle"), TEXT("Obstacle") },
+		{ TEXT("compare"), TEXT("Compare") }, { TEXT("camera"), TEXT("Camera") }, { TEXT("controls"), TEXT("More") },
 	};
-	const float MainTop = Toolbar.HeaderBottom + 0.012f * H, MainHeight = 0.062f * H, MainWidth = 0.150f * W, MainGap = 0.006f * W;
-	for (int32 I = 0; I < UE_ARRAY_COUNT(Main); ++I)
+	const float ButtonWidth = 148.0f * U, ButtonHeight = 44.0f * U, Gap = 8.0f * U;
+	const float BarY0 = H - M - 2.0f * ButtonHeight - Gap;
+	for (int32 I = 0; I < UE_ARRAY_COUNT(Bar); ++I)
 	{
-		const float X0 = 0.012f * W + I * (MainWidth + MainGap);
-		Toolbar.Buttons.Add({ Main[I].Key, Main[I].Value, FBox2D(FVector2D(X0, MainTop), FVector2D(X0 + MainWidth, MainTop + MainHeight)), ELsnButtonStyle::Main, FString() });
+		const float X0 = M + (I % 3) * (ButtonWidth + Gap), Y0 = BarY0 + (I / 3) * (ButtonHeight + Gap);
+		Toolbar.Buttons.Add({ Bar[I].Key, Bar[I].Value, FBox2D(FVector2D(X0, Y0), FVector2D(X0 + ButtonWidth, Y0 + ButtonHeight)), ELsnButtonStyle::Bar, FString() });
 	}
 
-	// The bar: two rows of ten, each under a line of group labels. Ten cells between 6 % and
-	// 94 % of the window, so that no button lies across the middle of a side-by-side window.
-	struct FEntry { const TCHAR* Action; const TCHAR* Label; const TCHAR* Group; };
-	static const FEntry Rows[2][12] = {
-		{ { TEXT("play"), TEXT("Play / pause"), TEXT("TIME") }, { TEXT("slower"), TEXT("Slower"), TEXT("TIME") }, { TEXT("faster"), TEXT("Faster"), TEXT("TIME") },
-		  { TEXT("sample_back"), TEXT("< Step"), TEXT("TIME") }, { TEXT("sample_forward"), TEXT("Step >"), TEXT("TIME") }, { TEXT("day_back"), TEXT("< Day"), TEXT("TIME") },
-		  { TEXT("day_forward"), TEXT("Day >"), TEXT("TIME") }, { TEXT("sun_event_back"), TEXT("< Sunrise / set"), TEXT("TIME") }, { TEXT("sun_event_forward"), TEXT("Sunrise / set >"), TEXT("TIME") },
-		  { TEXT("first_day"), TEXT("First lunar day"), TEXT("MISSION") }, { TEXT("arrival"), TEXT("Arrival view"), TEXT("MISSION") }, { TEXT("height_next"), TEXT("Observer height"), TEXT("OBSERVER") } },
-		{ { TEXT("page_sites"), TEXT("Sites ..."), TEXT("SITE") }, { TEXT("page_calendar"), TEXT("Calendar"), TEXT("PLAN") }, { TEXT("page_uncertainty"), TEXT("Uncertainty"), TEXT("PLAN") },
-		  { TEXT("page_trade"), TEXT("Mast / pairs"), TEXT("PLAN") }, { TEXT("camera"), TEXT("Camera"), TEXT("VIEW") }, { TEXT("follow_sun"), TEXT("Follow Sun"), TEXT("VIEW") },
-		  { TEXT("scale_objects"), TEXT("Scale objects"), TEXT("VIEW") }, { TEXT("fill_light"), TEXT("Night fill light"), TEXT("VIEW") }, { TEXT("quality"), TEXT("Low quality"), TEXT("VIEW") },
-		  { TEXT("details"), TEXT("Details"), TEXT("INFO") }, { TEXT("help"), TEXT("Help (F1)"), TEXT("INFO") }, { TEXT("controls"), TEXT("Less"), TEXT("INFO") } },
-	};
-	const float ButtonHeight = FMath::Max(0.036f * H, 23.0f), LabelHeight = 0.021f * H, Gap = 0.004f * H;
-	// Twelve cells between 1.2 % and 98.8 % of the window: the sixth ends at the middle.
-	const float Left = 0.012f * W, Cell = (0.976f / 12.0f) * W, Pad = 0.002f * W;
-	// The clean view: the one button that opens everything else, where the last cell of the bar is.
-	if (!bAllControls)
-	{
-		const float RowTop = Toolbar.Top + LabelHeight + (ButtonHeight + LabelHeight + Gap), X0 = Left + Cell * 11;
-		Toolbar.Buttons.Add({ TEXT("controls"), TEXT("More"), FBox2D(FVector2D(X0 + Pad, RowTop), FVector2D(X0 + Cell - Pad, RowTop + ButtonHeight)), ELsnButtonStyle::Bar, TEXT("INFO") });
-	}
-	for (int32 Row = 0; Row < 2 && bAllControls; ++Row)
-	{
-		const float RowTop = Toolbar.Top + LabelHeight + Row * (ButtonHeight + LabelHeight + Gap);
-		for (int32 Column = 0; Column < 12; ++Column)
-		{
-			const FEntry& Entry = Rows[Row][Column];
-			const float X0 = Left + Cell * Column;
-			Toolbar.Buttons.Add({ Entry.Action, Entry.Label, FBox2D(FVector2D(X0 + Pad, RowTop), FVector2D(X0 + Cell - Pad, RowTop + ButtonHeight)), ELsnButtonStyle::Bar, Entry.Group });
-			if (Column == 0 || FCString::Strcmp(Rows[Row][Column - 1].Group, Entry.Group) != 0)
-			{
-				Toolbar.GroupLabels.Add({ Entry.Group, FVector2D(X0 + Pad, RowTop - LabelHeight) });
-			}
-		}
-	}
-
-	// Side by side: the right view's own control, in its header.
+	// Side by side: "Next site" in the header of each half.
 	if (bComparing)
 	{
-		Toolbar.Buttons.Add({ TEXT("next_right_site"), TEXT("Next site >"), FBox2D(FVector2D(0.900f * W, 0.012f * H), FVector2D(0.988f * W, 0.052f * H)), ELsnButtonStyle::RightView, FString() });
+		const float NextWidth = 150.0f * U, NextHeight = 40.0f * U;
+		Toolbar.Buttons.Add({ TEXT("next_site"), TEXT("Next site"), FBox2D(FVector2D(0.5f * W - M - NextWidth, M), FVector2D(0.5f * W - M, M + NextHeight)), ELsnButtonStyle::RightView, FString() });
+		Toolbar.Buttons.Add({ TEXT("next_right_site"), TEXT("Next site"), FBox2D(FVector2D(W - M - NextWidth, M), FVector2D(W - M, M + NextHeight)), ELsnButtonStyle::RightView, FString() });
+	}
+
+	// The drawer: its tabs, and on the tab of the further controls their buttons in labelled groups.
+	if (bDrawerOpen)
+	{
+		const FBox2D Drawer = DrawerBox(W, H, bComparing);
+		static const TPair<const TCHAR*, const TCHAR*> Tabs[] = {
+			{ TEXT("page_calendar"), TEXT("Calendar") }, { TEXT("page_uncertainty"), TEXT("Uncertainty") }, { TEXT("page_trade"), TEXT("Mast height") },
+			{ TEXT("page_sites"), TEXT("Sites") }, { TEXT("details"), TEXT("Evidence") }, { TEXT("controls_tab"), TEXT("Controls") },
+		};
+		const int32 NumTabs = UE_ARRAY_COUNT(Tabs);
+		const float TabX0 = Drawer.Min.X + 16.0f * U, TabWidth = (Drawer.Max.X - Drawer.Min.X - 32.0f * U - (NumTabs - 1) * Gap) / NumTabs;
+		for (int32 I = 0; I < NumTabs; ++I)
+		{
+			const float X0 = TabX0 + I * (TabWidth + Gap);
+			Toolbar.Buttons.Add({ Tabs[I].Key, Tabs[I].Value, FBox2D(FVector2D(X0, Drawer.Min.Y + 12.0f * U), FVector2D(X0 + TabWidth, Drawer.Min.Y + 52.0f * U)), ELsnButtonStyle::Tab, FString() });
+		}
+		if (bControlsTab)
+		{
+			struct FEntry { const TCHAR* Action; const TCHAR* Label; const TCHAR* Group; };
+			static const FEntry Entries[] = {
+				{ TEXT("slower"), TEXT("Slower"), TEXT("TIME") }, { TEXT("faster"), TEXT("Faster"), TEXT("TIME") }, { TEXT("sample_back"), TEXT("Step back"), TEXT("TIME") },
+				{ TEXT("sample_forward"), TEXT("Step forward"), TEXT("TIME") }, { TEXT("day_back"), TEXT("Day back"), TEXT("TIME") }, { TEXT("day_forward"), TEXT("Day forward"), TEXT("TIME") },
+				{ TEXT("sun_event_back"), TEXT("Previous sunrise / set"), TEXT("TIME") }, { TEXT("sun_event_forward"), TEXT("Next sunrise / set"), TEXT("TIME") },
+				{ TEXT("first_day"), TEXT("First lunar day"), TEXT("MISSION AND OBSERVER") }, { TEXT("arrival"), TEXT("Arrival view"), TEXT("MISSION AND OBSERVER") }, { TEXT("height_next"), TEXT("Observer height"), TEXT("MISSION AND OBSERVER") },
+				{ TEXT("follow_sun"), TEXT("Follow Sun"), TEXT("VIEW") }, { TEXT("scale_objects"), TEXT("Scale objects"), TEXT("VIEW") }, { TEXT("fill_light"), TEXT("Night fill light"), TEXT("VIEW") },
+				{ TEXT("quality"), TEXT("Low quality"), TEXT("VIEW") }, { TEXT("help"), TEXT("Help (F1)"), TEXT("VIEW") },
+			};
+			const FBox2D Content = DrawerContent(W, H, bComparing);
+			const float CellWidth = (Content.Max.X - Content.Min.X - 2.0f * Gap) / 3.0f, CellHeight = 40.0f * U, LabelHeight = 28.0f * U;
+			float Y = Content.Min.Y;
+			int32 Column = 0;
+			for (int32 I = 0; I < UE_ARRAY_COUNT(Entries); ++I)
+			{
+				const FEntry& Entry = Entries[I];
+				if (I == 0 || FCString::Strcmp(Entries[I - 1].Group, Entry.Group) != 0)
+				{
+					if (Column != 0) { Y += CellHeight + Gap; }
+					Column = 0;
+					Toolbar.GroupLabels.Add({ Entry.Group, FVector2D(Content.Min.X, Y) });
+					Y += LabelHeight;
+				}
+				const float X0 = Content.Min.X + Column * (CellWidth + Gap);
+				Toolbar.Buttons.Add({ Entry.Action, Entry.Label, FBox2D(FVector2D(X0, Y), FVector2D(X0 + CellWidth, Y + CellHeight)), ELsnButtonStyle::Bar, Entry.Group });
+				if (++Column == 3)
+				{
+					Column = 0;
+					Y += CellHeight + Gap;
+				}
+			}
+		}
 	}
 	return Toolbar;
 }
@@ -266,18 +309,19 @@ FName FLsnToolbar::ActionAt(const FVector2D& Point) const
 	return NAME_None;
 }
 
-FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite)
+FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite, const TArray<bool>* Hidden, int32 FirstRow)
 {
 	FLsnSitePicker Picker;
-	const float W = WindowSizeX, H = SizeY;
-	const FLsnToolbar Toolbar = FLsnToolbar::Make(W, H, bComparing, false);
-	// Below the main buttons, above the time strips; side by side across both halves.
-	const float StripsTop = FLsnToolbar::BarTop(H) - 0.126f * H;
-	Picker.Sheet = FBox2D(FVector2D(0.012f * W, Toolbar.HeaderBottom + 0.086f * H), FVector2D(bComparing ? 0.988f * W : 0.685f * W, StripsTop - 0.034f * H));
-	const float Pad = 0.008f * H, TitleHeight = 0.036f * H, FooterHeight = 0.090f * H;
-	Picker.TitlePosition = FVector2D(Picker.Sheet.Min.X + Pad, Picker.Sheet.Min.Y + Pad);
+	const float U = SizeY / 1080.0f;
+	// In the drawer, on the tab of the sites: a search field, the list in one column, the custom coordinates.
+	Picker.Sheet = FLsnToolbar::DrawerContent(WindowSizeX, SizeY, bComparing);
+	const float X0 = Picker.Sheet.Min.X, X1 = Picker.Sheet.Max.X;
+	Picker.TitlePosition = FVector2D(X0, Picker.Sheet.Min.Y);
+	const float SearchTop = Picker.Sheet.Min.Y + 30.0f * U, FieldHeight = 36.0f * U;
+	Picker.SearchField = FBox2D(FVector2D(X0, SearchTop), FVector2D(X1, SearchTop + FieldHeight));
 
 	// The rows: a header where a group first appears, then its sites in the order of the list.
+	// A group none of whose sites is shown has no header, so no header stands alone.
 	TArray<FString> Groups;
 	for (const FString& Group : GroupOfSite)
 	{
@@ -287,72 +331,66 @@ FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bCompar
 	TArray<FItem> Items;
 	for (const FString& Group : Groups)
 	{
-		Items.Add({ -1, Group });
+		const int32 HeaderAt = Items.Num();
 		for (int32 I = 0; I < GroupOfSite.Num(); ++I)
 		{
-			if (GroupOfSite[I] == Group)
+			if (GroupOfSite[I] == Group && !(Hidden && Hidden->IsValidIndex(I) && (*Hidden)[I]))
 			{
 				Items.Add({ I, Group });
 			}
 		}
+		if (Items.Num() > HeaderAt)
+		{
+			Items.Insert({ -1, Group }, HeaderAt);
+		}
 	}
-	const float RowsTop = Picker.Sheet.Min.Y + Pad + TitleHeight, RowsBottom = Picker.Sheet.Max.Y - Pad - FooterHeight;
-	// A short list fills the first column before the next one is begun.
-	const int32 FullColumn = FMath::Max(FMath::FloorToInt32((RowsBottom - RowsTop) / (0.032f * H)), 1);
-	// Columns: two in one view; side by side two in each half, so that nothing lies across the middle.
-	TArray<TPair<float, float>> Columns;
-	const float Gap = 0.006f * W;
-	if (bComparing && Items.Num() > 2 * FullColumn)
+	const float FooterHeight = 150.0f * U, RowHeight = 32.0f * U;
+	const float RowsTop = SearchTop + FieldHeight + 10.0f * U, RowsBottom = Picker.Sheet.Max.Y - FooterHeight;
+	Picker.RowsPerPage = FMath::Max(FMath::FloorToInt32((RowsBottom - RowsTop) / RowHeight), 1);
+	Picker.NumRows = Items.Num();
+	Picker.FirstRow = FMath::Clamp(FirstRow, 0, FMath::Max(Items.Num() - 2, 0));
+	// A list that begins in the middle of a group begins with that group's header, and the
+	// last row shown is never a header: no header stands alone.
+	TArray<FItem> Page;
+	if (Items.IsValidIndex(Picker.FirstRow) && Items[Picker.FirstRow].Site >= 0)
 	{
-		const float HalfLeft0 = Picker.Sheet.Min.X + Pad, HalfLeft1 = 0.5f * W - Gap, HalfRight0 = 0.5f * W + Gap, HalfRight1 = Picker.Sheet.Max.X - Pad;
-		Columns.Add({ HalfLeft0, 0.5f * (HalfLeft0 + HalfLeft1) - 0.5f * Gap });
-		Columns.Add({ 0.5f * (HalfLeft0 + HalfLeft1) + 0.5f * Gap, HalfLeft1 });
-		Columns.Add({ HalfRight0, 0.5f * (HalfRight0 + HalfRight1) - 0.5f * Gap });
-		Columns.Add({ 0.5f * (HalfRight0 + HalfRight1) + 0.5f * Gap, HalfRight1 });
+		Page.Add({ -1, Items[Picker.FirstRow].Group });
 	}
-	else if (bComparing)
+	for (int32 I = Picker.FirstRow; I < Items.Num() && Page.Num() < Picker.RowsPerPage; ++I)
 	{
-		// A short list: one wide column in each half.
-		Columns.Add({ Picker.Sheet.Min.X + Pad, 0.5f * W - Gap });
-		Columns.Add({ 0.5f * W + Gap, Picker.Sheet.Max.X - Pad });
+		Page.Add(Items[I]);
 	}
-	else
+	while (Page.Num() > 0 && Page.Last().Site < 0)
 	{
-		const float X0 = Picker.Sheet.Min.X + Pad, X1 = Picker.Sheet.Max.X - Pad;
-		Columns.Add({ X0, 0.5f * (X0 + X1) - 0.5f * Gap });
-		Columns.Add({ 0.5f * (X0 + X1) + 0.5f * Gap, X1 });
+		Page.Pop();
 	}
-	const int32 PerColumn = FMath::Max(FMath::DivideAndRoundUp(Items.Num(), Columns.Num()), FMath::Min(Items.Num(), FullColumn));
-	const float RowHeight = FMath::Min(0.032f * H, (RowsBottom - RowsTop) / PerColumn);
-	for (int32 I = 0; I < Items.Num(); ++I)
+	for (int32 Slot = 0; Slot < Page.Num(); ++Slot)
 	{
-		const TPair<float, float>& Column = Columns[FMath::Min(I / PerColumn, Columns.Num() - 1)];
-		const float Y0 = RowsTop + RowHeight * (I % PerColumn);
+		const FItem& Item = Page[Slot];
+		const float Y0 = RowsTop + RowHeight * Slot;
 		FLsnPickerRow Row;
-		Row.SiteIndex = Items[I].Site;
-		Row.Group = Items[I].Group;
-		Row.Row = FBox2D(FVector2D(Column.Key, Y0), FVector2D(Column.Value, Y0 + RowHeight));
+		Row.SiteIndex = Item.Site;
+		Row.Group = Item.Group;
+		Row.Row = FBox2D(FVector2D(X0, Y0), FVector2D(X1, Y0 + RowHeight));
 		if (Row.SiteIndex >= 0)
 		{
 			// The name is the "show" box; at the right end two small boxes pin the site for a view.
-			const float PinWidth = FMath::Max(0.13f * (Column.Value - Column.Key), 44.0f);
-			Row.PinRight = FBox2D(FVector2D(Column.Value - PinWidth, Y0 + 1.0f), FVector2D(Column.Value, Y0 + RowHeight - 1.0f));
-			Row.PinLeft = FBox2D(FVector2D(Column.Value - 2.0f * PinWidth - 2.0f, Y0 + 1.0f), FVector2D(Column.Value - PinWidth - 2.0f, Y0 + RowHeight - 1.0f));
-			Row.Show = FBox2D(FVector2D(Column.Key, Y0 + 1.0f), FVector2D(Column.Value - 2.0f * PinWidth - 6.0f, Y0 + RowHeight - 1.0f));
+			const float PinWidth = 56.0f * U;
+			Row.PinRight = FBox2D(FVector2D(X1 - PinWidth, Y0 + 2.0f * U), FVector2D(X1, Y0 + RowHeight - 2.0f * U));
+			Row.PinLeft = FBox2D(FVector2D(X1 - 2.0f * PinWidth - 6.0f * U, Y0 + 2.0f * U), FVector2D(X1 - PinWidth - 6.0f * U, Y0 + RowHeight - 2.0f * U));
+			Row.Show = FBox2D(FVector2D(X0, Y0 + 1.0f), FVector2D(X1 - 2.0f * PinWidth - 14.0f * U, Y0 + RowHeight - 1.0f));
 		}
 		Picker.Rows.Add(Row);
 	}
 
-	// Custom coordinates, in the left part of the sheet: a label, two fields and a button, and a line for the message.
-	const float EntryTop = Picker.Sheet.Max.Y - Pad - FooterHeight + 0.010f * H;
-	const float EntryWidth = (bComparing ? 0.5f * W - Gap : Picker.Sheet.Max.X - Pad) - (Picker.Sheet.Min.X + Pad);
-	const float FieldTop = EntryTop + 0.022f * H, FieldHeight = FMath::Max(0.034f * H, 22.0f);
-	const float X0 = Picker.Sheet.Min.X + Pad;
+	// Custom coordinates at the foot: a label, two fields and a button, and lines for the message.
+	const float EntryTop = Picker.Sheet.Max.Y - FooterHeight + 12.0f * U, FieldTop = EntryTop + 30.0f * U;
+	const float Width = X1 - X0;
 	Picker.EntryLabelPosition = FVector2D(X0, EntryTop);
-	Picker.LatField = FBox2D(FVector2D(X0 + 0.10f * EntryWidth, FieldTop), FVector2D(X0 + 0.30f * EntryWidth, FieldTop + FieldHeight));
-	Picker.LonField = FBox2D(FVector2D(X0 + 0.48f * EntryWidth, FieldTop), FVector2D(X0 + 0.68f * EntryWidth, FieldTop + FieldHeight));
-	Picker.Compute = FBox2D(FVector2D(X0 + 0.72f * EntryWidth, FieldTop), FVector2D(X0 + 0.99f * EntryWidth, FieldTop + FieldHeight));
-	Picker.MessagePosition = FVector2D(X0, FieldTop + FieldHeight + 0.004f * H);
+	Picker.LatField = FBox2D(FVector2D(X0 + 0.11f * Width, FieldTop), FVector2D(X0 + 0.30f * Width, FieldTop + FieldHeight));
+	Picker.LonField = FBox2D(FVector2D(X0 + 0.50f * Width, FieldTop), FVector2D(X0 + 0.69f * Width, FieldTop + FieldHeight));
+	Picker.Compute = FBox2D(FVector2D(X0 + 0.73f * Width, FieldTop), FVector2D(X1, FieldTop + FieldHeight));
+	Picker.MessagePosition = FVector2D(X0, FieldTop + FieldHeight + 8.0f * U);
 	return Picker;
 }
 
@@ -363,6 +401,7 @@ ELsnPickerHit FLsnSitePicker::HitAt(const FVector2D& Point, int32& OutSiteIndex)
 	{
 		return ELsnPickerHit::None;
 	}
+	if (SearchField.IsInside(Point)) { return ELsnPickerHit::SearchField; }
 	if (LatField.IsInside(Point)) { return ELsnPickerHit::LatField; }
 	if (LonField.IsInside(Point)) { return ELsnPickerHit::LonField; }
 	if (Compute.IsInside(Point)) { return ELsnPickerHit::Compute; }
@@ -378,15 +417,18 @@ ELsnPickerHit FLsnSitePicker::HitAt(const FVector2D& Point, int32& OutSiteIndex)
 	return ELsnPickerHit::None;
 }
 
-FLsnTimeStripLayout FLsnTimeStripLayout::Make(float SizeX, float SizeY, const FLsnSitePackage& Package)
+FLsnTimeStripLayout FLsnTimeStripLayout::Make(float WindowSizeX, float SizeY, const FLsnSitePackage& Package, bool bComparing, bool bWithControlBar)
 {
 	FLsnTimeStripLayout Layout;
-	const float Left = 0.06f * SizeX, Right = 0.94f * SizeX;
-	// Bottom-up from the bar of buttons: each strip has a line of text below it.
-	const float WholeBottom = FLsnToolbar::BarTop(SizeY) - 0.026f * SizeY, ZoomBottom = WholeBottom - 0.024f * SizeY - 0.026f * SizeY;
-	Layout.WholeRange = FBox2D(FVector2D(Left, WholeBottom - 0.024f * SizeY), FVector2D(Right, WholeBottom));
-	Layout.Zoom = FBox2D(FVector2D(Left, ZoomBottom - 0.050f * SizeY), FVector2D(Right, ZoomBottom));
-	// The zoom strip shows six days around the selected time, or the whole axis if that is shorter.
+	const float U = SizeY / 1080.0f, M = 48.0f * U;
+	// One strip in a panel along the bottom, right of the control bar; side by side it is shared and has the rows of both sites.
+	const float Left = bWithControlBar ? M + 476.0f * U : M, Right = WindowSizeX - M, Top = FLsnToolbar::BottomRowTop(SizeY, bComparing);
+	Layout.Panel = FBox2D(FVector2D(Left, Top), FVector2D(Right, SizeY - M));
+	// Side by side the names of the two sites stand left of their rows.
+	Layout.Zoom = FBox2D(FVector2D(Left + (bComparing ? 236.0f : 16.0f) * U, Top + 14.0f * U), FVector2D(Right - 16.0f * U, Top + (bComparing ? 94.0f : 50.0f) * U));
+	// The strip of the whole range is gone from the screen: the calendar of the drawer shows the whole range.
+	Layout.WholeRange = FBox2D(FVector2D::ZeroVector, FVector2D::ZeroVector);
+	// The strip shows six days around the selected time, or the whole axis if that is shorter.
 	const double SixDays = Package.Time.StepS > 0.0 ? 6.0 * 86400.0 / Package.Time.StepS : 0.0;
 	Layout.ZoomHalfWidthSamples = FMath::Min(0.5 * SixDays, 0.5 * FMath::Max(Package.Time.Count - 1, 1));
 	return Layout;
@@ -395,11 +437,6 @@ FLsnTimeStripLayout FLsnTimeStripLayout::Make(float SizeX, float SizeY, const FL
 bool FLsnTimeStripLayout::PositionAt(const FVector2D& Point, const FLsnSitePackage& Package, double CurrentPosition, double& OutPosition) const
 {
 	const double Last = FMath::Max(Package.Time.Count - 1, 0);
-	if (WholeRange.IsInside(Point))
-	{
-		OutPosition = FMath::Clamp((Point.X - WholeRange.Min.X) / (WholeRange.Max.X - WholeRange.Min.X), 0.0, 1.0) * Last;
-		return true;
-	}
 	if (Zoom.IsInside(Point))
 	{
 		const double Fraction = (Point.X - Zoom.Min.X) / (Zoom.Max.X - Zoom.Min.X);
@@ -412,25 +449,26 @@ bool FLsnTimeStripLayout::PositionAt(const FVector2D& Point, const FLsnSitePacka
 void ALsnHud::DrawStrip(const FBox2D& Box, const FLsnSitePackage& P, int32 H, double FromPosition, double ToPosition, double CurrentPosition, float Scale)
 {
 	const float Width = Box.Max.X - Box.Min.X, Height = Box.Max.Y - Box.Min.Y;
-	DrawRect(FLinearColor(0.04f, 0.04f, 0.05f, 0.85f), Box.Min.X, Box.Min.Y, Width, Height);
 	const double FromEt = P.EtOfPosition(FromPosition), ToEt = P.EtOfPosition(ToPosition);
 	const double AxisStartEt = P.EtOfPosition(0.0), AxisEndEt = P.EtOfPosition(P.Time.Count - 1);
 	auto X = [&](double EtS) { return Box.Min.X + Width * static_cast<float>(FMath::Clamp((EtS - FromEt) / (ToEt - FromEt), 0.0, 1.0)); };
 
-	// Outside the package's time axis there is nothing to show.
-	if (FromEt < AxisStartEt)
-	{
-		DrawRect(FLinearColor(0.2f, 0.2f, 0.2f, 0.6f), Box.Min.X, Box.Min.Y, X(AxisStartEt) - Box.Min.X, Height);
-	}
-	if (ToEt > AxisEndEt)
-	{
-		DrawRect(FLinearColor(0.2f, 0.2f, 0.2f, 0.6f), X(AxisEndEt), Box.Min.Y, Box.Max.X - X(AxisEndEt), Height);
-	}
-	// Upper half: Sun visible; lower half: Earth visible. Both are the package's windows.
+	// Two rows: Sun visible above, Earth visible below. Both are the package's windows.
 	struct FRow { const TCHAR* WindowId; FLinearColor Color; float Top; };
-	const FRow Rows[] = { { TEXT("sun_visible"), SunColor, 0.08f }, { TEXT("earth_visible"), EarthColor, 0.54f } };
+	const FRow Rows[] = { { TEXT("sun_visible"), FLsnUi::Amber(), 0.0f }, { TEXT("earth_visible"), FLsnUi::Blue(), 0.56f } };
 	for (const FRow& Row : Rows)
 	{
+		const FBox2D Track(FVector2D(Box.Min.X, Box.Min.Y + Row.Top * Height), FVector2D(Box.Max.X, Box.Min.Y + (Row.Top + 0.44f) * Height));
+		DrawRounded(Track, FLinearColor(1.0f, 1.0f, 1.0f, 0.07f), 2.0f);
+		// Outside the package's time axis there is nothing to show.
+		if (FromEt < AxisStartEt)
+		{
+			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.55f), Box.Min.X, Track.Min.Y, X(AxisStartEt) - Box.Min.X, Track.Max.Y - Track.Min.Y);
+		}
+		if (ToEt > AxisEndEt)
+		{
+			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.55f), X(AxisEndEt), Track.Min.Y, Box.Max.X - X(AxisEndEt), Track.Max.Y - Track.Min.Y);
+		}
 		// With a stated horizon error (SPEC 5.7) the edges are bands, not lines: pale where the
 		// body is visible only if the horizon is lower than computed, full where it is visible
 		// even if the horizon is higher.
@@ -448,14 +486,12 @@ void ALsnHud::DrawStrip(const FBox2D& Box, const FLsnSitePackage& P, int32 H, do
 					continue;
 				}
 				const float X0 = X(Tone.Window->StartsEtS[I]), X1 = X(Tone.Window->EndsEtS[I]);
-				// Opaque tones over the dark strip, so that a pale band does not add up with what lies on it.
+				// Opaque tones, so that a pale band does not add up with what lies on it.
 				const FLinearColor Color(Row.Color.R * Tone.Alpha, Row.Color.G * Tone.Alpha, Row.Color.B * Tone.Alpha, 1.0f);
-				DrawRect(Color, X0, Box.Min.Y + Row.Top * Height, FMath::Max(X1 - X0, 1.0f), 0.38f * Height);
+				DrawRect(Color, X0, Track.Min.Y, FMath::Max(X1 - X0, 1.0f), Track.Max.Y - Track.Min.Y);
 			}
 		}
 	}
-	const float Cursor = X(P.EtOfPosition(CurrentPosition));
-	DrawRect(FLinearColor::White, Cursor - Scale, Box.Min.Y - 4.0f * Scale, 2.0f * Scale, Height + 8.0f * Scale);
 }
 
 void ALsnHud::DrawPanorama(const FLsnPanorama& Pano, const ALsnSiteScene& Scene, const ALsnObserverPawn* Pawn, float Scale)
@@ -535,13 +571,344 @@ float ALsnHud::DrawFit(const FString& Text, const FLinearColor& Color, float X, 
 	UFont* Font = GEngine->GetMediumFont();
 	float Width = 0.0f, Height = 0.0f;
 	GetTextSize(Text, Width, Height, Font, TextScale);
-	if (Width > MaxWidth && Width > 0.0f)
+	// The type has four sizes: a text that is too wide is cut and ends in three dots, it is not made smaller.
+	FString Shown = Text;
+	while (Width > MaxWidth && Shown.Len() > 4)
 	{
-		TextScale *= MaxWidth / Width;
-		Width = MaxWidth;
+		Shown = Shown.LeftChop(5).TrimEnd() + TEXT("...");
+		GetTextSize(Shown, Width, Height, Font, TextScale);
 	}
-	DrawText(Text, Color, X, Y, Font, TextScale);
+	DrawText(Shown, Color, X, Y, Font, TextScale);
 	return Width;
+}
+
+void ALsnHud::EndPlay(const EEndPlayReason::Type Reason)
+{
+	FLsnUi::Get().RemoveWidget();
+	Super::EndPlay(Reason);
+}
+
+float ALsnHud::SizeOfScale(float Scale) const
+{
+	// The old calls gave a scale of the engine's font: 0.9 small, 1.12 text, 1.45 large, 2 extra large at a height of 720.
+	const float Ratio = Scale / FLsnToolbar::TextScale(1.0f, UiHeight);
+	const float At1080 = Ratio < 1.0f ? FLsnUi::Footnote : Ratio < 1.3f ? FLsnUi::Body : Ratio < 1.9f ? FLsnUi::Title : FLsnUi::Display;
+	return U(At1080);
+}
+
+void ALsnHud::DrawRect(FLinearColor Color, float X, float Y, float Width, float Height)
+{
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Box;
+	Item.Box = FBox2D(UiOrigin + FVector2D(X, Y), UiOrigin + FVector2D(X + Width, Y + Height));
+	Item.Color = Color;
+	FLsnUi::Get().Add(Item);
+}
+
+void ALsnHud::DrawRounded(const FBox2D& Box, const FLinearColor& Fill, float RadiusAt1080, const FLinearColor& Border)
+{
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Box;
+	Item.Box = FBox2D(UiOrigin + Box.Min, UiOrigin + Box.Max);
+	Item.Color = Fill;
+	Item.Radius = U(RadiusAt1080);
+	Item.Border = Border;
+	Item.BorderPx = Border.A > 0.0f ? FMath::Max(U(1.0f), 1.0f) : 0.0f;
+	FLsnUi::Get().Add(Item);
+}
+
+void ALsnHud::DrawPanel(const FBox2D& Box, bool bBlur)
+{
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Box;
+	Item.Box = FBox2D(UiOrigin + Box.Min, UiOrigin + Box.Max);
+	Item.Color = FLsnUi::PanelFill();
+	Item.Radius = U(FLsnUi::PanelRadius);
+	Item.Border = FLsnUi::Hairline();
+	Item.BorderPx = FMath::Max(U(1.0f), 1.0f);
+	Item.bBlur = bBlur;
+	FLsnUi::Get().Add(Item);
+}
+
+void ALsnHud::DrawText(const FString& Text, FLinearColor Color, float X, float Y, UFont*, float Scale, bool)
+{
+	if (Text.IsEmpty())
+	{
+		return;
+	}
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Text;
+	Item.Box = FBox2D(UiOrigin + FVector2D(X, Y), UiOrigin + FVector2D(X, Y));
+	Item.Color = Color;
+	Item.Text = Text;
+	Item.SizePx = SizeOfScale(Scale);
+	FLsnUi::Get().Add(Item);
+}
+
+void ALsnHud::DrawType(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080, bool bMedium)
+{
+	if (Text.IsEmpty())
+	{
+		return;
+	}
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Text;
+	Item.Box = FBox2D(UiOrigin + FVector2D(X, Y), UiOrigin + FVector2D(X, Y));
+	Item.Color = Color;
+	Item.Text = Text;
+	Item.SizePx = U(SizeAt1080);
+	Item.bMedium = bMedium;
+	FLsnUi::Get().Add(Item);
+}
+
+float ALsnHud::TypeWidth(const FString& Text, float SizeAt1080, bool bMedium) const
+{
+	return static_cast<float>(FLsnUi::Measure(Text, U(SizeAt1080), bMedium).X);
+}
+
+float ALsnHud::DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080)
+{
+	// Runs of digits at the size; everything else (units, words) one size smaller, on the same baseline.
+	const float Smaller = SizeAt1080 >= FLsnUi::Display ? FLsnUi::Title : SizeAt1080 >= FLsnUi::Title ? FLsnUi::Body : FLsnUi::Footnote;
+	// The baseline of this family lies about 0.93 of the size below the top of a line.
+	const float Drop = 0.93f * U(SizeAt1080 - Smaller);
+	float Pen = X;
+	int32 Start = 0;
+	while (Start < Text.Len())
+	{
+		const bool bDigits = FChar::IsDigit(Text[Start]);
+		int32 End = Start;
+		while (End < Text.Len() && FChar::IsDigit(Text[End]) == bDigits)
+		{
+			++End;
+		}
+		const FString Run = Text.Mid(Start, End - Start);
+		DrawType(Run, Color, Pen, bDigits ? Y : Y + Drop, bDigits ? SizeAt1080 : Smaller, bDigits);
+		Pen += TypeWidth(Run, bDigits ? SizeAt1080 : Smaller, bDigits);
+		Start = End;
+	}
+	return Pen - X;
+}
+
+void ALsnHud::GetTextSize(const FString& Text, float& OutWidth, float& OutHeight, UFont*, float Scale) const
+{
+	const FVector2D Size = FLsnUi::Measure(Text, SizeOfScale(Scale));
+	OutWidth = static_cast<float>(Size.X);
+	OutHeight = static_cast<float>(Size.Y);
+}
+
+void ALsnHud::DrawLine(float X0, float Y0, float X1, float Y1, FLinearColor Color, float Thickness)
+{
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Line;
+	Item.A = UiOrigin + FVector2D(X0, Y0);
+	Item.B = UiOrigin + FVector2D(X1, Y1);
+	Item.Color = Color;
+	Item.Thickness = FMath::Max(Thickness, 1.0f);
+	FLsnUi::Get().Add(Item);
+}
+
+TArray<FString> ALsnHud::WrapLines(const FString& Text, float SizeAt1080, float MaxWidth) const
+{
+	TArray<FString> Lines;
+	FString Rest = Text;
+	while (!Rest.IsEmpty())
+	{
+		FString Part = Rest;
+		while (TypeWidth(Part, SizeAt1080) > MaxWidth)
+		{
+			int32 Space = INDEX_NONE;
+			if (!Part.FindLastChar(TEXT(' '), Space) || Space <= 0)
+			{
+				break;
+			}
+			Part.LeftInline(Space);
+		}
+		Lines.Add(Part);
+		Rest = Part.Len() < Rest.Len() ? Rest.Mid(Part.Len()).TrimStart() : FString();
+	}
+	return Lines;
+}
+
+float ALsnHud::DrawCard(const TArray<FLsnHudLine>& Lines, float X, float Y, float Width)
+{
+	// Measured first, so that the panel is as high as its text. FLsnHudLine::Size is one of the four sizes.
+	const float Pad = U(12.0f);
+	struct FRun { FString Text; FLinearColor Color; float Size; };
+	TArray<FRun> Runs;
+	float Height = 2.0f * Pad;
+	for (const FLsnHudLine& Line : Lines)
+	{
+		for (const FString& Part : WrapLines(Line.Text, Line.Size, Width - 2.0f * Pad))
+		{
+			Runs.Add({ Part, Line.Color, Line.Size });
+			Height += U(1.35f * Line.Size);
+		}
+	}
+	if (Runs.Num() == 0)
+	{
+		return Y;
+	}
+	DrawPanel(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
+	float LineY = Y + Pad;
+	for (const FRun& Run : Runs)
+	{
+		DrawType(Run.Text, Run.Color, X + Pad, LineY, Run.Size);
+		LineY += U(1.35f * Run.Size);
+	}
+	return Y + Height + U(FLsnUi::Grid);
+}
+
+void ALsnHud::DrawDisc(const FVector2D& Centre, float RadiusPx, const FLinearColor& Color)
+{
+	FLsnUiItem Item;
+	Item.Kind = FLsnUiItem::EKind::Box;
+	Item.Box = FBox2D(UiOrigin + Centre - FVector2D(RadiusPx, RadiusPx), UiOrigin + Centre + FVector2D(RadiusPx, RadiusPx));
+	Item.Color = Color;
+	Item.Radius = RadiusPx;
+	FLsnUi::Get().Add(Item);
+}
+
+void ALsnHud::DrawIcon(FName Icon, const FVector2D& C, const FLinearColor& Color, bool bOn)
+{
+	const float S = U(8.0f), T = FMath::Max(U(1.6f), 1.0f);
+	if (Icon == TEXT("sun"))
+	{
+		DrawDisc(C, S, Color);
+	}
+	else if (Icon == TEXT("earth"))
+	{
+		DrawDisc(C, S, Color);
+		DrawDisc(C + FVector2D(0.35f * S, -0.3f * S), 0.45f * S, FLinearColor(0.02f, 0.03f, 0.05f, 0.55f));
+	}
+	else if (Icon == TEXT("lander"))
+	{
+		DrawRect(Color, C.X - 0.6f * S, C.Y - 0.7f * S, 1.2f * S, 0.9f * S);
+		DrawLine(C.X - 0.6f * S, C.Y + 0.2f * S, C.X - 1.1f * S, C.Y + S, Color, T);
+		DrawLine(C.X + 0.6f * S, C.Y + 0.2f * S, C.X + 1.1f * S, C.Y + S, Color, T);
+	}
+	else if (Icon == TEXT("play"))
+	{
+		if (bOn)
+		{
+			DrawRect(Color, C.X - 0.7f * S, C.Y - 0.8f * S, 0.5f * S, 1.6f * S);
+			DrawRect(Color, C.X + 0.2f * S, C.Y - 0.8f * S, 0.5f * S, 1.6f * S);
+		}
+		else
+		{
+			DrawLine(C.X - 0.6f * S, C.Y - 0.9f * S, C.X - 0.6f * S, C.Y + 0.9f * S, Color, T);
+			DrawLine(C.X - 0.6f * S, C.Y - 0.9f * S, C.X + 0.9f * S, C.Y, Color, T);
+			DrawLine(C.X - 0.6f * S, C.Y + 0.9f * S, C.X + 0.9f * S, C.Y, Color, T);
+		}
+	}
+	else if (Icon == TEXT("next_sunset"))
+	{
+		DrawDisc(C + FVector2D(0.0f, -0.1f * S), 0.6f * S, Color);
+		DrawRect(FLinearColor(0.05f, 0.06f, 0.07f, 1.0f), C.X - S, C.Y + 0.25f * S, 2.0f * S, 0.6f * S);
+		DrawLine(C.X - S, C.Y + 0.25f * S, C.X + S, C.Y + 0.25f * S, Color, T);
+	}
+	else if (Icon == TEXT("obstacle"))
+	{
+		DrawLine(C.X - S, C.Y + 0.7f * S, C.X - 0.3f * S, C.Y - 0.7f * S, Color, T);
+		DrawLine(C.X - 0.3f * S, C.Y - 0.7f * S, C.X + 0.2f * S, C.Y + 0.1f * S, Color, T);
+		DrawLine(C.X + 0.2f * S, C.Y + 0.1f * S, C.X + 0.5f * S, C.Y - 0.3f * S, Color, T);
+		DrawLine(C.X + 0.5f * S, C.Y - 0.3f * S, C.X + S, C.Y + 0.7f * S, Color, T);
+	}
+	else if (Icon == TEXT("compare"))
+	{
+		DrawRect(Color, C.X - S, C.Y - 0.7f * S, 0.85f * S, 1.4f * S);
+		DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.5f * Color.A), C.X + 0.15f * S, C.Y - 0.7f * S, 0.85f * S, 1.4f * S);
+	}
+	else if (Icon == TEXT("camera"))
+	{
+		DrawRect(Color, C.X - S, C.Y - 0.5f * S, 1.4f * S, 1.1f * S);
+		DrawLine(C.X + 0.4f * S, C.Y, C.X + S, C.Y - 0.5f * S, Color, T);
+		DrawLine(C.X + 0.4f * S, C.Y, C.X + S, C.Y + 0.6f * S, Color, T);
+		DrawLine(C.X + S, C.Y - 0.5f * S, C.X + S, C.Y + 0.6f * S, Color, T);
+	}
+	else if (Icon == TEXT("controls"))
+	{
+		for (int32 I = -1; I <= 1; ++I)
+		{
+			DrawDisc(C + FVector2D(I * 0.7f * S, 0.0f), 0.22f * S, Color);
+		}
+	}
+	else if (Icon == TEXT("next_site") || Icon == TEXT("next_right_site"))
+	{
+		DrawLine(C.X - 0.4f * S, C.Y - 0.7f * S, C.X + 0.4f * S, C.Y, Color, T);
+		DrawLine(C.X - 0.4f * S, C.Y + 0.7f * S, C.X + 0.4f * S, C.Y, Color, T);
+	}
+}
+
+void ALsnHud::DrawButton(const FBox2D& Box, const FString& Label, FName Icon, bool bOn, bool bEnabled, bool bAccent, FName HoverKey)
+{
+	// One quiet style: dark, hairline border, icon and label. Hover and pressed lighten it; a switch that is on has a brighter edge.
+	const bool bInside = bEnabled && Box.IsInside(UiMouse - UiOrigin);
+	float& Hover = HoverOf.FindOrAdd(HoverKey);
+	// 150 ms from one state to the other.
+	Hover = FMath::Clamp(Hover + (bInside ? 1.0f : -1.0f) * UiDelta / 0.15f, 0.0f, 1.0f);
+	const float Lift = 0.10f * Hover + ((bInside && bUiPressed) ? 0.10f : 0.0f);
+	FLinearColor Fill = bAccent ? FLinearColor(FLsnUi::Amber().R * 0.9f, FLsnUi::Amber().G * 0.9f, FLsnUi::Amber().B * 0.9f, 1.0f) : bOn ? FLinearColor(0.16f, 0.19f, 0.24f, 0.92f) : FLinearColor(0.05f, 0.06f, 0.07f, 0.80f);
+	Fill = FLinearColor(Fill.R + Lift, Fill.G + Lift, Fill.B + Lift, Fill.A);
+	const FLinearColor Edge = bOn ? FLinearColor(1.0f, 1.0f, 1.0f, 0.55f) : FLinearColor(1.0f, 1.0f, 1.0f, 0.16f + 0.25f * Hover);
+	DrawRounded(Box, Fill, 6.0f, Edge);
+	const FLinearColor Ink = bAccent ? FLinearColor(0.04f, 0.03f, 0.0f) : bEnabled ? FLsnUi::Ink() : FLinearColor(0.42f, 0.44f, 0.48f);
+	const float LabelWidth = TypeWidth(Label, FLsnUi::Body), IconWidth = Icon.IsNone() ? 0.0f : U(28.0f);
+	const float X0 = Box.Min.X + FMath::Max(0.5f * (Box.Max.X - Box.Min.X - LabelWidth - IconWidth), U(6.0f));
+	const float CentreY = 0.5f * (Box.Min.Y + Box.Max.Y);
+	if (!Icon.IsNone())
+	{
+		DrawIcon(Icon, FVector2D(X0 + U(10.0f), CentreY), Ink, bOn);
+	}
+	DrawType(Label, Ink, X0 + IconWidth, CentreY - U(0.62f * FLsnUi::Body), FLsnUi::Body);
+}
+
+void ALsnHud::DrawChip(const FBox2D& Box, const FLinearColor& Accent, FName Icon, const FString& Label, const FString& State, const FString& LeadIn, const FString& Duration, const TArray<FString>& Detail)
+{
+	// A dark panel with a bar of the state colour on the left, an icon, the state word, and the countdown as the largest thing.
+	DrawPanel(Box);
+	DrawRounded(FBox2D(FVector2D(Box.Min.X + U(1.0f), Box.Min.Y + U(8.0f)), FVector2D(Box.Min.X + U(5.0f), Box.Max.Y - U(8.0f))), Accent, 2.0f);
+	const float X = Box.Min.X + U(20.0f), Width = Box.Max.X - X - U(12.0f);
+	float Y = Box.Min.Y + U(12.0f);
+	DrawIcon(Icon, FVector2D(X + U(9.0f), Y + U(15.0f)), Accent, false);
+	const float LabelX = X + U(28.0f), LabelWidth = TypeWidth(Label, FLsnUi::Title, true);
+	DrawType(Label, Accent, LabelX, Y, FLsnUi::Title, true);
+	// The state word beside the label where it fits, under it where it does not.
+	if (LabelX + LabelWidth + U(10.0f) + TypeWidth(State, FLsnUi::Title) <= Box.Max.X - U(12.0f))
+	{
+		DrawType(State, FLsnUi::Ink(), LabelX + LabelWidth + U(10.0f), Y, FLsnUi::Title);
+		Y += U(32.0f);
+	}
+	else
+	{
+		Y += U(30.0f);
+		for (const FString& Part : WrapLines(State, FLsnUi::Body, Width))
+		{
+			DrawType(Part, FLsnUi::Ink(), X, Y, FLsnUi::Body);
+			Y += U(24.0f);
+		}
+	}
+	if (!LeadIn.IsEmpty())
+	{
+		DrawType(LeadIn, FLsnUi::InkDim(), X, Y, FLsnUi::Body);
+		Y += U(22.0f);
+	}
+	if (!Duration.IsEmpty())
+	{
+		DrawDuration(Duration, FLsnUi::Ink(), X, Y, FLsnUi::Display);
+		Y += U(50.0f);
+	}
+	for (const FString& Line : Detail)
+	{
+		for (const FString& Part : WrapLines(Line, FLsnUi::Body, Width))
+		{
+			if (Y + U(22.0f) <= Box.Max.Y)
+			{
+				DrawType(Part, FLsnUi::InkDim(), X, Y, FLsnUi::Body);
+			}
+			Y += U(23.0f);
+		}
+	}
 }
 
 void ALsnHud::DrawHUD()
@@ -551,19 +918,43 @@ void ALsnHud::DrawHUD()
 	{
 		return;
 	}
-	UFont* Font = GEngine->GetMediumFont();
+	// What this view draws goes to the interface's list of the frame; a widget over the game view paints it.
+	FLsnUi::Get().BeginView(GFrameCounter);
+	FLsnUi::Get().EnsureWidget(GetWorld());
+	UiOrigin = FVector2D::ZeroVector;
+	UiHeight = Canvas->SizeY;
+	UFont* Font = nullptr;
 	const ALsnViewGameMode* GameMode = GetWorld()->GetAuthGameMode<ALsnViewGameMode>();
 	const APlayerController* Player = GetOwningPlayerController();
 	const bool bComparing = GameMode && GameMode->IsComparing();
 	const int32 View = GameMode ? GameMode->GetViewIndexOf(Player) : 0;
 	const float SizeX = Canvas->SizeX, SizeY = Canvas->SizeY;
 	const float Scale = FLsnToolbar::TextScale(SizeX, SizeY);
-	// The buttons are laid out in the whole window; a view draws what lies in it.
+	// Shared things (control bar, time strip, drawer) are laid out in the whole window and drawn by the left view.
 	const float WindowX = bComparing ? 2.0f * SizeX : SizeX;
 	const float ViewX0 = bComparing ? View * SizeX : 0.0f;
-	const float Margin = 0.012f * WindowX;
-	// One type scale: extra large (site name), large (times, countdowns, main buttons), medium (text), small (captions).
-	const float TypeXL = 2.0f * Scale, TypeL = 1.45f * Scale, TypeM = 1.12f * Scale, TypeS = 0.9f * Scale;
+	// What a view draws is given in its own pixels; the list of the frame is in pixels of the window.
+	UiOrigin = FVector2D(ViewX0, 0.0f);
+	const float Margin = U(FLsnUi::SafeMargin);
+	const float TypeL = 1.45f * Scale, TypeM = 1.12f * Scale, TypeS = 0.9f * Scale;
+
+	// The pointer belongs to the left player; its position is in window pixels.
+	const APlayerController* FirstPlayer = GetWorld()->GetFirstPlayerController();
+	const double NowS = GetWorld()->GetRealTimeSeconds();
+	UiDelta = FMath::Clamp(static_cast<float>(NowS - UiLastS), 0.0f, 0.1f);
+	UiLastS = NowS;
+	float MouseX = 0.0f, MouseY = 0.0f;
+	UiMouse = FVector2D(-1.0e6, -1.0e6);
+	if (FirstPlayer && FirstPlayer->bShowMouseCursor && FirstPlayer->GetMousePosition(MouseX, MouseY))
+	{
+		UiMouse = FVector2D(MouseX, MouseY);
+		if (!UiMouse.Equals(UiMouseBefore, 0.5))
+		{
+			UiMouseMovedS = NowS;
+			UiMouseBefore = UiMouse;
+		}
+	}
+	bUiPressed = FirstPlayer && FirstPlayer->IsInputKeyDown(EKeys::LeftMouseButton);
 
 	const ALsnSiteScene* Scene = GameMode ? GameMode->GetSceneOf(Player) : nullptr;
 	if (!Scene)
@@ -576,19 +967,20 @@ void ALsnHud::DrawHUD()
 	}
 	if (!Scene || !Scene->HasPackage())
 	{
-		DrawText(TEXT("No package loaded."), Alert, Margin, Margin, Font, TypeL);
+		TArray<FLsnHudLine> Lines;
+		Lines.Add({ TEXT("No package loaded."), Alert, FLsnUi::Title });
 		if (GameMode)
 		{
-			DrawWrapped(GameMode->GetLoadError(), Alert, Margin, Margin + 40.0f * Scale, SizeX - 2.0f * Margin, TypeM);
+			Lines.Add({ GameMode->GetLoadError(), White, FLsnUi::Body });
 		}
+		DrawCard(Lines, Margin, Margin, SizeX - 2.0f * Margin);
 		return;
 	}
 	const FLsnSitePackage& P = Scene->GetPackage();
 	const int32 H = Scene->GetHeightIndex();
 	const double Position = Scene->GetTimePosition();
 	const ALsnObserverPawn* Pawn = Cast<ALsnObserverPawn>(GetOwningPawn());
-	// The left observer holds what both views share (details, help).
-	const APlayerController* FirstPlayer = GetWorld()->GetFirstPlayerController();
+	// The left observer holds what both views share (drawer, help).
 	const ALsnObserverPawn* LeftPawn = FirstPlayer ? Cast<ALsnObserverPawn>(FirstPlayer->GetPawn()) : Pawn;
 
 	// For stills: no panels. A synthetic package keeps its marker; every still keeps a caption
@@ -597,231 +989,155 @@ void ALsnHud::DrawHUD()
 	{
 		if (P.bSynthetic)
 		{
-			DrawText(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, Margin, Margin, Font, 1.4f * Scale);
+			DrawType(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, Margin, Margin, FLsnUi::Title);
 		}
 		const FString Viewpoint = (Pawn && Pawn->IsOverview()) ? (Pawn->GetCameraUpM() >= 1000.0 ? FString::Printf(TEXT("overview from %.0f km above the site, not the observer's view"), Pawn->GetCameraUpM() / 1000.0)
 			: Pawn->IsArrivalRunning() ? FString(TEXT("camera move from high above down to the site; a camera move only, no descent is simulated"))
 			: Pawn->GetCameraView() == ELsnCameraView::Hero ? FString(TEXT("camera near the lander, not the observer's view")) : Pawn->GetCameraView() == ELsnCameraView::Wide ? FString(TEXT("wide view of the site, Sun outside the picture to the right; not the observer's view"))
 			: FString::Printf(TEXT("camera %.0f m above and behind the observer, not the observer's view"), Pawn->GetCameraUpM()))
 			: FString::Printf(TEXT("observer %.1f m"), P.ObserverHeightsM[H]);
-		DrawText(FString::Printf(TEXT("%s   %s   %s   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), *Viewpoint, *P.PackageId, *P.ContractVersion)
+		DrawType(FString::Printf(TEXT("%s   %s   %s   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), *Viewpoint, *P.PackageId, *P.ContractVersion)
 			+ (Scene->IsFillForced() ? TEXT("   weak fill light on as a viewing aid: shadows are black without it") : TEXT("")),
-			Dim, Margin, SizeY - 26.0f * Scale, Font, Scale * 0.9f);
+			Dim, Margin, SizeY - Margin - U(20.0f), FLsnUi::Footnote);
 		return;
 	}
 
 	// For the pitch clip: the view without its controls, with a caption that says what is shown.
 	const bool bPresentation = FParse::Param(FCommandLine::Get(), TEXT("LsnPresentation"));
-	// The clean view is the default: everything beyond the name, the chips, one strip and the main actions opens on demand.
-	const bool bAllControls = !bPresentation && LeftPawn && LeftPawn->AreControlsShown();
-	const FLsnToolbar Toolbar = FLsnToolbar::Make(WindowX, SizeY, bComparing, bAllControls);
 	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
+	const bool bDetails = LeftPawn && LeftPawn->AreDetailsShown() && Page == ELsnPlannerPage::Summary;
+	// The drawer is open while further controls, a page or the evidence is asked for.
+	const bool bDrawer = !bPresentation && LeftPawn && (LeftPawn->AreControlsShown() || Page != ELsnPlannerPage::Summary || bDetails);
+	const bool bControlsTab = bDrawer && Page == ELsnPlannerPage::Summary && !bDetails;
+	const FLsnToolbar Toolbar = FLsnToolbar::Make(WindowX, SizeY, bComparing, bDrawer, bControlsTab);
 	const bool bOverview = Pawn && Pawn->IsOverview();
 	const double EtS = P.bHasTimeline ? P.EtOfPosition(Position) : 0.0;
 	const int32 Sample = Scene->GetTimeIndex();
 
-	// --- header: site name, time, state chips --------------------------------------------
-	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.66f), 0.0f, 0.0f, SizeX, Toolbar.HeaderBottom);
-	float NameY = 0.012f * SizeY;
+	// Side by side: a thin divider between the halves.
+	if (bComparing && View == 0)
+	{
+		DrawRect(FLsnUi::Hairline(), SizeX - U(0.5f), 0.0f, FMath::Max(U(1.0f), 1.0f), SizeY);
+	}
+
+	// --- top left: site name, time, one line of coordinates and observer height -------------
+	float NameY = Margin - U(8.0f);
 	if (P.bSynthetic)
 	{
 		// The marker a synthetic package carries at all times (SPEC 3.3).
-		DrawFit(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, Margin, 0.003f * SizeY, SizeX - 2.0f * Margin, TypeM);
-		NameY = 0.026f * SizeY;
+		DrawType(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, Margin, NameY + U(6.0f), FLsnUi::Body, true);
+		NameY += U(28.0f);
+	}
+	const float ChipGap = U(16.0f);
+	const float ChipWidth = bComparing ? (SizeX - 2.0f * Margin - 2.0f * U(12.0f)) / 3.0f : U(392.0f), ChipHeight = U(196.0f);
+	const float ChipsX0 = bComparing ? Margin : SizeX - Margin - 3.0f * ChipWidth - 2.0f * ChipGap;
+	const float ChipsY0 = bComparing ? Margin + U(116.0f) : Margin;
+	const float NameWidth = bComparing ? SizeX - 2.0f * Margin - U(166.0f) : ChipsX0 - Margin - U(24.0f);
+	const TArray<FString> NameLines = WrapLines(P.SiteName, FLsnUi::Display, NameWidth);
+	for (int32 I = 0; I < NameLines.Num() && I < (bComparing ? 1 : 2); ++I)
+	{
+		FString Line = NameLines[I];
+		if (I == (bComparing ? 0 : 1) && NameLines.Num() > I + 1)
+		{
+			Line += TEXT("...");
+		}
+		DrawType(Line, White, Margin, NameY, FLsnUi::Display);
+		NameY += U(46.0f);
 	}
 	const FString Utc = P.bHasTimeline ? LsnHudText::UtcLabelOfPosition(P, Position) : FString();
 	const FString TimeText = !P.bHasTimeline ? FString(TEXT("terrain horizon only: no Sun or Earth timeline")) : Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc;
-	const int32 SiteCount = GameMode ? GameMode->GetSites().Num() : 0;
-	const int32 SiteIndex = GameMode ? GameMode->GetSelectedSite(View) : -1;
-	FString Sub = FString::Printf(TEXT("lat %.4f   lon %.4f (east +)   observer %.1f m above the surface"), P.LatDeg, P.LonDeg, P.ObserverHeightsM[H]);
-	if (bComparing && P.TerrainSource.bPresent)
+	DrawType(TimeText, White, Margin, NameY + U(2.0f), FLsnUi::Title);
+	if (P.TerrainSource.bPresent)
 	{
-		Sub += TEXT("   ") + LsnPlanner::TerrainSourceLabel(P.TerrainSource);
-	}
-	if (SiteIndex >= 0 && SiteCount > 0)
-	{
-		Sub += FString::Printf(TEXT("   site %d of %d"), SiteIndex + 1, SiteCount);
-	}
-	TArray<FString> Metrics;
-	if (P.bHasTimeline)
-	{
-		LsnPlanner::BuildMetricLines(P, H, Metrics);
-	}
-	if (bComparing)
-	{
-		for (const FString& Metric : Metrics)
+		// What elevation data the result rests on (since contract 0.9), as a small badge beside the time.
+		const FString Badge = P.TerrainSource.PixelM > 0.0 ? FString::Printf(TEXT("%s terrain, %.0f m"), *P.TerrainSource.ResolutionClass, P.TerrainSource.PixelM) : P.TerrainSource.ResolutionClass + TEXT(" terrain");
+		const float BadgeX = Margin + TypeWidth(TimeText, FLsnUi::Title) + U(16.0f), BadgeWidth = TypeWidth(Badge, FLsnUi::Body) + U(20.0f);
+		if (BadgeX + BadgeWidth <= Margin + NameWidth + U(160.0f))
 		{
-			if (Metric.StartsWith(TEXT("Sun visible")) || Metric.StartsWith(TEXT("Earth visible")))
-			{
-				Sub += TEXT("   ") + Metric.Replace(TEXT(" of the window"), TEXT(""));
-			}
+			DrawRounded(FBox2D(FVector2D(BadgeX, NameY + U(2.0f)), FVector2D(BadgeX + BadgeWidth, NameY + U(32.0f))), FLinearColor(0.05f, 0.06f, 0.07f, 0.70f), 6.0f, FLsnUi::Hairline());
+			DrawType(Badge, Dim, BadgeX + U(10.0f), NameY + U(5.0f), FLsnUi::Body);
 		}
-		Sub = Sub.Replace(TEXT(" above the surface"), TEXT("")) + (Metrics.Num() > 0 ? TEXT(" of the computed window") : TEXT(""));
 	}
-	FBox2D ChipArea;
-	if (bComparing)
-	{
-		// The right view keeps the right end of its first line for its own button.
-		const float NameWidth = SizeX - 2.0f * Margin - (View == 1 ? 0.10f * WindowX : 0.0f);
-		float TimeWidth = 0.0f, Unused = 0.0f;
-		GetTextSize(TimeText, TimeWidth, Unused, Font, TypeL);
-		DrawFit(P.SiteName, White, Margin, NameY - 0.004f * SizeY, NameWidth - TimeWidth - 2.0f * Margin, 1.35f * TypeXL);
-		DrawText(TimeText, White, Margin + NameWidth - TimeWidth, NameY + 0.006f * SizeY, Font, TypeL);
-		DrawFit(Sub, White, Margin, NameY + 0.042f * SizeY, SizeX - 2.0f * Margin, 1.15f * TypeM);
-		ChipArea = FBox2D(FVector2D(Margin, 0.082f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom - 0.008f * SizeY));
-	}
-	else
-	{
-		// Next to the name: what elevation data the result rests on (since contract 0.9).
-		const FString Terrain = LsnPlanner::TerrainSourceLabel(P.TerrainSource);
-		float TerrainWidth = 0.0f, TerrainHeight = 0.0f;
-		GetTextSize(Terrain, TerrainWidth, TerrainHeight, Font, TypeS);
-		const float NameWidth = DrawFit(P.SiteName, White, Margin, NameY, 0.37f * SizeX - (Terrain.IsEmpty() ? 0.0f : TerrainWidth + 14.0f * Scale), TypeXL);
-		if (!Terrain.IsEmpty())
-		{
-			DrawText(Terrain, P.TerrainSource.ResolutionClass == TEXT("fine") ? Good : P.TerrainSource.ResolutionClass == TEXT("medium") ? SunColor : Lost, Margin + NameWidth + 12.0f * Scale, NameY + 0.016f * SizeY, Font, TypeS);
-		}
-		DrawText(TimeText, White, Margin, NameY + 0.044f * SizeY, Font, TypeL);
-		DrawFit(Sub, Dim, Margin, NameY + 0.080f * SizeY, 0.37f * SizeX, TypeS);
-		ChipArea = FBox2D(FVector2D(0.40f * SizeX, 0.012f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom - 0.010f * SizeY));
-	}
+	DrawType(FString::Printf(TEXT("lat %.4f   lon %.4f (east +)   observer %.1f m above the surface"), P.LatDeg, P.LonDeg, P.ObserverHeightsM[H]), Dim, Margin, NameY + U(38.0f), FLsnUi::Body);
 
-	// A chip: a title with the state, a large line, a small line. Filled in the body's colour
-	// while the state is good, dark with a coloured edge while it is not.
-	struct FChip { FString Title; FString Headline; FString Detail; FLinearColor Color; bool bGood; };
-	TArray<FChip> Chips;
+	// --- top right: three state chips ---------------------------------------------------------
 	const FLsnCountdown SunCountdown = P.bHasTimeline ? P.CountdownAt(TEXT("SUN"), H, EtS) : FLsnCountdown();
 	const FLsnCountdown EarthCountdown = P.bHasTimeline ? P.CountdownAt(TEXT("EARTH"), H, EtS) : FLsnCountdown();
-	auto BodyChip = [&](const TCHAR* Body, const TCHAR* Name, const FLsnCountdown& Countdown, const FLinearColor& Color)
+	int32 ChipIndex = 0;
+	auto ChipBox = [&]()
+	{
+		const float X0 = ChipsX0 + ChipIndex * (ChipWidth + (bComparing ? U(12.0f) : ChipGap));
+		++ChipIndex;
+		return FBox2D(FVector2D(X0, ChipsY0), FVector2D(X0 + ChipWidth, ChipsY0 + ChipHeight));
+	};
+	auto BodyChip = [&](const TCHAR* Body, const TCHAR* Name, FName Icon, const FLsnCountdown& Countdown, const FLinearColor& Color)
 	{
 		if (!Countdown.bAvailable)
 		{
 			return;
 		}
-		FChip Chip;
-		Chip.Color = Color;
-		Chip.bGood = Countdown.bVisibleNow;
 		FLsnBlocking Blocking;
 		const bool bBlocked = P.BlockingAt(Body, H, Sample, Blocking) && Blocking.bHiddenOrPartly;
 		const bool bPartly = bBlocked && Blocking.VisibleFraction > 0.0;
-		Chip.Title = FString::Printf(TEXT("%s  %s"), Name, bPartly ? *FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction) : Countdown.bVisibleNow ? TEXT("visible") : TEXT("hidden"));
-		Chip.Headline = FString::Printf(TEXT("%s in %s%s"), Countdown.bVisibleNow ? TEXT("sets") : TEXT("rises"), Countdown.bLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Countdown.SecondsToChange));
-		// With a stated horizon error the event is a range, not an instant.
+		const FString State = bPartly ? FString::Printf(TEXT("partly hidden, %.0f %% visible"), 100.0 * Blocking.VisibleFraction) : Countdown.bVisibleNow ? FString(TEXT("visible")) : FString(TEXT("hidden"));
+		const FString LeadIn = FString::Printf(TEXT("%s in%s"), Countdown.bVisibleNow ? TEXT("sets") : TEXT("rises"), Countdown.bLowerBound ? TEXT(" at least") : TEXT(""));
+		TArray<FString> Detail;
+		// With a stated error the event is a range, not an instant.
 		const FLsnEvent* Event = LsnPlanner::EventEndingCountdown(P, Body, H, EtS, Countdown);
-		const FString Quality = Event ? LsnPlanner::TerrainQualityPhrase(*Event) : FString();
-		if (Event && !Quality.IsEmpty() && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS)
+		if (Event && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS && Event->bHasTerrainQuality && FMath::IsFinite(Event->QualityHeightErrorM))
 		{
-			// Since 0.10: what the event rests on, and how wide its band is for that height error.
-			// Short, so that it stays readable in the chip: "measured pixel +/- 5.0 m: ... to ...".
-			Chip.Detail = FString::Printf(TEXT("%s: %s to %s"), *Quality.Replace(TEXT(" terrain pixel, height"), TEXT(" pixel")).Replace(TEXT("terrain pixel of unknown kind"), TEXT("pixel of unknown kind")),
-				*LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS));
-		}
-		else if (Event && !Quality.IsEmpty())
-		{
-			Chip.Detail = TEXT("rests on a ") + Quality;
+			// Since 0.10: the band of the event for the height error of the terrain pixel it rests on.
+			const double Error = Event->QualityHeightErrorM;
+			Detail.Add(FString::Printf(TEXT("uncertainty: %s to %s (%s m terrain)"), *LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS),
+				FMath::IsNearlyEqual(Error, FMath::RoundToDouble(Error), 0.05) ? *FString::Printf(TEXT("%.0f"), Error) : *FString::Printf(TEXT("%.1f"), Error)));
 		}
 		else if (Event && Event->bHasBand && Event->LatestEtS > Event->EarliestEtS && P.Uncertainty.bHasHorizonError)
 		{
-			Chip.Detail = FString::Printf(TEXT("horizon +/- %.2f deg: %s to %s"), P.Uncertainty.HorizonErrorDeg, *LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS));
+			Detail.Add(FString::Printf(TEXT("uncertainty: %s to %s (horizon +/- %.2f deg)"), *LsnHudText::FormatDuration(Event->EarliestEtS - EtS), *LsnHudText::FormatDuration(Event->LatestEtS - EtS), P.Uncertainty.HorizonErrorDeg));
 		}
 		else if (Countdown.bLowerBound)
 		{
-			Chip.Detail = TEXT("no such event in the computed range");
+			Detail.Add(TEXT("no such event in the computed range"));
 		}
-		Chips.Add(Chip);
+		// The bar carries the body's colour while the body is visible.
+		DrawChip(ChipBox(), Countdown.bVisibleNow ? Color : FLinearColor(0.45f, 0.47f, 0.50f), Icon, Name, State, LeadIn, LsnHudText::FormatDuration(Countdown.SecondsToChange), Detail);
 	};
-	BodyChip(TEXT("SUN"), TEXT("SUN"), SunCountdown, SunColor);
-	BodyChip(TEXT("EARTH"), TEXT("EARTH"), EarthCountdown, EarthColor);
+	BodyChip(TEXT("SUN"), TEXT("SUN"), TEXT("sun"), SunCountdown, SunColor);
+	BodyChip(TEXT("EARTH"), TEXT("EARTH"), TEXT("earth"), EarthCountdown, EarthColor);
 	const FLsnRequirement* Requirement = P.Requirements.Num() > 0 ? &P.Requirements[(GameMode ? GameMode->GetRequirementIndex() : 0) % P.Requirements.Num()] : nullptr;
 	const FLsnOpportunity* Opportunity = (Requirement && P.bHasTimeline) ? P.FindOpportunity(Requirement->Id, H) : nullptr;
 	if (Opportunity)
 	{
 		const FLsnLandingCheck Check = LsnPlanner::LandingAt(*Opportunity, EtS);
-		FChip Chip;
-		Chip.Color = Good;
-		Chip.bGood = Check.bJudgeable && Check.bFeasible;
-		Chip.Title = !Check.bJudgeable ? TEXT("LANDING NOW  cannot be judged") : Check.bFeasible ? TEXT("LANDING NOW  meets the requirement") : TEXT("LANDING NOW  does not meet it");
-		Chip.Headline = !Check.bJudgeable ? FString(TEXT("stay runs past the range")) : Check.bFeasible ? FString::Printf(TEXT("can slip %s%s"), Check.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Check.SlipS))
-			: Check.bHasNextWindow ? FString::Printf(TEXT("window in %s"), *LsnHudText::FormatDuration(Check.WaitS)) : FString(TEXT("no window left in the range"));
-		Chip.Detail = FString::Printf(TEXT("example requirement '%s'"), *Requirement->Id);
-		Chips.Add(Chip);
-	}
-	if (Chips.Num() > 0)
-	{
-		const float Gap = 0.006f * WindowX;
-		const float ChipWidth = (ChipArea.Max.X - ChipArea.Min.X - 2.0f * Gap) / 3.0f, ChipHeight = ChipArea.Max.Y - ChipArea.Min.Y;
-		for (int32 I = 0; I < Chips.Num(); ++I)
-		{
-			const FChip& Chip = Chips[I];
-			const float X0 = ChipArea.Min.X + I * (ChipWidth + Gap), Y0 = ChipArea.Min.Y;
-			const FLinearColor Edge = Chip.bGood ? Chip.Color : Lost;
-			DrawRect(Edge, X0, Y0, ChipWidth, ChipHeight);
-			const FLinearColor Fill = Chip.bGood ? FLinearColor(Chip.Color.R * 0.86f, Chip.Color.G * 0.86f, Chip.Color.B * 0.86f, 1.0f) : FLinearColor(0.07f, 0.07f, 0.08f, 1.0f);
-			DrawRect(Fill, X0 + 2.0f, Y0 + 2.0f, ChipWidth - 4.0f, ChipHeight - 4.0f);
-			const FLinearColor Ink = Chip.bGood ? FLinearColor(0.02f, 0.02f, 0.03f) : Lost;
-			const float Inset = 10.0f * Scale, TextWidth = ChipWidth - 2.0f * Inset;
-			DrawFit(Chip.Title, Ink, X0 + Inset, Y0 + 0.006f * SizeY, TextWidth, (bComparing ? 1.25f : 1.0f) * TypeM);
-			DrawFit(Chip.Headline, Ink, X0 + Inset, Y0 + (bComparing ? 0.034f : 0.030f) * SizeY, TextWidth, (bComparing ? 1.6f : 1.12f) * TypeL);
-			DrawFit(Chip.Detail, Chip.bGood ? FLinearColor(0.10f, 0.10f, 0.12f) : Dim, X0 + Inset, Y0 + ChipHeight - 0.026f * SizeY, TextWidth, TypeS);
-		}
+		const bool bMet = Check.bJudgeable && Check.bFeasible;
+		const FString State = !Check.bJudgeable ? FString(TEXT("cannot be judged")) : bMet ? FString(TEXT("requirement met")) : FString(TEXT("requirement not met"));
+		const FString LeadIn = !Check.bJudgeable ? FString(TEXT("the stay runs past the computed range")) : bMet ? FString::Printf(TEXT("can slip%s"), Check.bSlipIsLowerBound ? TEXT(" at least") : TEXT(""))
+			: Check.bHasNextWindow ? FString(TEXT("next window in")) : FString(TEXT("no window left in the computed range"));
+		const FString Duration = !Check.bJudgeable ? FString() : bMet ? LsnHudText::FormatDuration(Check.SlipS) : Check.bHasNextWindow ? LsnHudText::FormatDuration(Check.WaitS) : FString();
+		DrawChip(ChipBox(), bMet ? Good : Alert, TEXT("lander"), TEXT("LANDING NOW:"), State, LeadIn, Duration, { TEXT("Example requirement (team's choice)") });
 	}
 
-	// --- buttons ----------------------------------------------------------------------------
+	// --- buttons -----------------------------------------------------------------------------
 	if (!bPresentation)
 	{
 		DrawToolbar(Toolbar, ViewX0, *Scene, LeftPawn, GameMode, Scale);
 	}
 
-	// --- below the header: horizon all round and the numbers of the whole window ------------
-	const float ContentTop = Toolbar.HeaderBottom + 0.086f * SizeY;   // below the main buttons
-	FLsnPanorama Pano;
-	LsnPlanner::PanoramaRange(P, H, Pano.MinElevationDeg, Pano.MaxElevationDeg);
-	if (bComparing)
-	{
-		Pano.Box = FBox2D(FVector2D(0.52f * SizeX, ContentTop), FVector2D(SizeX - Margin, ContentTop + 0.075f * SizeY));
-	}
-	else
-	{
-		Pano.Box = FBox2D(FVector2D(0.70f * SizeX, Toolbar.HeaderBottom + 0.012f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom + 0.012f * SizeY + 0.115f * SizeY));
-	}
-	if (bAllControls)
-	{
-		DrawPanorama(Pano, *Scene, Pawn, Scale);
-	}
-	float RightY = Pano.Box.Max.Y + 22.0f * Scale;
-	if (P.bHasTimeline && Page == ELsnPlannerPage::Summary && !bComparing && bAllControls)
-	{
-		if (Metrics.Num() > 0)
-		{
-			DrawFit(FString::Printf(TEXT("WHOLE COMPUTED WINDOW   %s to %s"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10)), Dim, Pano.Box.Min.X, RightY, Pano.Box.Max.X - Pano.Box.Min.X, TypeS);
-			RightY += 19.0f * Scale;
-			for (const FString& Metric : Metrics)
-			{
-				RightY = DrawWrapped(Metric, White, Pano.Box.Min.X, RightY, Pano.Box.Max.X - Pano.Box.Min.X, TypeM) + 2.0f * Scale;
-			}
-		}
-	}
-
-	// --- left column: notices, what blocks the Sun or the Earth, details --------------------
-	const bool bDetailsEarly = LeftPawn && LeftPawn->AreDetailsShown();
-	const float ColumnWidth = (bPresentation || !bAllControls ? 0.95f : bComparing ? 0.50f : 0.66f) * SizeX - Margin;
-	// Without the main buttons the column starts right under the header.
-	float Y = bPresentation ? Toolbar.HeaderBottom + 0.014f * SizeY : ContentTop;
-	auto Notice = [&](const FString& Text)
-	{
-		Y = DrawWrapped(Text, Alert, Margin, Y, ColumnWidth, TypeM) + 4.0f * Scale;
-	};
+	// --- left column under the header: notices, what blocks the Sun or the Earth ---------------
+	const float ColumnWidth = bComparing ? SizeX - 2.0f * Margin : U(640.0f);
+	float Y = Toolbar.HeaderBottom + U(16.0f);
+	TArray<FLsnHudLine> Notices;
 	if (Pawn && !Pawn->GetCameraNote().IsEmpty())
 	{
-		Notice(Pawn->GetCameraNote());
+		Notices.Add({ Pawn->GetCameraNote(), White, FLsnUi::Body });
 	}
 	if (Scene->GetSkippedHorizonSamples() > 0)
 	{
-		Notice(FString::Printf(TEXT("%d horizon samples are unknown in the package and are not drawn."), Scene->GetSkippedHorizonSamples()));
+		Notices.Add({ FString::Printf(TEXT("%d horizon samples are unknown in the package and are not drawn."), Scene->GetSkippedHorizonSamples()), Alert, FLsnUi::Body });
 	}
 	if (bComparing && View == 1 && GameMode && !GameMode->IsRightViewInRange())
 	{
-		Notice(TEXT("The selected instant is outside this package's time range: this half shows its nearest sample."));
+		Notices.Add({ TEXT("The selected instant is outside this package's time range: this half shows its nearest sample."), Alert, FLsnUi::Body });
 	}
 	if (View == 0 && LeftPawn && LeftPawn->IsFirstDayPlaying() && P.Calendar.bPresent)
 	{
@@ -830,172 +1146,235 @@ void ALsnHud::DrawHUD()
 		const FLsnCalendarPeriod* FullDay = P.Calendar.Periods.FindByPredicate([](const FLsnCalendarPeriod& Day) { return Day.bComplete; });
 		if (WithLanding && FullDay)
 		{
-			Y = DrawWrapped(FString::Printf(TEXT("The first lunar day after the planned landing of %s UTC, played fast: %.1f days of what this site gives the mission."), *WithLanding->Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
-				(FullDay->EndEtS - FullDay->StartEtS) / 86400.0), SunColor, Margin, Y, ColumnWidth, TypeL) + 6.0f * Scale;
+			Notices.Add({ FString::Printf(TEXT("The first lunar day after the planned landing of %s UTC, played fast: %.1f days of what this site gives the mission."), *WithLanding->Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
+				(FullDay->EndEtS - FullDay->StartEtS) / 86400.0), SunColor, FLsnUi::Body });
 		}
 	}
 	for (const FString& Warning : P.Warnings)
 	{
-		Notice(FString::Printf(TEXT("warning of the package: %s"), *Warning));
+		Notices.Add({ FString::Printf(TEXT("Warning of the package: %s"), *Warning), Dim, FLsnUi::Body });
 	}
-	if (Scene->GetNearGroundShadeShare() >= 0.3 && !bOverview && !bPresentation && !bDetailsEarly && Page == ELsnPlannerPage::Summary)
+	if (Scene->GetNearGroundShadeShare() >= 0.3 && !bOverview && !bPresentation)
 	{
 		// One short line: the chip says "visible" while the ground in the picture is dark.
 		FLsnBodyAtTime SunLow;
 		Scene->SampleBody(TEXT("SUN"), Position, SunLow);
-		Y = DrawWrapped(FString::Printf(TEXT("You are in sunlight; %.0f %% of the ground around you is not: the Sun is only %.1f deg high."), 100.0 * Scene->GetNearGroundShadeShare(), SunLow.ElevationDeg), White, Margin, Y, ColumnWidth, TypeM) + 6.0f * Scale;
+		Notices.Add({ FString::Printf(TEXT("You are in sunlight; %.0f %% of the ground around you is not: the Sun is only %.1f deg high."), 100.0 * Scene->GetNearGroundShadeShare(), FMath::Abs(SunLow.ElevationDeg) < 0.05 ? 0.0 : SunLow.ElevationDeg), White, FLsnUi::Body });
 	}
-	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && !bPresentation && bDetailsEarly && Page == ELsnPlannerPage::Summary)
+	const int32 SiteCount = GameMode ? GameMode->GetSites().Num() : 0;
+	const int32 SiteIndex = GameMode ? GameMode->GetSelectedSite(View) : -1;
+	bool bCustomProgress = false;
+	float CustomShare = 0.0f;
+	if (GameMode && View == 0 && SiteIndex >= 0 && GameMode->GetSites()[SiteIndex].Programme.StartsWith(TEXT("Custom")))
 	{
-		// The scene must not seem to contradict the package where the user looks: say what the dark ground is.
-		FLsnBodyAtTime SunNow;
-		Scene->SampleBody(TEXT("SUN"), Position, SunNow);
-		Y = DrawWrapped(FString::Printf(TEXT("About %.0f %% of the ground within %.0f m is drawn in shadow: the elevation data rises towards the Sun there by more than the Sun's height of %.1f deg. The package's horizon search starts %.0f m out; its result is for the observer at the site, who is in sunlight."),
-			100.0 * Scene->GetNearGroundShadeShare(), FMath::Max(P.HorizonSearchStartM(), 5.0), SunNow.ElevationDeg, P.HorizonSearchStartM()), White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
-	}
-	if (GameMode && View == 0 && SiteIndex >= 0 && GameMode->GetSites()[SiteIndex].Programme.StartsWith(TEXT("Custom")) && Page == ELsnPlannerPage::Summary)
-	{
-		// A site computed for custom coordinates: the two steps, what each said, and how far the running one is.
+		// Custom coordinates: what the two steps of the science core said, and how far the running one is.
 		const FLsnCustomEntry& Entry = GameMode->GetCustomEntry();
 		if (!Entry.HorizonLine.IsEmpty())
 		{
-			Y = DrawWrapped(Entry.HorizonLine, Good, Margin, Y, ColumnWidth, TypeS) + 4.0f * Scale;
+			Notices.Add({ Entry.HorizonLine, Good, FLsnUi::Body });
 		}
 		if (Entry.bRunning && Entry.Step == 2)
 		{
-			const float RunS = static_cast<float>(FPlatformTime::Seconds() - Entry.StartedS);
-			Y = DrawWrapped(Entry.Message, SunColor, Margin, Y, ColumnWidth, TypeM) + 4.0f * Scale;
-			const float BarWidth = 0.5f * ColumnWidth, BarHeight = 10.0f * Scale;
-			DrawRect(FLinearColor(0.20f, 0.20f, 0.22f, 1.0f), Margin, Y, BarWidth, BarHeight);
-			DrawRect(SunColor, Margin, Y, BarWidth * static_cast<float>(LsnPlanner::StepShare(RunS, Entry.StatedS)), BarHeight);
-			Y += BarHeight + 8.0f * Scale;
+			Notices.Add({ Entry.Message, SunColor, FLsnUi::Body });
+			bCustomProgress = true;
+			CustomShare = static_cast<float>(LsnPlanner::StepShare(FPlatformTime::Seconds() - Entry.StartedS, Entry.StatedS));
 		}
 		else if (!Entry.TimelineLine.IsEmpty())
 		{
-			Y = DrawWrapped(Entry.TimelineLine, Entry.bFailed ? Alert : P.bHasTimeline ? Good : Dim, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
+			Notices.Add({ Entry.TimelineLine, Entry.bFailed ? Alert : P.bHasTimeline ? Good : Dim, FLsnUi::Body });
 		}
 	}
-	const bool bDetails = bDetailsEarly;
-	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(SizeX, SizeY, P);
-	const float SheetBottom = Layout.Zoom.Min.Y - 0.030f * SizeY;
-	if (Page == ELsnPlannerPage::Summary && P.bHasTimeline)
+	if (!P.bHasTimeline)
+	{
+		Notices.Add({ TEXT("This package has no timeline: no Sun or Earth is shown."), Dim, FLsnUi::Body });
+	}
+	if (!bPresentation && Notices.Num() > 0)
+	{
+		Y = DrawCard(Notices, Margin, Y, ColumnWidth);
+		if (bCustomProgress)
+		{
+			DrawRounded(FBox2D(FVector2D(Margin, Y), FVector2D(Margin + ColumnWidth, Y + U(8.0f))), FLinearColor(1.0f, 1.0f, 1.0f, 0.12f), 4.0f);
+			DrawRounded(FBox2D(FVector2D(Margin, Y), FVector2D(Margin + ColumnWidth * CustomShare, Y + U(8.0f))), SunColor, 4.0f);
+			Y += U(16.0f);
+		}
+	}
+	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(WindowX, SizeY, P, bComparing, !bPresentation);
+	if (P.bHasTimeline && !bOverview && Scene->IsObstacleViewEnabled())
 	{
 		// What hides a body now, and what that obstacle costs: the package's own blocker (SPEC 5.5).
-		struct FCardLine { FString Text; FLinearColor Color; float Size; };
-		TArray<FCardLine> Card;
-		auto AddBlocker = [&](const TCHAR* Body, const FLinearColor& Color)
+		TArray<FLsnHudLine> Card;
+		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
 		{
 			FLsnBlocking Blocking;
 			TArray<FString> Sentences;
-			if (Scene->IsObstacleViewEnabled() && P.BlockingAt(Body, H, Sample, Blocking))
+			if (P.BlockingAt(Body, H, Sample, Blocking))
 			{
 				LsnHudText::BlockerSentences(Body, P, Blocking, Sentences);
 				for (int32 I = 0; I < Sentences.Num(); ++I)
 				{
-					Card.Add({ Sentences[I], I == 2 ? Alert : Color, I == 0 ? TypeL : TypeM });
+					Card.Add({ Sentences[I], I == 2 ? Alert : I == 0 ? White : Dim, FLsnUi::Body });
 				}
 			}
-		};
-		AddBlocker(TEXT("SUN"), FLinearColor(1.0f, 0.55f, 0.25f));
-		AddBlocker(TEXT("EARTH"), FLinearColor(0.35f, 0.85f, 1.0f));
-		if (Card.Num() > 0 && !bOverview)
-		{
-			const float CardTop = Y;
-			// Measured first, so that the dark box behind is as high as the text.
-			float CardHeight = 0.0f;
-			for (const FCardLine& Line : Card)
-			{
-				float Width = 0.0f, Height = 0.0f;
-				GetTextSize(Line.Text, Width, Height, Font, Line.Size);
-				CardHeight += 18.0f * Line.Size * FMath::CeilToFloat(FMath::Max(Width, 1.0f) / (ColumnWidth - 16.0f * Scale));
-			}
-			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.60f), Margin - 6.0f * Scale, CardTop - 6.0f * Scale, ColumnWidth, CardHeight + 14.0f * Scale);
-			for (const FCardLine& Line : Card)
-			{
-				Y = DrawWrapped(Line.Text, Line.Color, Margin, Y, ColumnWidth - 16.0f * Scale, Line.Size);
-			}
-			Y += 14.0f * Scale;
 		}
-	}
-	if (bDetails && Page == ELsnPlannerPage::Summary)
-	{
-		// On demand: where every number comes from, and how far it has been checked.
-		if (bComparing)
+		if (Card.Num() > 0)
 		{
-			Y = FMath::Max(Y, RightY + 6.0f * Scale);
-		}
-		const float PanelWidth = (bComparing ? SizeX - 2.0f * Margin : 0.66f * SizeX - Margin);
-		TArray<FLsnHudLine> Lines;
-		LsnHudText::BuildStatusLines(P, H, Position, Lines, Scene->GetGroundNote());
-		if (Pawn)
-		{
-			Lines.Add({ FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
-				Pawn->IsFollowingSun() ? TEXT("   view follows the Sun's azimuth") : TEXT("")), Dim, 1.0f });
-		}
-		if (SunCountdown.bAvailable || EarthCountdown.bAvailable)
-		{
-			const FString Method = SunCountdown.bAvailable ? SunCountdown.Method : EarthCountdown.Method;
-			Lines.Add({ FString::Printf(TEXT("countdowns: package windows sun_visible / earth_visible, TDB   [%s: %s]"), *Method, *P.ValidationStatusOf(Method)), Dim, 1.0f });
-		}
-		if (!P.BlockingMethod.IsEmpty())
-		{
-			Lines.Add({ FString::Printf(TEXT("what blocks a body and its cost: package blockers   [%s: %s]"), *P.BlockingMethod, *P.ValidationStatusOf(P.BlockingMethod)), Dim, 1.0f });
-		}
-		if (P.Uncertainty.bHasHorizonError)
-		{
-			Lines.Add({ FString::Printf(TEXT("ranges for the stated horizon error of %.2f deg   [%s]"), P.Uncertainty.HorizonErrorDeg, *P.ValidationStatusOf(P.Uncertainty.HorizonMethod)), Dim, 1.0f });
-		}
-		if (Opportunity)
-		{
-			Lines.Add({ FString::Printf(TEXT("landing windows of the example requirement '%s': %s   [%s]"), *Requirement->Id, *Requirement->Label, *P.ValidationStatusOf(Opportunity->Method)), Dim, 1.0f });
-		}
-		const float PanelTop = Y;
-		DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.86f), Margin - 6.0f * Scale, PanelTop - 6.0f * Scale, PanelWidth, FMath::Max(SheetBottom - PanelTop, 10.0f));
-		DrawText(TEXT("DETAILS: package, frame, contract and how far each number has been checked"), White, Margin, Y, Font, TypeS);
-		Y += 20.0f * Scale;
-		for (const FLsnHudLine& Line : Lines)
-		{
-			if (Y > SheetBottom - 20.0f * Scale)
-			{
-				break;
-			}
-			Y = DrawWrapped(Line.Text, Line.Color, Margin, Y, PanelWidth - 16.0f * Scale, TypeS * FMath::Min(Line.Size, 1.15f));
+			Y = DrawCard(Card, Margin, Y, ColumnWidth);
 		}
 	}
 
-	// --- planner pages: a sheet of their own over the view ---------------------------------
-	if (Page == ELsnPlannerPage::Sites && GameMode)
+	// --- the drawer, from the right: pages, sites, evidence, further controls ---------------
+	if (View == 0)
 	{
-		DrawSitePicker(WindowX, ViewX0, *GameMode, Scale);
+		DrawerAnim = FMath::Clamp(DrawerAnim + (bDrawer ? 1.0f : -1.0f) * UiDelta / 0.18f, 0.0f, 1.0f);
 	}
-	else if (Page != ELsnPlannerPage::Summary && GameMode)
+	if (View == 0 && bDrawer && GameMode)
 	{
-		const float SheetTop = bComparing ? RightY + 4.0f * Scale : ContentTop;
-		const FBox2D Sheet(FVector2D(Margin, SheetTop), FVector2D(bComparing ? SizeX - Margin : 0.685f * SizeX, SheetBottom));
-		DrawRect(FLinearColor(0.015f, 0.015f, 0.02f, 0.94f), Sheet.Min.X - 6.0f * Scale, Sheet.Min.Y - 6.0f * Scale, Sheet.Max.X - Sheet.Min.X + 12.0f * Scale, Sheet.Max.Y - Sheet.Min.Y + 12.0f * Scale);
-		const float Inset = 10.0f * Scale;
-		const float InnerX = Sheet.Min.X + Inset, InnerWidth = Sheet.Max.X - Sheet.Min.X - 2.0f * Inset;
-		float InnerY = Sheet.Min.Y + Inset;
-		const TCHAR* Title = Page == ELsnPlannerPage::Calendar ? TEXT("CALENDAR AND LANDING WINDOWS") : Page == ELsnPlannerPage::Uncertainty ? TEXT("UNCERTAINTY") : TEXT("MAST HEIGHT AND SITE PAIRS");
-		DrawText(Title, White, InnerX, InnerY, Font, TypeL);
-		InnerY += 30.0f * Scale;
-		if (Page == ELsnPlannerPage::Calendar)
+		const FBox2D Drawer = FLsnToolbar::DrawerBox(WindowX, SizeY, bComparing);
+		const FBox2D Content = FLsnToolbar::DrawerContent(WindowX, SizeY, bComparing);
+		const float InnerX = Content.Min.X, InnerWidth = Content.Max.X - Content.Min.X;
+		float InnerY = Content.Min.Y;
+		if (Page == ELsnPlannerPage::Sites)
 		{
-			// Side by side each half shows its own site; the two charts share the time axis of the packages.
-			DrawCalendar(FBox2D(FVector2D(InnerX, InnerY), FVector2D(InnerX + InnerWidth, Sheet.Max.Y - Inset)), { Scene }, GameMode->GetRequirementIndex(), Scale);
+			DrawSitePicker(WindowX, ViewX0, *GameMode, Scale);
+		}
+		else if (Page == ELsnPlannerPage::Calendar)
+		{
+			// Side by side the chart has a row for each site on one time axis.
+			TArray<const ALsnSiteScene*> Rows = { Scene };
+			if (bComparing && GameMode->GetSceneOfView(1) && GameMode->GetSceneOfView(1)->HasPackage())
+			{
+				Rows.Add(GameMode->GetSceneOfView(1));
+			}
+			DrawCalendar(Content, Rows, GameMode->GetRequirementIndex(), Scale);
 		}
 		else if (Page == ELsnPlannerPage::Uncertainty)
 		{
 			DrawUncertainty(*Scene, InnerX, InnerY, InnerWidth, Scale);
 		}
-		else
+		else if (Page == ELsnPlannerPage::Trade)
 		{
 			DrawTrade(*Scene, *GameMode, InnerX, InnerY, InnerWidth, Scale);
+		}
+		else if (bDetails)
+		{
+			// Evidence: where every number comes from, and how far it has been checked. Complete and unchanged.
+			TArray<FLsnHudLine> Lines;
+			LsnHudText::BuildStatusLines(P, H, Position, Lines, Scene->GetGroundNote());
+			if (SiteIndex >= 0 && SiteCount > 0)
+			{
+				Lines.Add({ FString::Printf(TEXT("site %d of %d in the package root"), SiteIndex + 1, SiteCount), Dim, 1.0f });
+			}
+			if (Pawn)
+			{
+				Lines.Add({ FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
+					Pawn->IsFollowingSun() ? TEXT("   view follows the Sun's azimuth") : TEXT("")), Dim, 1.0f });
+			}
+			if (SunCountdown.bAvailable || EarthCountdown.bAvailable)
+			{
+				const FString Method = SunCountdown.bAvailable ? SunCountdown.Method : EarthCountdown.Method;
+				Lines.Add({ FString::Printf(TEXT("countdowns: package windows sun_visible / earth_visible, TDB   [%s: %s]"), *Method, *P.ValidationStatusOf(Method)), Dim, 1.0f });
+			}
+			for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
+			{
+				const FLsnCountdown& Countdown = FCString::Stricmp(Body, TEXT("SUN")) == 0 ? SunCountdown : EarthCountdown;
+				const FLsnEvent* Event = Countdown.bAvailable ? LsnPlanner::EventEndingCountdown(P, Body, H, EtS, Countdown) : nullptr;
+				const FString Quality = Event ? LsnPlanner::TerrainQualityPhrase(*Event) : FString();
+				if (!Quality.IsEmpty())
+				{
+					Lines.Add({ FString::Printf(TEXT("the next %s event rests on a %s%s"), Body, *Quality, Event->QualityProductId.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Event->QualityProductId)), Dim, 1.0f });
+				}
+			}
+			if (!P.BlockingMethod.IsEmpty())
+			{
+				Lines.Add({ FString::Printf(TEXT("what blocks a body and its cost: package blockers   [%s: %s]"), *P.BlockingMethod, *P.ValidationStatusOf(P.BlockingMethod)), Dim, 1.0f });
+			}
+			if (P.Uncertainty.bHasHorizonError)
+			{
+				Lines.Add({ FString::Printf(TEXT("ranges for the stated horizon error of %.2f deg   [%s]"), P.Uncertainty.HorizonErrorDeg, *P.ValidationStatusOf(P.Uncertainty.HorizonMethod)), Dim, 1.0f });
+			}
+			if (P.Calendar.bPresent)
+			{
+				Lines.Add({ FString::Printf(TEXT("lunar-day calendar, %s to %s: share of each lunar day with the Sun and with the Earth visible   [%s]"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10), *P.ValidationStatusOf(P.Calendar.Method)), Dim, 1.0f });
+			}
+			if (P.Uncertainty.bHasEllipse)
+			{
+				Lines.Add({ FString::Printf(TEXT("survey of the stated landing ellipse   [%s]"), *P.ValidationStatusOf(P.Uncertainty.EllipseMethod)), Dim, 1.0f });
+			}
+			if (const FLsnHeightTradeQuantity* TradeSun = P.HeightTrade.bPresent ? P.HeightTrade.Find(TEXT("sun_visible_s")) : nullptr)
+			{
+				Lines.Add({ FString::Printf(TEXT("mast-height trade   [%s]"), *P.ValidationStatusOf(TradeSun->Method)), Dim, 1.0f });
+			}
+			if (Opportunity)
+			{
+				FString Summary = FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged (%d windows, longest %s)"), 100.0 * Opportunity->FeasibleFraction,
+					Opportunity->WindowCount, *LsnHudText::FormatDuration(Opportunity->LongestWindowS));
+				if (Opportunity->Planned.bPresent)
+				{
+					// The slip report of the scenario's planned landing, as the package gives it.
+					const FLsnSlipReport& Planned = Opportunity->Planned;
+					Summary += FString::Printf(TEXT("; planned landing %s (green line of the calendar): %s"), *Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
+						Planned.bFeasible ? *FString::Printf(TEXT("meets it, can slip %s%s"), Planned.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Planned.SlipToleranceS))
+						: Planned.bHasWait ? *FString::Printf(TEXT("does not meet it, next window after %s"), *LsnHudText::FormatDuration(Planned.WaitS)) : TEXT("does not meet it, no window left"));
+				}
+				Lines.Add({ Summary, Dim, 1.0f });
+				Lines.Add({ FString::Printf(TEXT("landing windows of the example requirement '%s': %s   [%s]"), *Requirement->Id, *Requirement->Label, *P.ValidationStatusOf(Opportunity->Method)), Dim, 1.0f });
+				Lines.Add({ TEXT("The example requirement is the team's choice for showing the tool. It is not a requirement of NASA or of any mission."), White, 1.0f });
+			}
+			DrawType(TEXT("Evidence"), White, InnerX, InnerY, FLsnUi::Title, true);
+			InnerY += U(36.0f);
+			for (const FLsnHudLine& Line : Lines)
+			{
+				for (const FString& Part : WrapLines(Line.Text, FLsnUi::Footnote, InnerWidth))
+				{
+					if (InnerY + U(19.0f) > Content.Max.Y)
+					{
+						break;
+					}
+					DrawType(Part, Line.Color == FLinearColor::White ? White : Line.Color, InnerX, InnerY, FLsnUi::Footnote);
+					InnerY += U(19.0f);
+				}
+				InnerY += U(3.0f);
+			}
+		}
+		else if (!bComparing && P.bHasTimeline)
+		{
+			// Under the further controls: the horizon all round and the numbers of the whole computed window.
+			float Lowest = Content.Min.Y;
+			for (const FLsnButton& Button : Toolbar.Buttons)
+			{
+				if (Button.Style == ELsnButtonStyle::Bar && Button.Box.Min.X >= Drawer.Min.X)
+				{
+					Lowest = FMath::Max(Lowest, static_cast<float>(Button.Box.Max.Y));
+				}
+			}
+			FLsnPanorama Pano;
+			LsnPlanner::PanoramaRange(P, H, Pano.MinElevationDeg, Pano.MaxElevationDeg);
+			Pano.Box = FBox2D(FVector2D(InnerX, Lowest + U(40.0f)), FVector2D(InnerX + InnerWidth, Lowest + U(112.0f)));
+			if (Pano.Box.Max.Y + U(60.0f) <= Content.Max.Y)
+			{
+				DrawType(TEXT("HORIZON ALL ROUND"), Dim, InnerX, Lowest + U(14.0f), FLsnUi::Footnote);
+				DrawPanorama(Pano, *Scene, Pawn, Scale);
+				TArray<FString> Metrics;
+				LsnPlanner::BuildMetricLines(P, H, Metrics);
+				float MetricY = Pano.Box.Max.Y + U(28.0f);
+				DrawType(FString::Printf(TEXT("WHOLE COMPUTED WINDOW   %s to %s"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10)), Dim, InnerX, MetricY, FLsnUi::Footnote);
+				MetricY += U(22.0f);
+				for (const FString& Metric : Metrics)
+				{
+					for (const FString& Part : WrapLines(Metric, FLsnUi::Body, InnerWidth))
+					{
+						if (MetricY + U(24.0f) <= Content.Max.Y)
+						{
+							DrawType(Part, White, InnerX, MetricY, FLsnUi::Body);
+						}
+						MetricY += U(24.0f);
+					}
+				}
+			}
 		}
 	}
 	if (!P.bHasTimeline)
 	{
-		DrawText(TEXT("This package has no timeline: no Sun or Earth is shown."), Dim, Margin, Y, Font, TypeM);
 		if (View == 0 && LeftPawn && LeftPawn->IsHelpShown())
 		{
 			DrawHelp(SizeX, SizeY, Scale);
@@ -1003,53 +1382,17 @@ void ALsnHud::DrawHUD()
 		return;
 	}
 
-	// --- where the Sun and the Earth are when they are outside the view -----------------
-	// The Sun outside the picture: one click turns the view to it.
-	if (View == 0 && LeftPawn && LeftPawn->IsSunOutOfView() && !bOverview && !bPresentation && Page == ELsnPlannerPage::Summary)
+	// --- the Sun outside the picture: one click turns the view to it ---------------------------
+	if (View == 0 && LeftPawn && LeftPawn->IsSunOutOfView() && !bOverview && !bPresentation)
 	{
-		const FBox2D Box = FLsnToolbar::LookAtSunBox(WindowX, SizeY, bComparing);
-		const float Width = Box.Max.X - Box.Min.X, Height = Box.Max.Y - Box.Min.Y;
-		DrawRect(SunColor, Box.Min.X, Box.Min.Y, Width, Height);
-		DrawRect(FLinearColor(0.10f, 0.08f, 0.02f, 1.0f), Box.Min.X + 2.0f, Box.Min.Y + 2.0f, Width - 4.0f, Height - 4.0f);
-		const FString Label = TEXT("The Sun is outside the picture: look at it");
-		float TextWidth = 0.0f, TextHeight = 0.0f;
-		const float LabelScale = 1.05f * FLsnToolbar::TextScale(WindowX, SizeY);
-		GetTextSize(Label, TextWidth, TextHeight, Font, LabelScale);
-		const float Fit = FMath::Min(1.0f, (Width - 12.0f) / FMath::Max(TextWidth, 1.0f));
-		DrawText(Label, SunColor, Box.Min.X + 0.5f * (Width - TextWidth * Fit), Box.Min.Y + 0.5f * (Height - TextHeight * Fit), Font, LabelScale * Fit);
-	}
-	if (Pawn && !bOverview && !bPresentation && bAllControls && Page == ELsnPlannerPage::Summary)
-	{
-		float IndicatorY = Layout.Zoom.Min.Y - 36.0f * Scale;
-		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
-		{
-			FLsnBodyAtTime At;
-			if (!Scene->SampleBody(Body, Position, At))
-			{
-				continue;
-			}
-			const bool bSun = FCString::Stricmp(Body, TEXT("SUN")) == 0;
-			const FVector Screen = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(At.AzimuthDeg, At.ElevationDeg) * 1.0e6, false);
-			if (Screen.Z > 0.0 && Screen.X >= 0.0 && Screen.X <= SizeX && Screen.Y >= 0.0 && Screen.Y <= SizeY)
-			{
-				continue;
-			}
-			const double Turn = FMath::Fmod(At.AzimuthDeg - Pawn->GetAzimuthDeg() + 540.0, 360.0) - 180.0;
-			const FString Text = Turn >= 0.0
-				? FString::Printf(TEXT("%s %.0f deg to the right, el %.1f  >>"), bSun ? TEXT("Sun") : TEXT("Earth"), Turn, At.ElevationDeg)
-				: FString::Printf(TEXT("<<  %s %.0f deg to the left, el %.1f"), bSun ? TEXT("Sun") : TEXT("Earth"), -Turn, At.ElevationDeg);
-			float TextWidth = 0.0f, TextHeight = 0.0f;
-			GetTextSize(Text, TextWidth, TextHeight, Font, Scale * 1.2f);
-			DrawText(Text, bSun ? SunColor : EarthColor, Layout.Zoom.Max.X - TextWidth, IndicatorY, Font, Scale * 1.2f);
-			IndicatorY -= 24.0f * Scale;
-		}
+		DrawButton(FLsnToolbar::LookAtSunBox(WindowX, SizeY, bComparing), TEXT("The Sun is outside the picture: look at it"), TEXT("sun"), false, true, false, TEXT("look_at_sun"));
 	}
 
-	// A marker at the peak of each highlighted obstacle, and an outline where the hidden body stands.
+	// A label card at the peak of each highlighted obstacle, and an outline where the hidden body stands.
 	for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
 	{
 		FLsnBlocking Blocking;
-		if (bOverview || bDetails || Page != ELsnPlannerPage::Summary || !Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
+		if (bOverview || !Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
 		{
 			continue;
 		}
@@ -1062,14 +1405,18 @@ void ALsnHud::DrawHUD()
 			const FVector Rim = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(At.AzimuthDeg, At.ElevationDeg + At.AngularRadiusDeg) * 1.0e6, false);
 			if (Centre.Z > 0.0 && Rim.Z > 0.0)
 			{
-				const float Radius = FMath::Max(static_cast<float>(FVector2D::Distance(FVector2D(Centre.X, Centre.Y), FVector2D(Rim.X, Rim.Y))), 3.0f * Scale);
+				const float Radius = FMath::Max(static_cast<float>(FVector2D::Distance(FVector2D(Centre.X, Centre.Y), FVector2D(Rim.X, Rim.Y))), U(4.0f));
 				const int32 Segments = 48;
 				for (int32 I = 0; I < Segments; I += 2)  // dashed
 				{
 					const float A0 = 2.0f * UE_PI * I / Segments, A1 = 2.0f * UE_PI * (I + 1) / Segments;
-					DrawLine(Centre.X + Radius * FMath::Cos(A0), Centre.Y + Radius * FMath::Sin(A0), Centre.X + Radius * FMath::Cos(A1), Centre.Y + Radius * FMath::Sin(A1), Outline, 1.5f * Scale);
+					DrawLine(Centre.X + Radius * FMath::Cos(A0), Centre.Y + Radius * FMath::Sin(A0), Centre.X + Radius * FMath::Cos(A1), Centre.Y + Radius * FMath::Sin(A1), Outline, U(1.5f));
 				}
-				DrawText(FString::Printf(TEXT("%s (behind terrain)"), bSun ? TEXT("Sun") : TEXT("Earth")), Outline, Centre.X + Radius + 6.0f * Scale, Centre.Y - 8.0f * Scale, Font, Scale);
+				// The label stays out of the open drawer.
+				const FString Behind = FString::Printf(TEXT("%s (behind terrain)"), bSun ? TEXT("Sun") : TEXT("Earth"));
+				const float LabelRight = (bDrawer && View == (bComparing ? 1 : 0)) ? static_cast<float>(FLsnToolbar::DrawerBox(WindowX, SizeY, bComparing).Min.X) - ViewX0 - U(8.0f) : SizeX - Margin;
+				const float LabelX = Centre.X + Radius + U(8.0f) + TypeWidth(Behind, FLsnUi::Body) <= LabelRight ? Centre.X + Radius + U(8.0f) : Centre.X - Radius - U(8.0f) - TypeWidth(Behind, FLsnUi::Body);
+				DrawType(Behind, Outline, LabelX, Centre.Y - U(11.0f), FLsnUi::Body);
 			}
 		}
 		const FVector Peak = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(Blocking.Obstacle->PeakAzimuthDeg, Blocking.Obstacle->PeakElevationDeg) * 1.0e6, false);
@@ -1077,29 +1424,110 @@ void ALsnHud::DrawHUD()
 		{
 			continue;
 		}
-		const FLinearColor Color = bSun ? FLinearColor(1.0f, 0.45f, 0.2f) : FLinearColor(0.3f, 0.85f, 1.0f);
+		// The cost in hours is the large thing; distance and azimuth stand under it. A leader line runs to the ridge.
 		const FString Distance = Blocking.Obstacle->PeakDistanceM < 1000.0 ? FString::Printf(TEXT("%.0f m"), Blocking.Obstacle->PeakDistanceM) : FString::Printf(TEXT("%.1f km"), Blocking.Obstacle->PeakDistanceM / 1000.0);
-		const FString Cost = Blocking.Blocker ? FString::Printf(TEXT("costs %.0f h of %s"), Blocking.Blocker->LostS / 3600.0, Body) : FString::Printf(TEXT("hides the %s now"), bSun ? TEXT("Sun") : TEXT("Earth"));
-		const float Top = Peak.Y - 70.0f * Scale;
-		DrawLine(Peak.X, Peak.Y - 6.0f * Scale, Peak.X, Top + 34.0f * Scale, Color, 2.0f * Scale);
-		const FString Headline = FString::Printf(TEXT("this ridge %s"), *Cost);
-		const FString Detail = FString::Printf(TEXT("peak %s away, azimuth %.1f deg"), *Distance, Blocking.Obstacle->PeakAzimuthDeg);
-		float HeadlineWidth = 0.0f, DetailWidth = 0.0f, Unused = 0.0f;
-		GetTextSize(Headline, HeadlineWidth, Unused, Font, Scale * 1.4f);
-		GetTextSize(Detail, DetailWidth, Unused, Font, Scale);
-		const bool bLabelLeft = Peak.X > 0.45f * SizeX;
-		DrawText(Headline, Color, bLabelLeft ? Peak.X - 8.0f * Scale - HeadlineWidth : Peak.X + 8.0f * Scale, Top, Font, Scale * 1.4f);
-		DrawText(Detail, Color, bLabelLeft ? Peak.X - 8.0f * Scale - DetailWidth : Peak.X + 8.0f * Scale, Top + 24.0f * Scale, Font, Scale);
+		const FString Head = Blocking.Blocker ? FString(TEXT("this ridge costs")) : FString::Printf(TEXT("this ridge hides the %s now"), bSun ? TEXT("Sun") : TEXT("Earth"));
+		const FString Cost = Blocking.Blocker ? FString::Printf(TEXT("%.0f h of %s"), Blocking.Blocker->LostS / 3600.0, bSun ? TEXT("Sun") : TEXT("Earth")) : FString();
+		const FString Detail = FString::Printf(TEXT("%s away, azimuth %.1f deg"), *Distance, Blocking.Obstacle->PeakAzimuthDeg);
+		const float CardWidth = FMath::Max3(TypeWidth(Head, FLsnUi::Body), TypeWidth(Detail, FLsnUi::Body), TypeWidth(Cost, FLsnUi::Display)) + U(28.0f);
+		const float CardHeight = U(Cost.IsEmpty() ? 68.0f : 116.0f);
+		const bool bCardLeft = Peak.X > 0.5f * SizeX;
+		// Clear of the drawer, and below the cards of the left column where it would lie on them.
+		const float RightLimit = (bDrawer && !bComparing ? static_cast<float>(FLsnToolbar::DrawerBox(WindowX, SizeY, bComparing).Min.X) - U(16.0f) : SizeX - Margin) - CardWidth;
+		const float CardX = FMath::Clamp(bCardLeft ? Peak.X - U(56.0f) - CardWidth : Peak.X + U(56.0f), Margin, FMath::Max(RightLimit, Margin));
+		const float TopLimit = CardX < Margin + ColumnWidth + U(8.0f) ? FMath::Max(Y, Toolbar.HeaderBottom + U(16.0f)) : Toolbar.HeaderBottom + U(16.0f);
+		const float CardY = FMath::Clamp(Peak.Y - U(64.0f) - CardHeight, TopLimit, FMath::Max(Layout.Panel.Min.Y - U(60.0f) - CardHeight, TopLimit));
+		DrawLine(Peak.X, Peak.Y - U(4.0f), bCardLeft ? CardX + CardWidth : CardX, CardY + CardHeight - U(14.0f), FLinearColor(Outline.R, Outline.G, Outline.B, 0.85f), U(1.5f));
+		DrawDisc(FVector2D(Peak.X, Peak.Y - U(4.0f)), U(3.5f), Outline);
+		DrawPanel(FBox2D(FVector2D(CardX, CardY), FVector2D(CardX + CardWidth, CardY + CardHeight)));
+		DrawRounded(FBox2D(FVector2D(CardX + U(1.0f), CardY + U(8.0f)), FVector2D(CardX + U(5.0f), CardY + CardHeight - U(8.0f))), Outline, 2.0f);
+		float LineY = CardY + U(10.0f);
+		DrawType(Head, Dim, CardX + U(16.0f), LineY, FLsnUi::Body);
+		LineY += U(24.0f);
+		if (!Cost.IsEmpty())
+		{
+			DrawDuration(Cost, White, CardX + U(16.0f), LineY, FLsnUi::Display);
+			LineY += U(50.0f);
+		}
+		DrawType(Detail, White, CardX + U(16.0f), LineY, FLsnUi::Body);
 	}
 
-	// --- time strips ------------------------------------------------------------------------
-	DrawStrip(Layout.Zoom, P, H, Position - Layout.ZoomHalfWidthSamples, Position + Layout.ZoomHalfWidthSamples, Position, Scale);
+	// --- bottom: the time strip in its panel ---------------------------------------------------
+	const float RowHeight = U(36.0f);
+	const FBox2D Rows(FVector2D(Layout.Zoom.Min.X, Layout.Zoom.Min.Y + (bComparing ? View * U(44.0f) : 0.0f)), FVector2D(Layout.Zoom.Max.X, Layout.Zoom.Min.Y + (bComparing ? View * U(44.0f) : 0.0f) + RowHeight));
+	if (View == 0)
+	{
+		DrawPanel(Layout.Panel);
+	}
+	// Shared things are laid out in window pixels: taken back by the origin of this view.
+	const FBox2D RowsHere(Rows.Min - FVector2D(ViewX0, 0.0f), Rows.Max - FVector2D(ViewX0, 0.0f));
+	DrawStrip(RowsHere, P, H, Position - Layout.ZoomHalfWidthSamples, Position + Layout.ZoomHalfWidthSamples, Position, Scale);
+	if (View == 0)
+	{
+		// Tick marks at every UTC midnight with the date; the playhead carries its own time.
+		const float StripWidth = Layout.Zoom.Max.X - Layout.Zoom.Min.X;
+		const float TickY = Layout.Zoom.Max.Y + U(4.0f);
+		FDateTime Start;
+		if (P.Time.LeapSecondsInRange == 0 && P.Time.StepS > 0.0 && FDateTime::ParseIso8601(*P.Time.StartUtc, Start))
+		{
+			static const TCHAR* Months[] = { TEXT("Jan"), TEXT("Feb"), TEXT("Mar"), TEXT("Apr"), TEXT("May"), TEXT("Jun"), TEXT("Jul"), TEXT("Aug"), TEXT("Sep"), TEXT("Oct"), TEXT("Nov"), TEXT("Dec") };
+			const double From = Position - Layout.ZoomHalfWidthSamples, To = Position + Layout.ZoomHalfWidthSamples;
+			const FDateTime FromTime = Start + FTimespan::FromSeconds(P.Time.StepS * From);
+			FDateTime Midnight(FromTime.GetYear(), FromTime.GetMonth(), FromTime.GetDay());
+			for (int32 Day = 0; Day < 40; ++Day)
+			{
+				Midnight += FTimespan::FromDays(1.0);
+				const double At = (Midnight - Start).GetTotalSeconds() / P.Time.StepS;
+				if (At > To)
+				{
+					break;
+				}
+				if (At < 0.0 || At > P.Time.Count - 1)
+				{
+					continue;
+				}
+				const float X = Layout.Zoom.Min.X + StripWidth * static_cast<float>((At - From) / (To - From));
+				DrawLine(X, Layout.Zoom.Min.Y - U(4.0f), X, TickY + U(6.0f), FLinearColor(1.0f, 1.0f, 1.0f, 0.35f), U(1.0f));
+				const FString Label = FString::Printf(TEXT("%d %s"), Midnight.GetDay(), Months[Midnight.GetMonth() - 1]);
+				if (X + TypeWidth(Label, FLsnUi::Body) + U(6.0f) < Layout.Zoom.Max.X)
+				{
+					DrawType(Label, Dim, X + U(6.0f), TickY + U(2.0f), FLsnUi::Body);
+				}
+			}
+		}
+		if (bComparing && GameMode)
+		{
+			// Which pair of rows is which site.
+			for (int32 Half = 0; Half < 2; ++Half)
+			{
+				const ALsnSiteScene* Other = GameMode->GetSceneOfView(Half);
+				if (Other && Other->HasPackage())
+				{
+					FString Name = Other->GetPackage().SiteName;
+					while (TypeWidth(Name, FLsnUi::Footnote) > U(208.0f) && Name.Len() > 4)
+					{
+						Name = Name.LeftChop(5).TrimEnd() + TEXT("...");
+					}
+					DrawType(Name, White, Layout.Panel.Min.X + U(16.0f), Layout.Zoom.Min.Y + Half * U(44.0f) + U(8.0f), FLsnUi::Footnote);
+				}
+			}
+		}
+		const float Cursor = 0.5f * (Layout.Zoom.Min.X + Layout.Zoom.Max.X);
+		DrawRect(White, Cursor - U(1.0f), Layout.Panel.Min.Y - U(6.0f), U(2.0f), Layout.Zoom.Max.Y - Layout.Panel.Min.Y + U(12.0f));
+		const FString Now = LsnHudText::UtcLabelOfPosition(P, Position);
+		if (!Now.IsEmpty())
+		{
+			const float LabelWidth = TypeWidth(Now, FLsnUi::Body) + U(24.0f);
+			const FBox2D Label(FVector2D(Cursor - 0.5f * LabelWidth, Layout.Panel.Min.Y - U(42.0f)), FVector2D(Cursor + 0.5f * LabelWidth, Layout.Panel.Min.Y - U(8.0f)));
+			DrawPanel(Label);
+			DrawType(Now, White, Label.Min.X + U(12.0f), Label.Min.Y + U(5.0f), FLsnUi::Body);
+		}
+	}
 	if (bPresentation)
 	{
-		// The strip of six days and one line under it; a caption across the window says what is shown.
-		DrawText(TEXT("six days around this instant   yellow: Sun visible   blue: Earth visible"), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeM);
+		// A caption across the window says what is shown.
 		FString Caption;
-		if (FParse::Value(FCommandLine::Get(), TEXT("LsnCaption="), Caption, false) && GameMode)
+		if (View == 0 && FParse::Value(FCommandLine::Get(), TEXT("LsnCaption="), Caption, false) && GameMode)
 		{
 			// "first|second": the second text from the moment the package gives the Sun of the left site as hidden.
 			FString First = Caption, Second;
@@ -1107,237 +1535,183 @@ void ALsnHud::DrawHUD()
 			const ALsnSiteScene* LeftScene = GameMode->GetSceneOfView(0);
 			const bool bLeftSunDown = LeftScene && LeftScene->HasPackage() && LeftScene->GetSunVisibleFraction() <= 0.0;
 			const FString Text = (bLeftSunDown && !Second.IsEmpty()) ? Second : First;
-			const float CaptionScale = 1.75f * FLsnToolbar::TextScale(WindowX, SizeY);
-			float TextWidth = 0.0f, TextHeight = 0.0f;
-			GetTextSize(Text, TextWidth, TextHeight, Font, CaptionScale);
-			const float Fit = FMath::Min(1.0f, (WindowX - 60.0f) / FMath::Max(TextWidth, 1.0f));
-			const float BandTop = Layout.Zoom.Max.Y + 0.045f * SizeY, BandHeight = 0.075f * SizeY;
-			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.85f), 0.0f, BandTop, SizeX, BandHeight);
-			// Centred in the window; each view draws its part.
-			DrawText(Text, White, 0.5f * (WindowX - TextWidth * Fit) - ViewX0, BandTop + 0.5f * (BandHeight - TextHeight * Fit), Font, CaptionScale * Fit);
+			const TArray<FString> Parts = WrapLines(Text, FLsnUi::Title, WindowX - 2.0f * Margin - U(48.0f));
+			const float BandHeight = U(24.0f + 34.0f * Parts.Num());
+			const float BandTop = Layout.Panel.Min.Y - U(64.0f) - BandHeight;
+			float Widest = 0.0f;
+			for (const FString& Part : Parts)
+			{
+				Widest = FMath::Max(Widest, TypeWidth(Part, FLsnUi::Title));
+			}
+			DrawPanel(FBox2D(FVector2D(0.5f * (WindowX - Widest) - U(24.0f), BandTop), FVector2D(0.5f * (WindowX + Widest) + U(24.0f), BandTop + BandHeight)));
+			for (int32 I = 0; I < Parts.Num(); ++I)
+			{
+				DrawType(Parts[I], White, 0.5f * (WindowX - TypeWidth(Parts[I], FLsnUi::Title)), BandTop + U(12.0f + 34.0f * I), FLsnUi::Title);
+			}
 		}
 		return;
 	}
-	if (!bAllControls)
+	if (View == 0)
 	{
-		// The clean view: one strip and one line that says how to use it and where the rest is.
-		DrawText(TEXT("six days around this instant   yellow: Sun visible   blue: Earth visible"), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeM);
-		if (View == 0)
+		// One line that says how to use the view: it fades out five seconds after the pointer last moved.
+		const bool bPlayingNow = LeftPawn && LeftPawn->IsPlaying();
+		const FString Hint = bPlayingNow ? FString::Printf(TEXT("Playing: %.1f h of site time per second"), LeftPawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0)
+			: FString(TEXT("Drag the strip to change the time. Right mouse button: look round."));
+		const float Target = (bPlayingNow || NowS - UiMouseMovedS < 5.0) ? 1.0f : 0.0f;
+		HintAlpha = FMath::Clamp(HintAlpha + (Target > HintAlpha ? 1.0f : -1.0f) * UiDelta / 0.2f, 0.0f, 1.0f);
+		if (HintAlpha > 0.0f)
 		{
-			const FString Hint = (LeftPawn && LeftPawn->IsPlaying()) ? FString::Printf(TEXT("playing: %.1f h of site time per second"), LeftPawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0)
-				: FString(TEXT("drag the strip to change the time   right mouse button: look round   More: all controls"));
-			DrawText(Hint, White, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 26.0f * Scale, Font, TypeM);
+			DrawType(Hint, FLinearColor(Dim.R, Dim.G, Dim.B, HintAlpha), Margin, Toolbar.Top - U(46.0f), FLsnUi::Body);
 		}
-		if (View == 0 && LeftPawn && LeftPawn->IsHelpShown())
+		if (LeftPawn && LeftPawn->IsHelpShown())
 		{
 			DrawHelp(SizeX, SizeY, Scale);
 		}
-		return;
-	}
-	DrawStrip(Layout.WholeRange, P, H, 0.0, P.Time.Count - 1, Position, Scale);
-	DrawText(FString::Printf(TEXT("%.0f days around the selected time   yellow: Sun visible   blue: Earth visible%s"), 2.0 * Layout.ZoomHalfWidthSamples * P.Time.StepS / 86400.0,
-		P.Uncertainty.bHasHorizonError ? TEXT("   pale: only if the horizon is lower than computed") : TEXT("")), Dim, Layout.Zoom.Min.X, Layout.Zoom.Max.Y + 2.0f * Scale, Font, TypeS);
-	DrawText(FString::Printf(TEXT("whole computed range   %s   to   %s"), *P.Time.StartUtc.Left(10), *P.Time.EndUtc.Left(10)), Dim, Layout.WholeRange.Min.X, Layout.WholeRange.Max.Y + 2.0f * Scale, Font, TypeS);
-	if (View == 0)
-	{
-		const FString Hint = (LeftPawn && LeftPawn->IsPlaying()) ? FString::Printf(TEXT("playing: %.1f h of site time per second"), LeftPawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0)
-			: FString(TEXT("drag on a strip to choose the time   hold the right mouse button to look round   wheel to zoom"));
-		float HintWidth = 0.0f, HintHeight = 0.0f;
-		GetTextSize(Hint, HintWidth, HintHeight, Font, TypeS);
-		DrawText(Hint, White, Layout.WholeRange.Max.X - HintWidth, Layout.WholeRange.Max.Y + 2.0f * Scale, Font, TypeS);
-	}
-	if (View == 0 && LeftPawn && LeftPawn->IsHelpShown())
-	{
-		DrawHelp(SizeX, SizeY, Scale);
 	}
 }
 
 void ALsnHud::DrawToolbar(const FLsnToolbar& Toolbar, float ViewX0, const ALsnSiteScene& Scene, const ALsnObserverPawn* Pawn, const ALsnViewGameMode* GameMode, float Scale)
 {
-	UFont* Font = GEngine->GetMediumFont();
-	// The pointer belongs to the left player; its position is in window pixels.
-	FVector2D Mouse(-1.0, -1.0);
-	float MouseX = 0.0f, MouseY = 0.0f;
-	const APlayerController* First = GetWorld()->GetFirstPlayerController();
-	if (First && First->bShowMouseCursor && First->GetMousePosition(MouseX, MouseY))
-	{
-		Mouse = FVector2D(MouseX, MouseY);
-	}
 	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
 	const bool bComparing = GameMode && GameMode->IsComparing();
-	const float ViewX1 = ViewX0 + Canvas->SizeX;
-	const FLinearColor Accent(1.0f, 0.70f, 0.18f);
-	Scale = FLsnToolbar::TextScale(bComparing ? 2.0f * Canvas->SizeX : Canvas->SizeX, Canvas->SizeY);
-	for (const FLsnButtonGroupLabel& Label : Toolbar.GroupLabels)
+	const int32 View = ViewX0 > 0.0f ? 1 : 0;
+	const bool bDetails = Pawn && Pawn->AreDetailsShown() && Page == ELsnPlannerPage::Summary;
+	const bool bDrawer = Pawn && (Pawn->AreControlsShown() || Page != ELsnPlannerPage::Summary || bDetails);
+	if (View == 0 && bDrawer)
 	{
-		if (Label.Position.X >= ViewX0 && Label.Position.X < ViewX1)
+		// The drawer slides in from the right; its buttons are where they will be clicked.
+		const FBox2D Drawer = FLsnToolbar::DrawerBox(bComparing ? 2.0f * Canvas->SizeX : Canvas->SizeX, Canvas->SizeY, bComparing);
+		const float Slide = (1.0f - DrawerAnim) * U(120.0f);
+		DrawPanel(FBox2D(Drawer.Min + FVector2D(Slide, 0.0f), Drawer.Max + FVector2D(Slide, 0.0f)));
+		for (const FLsnButtonGroupLabel& Label : Toolbar.GroupLabels)
 		{
-			DrawText(Label.Text, Dim, Label.Position.X - ViewX0, Label.Position.Y + 1.0f * Scale, Font, 0.82f * Scale);
+			DrawType(Label.Text, FLsnUi::InkDim(), Label.Position.X, Label.Position.Y + U(4.0f), FLsnUi::Footnote);
 		}
 	}
+	const bool bHasTimeline = Scene.GetPackage().bHasTimeline;
 	for (const FLsnButton& Button : Toolbar.Buttons)
 	{
-		if (Button.Box.Max.X <= ViewX0 || Button.Box.Min.X >= ViewX1)
+		// The left view draws everything that is shared; the right view its own control.
+		const FName A = Button.Action;
+		if ((A == TEXT("next_right_site")) != (View == 1))
 		{
 			continue;
 		}
-		// A button that is a switch is drawn lit while it is on.
-		const FName A = Button.Action;
+		// A button that is a switch is drawn with a brighter edge while it is on.
 		const bool bOn = (A == TEXT("play") && Pawn && Pawn->IsPlaying()) || (A == TEXT("compare") && bComparing)
 			|| (A == TEXT("page_calendar") && Page == ELsnPlannerPage::Calendar) || (A == TEXT("page_uncertainty") && Page == ELsnPlannerPage::Uncertainty)
 			|| (A == TEXT("page_trade") && Page == ELsnPlannerPage::Trade) || (A == TEXT("page_sites") && Page == ELsnPlannerPage::Sites) || (A == TEXT("obstacle") && Scene.IsObstacleViewEnabled())
 			|| (A == TEXT("follow_sun") && Pawn && Pawn->IsFollowingSun()) || (A == TEXT("quality") && GameMode && GameMode->IsLowQuality())
 			|| (A == TEXT("scale_objects") && Scene.AreScaleObjectsVisible()) || (A == TEXT("fill_light") && Scene.IsFillLightVisible())
-			|| (A == TEXT("details") && Pawn && Pawn->AreDetailsShown()) || (A == TEXT("help") && Pawn && Pawn->IsHelpShown())
+			|| (A == TEXT("details") && bDetails) || (A == TEXT("help") && Pawn && Pawn->IsHelpShown())
+			|| (A == TEXT("controls_tab") && bDrawer && Page == ELsnPlannerPage::Summary && !bDetails) || (A == TEXT("controls") && bDrawer)
 			|| (A == TEXT("camera") && Pawn && Pawn->GetCameraView() != ELsnCameraView::Observer) || (A == TEXT("arrival") && Pawn && Pawn->IsArrivalRunning())
 			|| (A == TEXT("first_day") && Pawn && Pawn->IsFirstDayPlaying());
-		const bool bHover = Button.Box.IsInside(Mouse);
-		const float X0 = Button.Box.Min.X - ViewX0, Y0 = Button.Box.Min.Y;
-		const float Width = Button.Box.Max.X - Button.Box.Min.X, Height = Button.Box.Max.Y - Button.Box.Min.Y;
+		// What needs the timeline of the package is shown as not available without one.
+		const bool bNeedsTimeline = A == TEXT("play") || A == TEXT("next_sunset") || A == TEXT("slower") || A == TEXT("faster") || A == TEXT("sample_back") || A == TEXT("sample_forward") || A == TEXT("day_back")
+			|| A == TEXT("day_forward") || A == TEXT("sun_event_back") || A == TEXT("sun_event_forward") || A == TEXT("first_day");
 		FString Label = Button.Label;
-		FLinearColor Edge, Fill, Ink = White;
-		float TextSize = 0.95f * Scale;
-		if (Button.Style == ELsnButtonStyle::Main)
-		{
-			// The three main actions: the largest and brightest things on screen that can be clicked.
-			if (A == TEXT("compare") && bComparing) { Label = TEXT("Back to one site"); }
-			if (A == TEXT("obstacle")) { Label = bOn ? TEXT("Hide what blocks it") : TEXT("What blocks the Sun?"); }
-			Edge = Accent;
-			Fill = bHover ? FLinearColor(1.0f, 0.80f, 0.36f, 1.0f) : FLinearColor(Accent.R * 0.92f, Accent.G * 0.92f, Accent.B * 0.92f, 1.0f);
-			Ink = FLinearColor(0.03f, 0.02f, 0.0f);
-			TextSize = 1.3f * Scale;
-		}
-		else
-		{
-			Edge = bHover ? FLinearColor(0.9f, 0.9f, 0.9f, 1.0f) : bOn ? FLinearColor(0.45f, 0.70f, 0.95f, 1.0f) : FLinearColor(0.34f, 0.34f, 0.38f, 1.0f);
-			Fill = bOn ? FLinearColor(0.13f, 0.27f, 0.42f, 0.97f) : FLinearColor(0.07f, 0.07f, 0.09f, 0.94f);
-			if (bHover)
-			{
-				Fill = FLinearColor(Fill.R + 0.10f, Fill.G + 0.10f, Fill.B + 0.10f, 1.0f);
-			}
-			TextSize = (Button.Style == ELsnButtonStyle::RightView ? 1.05f : 0.95f) * Scale;
-		}
-		DrawRect(Edge, X0, Y0, Width, Height);
-		DrawRect(Fill, X0 + 2.0f, Y0 + 2.0f, Width - 4.0f, Height - 4.0f);
-		// The label is made smaller where it would not fit.
-		float TextWidth = 0.0f, TextHeight = 0.0f;
-		GetTextSize(Label, TextWidth, TextHeight, Font, TextSize);
-		if (TextWidth > Width - 10.0f)
-		{
-			TextSize *= (Width - 10.0f) / TextWidth;
-			GetTextSize(Label, TextWidth, TextHeight, Font, TextSize);
-		}
-		DrawText(Label, Ink, X0 + 0.5f * (Width - TextWidth), Y0 + 0.5f * (Height - TextHeight), Font, TextSize);
+		if (A == TEXT("play") && bOn) { Label = TEXT("Pause"); }
+		if (A == TEXT("compare") && bComparing) { Label = TEXT("One site"); }
+		if (A == TEXT("controls") && bDrawer) { Label = TEXT("Less"); }
+		const FBox2D Box(Button.Box.Min - FVector2D(ViewX0, 0.0f), Button.Box.Max - FVector2D(ViewX0, 0.0f));
+		const bool bIcon = Button.Style != ELsnButtonStyle::Tab && Button.Group.IsEmpty();
+		DrawButton(Box, Label, bIcon ? A : NAME_None, bOn, bHasTimeline || !bNeedsTimeline, false, A);
 	}
 }
 
 void ALsnHud::DrawSitePicker(float WindowSizeX, float ViewX0, const ALsnViewGameMode& GameMode, float Scale)
 {
-	UFont* Font = GEngine->GetMediumFont();
 	TArray<FString> Groups;
 	for (const FLsnSiteInfo& Info : GameMode.GetSiteInfos())
 	{
 		Groups.Add(Info.Group);
 	}
 	const bool bComparing = GameMode.IsComparing();
-	const FLsnSitePicker Picker = FLsnSitePicker::Make(WindowSizeX, Canvas->SizeY, bComparing, Groups);
-	const float ViewX1 = ViewX0 + Canvas->SizeX;
-	// Sized for the window, like the bar; a view draws what lies in it.
-	Scale = FLsnToolbar::TextScale(WindowSizeX, Canvas->SizeY);
-	auto Visible = [&](const FBox2D& Box) { return Box.Max.X > ViewX0 && Box.Min.X < ViewX1; };
-	auto Fill = [&](const FBox2D& Box, const FLinearColor& Color)
-	{
-		const float X0 = FMath::Max(static_cast<float>(Box.Min.X), ViewX0), X1 = FMath::Min(static_cast<float>(Box.Max.X), ViewX1);
-		if (X1 > X0)
-		{
-			DrawRect(Color, X0 - ViewX0, Box.Min.Y, X1 - X0, Box.Max.Y - Box.Min.Y);
-		}
-	};
-	FVector2D Mouse(-1.0, -1.0);
-	float MouseX = 0.0f, MouseY = 0.0f;
-	const APlayerController* First = GetWorld()->GetFirstPlayerController();
-	if (First && First->bShowMouseCursor && First->GetMousePosition(MouseX, MouseY))
-	{
-		Mouse = FVector2D(MouseX, MouseY);
-	}
-	Fill(Picker.Sheet, FLinearColor(0.015f, 0.015f, 0.02f, 0.95f));
-	if (Picker.TitlePosition.X >= ViewX0 && Picker.TitlePosition.X < ViewX1)
-	{
-		DrawText(TEXT("SITES   click a name to show it; Left and Right pin a site for the comparison"), White, Picker.TitlePosition.X - ViewX0, Picker.TitlePosition.Y, Font, 1.2f * Scale);
-	}
+	const TArray<bool> Hidden = GameMode.GetSitesHiddenBySearch();
+	const FLsnSitePicker Picker = FLsnSitePicker::Make(WindowSizeX, Canvas->SizeY, bComparing, Groups, &Hidden, GameMode.GetPickerFirstRow());
+	const FLsnCustomEntry& Entry = GameMode.GetCustomEntry();
+	const FVector2D Mouse = UiMouse;
+	DrawType(TEXT("Sites"), White, Picker.TitlePosition.X, Picker.TitlePosition.Y - U(4.0f), FLsnUi::Title, true);
+	const FString Count = FString::Printf(TEXT("%d of %d rows; the wheel scrolls"), FMath::Min(Picker.FirstRow + Picker.Rows.Num(), Picker.NumRows), Picker.NumRows);
+	DrawType(Count, Dim, Picker.Sheet.Max.X - TypeWidth(Count, FLsnUi::Footnote), Picker.TitlePosition.Y + U(4.0f), FLsnUi::Footnote);
+
+	// The search field: what is typed narrows the list by name, programme and category.
+	const bool bSearchFocus = Entry.Focus == 2;
+	DrawRounded(Picker.SearchField, FLinearColor(0.02f, 0.02f, 0.03f, 0.85f), 6.0f, bSearchFocus ? FLinearColor(1.0f, 1.0f, 1.0f, 0.6f) : FLsnUi::Hairline());
+	const bool bCaretOn = FMath::Fmod(GetWorld()->GetRealTimeSeconds(), 1.0) < 0.5;
+	const FString& Search = GameMode.GetSiteSearch();
+	DrawType(Search.IsEmpty() && !bSearchFocus ? FString(TEXT("Search: click here and type a name, a programme or a category")) : Search + ((bSearchFocus && bCaretOn) ? TEXT("_") : TEXT("")),
+		Search.IsEmpty() && !bSearchFocus ? Dim : White, Picker.SearchField.Min.X + U(12.0f), Picker.SearchField.Min.Y + U(6.0f), FLsnUi::Body);
+
 	const int32 LeftSite = GameMode.GetSelectedSite(0), RightSite = bComparing ? GameMode.GetSelectedSite(1) : -1;
 	for (const FLsnPickerRow& Row : Picker.Rows)
 	{
-		if (!Visible(Row.Row))
-		{
-			continue;
-		}
-		const float X0 = Row.Row.Min.X - ViewX0, Height = Row.Row.Max.Y - Row.Row.Min.Y;
-		const float TextY = Row.Row.Min.Y + 0.5f * Height - 9.0f * Scale;
+		const float X0 = Row.Row.Min.X, TextY = Row.Row.Min.Y + U(4.0f);
 		if (Row.SiteIndex < 0)
 		{
-			DrawFit(Row.Group.ToUpper(), SunColor, X0, TextY + 2.0f * Scale, Row.Row.Max.X - Row.Row.Min.X, 0.85f * Scale);
+			DrawType(Row.Group.ToUpper(), Dim, X0, TextY + U(6.0f), FLsnUi::Footnote, true);
+			DrawLine(X0 + TypeWidth(Row.Group.ToUpper(), FLsnUi::Footnote, true) + U(10.0f), Row.Row.Min.Y + U(20.0f), Row.Row.Max.X, Row.Row.Min.Y + U(20.0f), FLsnUi::Hairline(), U(1.0f));
 			continue;
 		}
 		const bool bLeft = Row.SiteIndex == LeftSite, bRight = Row.SiteIndex == RightSite;
 		if (Row.Row.IsInside(Mouse) || bLeft || bRight)
 		{
-			Fill(Row.Show, Row.Row.IsInside(Mouse) ? FLinearColor(0.20f, 0.22f, 0.28f, 1.0f) : FLinearColor(0.10f, 0.16f, 0.24f, 1.0f));
+			DrawRounded(Row.Show, Row.Row.IsInside(Mouse) ? FLinearColor(1.0f, 1.0f, 1.0f, 0.10f) : FLinearColor(1.0f, 1.0f, 1.0f, 0.05f), 4.0f);
 		}
-		// The name, and what the terrain behind the result is (since contract 0.9).
+		// The name; the category; the resolution class of the terrain behind the result as a small badge (since contract 0.9).
 		const FLsnSiteInfo& Info = GameMode.GetSiteInfos()[Row.SiteIndex];
-		const float ShowWidth = Row.Show.Max.X - Row.Show.Min.X;
-		FString Class = Info.TerrainSource.bPresent ? FString::Printf(TEXT("%s %.0f m"), *Info.TerrainSource.ResolutionClass, Info.TerrainSource.PixelM) : FString();
-		float ClassWidth = 0.0f, Unused = 0.0f;
-		GetTextSize(Class, ClassWidth, Unused, Font, 0.85f * Scale);
-		DrawFit(GameMode.GetSites()[Row.SiteIndex].Name, White, X0 + 6.0f * Scale, TextY, ShowWidth - ClassWidth - 18.0f * Scale, 1.05f * Scale);
+		const FLsnIndexEntry& Site = GameMode.GetSites()[Row.SiteIndex];
+		const FString Class = Info.TerrainSource.bPresent ? FString::Printf(TEXT("%s %.0f m"), *Info.TerrainSource.ResolutionClass, Info.TerrainSource.PixelM) : FString();
+		const float BadgeWidth = Class.IsEmpty() ? 0.0f : TypeWidth(Class, FLsnUi::Footnote) + U(16.0f);
+		const float CategoryWidth = Site.Category.IsEmpty() ? 0.0f : TypeWidth(Site.Category, FLsnUi::Footnote) + U(16.0f);
+		const float NameRight = Row.Show.Max.X - BadgeWidth - CategoryWidth - U(12.0f);
+		FString Name = Site.Name;
+		while (TypeWidth(Name, FLsnUi::Body) > NameRight - X0 - U(8.0f) && Name.Len() > 4)
+		{
+			Name = Name.LeftChop(5).TrimEnd() + TEXT("...");
+		}
+		DrawType(Name, White, X0 + U(8.0f), TextY, FLsnUi::Body);
+		float BadgeX = Row.Show.Max.X - BadgeWidth - U(4.0f);
 		if (!Class.IsEmpty())
 		{
-			const FLinearColor ClassColor = Info.TerrainSource.ResolutionClass == TEXT("fine") ? Good : Info.TerrainSource.ResolutionClass == TEXT("medium") ? SunColor : Lost;
-			DrawText(Class, ClassColor, Row.Show.Max.X - ViewX0 - ClassWidth - 4.0f * Scale, TextY + 2.0f * Scale, Font, 0.85f * Scale);
+			DrawRounded(FBox2D(FVector2D(BadgeX, Row.Row.Min.Y + U(5.0f)), FVector2D(BadgeX + BadgeWidth, Row.Row.Max.Y - U(5.0f))), FLinearColor(0.0f, 0.0f, 0.0f, 0.0f), 5.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.30f));
+			DrawType(Class, White, BadgeX + U(8.0f), Row.Row.Min.Y + U(8.0f), FLsnUi::Footnote);
 		}
-		const TPair<const FBox2D*, const TCHAR*> Pins[] = { { &Row.PinLeft, TEXT("Left") }, { &Row.PinRight, TEXT("Right") } };
-		for (int32 I = 0; I < 2; ++I)
+		if (!Site.Category.IsEmpty())
 		{
-			const FBox2D& Box = *Pins[I].Key;
-			const bool bOn = I == 0 ? bLeft : bRight;
-			Fill(Box, Box.IsInside(Mouse) ? FLinearColor(0.9f, 0.9f, 0.9f, 1.0f) : bOn ? FLinearColor(0.45f, 0.70f, 0.95f, 1.0f) : FLinearColor(0.34f, 0.34f, 0.38f, 1.0f));
-			Fill(Box.ExpandBy(-1.5), bOn ? FLinearColor(0.13f, 0.27f, 0.42f, 1.0f) : FLinearColor(0.07f, 0.07f, 0.09f, 1.0f));
-			float TextWidth = 0.0f;
-			GetTextSize(Pins[I].Value, TextWidth, Unused, Font, 0.85f * Scale);
-			DrawText(Pins[I].Value, White, 0.5f * (Box.Min.X + Box.Max.X) - ViewX0 - 0.5f * TextWidth, TextY + 2.0f * Scale, Font, 0.85f * Scale);
+			BadgeX -= CategoryWidth;
+			DrawType(Site.Category, Dim, BadgeX + U(4.0f), Row.Row.Min.Y + U(8.0f), FLsnUi::Footnote);
 		}
+		DrawButton(Row.PinLeft, TEXT("Left"), NAME_None, bLeft, true, false, FName(*FString::Printf(TEXT("pin_left_%d"), Row.SiteIndex)));
+		DrawButton(Row.PinRight, TEXT("Right"), NAME_None, bRight, true, false, FName(*FString::Printf(TEXT("pin_right_%d"), Row.SiteIndex)));
 	}
+
 	// Custom coordinates: handed to the science core, which must be on this machine.
-	if (Picker.EntryLabelPosition.X >= ViewX0 && Picker.EntryLabelPosition.X < ViewX1)
+	DrawLine(Picker.Sheet.Min.X, Picker.EntryLabelPosition.Y - U(8.0f), Picker.Sheet.Max.X, Picker.EntryLabelPosition.Y - U(8.0f), FLsnUi::Hairline(), U(1.0f));
+	DrawType(TEXT("Custom coordinates"), White, Picker.EntryLabelPosition.X, Picker.EntryLabelPosition.Y - U(2.0f), FLsnUi::Body, true);
+	DrawType(TEXT("computed by the science core on this machine; Tab changes the field, Enter computes"), Dim, Picker.EntryLabelPosition.X + TypeWidth(TEXT("Custom coordinates"), FLsnUi::Body, true) + U(12.0f),
+		Picker.EntryLabelPosition.Y + U(2.0f), FLsnUi::Footnote);
+	const TPair<const FBox2D*, const TCHAR*> Fields[] = { { &Picker.LatField, TEXT("latitude") }, { &Picker.LonField, TEXT("longitude E") } };
+	for (int32 I = 0; I < 2; ++I)
 	{
-		const FLsnCustomEntry& Entry = GameMode.GetCustomEntry();
-		DrawFit(TEXT("CUSTOM COORDINATES   computed by the science core on this machine; type the numbers, Tab changes the field, Enter computes"), Dim,
-			Picker.EntryLabelPosition.X - ViewX0, Picker.EntryLabelPosition.Y, Picker.Compute.Max.X - Picker.EntryLabelPosition.X, 0.85f * Scale);
-		const TPair<const FBox2D*, const TCHAR*> Fields[] = { { &Picker.LatField, TEXT("latitude") }, { &Picker.LonField, TEXT("longitude, east +") } };
-		for (int32 I = 0; I < 2; ++I)
+		const FBox2D& Box = *Fields[I].Key;
+		const bool bFocus = Entry.Focus == I;
+		DrawType(Fields[I].Value, Dim, Box.Min.X - TypeWidth(Fields[I].Value, FLsnUi::Footnote) - U(8.0f), Box.Min.Y + U(9.0f), FLsnUi::Footnote);
+		DrawRounded(Box, FLinearColor(0.02f, 0.02f, 0.03f, 0.85f), 6.0f, bFocus ? FLinearColor(1.0f, 1.0f, 1.0f, 0.6f) : FLsnUi::Hairline());
+		const FString& Value = I == 0 ? Entry.Latitude : Entry.Longitude;
+		DrawType(Value + ((bFocus && bCaretOn) ? TEXT("_") : TEXT("")), White, Box.Min.X + U(10.0f), Box.Min.Y + U(6.0f), FLsnUi::Body);
+	}
+	// The one accent button of the screen.
+	DrawButton(Picker.Compute, Entry.bRunning ? TEXT("Computing ...") : TEXT("Compute and show"), NAME_None, false, !Entry.bRunning, true, TEXT("custom_compute"));
+	float MessageY = Picker.MessagePosition.Y;
+	for (const FString& Part : WrapLines(Entry.Message, FLsnUi::Footnote, Picker.Sheet.Max.X - Picker.Sheet.Min.X))
+	{
+		if (MessageY + U(18.0f) <= Picker.Sheet.Max.Y + U(8.0f))
 		{
-			const FBox2D& Box = *Fields[I].Key;
-			const bool bFocus = Entry.Focus == I;
-			float LabelWidth = 0.0f, Unused = 0.0f;
-			GetTextSize(Fields[I].Value, LabelWidth, Unused, Font, 0.9f * Scale);
-			DrawText(Fields[I].Value, White, Box.Min.X - ViewX0 - LabelWidth - 8.0f * Scale, Box.Min.Y + 0.5f * (Box.Max.Y - Box.Min.Y) - 8.0f * Scale, Font, 0.9f * Scale);
-			Fill(Box, bFocus ? FLinearColor(1.0f, 0.70f, 0.18f, 1.0f) : FLinearColor(0.34f, 0.34f, 0.38f, 1.0f));
-			Fill(Box.ExpandBy(-2.0), FLinearColor(0.03f, 0.03f, 0.04f, 1.0f));
-			const FString& Value = I == 0 ? Entry.Latitude : Entry.Longitude;
-			// A caret in the focused field, blinking.
-			const bool bCaret = bFocus && FMath::Fmod(GetWorld()->GetRealTimeSeconds(), 1.0) < 0.5;
-			DrawText(Value + (bCaret ? TEXT("_") : TEXT("")), White, Box.Min.X - ViewX0 + 8.0f * Scale, Box.Min.Y + 0.5f * (Box.Max.Y - Box.Min.Y) - 10.0f * Scale, Font, 1.2f * Scale);
+			DrawType(Part, Entry.bFailed ? FLsnUi::Red() : Entry.bRunning ? FLsnUi::Amber() : FLsnUi::Green(), Picker.MessagePosition.X, MessageY, FLsnUi::Footnote);
 		}
-		const bool bHover = Picker.Compute.IsInside(Mouse);
-		Fill(Picker.Compute, FLinearColor(1.0f, 0.70f, 0.18f, 1.0f));
-		Fill(Picker.Compute.ExpandBy(-2.0), bHover ? FLinearColor(1.0f, 0.80f, 0.36f, 1.0f) : FLinearColor(0.92f, 0.64f, 0.17f, 1.0f));
-		const TCHAR* Label = Entry.bRunning ? TEXT("computing ...") : TEXT("Compute and show");
-		float LabelWidth = 0.0f, Unused = 0.0f;
-		GetTextSize(Label, LabelWidth, Unused, Font, 1.05f * Scale);
-		DrawText(Label, FLinearColor(0.03f, 0.02f, 0.0f), 0.5f * (Picker.Compute.Min.X + Picker.Compute.Max.X) - ViewX0 - 0.5f * LabelWidth, Picker.Compute.Min.Y + 0.5f * (Picker.Compute.Max.Y - Picker.Compute.Min.Y) - 9.0f * Scale, Font, 1.05f * Scale);
-		const float MessageWidth = (bComparing ? 0.5f * WindowSizeX : Picker.Sheet.Max.X) - Picker.MessagePosition.X - 8.0f * Scale;
-		DrawWrapped(Entry.Message, Entry.bFailed ? Alert : Entry.bRunning ? SunColor : Good, Picker.MessagePosition.X - ViewX0, Picker.MessagePosition.Y, MessageWidth, 0.9f * Scale);
+		MessageY += U(18.0f);
 	}
 }
 
@@ -1405,7 +1779,7 @@ float ALsnHud::DrawWrapped(const FString& Text, const FLinearColor& Color, float
 			GetTextSize(Part, Width, Height, Font, TextScale);
 		}
 		DrawText(Part, Color, X, Y, Font, TextScale);
-		Y += 18.0f * TextScale;
+		Y += 1.35f * SizeOfScale(TextScale);
 		Rest = Part.Len() < Rest.Len() ? Rest.Mid(Part.Len()).TrimStart() : FString();
 	}
 	return Y;
@@ -1413,14 +1787,15 @@ float ALsnHud::DrawWrapped(const FString& Text, const FLinearColor& Color, float
 
 void ALsnHud::DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>& Rows, int32 RequirementIndex, float Scale)
 {
-	UFont* Font = GEngine->GetMediumFont();
+	UFont* Font = nullptr;
+	// The scale of the old calls that gives the text size of the design system.
+	const float TextM = 1.12f * Scale;
 	const float Width = Box.Max.X - Box.Min.X;
 	if (Rows.Num() == 0 || Box.Max.Y - Box.Min.Y < 60.0f * Scale)
 	{
 		return;
 	}
 	const FLsnSitePackage& First = Rows[0]->GetPackage();
-	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.82f), Box.Min.X - 8.0f * Scale, Box.Min.Y - 6.0f * Scale, Width + 16.0f * Scale, Box.Max.Y - Box.Min.Y + 8.0f * Scale);
 	float Y = Box.Min.Y;
 	if (!First.Calendar.bPresent)
 	{
@@ -1433,29 +1808,47 @@ void ALsnHud::DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>
 	auto X = [&](double EtS) { return Box.Min.X + Width * static_cast<float>(FMath::Clamp((EtS - AxisStart) / (AxisEnd - AxisStart), 0.0, 1.0)); };
 
 	const FLsnRequirement* Requirement = First.Requirements.Num() > 0 ? &First.Requirements[RequirementIndex % First.Requirements.Num()] : nullptr;
-	Y = DrawWrapped(FString::Printf(TEXT("Lunar-day calendar, %s to %s: share of each lunar day with the Sun visible (yellow) and with the Earth visible (blue line)   [%s]"),
-		*First.Time.StartUtc.Left(10), *First.Time.EndUtc.Left(10), *First.ValidationStatusOf(First.Calendar.Method)), White, Box.Min.X, Y, Width, Scale * 1.15f);
-	if (Requirement)
+	DrawType(TEXT("Calendar"), White, Box.Min.X, Y - U(4.0f), FLsnUi::Title, true);
+	const FString Range = FString::Printf(TEXT("lunar days, %s to %s"), *First.Time.StartUtc.Left(10), *First.Time.EndUtc.Left(10));
+	DrawType(Range, Dim, Box.Max.X - TypeWidth(Range, FLsnUi::Body), Y + U(2.0f), FLsnUi::Body);
+	Y += U(40.0f);
+	// One row of legend: what each mark of the chart is.
 	{
-		Y = DrawWrapped(FString::Printf(TEXT("Green: landing times that meet the requirement '%s' - %s"), *Requirement->Id, *Requirement->Label), Good, Box.Min.X, Y, Width, Scale);
-		Y = DrawWrapped(TEXT("This requirement is an example chosen by the team, not a mission requirement; the package cannot tell whether it is the right one. R: next requirement."), Dim, Box.Min.X, Y, Width, Scale * 0.9f);
+		float LegendX = Box.Min.X;
+		const float MarkY = Y + U(11.0f);
+		DrawRect(SunColor, LegendX, MarkY - U(7.0f), U(14.0f), U(14.0f));
+		LegendX += U(22.0f);
+		DrawType(TEXT("Sun share"), White, LegendX, Y, FLsnUi::Body);
+		LegendX += TypeWidth(TEXT("Sun share"), FLsnUi::Body) + U(24.0f);
+		DrawRect(EarthColor, LegendX, MarkY - U(1.5f), U(18.0f), U(3.0f));
+		LegendX += U(26.0f);
+		DrawType(TEXT("Earth share"), White, LegendX, Y, FLsnUi::Body);
+		LegendX += TypeWidth(TEXT("Earth share"), FLsnUi::Body) + U(24.0f);
+		DrawRect(Good, LegendX, MarkY - U(3.0f), U(18.0f), U(6.0f));
+		LegendX += U(26.0f);
+		DrawType(TEXT("landing windows"), White, LegendX, Y, FLsnUi::Body);
+		LegendX += TypeWidth(TEXT("landing windows"), FLsnUi::Body) + U(24.0f);
+		DrawRect(White, LegendX, MarkY - U(9.0f), U(2.0f), U(18.0f));
+		LegendX += U(10.0f);
+		DrawType(TEXT("selected instant"), White, LegendX, Y, FLsnUi::Body);
 	}
-	Y += 6.0f * Scale;
+	Y += U(36.0f);
+	(void)Requirement;
 
-	const float TextBlock = 90.0f * Scale;
-	const float RowHeight = FMath::Clamp((Box.Max.Y - Y) / Rows.Num() - TextBlock, 34.0f * Scale, 120.0f * Scale);
+	const float TextBlock = U(104.0f);
+	const float RowHeight = FMath::Clamp((Box.Max.Y - Y) / Rows.Num() - TextBlock, U(60.0f), U(260.0f));
 	for (const ALsnSiteScene* Row : Rows)
 	{
 		const FLsnSitePackage& P = Row->GetPackage();
 		const int32 H = Row->GetHeightIndex();
-		DrawText(FString::Printf(TEXT("%s, observer %.1f m"), *P.SiteName, P.ObserverHeightsM[H]), White, Box.Min.X, Y, Font, Scale * 1.2f);
-		Y += 22.0f * Scale;
+		DrawFit(FString::Printf(TEXT("%s, observer %.1f m"), *P.SiteName, P.ObserverHeightsM[H]), White, Box.Min.X, Y, Width, TextM);
+		Y += U(28.0f);
 		const FLsnCalendarQuantity* SunQ = P.Calendar.bPresent ? P.Calendar.Find(TEXT("sun_visible_s")) : nullptr;
 		const FLsnCalendarQuantity* EarthQ = P.Calendar.bPresent ? P.Calendar.Find(TEXT("earth_visible_s")) : nullptr;
 		if (!SunQ)
 		{
-			DrawText(TEXT("no calendar in this package"), Dim, Box.Min.X, Y, Font, Scale);
-			Y += RowHeight + TextBlock - 22.0f * Scale;
+			DrawText(TEXT("no calendar in this package"), Dim, Box.Min.X, Y, Font, TextM);
+			Y += RowHeight + TextBlock - U(28.0f);
 			continue;
 		}
 		const float BarTop = Y, BarBottom = Y + RowHeight;
@@ -1478,9 +1871,10 @@ void ALsnHud::DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>
 				const double EarthShare = FMath::Clamp(P.Calendar.Value(*EarthQ, H, Period) / Length, 0.0, 1.0);
 				DrawRect(FLinearColor(EarthColor.R * Tone, EarthColor.G * Tone, EarthColor.B * Tone, 1.0f), X0, BarBottom - RowHeight * static_cast<float>(EarthShare) - 1.5f * Scale, X1 - X0, 3.0f * Scale);
 			}
-			if (Period % 3 == 0 && Row == Rows[0])
+			if (Period % 4 == 0 && Row == Rows[0] && X0 + U(76.0f) <= Box.Max.X)
 			{
-				DrawText(Day.StartUtc.Left(7), Dim, X0, BarBottom + 9.0f * Scale, Font, Scale * 0.8f);
+				// Axis labels at the size of the text.
+				DrawText(Day.StartUtc.Left(7), Dim, X0, BarBottom + U(12.0f), Font, TextM);
 			}
 		}
 		// Landing windows of the requirement, the planned landing and the selected time, on the same axis.
@@ -1504,29 +1898,21 @@ void ALsnHud::DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>
 		}
 		const float NowX = X(NowEt);
 		DrawRect(FLinearColor::White, NowX - Scale, BarTop - 4.0f * Scale, 2.0f * Scale, RowHeight + 14.0f * Scale);
-		Y = BarBottom + 24.0f * Scale;
+		Y = BarBottom + U(Row == Rows[0] ? 40.0f : 14.0f);
 		if (Opportunity)
 		{
 			const FLsnLandingCheck Check = LsnPlanner::LandingAt(*Opportunity, NowEt);
-			DrawText(FString::Printf(TEXT("%s: %s"), *LsnHudText::UtcLabelOfPosition(P, Row->GetTimePosition()), *LsnHudText::LandingSentence(Check)),
-				!Check.bJudgeable ? Dim : Check.bFeasible ? Good : Lost, Box.Min.X, Y, Font, Scale * 1.15f);
-			Y += 21.0f * Scale;
-			FString Summary = FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged (%d windows, longest %s)"), 100.0 * Opportunity->FeasibleFraction,
-				Opportunity->WindowCount, *LsnHudText::FormatDuration(Opportunity->LongestWindowS));
-			if (Opportunity->Planned.bPresent)
-			{
-				// The slip report of the scenario's planned landing, as the package gives it.
-				const FLsnSlipReport& Planned = Opportunity->Planned;
-				Summary += FString::Printf(TEXT("; planned landing %s (green line): %s"), *Planned.Utc.Left(16).Replace(TEXT("T"), TEXT(" ")),
-					Planned.bFeasible ? *FString::Printf(TEXT("meets it, can slip %s%s"), Planned.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Planned.SlipToleranceS))
-					: Planned.bHasWait ? *FString::Printf(TEXT("does not meet it, next window after %s"), *LsnHudText::FormatDuration(Planned.WaitS)) : TEXT("does not meet it, no window left"));
-			}
-			Y = DrawWrapped(Summary + FString::Printf(TEXT("   [%s]"), *P.ValidationStatusOf(Opportunity->Method)), Dim, Box.Min.X, Y, Width, Scale * 0.9f);
+			// The result sentence, one line. The numbers behind it are in the evidence of the drawer.
+			const FString Result = !Check.bJudgeable ? FString(TEXT("Landing now cannot be judged: the stay runs past the computed range"))
+				: Check.bFeasible ? FString::Printf(TEXT("Landing now: requirement met; it can slip %s%s"), Check.bSlipIsLowerBound ? TEXT("at least ") : TEXT(""), *LsnHudText::FormatDuration(Check.SlipS))
+				: Check.bHasNextWindow ? FString::Printf(TEXT("Landing now: requirement not met; next window in %s"), *LsnHudText::FormatDuration(Check.WaitS)) : FString(TEXT("Landing now: requirement not met; no window left in the range"));
+			DrawFit(Result, !Check.bJudgeable ? Dim : Check.bFeasible ? Good : Lost, Box.Min.X, Y, Width, TextM);
+			Y += U(34.0f);
 		}
 		else
 		{
-			DrawText(TEXT("this package states no requirement: no landing windows"), Dim, Box.Min.X, Y, Font, Scale * 0.9f);
-			Y += 39.0f * Scale;
+			DrawText(TEXT("this package states no requirement: no landing windows"), Dim, Box.Min.X, Y, Font, TextM);
+			Y += U(34.0f);
 		}
 	}
 }
@@ -1542,15 +1928,15 @@ float ALsnHud::DrawUncertainty(const ALsnSiteScene& Scene, float X, float Y, flo
 	}
 	if (U.bHasHorizonError)
 	{
-		Y = DrawWrapped(FString::Printf(TEXT("Stated horizon error %.2f deg: the pale edges of the time strips and the ranges under the countdowns   [%s]"), U.HorizonErrorDeg, *P.ValidationStatusOf(U.HorizonMethod)), White, X, Y, Width, Scale * 1.1f);
+		Y = DrawWrapped(FString::Printf(TEXT("Stated horizon error %.2f deg: the pale edges of the time strips and the ranges under the countdowns"), U.HorizonErrorDeg), White, X, Y, Width, Scale * 1.1f);
 		Y = DrawWrapped(U.HorizonAssumption, Dim, X, Y, Width, Scale * 0.85f);
 		Y += 8.0f * Scale;
 	}
 	if (U.bHasEllipse)
 	{
 		const FLsnEllipseStats* Stats = U.EllipseStats.Find(TEXT("SUN"));
-		Y = DrawWrapped(FString::Printf(TEXT("Stated landing ellipse %.1f x %.1f km, major axis towards azimuth %.0f deg, %d sample points, observer %.1f m   [%s]"), 2.0 * U.SemiMajorM / 1000.0, 2.0 * U.SemiMinorM / 1000.0,
-			U.AzimuthDeg, U.Points.Num(), P.ObserverHeightsM.IsValidIndex(U.EllipseHeightIndex) ? P.ObserverHeightsM[U.EllipseHeightIndex] : 0.0, *P.ValidationStatusOf(U.EllipseMethod)), White, X, Y, Width, Scale * 1.1f);
+		Y = DrawWrapped(FString::Printf(TEXT("Stated landing ellipse %.1f x %.1f km, major axis towards azimuth %.0f deg, %d sample points, observer %.1f m"), 2.0 * U.SemiMajorM / 1000.0, 2.0 * U.SemiMinorM / 1000.0,
+			U.AzimuthDeg, U.Points.Num(), P.ObserverHeightsM.IsValidIndex(U.EllipseHeightIndex) ? P.ObserverHeightsM[U.EllipseHeightIndex] : 0.0), White, X, Y, Width, Scale * 1.1f);
 		// Small map: the sample points east and north of the site, coloured by their Sun-visible time.
 		const float Side = FMath::Min(Width * 0.42f, 190.0f * Scale);
 		const FVector2D Centre(X + 0.5f * Side, Y + 0.5f * Side + 4.0f * Scale);
@@ -1602,8 +1988,7 @@ float ALsnHud::DrawTrade(const ALsnSiteScene& Scene, const ALsnViewGameMode& Gam
 	LsnPlanner::BuildHeightTradeLines(P, Lines);
 	if (Lines.Num() > 0)
 	{
-		const FLsnHeightTradeQuantity* Sun = P.HeightTrade.Find(TEXT("sun_visible_s"));
-		Y = DrawWrapped(Lines[0] + FString::Printf(TEXT("   [%s]"), Sun ? *P.ValidationStatusOf(Sun->Method) : TEXT("unknown")), Dim, X, Y, Width, Scale * 0.9f);
+		Y = DrawWrapped(Lines[0], Dim, X, Y, Width, Scale * 0.9f);
 		for (int32 I = 1; I < Lines.Num(); ++I)
 		{
 			// The height the view is drawn for is marked.

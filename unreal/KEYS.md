@@ -6,43 +6,36 @@ of a package.
 
 ## With the mouse alone
 
-The mouse pointer is visible. The header shows the site, the time and three chips: the Sun,
-the Earth (each with the time to its next set or rise) and whether a landing now meets the
-example requirement. Under it are the three main actions and, at the bottom, one time strip.
-That is the whole view at the start. **More** (key T) brings the other controls in labelled
-groups along the bottom, the panorama and the list of numbers; **Less** takes them away again.
-When the Sun or the Earth is up but outside the picture, an arrow at the edge points to it;
-click it to turn the view there.
+The mouse pointer is visible. Top left: the site, the time (UTC), one line with the
+coordinates and the observer height. Top right: three state chips, each with a bar of its
+state colour (amber Sun, blue Earth, green requirement met, red not met), the state word and
+the countdown as the largest thing; under a countdown stands its uncertainty where the package
+states one. Bottom left: the control bar. Bottom: the time strip with a tick and a date at
+every UTC midnight and a playhead that carries its own time.
 
 | What | How |
 | --- | --- |
-| Choose the time | drag on either time strip (upper: six days around the selected time; lower: the whole computed range) |
-| All other controls | **More** / **Less** |
-| Turn to the Sun when it is outside the picture | click the arrow at the edge of the picture |
+| Choose the time | drag on the time strip (six days around the selected time) |
+| Play the timeline | **Play** (it becomes **Pause**) |
+| Jump to the next sunset | **Next sunset** |
+| Which terrain hides the Sun or the Earth, and what it costs | **Obstacle** (on at the start): a thin line along the ridge and a card with the hours it costs, its distance and azimuth |
+| Two sites side by side at the same instant | **Compare** (it becomes **One site**); **Next site** in the header of each half changes that half; one time strip is shared |
 | Camera position | **Camera** goes round: the observer's own view, a camera near the lander looking towards the Sun, a wide view of the site |
-| Camera move from high above down to the site | **Arrival view** (a camera move only; no descent is simulated) |
-| The first lunar day after the planned landing, played fast | **First lunar day** |
-| Play the timeline | button **Play / pause**, **Slower**, **Faster** |
-| Step in time | **< Step**, **Step >** (one sample of the package), **< Day**, **Day >** |
-| Jump to the next sunset | main button **Jump to next sunset** |
-| Next or previous rise or set of the Sun | **< Sunrise / set**, **Sunrise / set >** |
-| Another site | **Sites ...** opens the list: click a name |
-| Any two sites for the comparison | in the list, **Left** and **Right** beside each site |
-| A site of your own | at the foot of the list: type latitude and east longitude, **Compute and show** (needs the science core's Python environment on the machine; the view says so if it is missing) |
-| Two sites side by side at the same instant | main button **Compare two sites**; **Next site >** in the header of the right view changes the right one |
-| Calendar, uncertainty, mast-height trade and site pairs | **Calendar**, **Uncertainty**, **Mast / pairs** (a page is shown only if the package has the field) |
-| Which terrain hides the Sun or the Earth, and what it costs | main button **What blocks the Sun?** (on at the start) |
-| Package id, frame, contract version, test status | **Details** |
-| Lander, mast and boulders for scale | **Scale objects** |
-| A weak light while the Sun is down | **Night fill light** |
-| Observer height (mast height) | **Observer height** goes round the heights of the package |
-| Keep the view on the Sun | **Follow Sun** |
-| Slower graphics card | **Low quality** |
+| Everything else | **More** opens a drawer from the right (**Less** closes it). Its tabs: |
+| ... calendar and landing windows | tab **Calendar** |
+| ... uncertainty | tab **Uncertainty** |
+| ... mast-height trade and site pairs | tab **Mast height** |
+| ... another site, any two sites for the comparison | tab **Sites**: click a name to show it; **Left** and **Right** pin a site for a half; the wheel scrolls the list; click the search field and type to narrow it by name, programme or category |
+| ... a site of your own | at the foot of the tab **Sites**: type latitude and east longitude, **Compute and show** (needs the science core's Python environment, elevation data and kernels on the machine; the view says what is missing) |
+| ... package id, frame, contract version, test status, what each number rests on, the note on the example requirement | tab **Evidence** |
+| ... slower, faster, steps, days, sunrise and sunset, first lunar day, arrival view, observer height, follow Sun, scale objects, night fill light, low quality, help | tab **Controls** |
+| Turn to the Sun when it is outside the picture | **The Sun is outside the picture: look at it** (bottom left, shown only then) |
 | Look round | hold the right mouse button and move |
-| Zoom | mouse wheel |
-| This list on screen | **Help (F1)** |
+| Zoom | mouse wheel (over the open list of sites it scrolls the list) |
 
-A lit button is switched on.
+A button whose switch is on has a brighter edge. A button that needs a timeline is grey for a
+package without one. The line of hints above the control bar fades five seconds after the
+pointer last moved and comes back when it moves.
 
 ## Keys
 
@@ -68,9 +61,9 @@ A lit button is switched on.
 | H | horizon line of the package |
 | L | fill light while the Sun is down (a display aid, not physics) |
 | G | lower drawing quality |
-| I | details: package, frame, contract version, test status |
+| I | evidence: package, frame, contract version, test status |
 | S | site list, pinning two sites, custom coordinates |
-| T | all controls on and off |
+| T | the drawer (More / Less) |
 | V | camera position: observer, near the lander, wide |
 | A | camera move from high above down to the site |
 | D | play the first lunar day after the planned landing |
@@ -94,5 +87,5 @@ A first-time user will not find these without this list:
 `LunarSiteNavigator.exe -windowed -ResX=1920 -ResY=1080` runs in a window.
 `-LsnLowQuality` starts with the lower drawing quality.
 `-LsnSite=<site_id>` or `-LsnCompare=<site_id>,<site_id>` chooses the sites shown at the start.
-`-LsnControls` starts with all controls shown. `-LsnView=hero` or `-LsnView=wide` starts with
+`-LsnControls` starts with the drawer open. `-LsnView=hero` or `-LsnView=wide` starts with
 that camera position.

@@ -876,6 +876,7 @@ bool LsnPackageIO::LoadIndex(const FString& PackageRoot, TArray<FLsnIndexEntry>&
 		(*Object)->TryGetBoolField(TEXT("has_timeline"), Entry.bHasTimeline);
 		(*Object)->TryGetStringArrayField(TEXT("site_ids"), Entry.SiteIds);
 		(*Object)->TryGetStringField(TEXT("programme"), Entry.Programme);
+		(*Object)->TryGetStringField(TEXT("category"), Entry.Category);
 		OutEntries.Add(Entry);
 	}
 	return true;

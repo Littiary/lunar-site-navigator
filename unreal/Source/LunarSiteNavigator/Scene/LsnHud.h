@@ -62,6 +62,8 @@ enum class ELsnButtonStyle : uint8
 	Main,
 	Bar,
 	RightView,
+	/** A tab of the drawer. */
+	Tab,
 };
 
 /** A button on screen: a named action of the observer (ALsnObserverPawn::DoAction). */
@@ -103,7 +105,13 @@ struct LUNARSITENAVIGATOR_API FLsnToolbar
 	 * bAllControls false: the clean default view, with the three main actions and the one
 	 * button that opens the rest; true: the bar of grouped buttons as well.
 	 */
-	static FLsnToolbar Make(float WindowSizeX, float SizeY, bool bComparing, bool bAllControls = true);
+	static FLsnToolbar Make(float WindowSizeX, float SizeY, bool bComparing, bool bDrawerOpen = true, bool bControlsTab = true);
+	/** Lower edge of the header band; upper edge of the bottom row (control bar and time strip). */
+	static float HeaderBottomOf(float SizeY, bool bComparing);
+	static float BottomRowTop(float SizeY, bool bComparing);
+	/** The drawer that opens from the right, and the part of it below its tabs. */
+	static FBox2D DrawerBox(float WindowSizeX, float SizeY, bool bComparing);
+	static FBox2D DrawerContent(float WindowSizeX, float SizeY, bool bComparing);
 	/** Where "look at the Sun" is drawn while the Sun is outside the picture. */
 	static FBox2D LookAtSunBox(float WindowSizeX, float SizeY, bool bComparing);
 	/** Upper edge of the bar for a window height; the time strips are laid out above it. */
@@ -124,6 +132,7 @@ enum class ELsnPickerHit : uint8
 	LatField,
 	LonField,
 	Compute,
+	SearchField,
 };
 
 /** A row of the site picker: the header of a group (SiteIndex -1) or a site with its three boxes. */
@@ -144,11 +153,14 @@ struct LUNARSITENAVIGATOR_API FLsnSitePicker
 {
 	FBox2D Sheet;
 	TArray<FLsnPickerRow> Rows;
-	FBox2D LatField, LonField, Compute;
+	FBox2D LatField, LonField, Compute, SearchField;
+	/** The list shows RowsPerPage of NumRows rows (group headers included), from FirstRow. */
+	int32 RowsPerPage = 0, NumRows = 0, FirstRow = 0;
 	/** Where the title, the label of the entry and its message are drawn. */
 	FVector2D TitlePosition = FVector2D::ZeroVector, EntryLabelPosition = FVector2D::ZeroVector, MessagePosition = FVector2D::ZeroVector;
 
-	static FLsnSitePicker Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite);
+	/** Hidden: the sites a search has taken out of the list; FirstRow: how far the list is scrolled. */
+	static FLsnSitePicker Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite, const TArray<bool>* Hidden = nullptr, int32 FirstRow = 0);
 	ELsnPickerHit HitAt(const FVector2D& Point, int32& OutSiteIndex) const;
 };
 
@@ -157,10 +169,12 @@ struct LUNARSITENAVIGATOR_API FLsnTimeStripLayout
 {
 	FBox2D WholeRange;
 	FBox2D Zoom;
+	/** The panel the strip lies in. */
+	FBox2D Panel = FBox2D(FVector2D::ZeroVector, FVector2D::ZeroVector);
 	/** Half width of the zoom strip in samples. */
 	double ZoomHalfWidthSamples = 0.0;
 
-	static FLsnTimeStripLayout Make(float SizeX, float SizeY, const FLsnSitePackage& Package);
+	static FLsnTimeStripLayout Make(float WindowSizeX, float SizeY, const FLsnSitePackage& Package, bool bComparing = false, bool bWithControlBar = true);
 
 	/** Time position under a screen point, or false if the point is on neither strip. */
 	bool PositionAt(const FVector2D& Point, const FLsnSitePackage& Package, double CurrentPosition, double& OutPosition) const;
@@ -177,8 +191,50 @@ class LUNARSITENAVIGATOR_API ALsnHud : public AHUD
 
 public:
 	virtual void DrawHUD() override;
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 private:
+	// The drawing calls of the base class, taken over: they add to the interface's list of the
+	// frame (Scene/LsnUi.h) instead of drawing on the canvas. A text scale is turned into one of
+	// the four sizes of the design system.
+	void DrawRect(FLinearColor Color, float X, float Y, float Width, float Height);
+	void DrawText(const FString& Text, FLinearColor Color, float X, float Y, UFont* Font = nullptr, float Scale = 1.0f, bool bScalePosition = false);
+	void DrawLine(float X0, float Y0, float X1, float Y1, FLinearColor Color, float Thickness = 0.0f);
+	void GetTextSize(const FString& Text, float& OutWidth, float& OutHeight, UFont* Font = nullptr, float Scale = 1.0f) const;
+	/** A panel of the design system: dark, translucent, blurred behind, hairline border, rounded. */
+	void DrawPanel(const FBox2D& Box, bool bBlur = true);
+	/** A box with rounded corners and an optional hairline. */
+	void DrawRounded(const FBox2D& Box, const FLinearColor& Fill, float RadiusAt1080, const FLinearColor& Border = FLinearColor::Transparent);
+	/** Text at one of the four sizes (pixels at a window height of 1080). */
+	void DrawType(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080, bool bMedium = false);
+	float TypeWidth(const FString& Text, float SizeAt1080, bool bMedium = false) const;
+	/** "8 d 16 h 33 min": digits at the size, units one size smaller on the same baseline; returns the width. */
+	float DrawDuration(const FString& Text, const FLinearColor& Color, float X, float Y, float SizeAt1080);
+	/** Pixels in this window for a length given at a window height of 1080. */
+	float U(float At1080) const { return At1080 * UiHeight / 1080.0f; }
+	/** The size in window pixels for a text scale of the old drawing calls. */
+	float SizeOfScale(float Scale) const;
+
+	TArray<FString> WrapLines(const FString& Text, float SizeAt1080, float MaxWidth) const;
+	/** Lines of text in a panel as high as they need; FLsnHudLine::Size is one of the four sizes. Returns the Y below it. */
+	float DrawCard(const TArray<FLsnHudLine>& Lines, float X, float Y, float Width);
+	void DrawDisc(const FVector2D& Centre, float RadiusPx, const FLinearColor& Color);
+	void DrawIcon(FName Icon, const FVector2D& Centre, const FLinearColor& Color, bool bOn);
+	/** The one quiet button style, with its hover, pressed, on and not-available states. */
+	void DrawButton(const FBox2D& Box, const FString& Label, FName Icon, bool bOn, bool bEnabled, bool bAccent, FName HoverKey);
+	void DrawChip(const FBox2D& Box, const FLinearColor& Accent, FName Icon, const FString& Label, const FString& State, const FString& LeadIn, const FString& Duration, const TArray<FString>& Detail);
+
+	/** Pointer of the left player in window pixels, and what moves with time: hover of each button, the drawer, the hint line. */
+	FVector2D UiMouse = FVector2D(-1.0e6, -1.0e6), UiMouseBefore = FVector2D::ZeroVector;
+	double UiMouseMovedS = 0.0, UiLastS = 0.0;
+	float UiDelta = 0.0f, DrawerAnim = 0.0f, HintAlpha = 1.0f;
+	bool bUiPressed = false;
+	TMap<FName, float> HoverOf;
+
+	/** Upper left corner of this view in the window, and the height of the window. */
+	FVector2D UiOrigin = FVector2D::ZeroVector;
+	float UiHeight = 1080.0f;
+
 	/** Draws text that continues on further lines when wider than MaxWidth; returns the Y below it. */
 	float DrawWrapped(const FString& Text, const FLinearColor& Color, float X, float Y, float MaxWidth, float TextScale);
 	void DrawCalendar(const FBox2D& Box, const TArray<const ALsnSiteScene*>& Rows, int32 RequirementIndex, float Scale);

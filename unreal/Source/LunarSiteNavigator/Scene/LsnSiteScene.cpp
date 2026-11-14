@@ -27,7 +27,8 @@ namespace
 	constexpr float HorizonLineEmissive = 3.0f;
 	constexpr float ObstacleEmissive = 6.0f;
 	/** Angular height of the highlight band above the horizon. A drawing choice. */
-	constexpr double ObstacleBandDeg = 0.10;
+	// A thin line along the ridge; the glare of the view gives it a soft glow.
+	constexpr double ObstacleBandDeg = 0.05;
 	const FColor SunObstacleColor(255, 70, 10, 255);
 	const FColor EarthObstacleColor(20, 200, 255, 255);
 	constexpr float RegolithAlbedo = 0.13f;

@@ -81,6 +81,9 @@ public:
 	bool IsHelpShown() const { return bShowHelp; }
 	/** False for the clean default view: site name, chips, one time strip and the three main actions. */
 	bool AreControlsShown() const { return bShowControls; }
+	/** The drawer is open while further controls, a page or the evidence is asked for; its tab of the further controls is the one left when no page and no evidence is. */
+	bool IsDrawerOpen() const;
+	bool IsControlsTab() const;
 	/** True while the Sun of the package is outside the picture (and the package has a Sun). */
 	bool IsSunOutOfView() const { return bSunOutOfView; }
 	/** The details panel: package id, frame, contract version and test status of what is shown. */

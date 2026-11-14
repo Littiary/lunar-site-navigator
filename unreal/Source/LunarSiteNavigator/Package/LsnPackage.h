@@ -369,6 +369,8 @@ struct FLsnIndexEntry
 	 * optional index field "programme"; empty when the index has none.
 	 */
 	FString Programme;
+	/** Since 0.11: what kind of entry the site is ("past landing", "candidate", ...); empty when the index has none. */
+	FString Category;
 };
 
 namespace LsnPackageIO

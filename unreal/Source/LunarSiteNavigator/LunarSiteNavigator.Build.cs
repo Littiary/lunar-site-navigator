@@ -19,7 +19,9 @@ public class LunarSiteNavigator : ModuleRules
 		{
 			"Json",
 			"RenderCore",
-			"RHI"
+			"RHI",
+			"Slate",
+			"SlateCore"
 		});
 
 		PublicIncludePaths.Add(ModuleDirectory);
