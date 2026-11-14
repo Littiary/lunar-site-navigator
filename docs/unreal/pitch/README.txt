@@ -1,6 +1,6 @@
 Pitch material of the Unreal planner view. Every file is a real render of the running scene
 from the published packages (packages/ of the repository). Made by unreal/Scripts/pitch.ps1
-at repository commit 3819f48 on 2026-11-14 14:43 UTC.
+at repository commit 1ea4245 on 2026-11-14 15:28 UTC.
 
 Packages: Shackleton crater rim crest: site-a4f5f765a5d43bbf (contract 0.6); de Gerlache crater rim crest: site-6ded733f4be837e5 (contract 0.6).
 Published fields: obstacles and their cost: True; lunar-day calendar: True; stated horizon error or landing ellipse: True.
@@ -23,8 +23,14 @@ still_4_uncertainty_band.png
 still_5_south_pole_wide.png
     The south-polar terrain around Shackleton crater rim crest at 2027-09-19T13:00:00Z, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg: LOLA elevation data sampled for drawing, the Sun and the Earth in the directions and sizes of the package.
 
+still_7_mast_and_lander.png
+    Shackleton crater rim crest at 2027-09-19T13:00:00Z: the camera stands 5 m above and 22 m behind the observer (not the observer's view) and shows the mast that carries the observer at 10 m and the lander beside it. Both are scale objects of the team's own design, not part of the package.
+
 still_6_astronaut_height.png
     Shackleton crater rim crest at 2027-09-19T13:00:00Z from the observer height of 2 m, looking towards azimuth 128 deg with a 62 deg field of view: the Sun low on the left, the Earth as a crescent on the right.
 
-Not in any of these: textures, an atmosphere, stars or a map of the Earth. The ground is LOLA elevation data sampled on 320
-rings per azimuth; surface shading, exposure and the weak fill light are display choices (see unreal/README.md).
+The ground is LOLA elevation data sampled on 320 rings per azimuth. Roughness and small craters finer than that data are
+illustrative shading computed in the surface shader: positions, shadows and the horizon are those of the data. Stars are the
+Yale Bright Star Catalogue, turned for the date. Lander, mast and boulders are scale objects of the team's own design, not part
+of any package. Surface shading, exposure, the glare of the Sun and the fill light while the Sun is down are display choices
+(see unreal/README.md). Not in any of these: image textures, an atmosphere or a map of the Earth.
