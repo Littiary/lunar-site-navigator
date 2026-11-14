@@ -395,7 +395,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
     nav = [(f"#site-{slug(s.manifest['site']['site_id'])}", s.manifest["site"]["name"]) for s in sites]
     nav += [("#methods", "Methods"), ("#data", "Data")]
     if chart_links:
-        nav.append(("viewer/", "Interactive viewer"))
+        nav += [("viewer/", "Interactive viewer"), ("viewer/compare.html", "Compare two sites")]
     if card:
         nav.append(("#validation", "Validation"))
     banner = ""

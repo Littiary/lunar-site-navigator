@@ -94,7 +94,9 @@ class SiteBuildTests(unittest.TestCase):
 
     def test_page_links_the_viewer(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIn('href="viewer/"', (self.build(tmp, "N") / "index.html").read_text(encoding="utf-8"))
+            html = (self.build(tmp, "N") / "index.html").read_text(encoding="utf-8")
+            self.assertIn('href="viewer/"', html)
+            self.assertIn('href="viewer/compare.html"', html)
 
     def test_rebuild_is_identical(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:

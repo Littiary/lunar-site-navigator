@@ -72,6 +72,18 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
 - `js/view3d.js` uses trigonometry only in its marked display transform.
 - `tests/test_viewer.py` enforces these rules in the source.
 
+**Split-screen comparison (`compare.html`).** Two sites side by side on one shared timeline (Task 7, first milestone):
+- **Shared controls:** play/pause, speed (1 h, 6 h, 1 day or 1 week per step), a UTC date field, a slider and ±1 h / ±1 day steps.
+- **Each pane:** chooses its own site and observer height and shows
+  - status chips for the windows `sun_visible`, `earth_visible`, `earth_network_dsn` and `sun_eclipsed_by_earth`;
+  - the horizon with the Sun and the Earth;
+  - the values at that time;
+  - the package metrics for the whole window (visible shares, longest outages, DSN share, relay need, eclipses);
+  - the next events.
+- **Shared time:** a sample of the time grid of the left site. Each pane shows the sample of its own package nearest to that instant, labelled with its own UTC. If the grids ever differ, the pane says so.
+- **Layout:** the panes stack on narrow screens.
+- **Shareable links:** `?a=<site_id>&b=<site_id>&ha=<height index>&hb=<height index>&i=<sample>` opens a selection.
+
 The viewer needs a web server; `fetch` does not work from `file://`. The site build below copies it to `viewer/`, with the packages next to it in `packages/`. To try it locally:
 
 ```
