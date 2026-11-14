@@ -1,0 +1,45 @@
+{
+ "note": "Absolute radial check against the lunar laser ranging (LLR) retroreflectors, independent of LOLA. Written and committed BEFORE any DEM value at a reflector was looked at; not to be edited afterwards. The commit time is the authoritative time of writing.",
+ "sources": {
+  "DE421": {
+   "citation": "J. G. Williams, D. H. Boggs, W. M. Folkner, DE421 Lunar Orbit, Physical Librations, and Surface Coordinates, JPL IOM 335-JW,DB,WF-20080314-001, 14 March 2008, Table 4 (mean Earth/mean rotation axis frame) and eq. (3)",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421_lunar_ephemeris_and_orientation.pdf",
+   "retrieved_utc": "2026-11-14T13:31Z"
+  },
+  "DE430": {
+   "citation": "J. G. Williams, D. H. Boggs, W. M. Folkner, DE430 Lunar Orbit, Physical Librations, and Surface Coordinates, JPL IOM 335-JW,DB,WF-20130722-016, 22 July 2013, Table 7 (mean Earth/mean rotation axis frame), Tables 6 and 8, eqs. (4)-(5)",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de430_moon_coord.pdf",
+   "retrieved_utc": "2026-11-14T13:27Z"
+  }
+ },
+ "frame": {
+  "our_products": "LOLA labels: COORDINATE_SYSTEM_NAME = 'MEAN EARTH/POLAR AXIS OF DE421', planetocentric, sphere 1737.4 km",
+  "choice": "DE421 Table 4 is in exactly that frame and is used for Apollo 11, 14, 15 and Lunokhod 2. Lunokhod 1 was not in DE421 (recovered in 2010); its coordinates are taken from DE430 Table 7. DE430's MER frame was aligned to the DE421 one (memo section 6.1); for the four common arrays DE430 - DE421 differ by about 1.5 m horizontally and 0.4 m in radius, far below the DEM's resolution. No conversion is applied to DE421 Table 4; the PA coordinates (DE421 Table 3) are evaluated as well, only to show the size of a PA/ME mix-up (about 830 m horizontally).",
+  "tide": "the tabulated positions exclude the constant tidal displacement (DE421 Table 5: +0.19 to +0.42 m radial); not added, it is below the DEM's precision"
+ },
+ "reflectors_DE421_ME": [
+  {"name": "Apollo 11", "lon_deg_east": 23.4730729, "lat_deg": 0.6734398, "radius_m": 1735472.732},
+  {"name": "Apollo 14", "lon_deg_east": -17.4786483, "lat_deg": -3.6441703, "radius_m": 1736336.135},
+  {"name": "Apollo 15", "lon_deg_east": 3.6285073, "lat_deg": 26.1333959, "radius_m": 1735477.340},
+  {"name": "Lunokhod 1", "lon_deg_east": -35.0080312, "lat_deg": 38.3151827, "radius_m": 1734928.585, "from": "DE430 Table 7"},
+  {"name": "Lunokhod 2", "lon_deg_east": 30.9221489, "lat_deg": 25.8323070, "radius_m": 1734639.009}
+ ],
+ "reflectors_DE421_PA_for_the_mixup_test": [
+  {"name": "Apollo 11", "lon_deg_east": 23.4543075, "lat_deg": 0.6934309},
+  {"name": "Apollo 14", "lon_deg_east": -17.4971065, "lat_deg": -3.6233288},
+  {"name": "Apollo 15", "lon_deg_east": 3.6103520, "lat_deg": 26.1551743},
+  {"name": "Lunokhod 1", "lon_deg_east": -35.0366497, "lat_deg": 38.3331055, "from": "DE430 Table 6"},
+  {"name": "Lunokhod 2", "lon_deg_east": 30.9087426, "lat_deg": 25.8509928}
+ ],
+ "expected_agreement": {
+  "difference": "d = r_DEM(lon, lat) - r_reflector, bilinear DEM radius at the reflector's latitude and longitude",
+  "what_the_DEM_allows": "a reflector stands on the surface: Apollo arrays about 0.3-0.5 m above the ground, the Lunokhod reflectors on the rover body, about 1-2 m (not measured here), so d should be slightly negative. The DEM value is an average over a pixel (118 m for SLDEM2015_256, 237 m for LDEM_128, 1.9 km for LDEM_16) and its absolute radius is good to the LOLA radial accuracy (published: ~10 m in 2010, orbits <10 m in total after GRAIL). The pixel-scale relief is measured from the DEM itself, without the reflector: sigma_local = RMS deviation of the 3 x 3 pixels around the reflector from their mean.",
+  "tolerance_per_reflector_m": "5 + 2 * sigma_local",
+  "pass_if": "|d| <= tolerance for all five reflectors on SLDEM2015_256 and on LDEM_128 (LDEM_16 reported only)",
+  "frame_or_radius_problem_if": [
+   "all five d of the same sign with |mean d| > 10 m: a radius or datum problem (for example a 1737.151 km instead of 1737.4 km reference would give about -250 m; a km/m slip thousands of metres)",
+   "|d| much larger than the tolerance at one or two reflectors while d at the PA positions is small there: a PA/ME or longitude-convention problem"
+  ],
+  "not_testable": "horizontal position: at these sites a 100 m horizontal error changes the DEM height by about slope * 100 m, i.e. a few metres on the mare, inside the tolerance; this check constrains the radius and the reference sphere, not the horizontal frame"
+ }
+}

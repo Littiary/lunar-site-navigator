@@ -1,9 +1,42 @@
 {
- "generated_utc": "2026-11-14T13:22:27Z",
+ "generated_utc": "2026-11-14T14:09:40Z",
  "criterion": "data/checkpoints/thresholds_independent.json",
  "results": {
   "A_LDEM_80S_20M_vs_LDEM_128": {
-   "pending": "LDEM_128 is not downloaded yet",
+   "ours": "LDEM_80S_20M",
+   "reference": "LDEM_128",
+   "reference_version": "V3.0",
+   "latitude_band": [
+    -89.5,
+    -80.5
+   ],
+   "cells": 20000,
+   "stats": {
+    "n": 20000,
+    "mean_d_m": 0.014590720154699656,
+    "median_abs_d_m": 1.1280059443584491,
+    "p95_abs_d_m": 7.629216287517928,
+    "rms_d_m": 4.452064405800925
+   },
+   "fit": {
+    "points_used": 19013,
+    "blocks": 2678,
+    "height_offset_m": 0.050356608657343156,
+    "translation_x_m": 0.11251192586297355,
+    "translation_y_m": -0.21920683371043234,
+    "rotation_deg": 5.34862395226265e-05,
+    "radial_scale": -2.07393312205012e-06,
+    "se": {
+     "height_offset_m": 0.027463646180786318,
+     "translation_x_m": 0.2922042301185166,
+     "translation_y_m": 0.27181829066949975,
+     "rotation_deg": 6.374105267312977e-05,
+     "radial_scale": 1.7150207577090783e-06
+    },
+    "residual_rms_m": 3.6636603930231
+   },
+   "mirror_rms_m": 2433.86425443133,
+   "mirror_rms_ratio": 546.6821754105955,
    "judgement": {
     "criterion": {
      "abs_mean_d_m": 3.0,
@@ -15,11 +48,55 @@
      "radial_scale_se_at_most": 3e-05,
      "mirror_rms_ratio_at_least": 3.0
     },
-    "passed": null
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true,
+     "p95_abs_d_m": true
+    },
+    "passed": true
    }
   },
   "A_LDEM_60S_60M_vs_LDEM_128": {
-   "pending": "LDEM_128 is not downloaded yet",
+   "ours": "LDEM_60S_60M",
+   "reference": "LDEM_128",
+   "reference_version": "V3.0",
+   "latitude_band": [
+    -79.5,
+    -60.5
+   ],
+   "cells": 20000,
+   "stats": {
+    "n": 20000,
+    "mean_d_m": 0.05530610858697752,
+    "median_abs_d_m": 1.0450941931189845,
+    "p95_abs_d_m": 5.836989649278242,
+    "rms_d_m": 3.0070829028816983
+   },
+   "fit": {
+    "points_used": 18836,
+    "blocks": 12800,
+    "height_offset_m": 0.053589599892267796,
+    "translation_x_m": 0.052072872308032564,
+    "translation_y_m": -0.08957886491011358,
+    "rotation_deg": -2.341248733699831e-06,
+    "radial_scale": 5.86271722557985e-08,
+    "se": {
+     "height_offset_m": 0.0221622668706229,
+     "translation_x_m": 0.22343369933712526,
+     "translation_y_m": 0.23433443388851868,
+     "rotation_deg": 1.769197215716486e-05,
+     "radial_scale": 3.521606674177989e-07
+    },
+    "residual_rms_m": 2.9360088411749903
+   },
+   "mirror_rms_m": 2502.3646085214345,
+   "mirror_rms_ratio": 832.1568408118744,
    "judgement": {
     "criterion": {
      "abs_mean_d_m": 3.0,
@@ -31,7 +108,18 @@
      "radial_scale_se_at_most": 3e-05,
      "mirror_rms_ratio_at_least": 3.0
     },
-    "passed": null
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true,
+     "p95_abs_d_m": true
+    },
+    "passed": true
    }
   },
   "A2_LDEM_80S_20M_vs_LDEM_16": {
@@ -245,6 +333,14 @@
       "extreme_difference_m": -102.8760751679165,
       "extreme_distance_km": 1.0307764064044151,
       "passed": false
+     },
+     "LDEM_128": {
+      "at_point_m": 10756.032024000004,
+      "point_difference_m": -27.367975999995906,
+      "extreme_m": 10777.520585539087,
+      "extreme_difference_m": -5.8794144609128125,
+      "extreme_distance_km": 0.3535533905932738,
+      "passed": true
      }
     }
    },
@@ -267,12 +363,20 @@
       "extreme_difference_m": -11.75554398397071,
       "extreme_distance_km": 0.0,
       "passed": true
+     },
+     "LDEM_128": {
+      "at_point_m": -9124.145776000008,
+      "point_difference_m": -7.145776000008482,
+      "extreme_m": -9124.145776000008,
+      "extreme_difference_m": -7.145776000008482,
+      "extreme_distance_km": 0.0,
+      "passed": true
      }
     }
    }
   ],
   "passed": false
  },
- "complete": false,
+ "complete": true,
  "all_with_criterion_passed": false
 }

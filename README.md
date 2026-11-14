@@ -19,6 +19,16 @@ Work in progress during the hackathon (14–15 November 2026). This file is upda
 | `unreal/` | Unreal Engine scene and planner interface. It only reads packages. |
 | `docs/` | Method notes, validation results, credits. |
 
+## Reproducing the results
+
+```
+git clone https://github.com/Littiary/lunar-site-navigator.git
+cd lunar-site-navigator
+python scripts/bootstrap.py --test
+```
+
+This creates the Python environment, installs the packages, downloads the SPICE kernels, the LOLA elevation products and the validation inputs to a data folder outside the repository (`LSN_DATA_ROOT`), checks every download against a committed checksum and runs the tests. Options, the same steps as single commands, sizes and limits are in [docs/setup.md](docs/setup.md).
+
 ## Data and credits
 
 Every third-party dataset, library and asset is listed with its licence and source in [CREDITS.md](CREDITS.md).

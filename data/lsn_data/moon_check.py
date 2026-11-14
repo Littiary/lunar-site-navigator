@@ -234,10 +234,17 @@ def run(root: Path | None = None) -> dict:
     th = thresholds()
     moon = open_moon(root)
     rdr = [Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat" for n in catalog.RDR_SAMPLE]
+    # Deviation from thresholds_moon.json (criteria unchanged): the LRO_SM_06 files have no valid returns north of
+    # 80.5 N and only ~3400 in 60.5-79.5 N, so the north-polar products are compared with the LRO_SM_06 files plus
+    # 14 files of LRO_NO_08 (2010, near-circular orbit).
+    rdr_north = rdr + [Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat" for n in catalog.RDR_NORTH
+                       if (Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat").exists()]
     rep = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_moon.json", "coverage": moon.coverage()}
     north_ids = [p.product_id for t in moon.polar if t.pole > 0 for p in t.products]
     tile_ids = [t.product_id for c in moon.cylindrical for t in c.tiles]
-    rep["checkpoint_1"] = checkpoint_1(root, north_ids + tile_ids + list(catalog.RDR_SAMPLE))
+    rep["checkpoint_1"] = checkpoint_1(root, north_ids + tile_ids + list(catalog.RDR_SAMPLE) + list(catalog.RDR_NORTH))
+    rep["deviation"] = ("north-polar products compared with LRO_SM_06 plus LRO_NO_08 returns, because LRO_SM_06 has none "
+                        "north of 80.5 N; criteria unchanged")
 
     c2 = {}
     try:
@@ -249,7 +256,7 @@ def run(root: Path | None = None) -> dict:
         for dem in north.products:
             band = crit["regions"].get(dem.product_id)
             if band:
-                r = ind.compare_rdr(dem, rdr, *band)
+                r = ind.compare_rdr(dem, rdr_north, *band)
                 r["judgement"] = ind._judge(r["stats"], r["fit"], r["mirror_rms_ratio"], crit["pass_if"])
                 c2[dem.product_id] = r
     crit_c = th["checkpoint_2_georeferencing"]["cylindrical"]["pass_if_in_pixels"]

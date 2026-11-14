@@ -16,16 +16,16 @@ This folder answers one question for the science core: **seen from a point on th
 | `core/tests/ephem/`, `core/tests/events/` | Acceptance tests |
 | `validation/horizons/` | Comparison against JPL Horizons: thresholds, queries, raw responses, results |
 
-Set-up from the repository root:
+Set-up from a fresh clone, in the repository root (the one setup path of the repository, described in [`docs/setup.md`](../../../docs/setup.md)):
 
 ```
-python -m venv .venv
-.venv/Scripts/python -m pip install -e "core[dev,ephem]"
-.venv/Scripts/python -m lsncore.ephem.fetch_kernels
+python scripts/bootstrap.py --no-terrain
 .venv/Scripts/python -m pytest core validation
 ```
 
-Kernels are downloaded to `data/kernels/` (not under version control). Set `LSN_KERNEL_DIR` to use another folder.
+That creates the environment, installs `core[test,validation]` and `data[test]`, and downloads the kernels and the validation inputs. Without `--no-terrain` it also downloads the LOLA elevation products.
+
+Kernels are downloaded to `kernels/` under the data root, outside the repository (`LSN_DATA_ROOT`; default `C:\lsn-data` on Windows, `~/lsn-data` elsewhere). Set `LSN_KERNEL_DIR` to use another folder. A download that does not match the checksum in `kernel_manifest.json` is refused, and the manifest is not rewritten when the files match, so a fresh clone stays clean. The whole setup from a fresh clone is in [`docs/setup.md`](../../../docs/setup.md).
 
 ## Method
 

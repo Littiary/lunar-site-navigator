@@ -2,6 +2,8 @@
 
 Independent checks of the science core. Each check has a threshold file that is written and committed before the comparison is run and is not edited afterwards.
 
+Setup from a fresh clone, where the downloaded inputs go (never into the repository) and what the tests do without them: [`docs/setup.md`](../docs/setup.md). All commands below are run from the repository root with the environment that `python scripts/bootstrap.py` creates.
+
 ## `card/` — the validation card
 
 `card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree.
@@ -10,7 +12,7 @@ The card has 32 checks; 31 pass and one fails: the comparison with an LROC image
 
 ## `sites/` — end-to-end results for the south-polar site records, and the published packages
 
-`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, eclipses, ground-station windows, countdowns) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
+`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline of contract 0.6 over 24 months (LOLA terrain horizon with its obstacles, direction table, events, windows, eclipses and the lit fraction of the Sun, ground-station windows, countdowns, what each obstacle costs, the lunar-day calendar, landing windows for the three example requirements, the uncertainty band and the landing-circle survey for stated assumptions, the mast-height trade and the site pairs) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
 
 The published packages are regenerated, never edited by hand, and are republished whenever a change alters results (the code change is committed first, the regenerated packages in the commit that follows, so that their provenance names a clean commit). The method behind them reproduces the published LOLA illumination maps on terrain of the same resolution (`pgda/`), but the numbers of these three sites themselves have no independent counterpart; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
@@ -58,7 +60,7 @@ Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %
 
 ## `lro_images/` — sunlit or shadowed state against dated LROC images
 
-**What is compared.** Whether a point is sunlit or in shadow at the moment a Lunar Reconnaissance Orbiter Camera image was taken: the state the terrain horizon gives (sunlit if at least half of the Sun's disc is above the horizon at the surface) against the image. Two cases, with the reading rule and the criteria committed before any computation and before the image was downloaded (`lro_images/cases.json`, commit fb05da0). `python -m validation.lro_images.fetch` downloads the image; `files.json` records its URL, checksum and retrieval time.
+**What is compared.** Whether a point is sunlit or in shadow at the moment a Lunar Reconnaissance Orbiter Camera image was taken: the state the terrain horizon gives (sunlit if at least half of the Sun's disc is above the horizon at the surface) against the image. Two cases, with the reading rule and the criteria committed before any computation and before the image was downloaded (`lro_images/cases.json`, commit fb05da0). `python -m validation.lro_images.fetch` downloads the image to the data root, outside the repository; `files.json` records its URL, checksum and retrieval time, and a download that differs from that record is refused.
 
 **Result** (`lro_images/results/validation_table.md`): 3 of 4 registered checks pass, 1 fail, 0 not decided.
 
@@ -117,7 +119,7 @@ Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie 
 * The operator's times are predictions; its images of the eclipse are timed to about half an hour, which is too coarse to test contacts. No measured power curve was found.
 * The operator labels its predicted times "CST". They are read as local Texas time on that date (UTC−5); read as UTC−6 the eclipse would end after the Moon has left the Earth's penumbra, which the NASA chart excludes.
 * One eclipse, one site.
-* The package does not yet carry the power line as a time series (a contract field is needed); it carries the eclipse windows and metrics.
+* The package carries the power line as the series `lit_fraction` of the Sun, sampled at the step of the series (one hour in the published packages), next to the eclipse windows and metrics. Between the Sun and the Earth the lit fraction is computed in the plane tangent to the sky at the Sun; an earlier version took differences of azimuth and elevation instead, which was wrong by up to 0.011 of the disc with the Sun 60° high and by less than 0.001 at the polar sites.
 
 ## `stations/` — ground-station geometry versus JPL Horizons
 

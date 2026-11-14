@@ -85,6 +85,24 @@ def test_lit_fraction_reduces_to_the_two_single_cases():
     assert only_terrain[0] == pytest.approx(ev.disc_signals(az, el, np.array([rs]), rough).visible_fraction[0], abs=1e-12)
 
 
+def test_lit_fraction_matches_the_closed_form_at_any_sun_elevation_and_position_angle():
+    """The Earth is placed at a true angular distance and position angle from the Sun.
+
+    Taking differences of azimuth and elevation as flat coordinates passes this near the
+    horizon and fails it high in the sky (0.011 of the disc at 60 degrees elevation).
+    """
+    rs, re = 0.266, 0.912
+    clear = ev.Horizon(0.0, 1.0, np.full(360, -5.0))
+    for el in (1.0, 7.0, 30.0, 60.0, 85.0):
+        for sep in (0.70, 0.90, 1.10):
+            for angle in np.radians(np.arange(0.0, 360.0, 30.0)):
+                s, e0 = np.radians(sep), np.radians(el)
+                sin_el = np.sin(e0) * np.cos(s) + np.cos(e0) * np.sin(s) * np.cos(angle)
+                d_az = np.arctan2(np.sin(angle) * np.sin(s) * np.cos(e0), np.cos(s) - np.sin(e0) * sin_el)
+                lit = ec.lit_fraction(np.array([100.0]), np.array([el]), np.array([rs]), np.array([100.0 + np.degrees(d_az)]), np.array([np.degrees(np.arcsin(sin_el))]), np.array([re]), clear)
+                assert lit[0] == pytest.approx(1.0 - ec.covered_fraction(sep, rs, re), abs=TOL_COVERED), (el, sep, np.degrees(angle))
+
+
 def test_lit_fraction_with_terrain_and_earth_matches_pixel_counting():
     rs, re = 0.266, 0.912
     az0, el0 = 100.0, 0.05  # the Sun sits on a sloping horizon while the Earth covers part of it
