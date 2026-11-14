@@ -16,7 +16,7 @@ every method card has validation status `synthetic`.
 | `SYNTHETIC_scenario.json` | The scenario the sample was produced from |
 | `packages/index.json` | List of the packages below |
 | `packages/direction_table/<id>/` | Direction-table package: 769 hourly records, Sun and Earth |
-| `packages/site/synthetic-sample-site/<id>/` | Site package: horizon for 6 observer heights and 1440 azimuths, a 30-day hourly series, events, windows, metrics |
+| `packages/site/synthetic-sample-site/<id>/` | Site package: horizon for 6 observer heights and 1440 azimuths with its obstacles (four per height: an invented far ridge, an invented near rock field and two stretches between them), a 30-day hourly series, events, windows, metrics, the blocker of every sample and the time lost to each obstacle |
 
 Regenerate and check:
 

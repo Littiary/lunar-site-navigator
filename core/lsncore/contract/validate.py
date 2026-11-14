@@ -57,9 +57,15 @@ def _schema_errors(doc: Any) -> list[str]:
     for err in sorted(_validator(doc["kind"]).iter_errors(doc), key=lambda e: list(e.absolute_path)):
         where = "/".join(str(p) for p in err.absolute_path) or "<root>"
         errors.append(f"{where}: {err.message}")
-    version = doc.get("contract", {}).get("version")
-    if version != CONTRACT_VERSION:
-        errors.append(f"contract/version: found {version!r}, this reader implements {CONTRACT_VERSION!r}")
+    version = str(doc.get("contract", {}).get("version"))
+    try:
+        found = tuple(int(part) for part in version.split("."))
+        mine = tuple(int(part) for part in CONTRACT_VERSION.split("."))
+        readable = len(found) == 2 and found[0] == mine[0] and found[1] <= mine[1]
+    except ValueError:
+        readable = False
+    if not readable:
+        errors.append(f"contract/version: found {version!r}, this reader implements {CONTRACT_VERSION!r} and older minor versions")
     return errors
 
 
@@ -162,6 +168,15 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
     ):
         _expect_shape(hz.get(name), shape, f"horizon/{name}", errors)
 
+    _expect_shape(hz.get("obstacle_id"), shape, "horizon/obstacle_id", errors)
+    if ("obstacle_id" in hz) != ("obstacles" in hz):
+        errors.append("horizon: obstacle_id and obstacles must be given together")
+    for k, ob in enumerate(hz.get("obstacles", [])):
+        if ob["id"] != k:
+            errors.append(f"horizon/obstacles/{k}: id must equal the position in the list")
+        if ob["height_index"] >= len(heights) or ob["azimuth_start_index"] >= az["count"] or ob["azimuth_count"] > az["count"]:
+            errors.append(f"horizon/obstacles/{k}: index out of range")
+
     site = manifest["site"]
     req_site = manifest["request"]["site"]
     for key in ("site_id", "lat_deg", "lon_deg"):
@@ -182,8 +197,16 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             continue
         for name in ("azimuth_deg", "elevation_deg", "angular_radius_deg"):
             _expect_shape(series.get(name), [n], f"timeline/series/{body}/{name}", errors)
-        for name in ("margin_deg", "visible_fraction"):
+        for name in ("margin_deg", "visible_fraction", "blocker_azimuth_index"):
             _expect_shape(series.get(name), [len(heights), n], f"timeline/series/{body}/{name}", errors)
+    n_obstacles = len(hz.get("obstacles", []))
+    for i, blocker in enumerate(tl.get("blockers", [])):
+        if blocker["height_index"] >= len(heights) or blocker["body"] not in tl["bodies"]:
+            errors.append(f"timeline/blockers/{i}: body or height_index not in this package")
+        if blocker["obstacle_id"] >= n_obstacles:
+            errors.append(f"timeline/blockers/{i}: obstacle_id is not in horizon/obstacles")
+        if len(blocker["intervals_et_s"]) != len(blocker["intervals_utc"]):
+            errors.append(f"timeline/blockers/{i}: intervals_et_s and intervals_utc differ in length")
     t0 = tl["time"]["start_et_s"]
     t1 = t0 + (n - 1) * tl["time"]["step_s"]
     last = None

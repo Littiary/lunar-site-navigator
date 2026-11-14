@@ -16,7 +16,9 @@ from pathlib import Path
 import numpy as np
 
 from . import packaging as pk
+from .blocking import add_blocking_to_timeline
 from .contract import format_utc, read_package, write_index
+from .obstacles import segment_obstacles
 from .geometry import DEG, destination, site_frame, topocentric_az_el
 from .results import BodySeries, HorizonResult, TimelineResult
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
@@ -94,6 +96,9 @@ def synthetic_methods() -> dict:
         pk.M_EVENTS: _card("rise and set events", "Times at which a body crosses its visibility threshold.", local, "TDB"),
         pk.M_WINDOWS: _card("visibility windows", "Intervals during which the stated condition holds.", local, "TDB"),
         pk.M_METRICS: _card("window statistics", "Summary numbers derived from the visibility windows.", local, "TDB"),
+        pk.M_OBSTACLES: _card("obstacles", "Runs of neighbouring azimuths whose horizon is set by the same piece of terrain.", local, "none"),
+        pk.M_SMOOTH_SPHERE: _card("visibility over a smooth sphere", "The visibility condition evaluated without terrain.", local, "TDB"),
+        pk.M_BLOCKING: _card("time lost to terrain", "Time in which a smooth sphere would show the body and the terrain hides it, and the obstacle that hides it.", local, "TDB"),
         pk.M_DIRTAB_POSITIONS: _card("body positions", "Position of each body relative to the centre of the Moon.", SYNTHETIC_FRAME, "TDB"),
         pk.M_DIRTAB_RADII: _card("body radii", "Radius used for the disc of each body.", "none", "none"),
         pk.M_DIRTAB_INTERP: _card("table interpolation error", "Largest error of the recommended interpolation between table records.", SYNTHETIC_FRAME, "TDB"),
@@ -101,18 +106,23 @@ def synthetic_methods() -> dict:
 
 
 def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_m: float) -> HorizonResult:
-    """An invented horizon: two triangle waves, obstacles between 2 km and 82 km away."""
+    """An invented horizon: two triangle waves; the limiting terrain is 5 to 45 km away,
+    except for an invented far ridge (azimuth 40 to 70) and an invented near rock field
+    (azimuth 200 to 215), so that the profile falls into several obstacles."""
     site = canonical_site(site)
     heights = np.asarray(canonical_heights(heights_m), dtype=np.float64)
     n_az = int(round(360.0 / azimuth_step_deg))
     az = np.arange(n_az) * azimuth_step_deg
     base_deg = 3.0 * _tri(az / 360.0) + 1.5 * _tri(az / 45.0) - 1.0
-    dist_m = np.minimum(2000.0 + 80000.0 * _tri(az / 120.0 + 0.25), max_range_m)
+    dist_m = 5000.0 + 40000.0 * _tri(az / 120.0 + 0.25)
+    dist_m = np.where((az >= 40.0) & (az < 70.0), 150000.0, dist_m)
+    dist_m = np.where((az >= 200.0) & (az < 215.0), 300.0 + 2.0 * (az - 200.0), dist_m)
+    dist_m = np.minimum(dist_m, max_range_m)
     elevation = base_deg[None, :] - (heights[:, None] / dist_m[None, :]) / DEG
     obstacle_height = _SURFACE_HEIGHT_M + dist_m * base_deg * DEG + dist_m**2 / (2.0 * _RADIUS_M)
     lat, lon = destination(site["lat_deg"], site["lon_deg"], az, dist_m / _RADIUS_M)
     tile = lambda a: np.broadcast_to(a, (heights.size, n_az)).copy()  # noqa: E731
-    return HorizonResult(
+    result = HorizonResult(
         azimuth_step_deg=azimuth_step_deg,
         observer_heights_m=[float(h) for h in heights],
         max_range_m=max_range_m,
@@ -124,6 +134,9 @@ def synthetic_horizon(site: dict, heights_m, azimuth_step_deg: float, max_range_
         obstacle_lat_deg=tile(lat),
         obstacle_lon_deg=tile(lon),
     )
+    grouping = segment_obstacles(result)
+    result.obstacle_id, result.obstacles = grouping.obstacle_id, grouping.obstacles
+    return result
 
 
 def synthetic_positions_km(et_s: np.ndarray) -> np.ndarray:
@@ -217,6 +230,9 @@ def synthetic_timeline(
     windows: list[dict] = []
     metrics: list[dict] = []
     visible: dict[tuple[str, int], IntervalSet] = {}
+    visible_smooth: dict[tuple[str, int], IntervalSet] = {}
+    r_site = horizon.reference_radius_m + horizon.surface_height_m
+    dip = np.degrees(np.arccos(r_site / (r_site + np.asarray(heights, dtype=np.float64))))  # [H]
 
     for body in bodies:
         b = table.manifest["bodies"].index(body)
@@ -241,6 +257,8 @@ def synthetic_timeline(
         for h in range(len(heights)):
             iv = IntervalSet.from_samples(grid, signal[h], level)
             visible[(body, h)] = iv
+            # the same condition over a smooth sphere: the horizon is flat, dip[h] below horizontal
+            visible_smooth[(body, h)] = IntervalSet.from_samples(grid, signal[h] - margin[h] + el + dip[h], level)
             windows.append(_window(f"{body.lower()}_visible", body, h, f"{body} visible: {threshold['quantity']} {threshold['op']} {threshold['value']}", iv, clock, threshold))
             for a, e in iv.intervals:
                 for kind, when in (("rise", a), ("set", e)):
@@ -271,7 +289,7 @@ def synthetic_timeline(
             windows.append(_window("sun_and_earth_visible", "COMBINED", h, "SUN visible and EARTH visible at the same time", both, clock, None))
 
     events.sort(key=lambda ev: (ev["et_s"], ev["body"], ev["height_index"]))
-    return TimelineResult(
+    result = TimelineResult(
         direction_table_id=table.package_id,
         direction_table_sha256=table.manifest["content_sha256"],
         time=grid.to_contract(clock.et_to_utc(t[0]), clock.et_to_utc(t[-1])),
@@ -282,6 +300,8 @@ def synthetic_timeline(
         metrics=metrics,
         thresholds=thresholds,
     )
+    add_blocking_to_timeline(result, horizon, visible_smooth, clock.et_to_utc)
+    return result
 
 
 def _window(wid: str, subject: str, h: int, definition: str, iv: IntervalSet, clock, threshold) -> dict:

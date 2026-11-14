@@ -36,6 +36,9 @@ class HorizonResult:
     warnings: list[str] = field(default_factory=list)
     # how much of each ray was walked on the finest data and how much was proven irrelevant
     search_stats: dict = field(default_factory=dict)
+    # grouping of the profile into obstacles (lsncore.obstacles): [H, A] ids and the records
+    obstacle_id: np.ndarray | None = None
+    obstacles: list | None = None
 
 
 @dataclass
@@ -47,6 +50,8 @@ class BodySeries:
     margin_deg: np.ndarray  # [H, N]
     visible_fraction: np.ndarray  # [H, N]
     angular_radius_deg: np.ndarray | None = None  # [N]
+    # [H, N] index of the horizon sample that limits the view of the disc (lsncore.blocking)
+    blocker_azimuth_index: np.ndarray | None = None
 
 
 @dataclass
@@ -66,3 +71,5 @@ class TimelineResult:
     windows: list[dict]
     metrics: list[dict]
     thresholds: dict[str, dict] = field(default_factory=dict)
+    # obstacles that cost visible time compared with a smooth sphere; None = not computed
+    blockers: list | None = None

@@ -1,5 +1,5 @@
 {
-  "contract": {"name": "lsn-package", "version": "0.1"},
+  "contract": {"name": "lsn-package", "version": "0.2"},
   "kind": "scenario",
   "scenario_id": "synthetic-sample",
   "title": "SYNTHETIC SAMPLE - not a real site, not real dates",

@@ -10,12 +10,17 @@ from __future__ import annotations
 import time as _time
 from pathlib import Path
 
+import numpy as np
+
 from . import packaging as pk
+from .blocking import add_blocking_to_timeline
 from .contract import write_index
 from .dem import Terrain
 from .horizon import M_FAR_FIELD, HorizonSettings, compute_horizon
+from .obstacles import ABS_TOL_M, NEAR_FIELD_M, REL_TOL
 from .scenario import DEFAULT_HEIGHT_M, canonical_heights, canonical_site
 from .synthetic import run_synthetic_scenario
+from .timeline import IntervalSet, TimeGrid
 
 # Body-fixed frame of the LOLA elevation products and of the direction table: the lunar
 # mean-Earth / polar-axis frame, as named in the frame kernel the ephemeris stream loads.
@@ -103,6 +108,14 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
             params,
             ["Where two obstacles reach nearly the same elevation the reported point can jump between them from one azimuth or observer height to the next."],
         ),
+        pk.M_OBSTACLES: card(
+            "Obstacles of the horizon profile",
+            "An obstacle is a run of neighbouring azimuths whose horizon is set by the same piece of terrain. obstacle_id gives, per observer height and azimuth, the index of the obstacle in the obstacles list (-1 where the horizon has no data). Each obstacle lists its azimuth range, the range of distances of its limiting points, and its peak: the azimuth at which its horizon elevation is largest, with the distance, coordinates and height of the limiting point there.",
+            f"Two neighbouring azimuths belong to the same obstacle if the distances of their limiting points differ by no more than {REL_TOL:.0%} of the smaller one or by no more than {ABS_TOL_M:g} m. The profile is treated as periodic. near_field marks a peak closer than {NEAR_FIELD_M:g} m.",
+            local,
+            {"relative_tolerance": REL_TOL, "absolute_tolerance_m": ABS_TOL_M, "near_field_m": NEAR_FIELD_M},
+            ["The grouping looks at distance only. It does not identify named features, and one ridge can be split where the limiting point jumps along it."],
+        ),
         M_FAR_FIELD: card(
             "Bound on unseen far terrain",
             "far_field_max_deg: the largest amount, over all azimuths and observer heights, by which terrain beyond the reach of the rays could still raise the horizon, if no such terrain is higher than ceiling_height_m. 0 means the search radius is proven sufficient under that assumption. far_field_open_azimuth_fraction: share of azimuths with a non-zero bound. shortest_reach_m: shortest ray reach (search radius, or the edge of the data).",
@@ -111,6 +124,72 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
             {"max_range_m": max_range_m, "ceiling_source": "highest terrain in the DEM products" if terrain.ceiling_height_m is not None else "highest terrain met inside the search radius (assumption)"},
         ),
     }
+
+
+def blocking_methods(dem_set_id: str, azimuth_step_deg: float, series_step_s: float, direction_table_id: str) -> dict:
+    """Method cards of the comparison with a smooth sphere and of the blockers."""
+    local = "local East/North/Up at the site; up is the outward radial direction of the reference sphere"
+    data = [dem_set_id, direction_table_id]
+    evidence = [
+        "core/tests/test_obstacles.py::test_hours_lost_to_a_ridge_against_the_closed_form: lost time 0.9 s off the closed-form value of 45.7 h (threshold 5 s)",
+        "core/tests/test_obstacles.py::test_lost_time_is_split_between_obstacles_without_loss: the shares add up to the lost time (threshold 1e-6 s)",
+        "core/tests/test_obstacles.py::test_limiting_azimuth_on_a_sloping_horizon",
+        "Not yet compared with an independent computation on real terrain.",
+    ]
+    return {
+        pk.M_SMOOTH_SPHERE: pk.method_card(
+            "Visibility over a smooth sphere",
+            "The visibility condition of the body evaluated as if the Moon were a smooth sphere through the ground point of the site: the horizon is a circle below the horizontal by the dip angle acos(r / (r + m)), r being the distance of the site from the centre and m the observer height. Same direction table, same condition and same event finder as the terrain windows.",
+            "Event finder (lsncore.events.finder) on a flat horizon profile at minus the dip angle.",
+            local,
+            "TDB",
+            [direction_table_id],
+            {"condition": "the scenario threshold of the body"},
+            "analytic-test-passed",
+            evidence,
+            ["This is a reference for comparison, not a prediction: no site sits on a smooth sphere."],
+        ),
+        pk.M_BLOCKING: pk.method_card(
+            "Time lost to terrain and the obstacle that causes it",
+            "lost_to_terrain: the times at which the body is visible over a smooth sphere and not visible over the terrain. gained_from_terrain: visible over the terrain and not over a smooth sphere (terrain below the smooth horizon). blocker_azimuth_index: for every sample of the series, the index of the horizon sample that limits the view of the disc; for a hidden disc under the 'any part visible' condition it is where the disc is closest to showing. blockers: the lost time split between the obstacles of the horizon, each with the intervals in which it is the limiting obstacle.",
+            "Interval algebra on the visibility windows (lost = smooth AND NOT terrain). For the split, each sample of the series stands for the half step before and after it, and its time goes to the obstacle at its limiting horizon sample.",
+            local,
+            "TDB",
+            data,
+            {"series_step_s": series_step_s, "azimuth_step_deg": azimuth_step_deg},
+            "analytic-test-passed",
+            evidence,
+            [
+                f"The totals have the accuracy of the event finder; the split between obstacles is resolved to the series step ({series_step_s:g} s).",
+                "One obstacle is named per instant: the one at the limiting azimuth. Other terrain under the disc may hide parts of it at the same time.",
+                "Obstacles are runs of the horizon profile, not named terrain features; see the obstacle card.",
+                "The horizon limits of docs/method/horizon.md apply: near terrain depends on single DEM pixels.",
+            ],
+        ),
+    }
+
+
+def _smooth_sphere_windows(csite: dict, horizon, table_dir, timeline, thresholds: dict) -> dict:
+    """Visibility windows of every body and observer height over a smooth sphere through the site."""
+    from .ephem import directions as d
+    from .ephem import table as ephem_table
+    from .events import finder
+
+    table = ephem_table.load_table(table_dir)
+    grid = TimeGrid.from_contract(timeline.time)
+    domain = (grid.start_et_s, grid.end_et_s)
+    ground = d.Site(csite["lon_deg"], csite["lat_deg"], horizon.surface_height_m / 1000.0)
+    r_site = horizon.reference_radius_m + horizon.surface_height_m
+    out = {}
+    for body in timeline.bodies:
+        direction = finder.site_direction(ground, table, body)
+        rule = {"visible": finder.threshold_from_contract(thresholds[body], "visible")}
+        for h, m in enumerate(horizon.observer_heights_m):
+            dip = float(np.degrees(np.arccos(r_site / (r_site + m))))
+            flat = finder.Horizon(0.0, 1.0, np.full(360, -dip))
+            result = finder.find_events(direction, flat, domain[0], domain[1], thresholds=rule)
+            out[(body, h)] = IntervalSet(finder.windows(result, "visible").intervals_et_s, domain)
+    return out
 
 
 def _mark_synthetic(methods: dict) -> dict:
@@ -189,8 +268,15 @@ def run_scenario(
         if window is not None and table_dir is None:
             status = "partial"
         if table_dir is not None:
+            from .ephem import directions as ephem_directions
+
             timeline = timeline_mod.compute_timeline(site, horizon, table_dir, window, bodies, thresholds)
             methods.update(timeline_mod.timeline_methods(table_dir, horizon_is_terrain=True))
+            smooth = _smooth_sphere_windows(csite, horizon, table_dir, timeline, thresholds)
+            add_blocking_to_timeline(timeline, horizon, smooth, ephem_directions.et_to_utc_z)
+            methods.update(
+                blocking_methods(terrain.describe()["dem_set_id"], az_step, float(window["step_s"]), timeline.direction_table_id)
+            )
         t2 = _time.perf_counter()
         if not horizon.coverage_complete:
             status = "partial"

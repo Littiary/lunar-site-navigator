@@ -23,6 +23,9 @@ M_FRACTION = "timeline.visible_fraction"
 M_EVENTS = "timeline.events"
 M_WINDOWS = "timeline.windows"
 M_METRICS = "timeline.metrics"
+M_OBSTACLES = "horizon.obstacles"
+M_SMOOTH_SPHERE = "timeline.smooth_sphere"
+M_BLOCKING = "timeline.blocking"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
@@ -166,6 +169,9 @@ def build_site_package(
     for name, values, dtype, unit in optional:
         if values is not None:
             horizon_block[name] = writer.array(f"horizon_{name}", values, dtype, unit, M_OBSTACLE)
+    if horizon.obstacle_id is not None and horizon.obstacles is not None:
+        horizon_block["obstacle_id"] = writer.array("horizon_obstacle_id", horizon.obstacle_id, "<i4", "1", M_OBSTACLES)
+        horizon_block["obstacles"] = [{**record, "method": M_OBSTACLES} for record in horizon.obstacles]
     if horizon.error_bounds:
         horizon_block["error_bounds"] = {
             name: _quantity(value, unit, method)
@@ -196,6 +202,10 @@ def build_site_package(
             block["visible_fraction"] = writer.array(
                 f"series_{tag}_visible_fraction", s.visible_fraction, "<f4", "1", M_FRACTION
             )
+            if s.blocker_azimuth_index is not None:
+                block["blocker_azimuth_index"] = writer.array(
+                    f"series_{tag}_blocker_azimuth_index", s.blocker_azimuth_index, "<i4", "1", M_BLOCKING
+                )
             series[body] = block
         sections["timeline"] = {
             "direction_table_id": timeline.direction_table_id,
@@ -206,6 +216,8 @@ def build_site_package(
             "windows": timeline.windows,
             "metrics": timeline.metrics,
         }
+        if timeline.blockers is not None:
+            sections["timeline"]["blockers"] = timeline.blockers
 
     used = _used_methods(sections, set())
     missing = used - methods.keys()

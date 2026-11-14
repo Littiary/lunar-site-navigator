@@ -1,10 +1,11 @@
-# Package contract, version 0.1
+# Package contract, version 0.2
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
 
 - Machine-checkable schema: [`schemas/lsn-contract.schema.json`](schemas/lsn-contract.schema.json) (JSON Schema 2020-12).
 - Sample with invented values: [`sample/`](sample/README.md).
+- What changed since 0.1: [section 10](#10-changes).
 - Reference writer, reader and validator: `core/lsncore/contract/`.
 - Owner: the core stream. Other streams request changes; they do not edit these files
   (CONTRIBUTING.md, rule 2).
@@ -102,7 +103,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.1"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.2"}` |
 | `kind` | `site` or `direction_table` |
 | `package_id` | `site-` or `dirtab-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -204,10 +205,34 @@ same package ids.
 | `obstacle_lat_deg`, `obstacle_lon_deg` | `[H, A]` `<f8` | Optional. Coordinates of that point |
 | `error_bounds` | | Optional named quantities. The horizon core writes `far_field_max_deg` (largest amount by which terrain beyond the reach of the rays could still raise the horizon; 0 = search radius proven sufficient), `far_field_open_azimuth_fraction`, `ceiling_height_m` (the terrain ceiling that bound assumes) and `shortest_reach_m`; see [`../method/horizon.md`](../method/horizon.md) |
 | `flags` | | `coverage_complete`, `truncated_at_data_edge`, `nodata_fraction` |
+| `obstacle_id` | `[H, A]` `<i4` | Since 0.2. For each observer height and azimuth, the index into `obstacles` of the obstacle that this azimuth belongs to; -1 where the horizon has no data |
+| `obstacles` | list | Since 0.2. One record per obstacle, see below. `obstacles[k].id` is `k` |
 
 Between azimuth samples, readers interpolate linearly (periodically). The obstacle point,
 its distance and its height can change abruptly from one azimuth to the next; they must
 not be interpolated, only read at the nearest sample.
+
+**Obstacle** (since 0.2). An obstacle is a run of neighbouring azimuths whose horizon is
+set by the same piece of terrain: the limiting points of neighbouring azimuths lie at
+nearly the same distance (within 10 %, or within 50 m). Where the limiting point jumps
+nearer or farther, a new obstacle begins. The grouping is done separately for each
+observer height; ids are unique across heights.
+
+| Field | Content |
+|---|---|
+| `id`, `height_index` | Position in the list; observer height the grouping belongs to |
+| `azimuth_start_index`, `azimuth_count` | The run: azimuth indices `(azimuth_start_index + k) mod A` for `k = 0 … azimuth_count - 1`. A run may pass through azimuth 0 |
+| `azimuth_start_deg`, `azimuth_end_deg` | First and last azimuth of the run in degrees (`end` is smaller than `start` when the run passes through 0) |
+| `peak_azimuth_deg`, `peak_elevation_deg` | Where the obstacle stands highest in the profile, and how high |
+| `peak_distance_m`, `peak_lat_deg`, `peak_lon_deg`, `peak_height_m` | The limiting terrain point at the peak azimuth |
+| `distance_min_m`, `distance_max_m` | Range of the distances of the limiting points along the run |
+| `near_field` | `true` if the peak is closer than 1 km: such an obstacle depends on single pixels of the elevation model and on the observer height |
+| `method` | Method card |
+
+The outline of an obstacle in 3-D is the sequence of limiting points
+(`obstacle_lat_deg`, `obstacle_lon_deg`, `obstacle_height_m` at `[height_index, j]`) for
+the azimuth indices `j` of its run. Obstacles are geometric runs of the profile; they
+carry no names.
 
 Reserved optional arrays, same shape: `obstacle_dem_layer` (`|u1`), `elevation_sigma_deg`,
 `elevation_lower_deg`, `elevation_upper_deg` (uncertainty band).
@@ -226,9 +251,11 @@ Present only when a time window was computed.
 | `series.<BODY>.angular_radius_deg` | `[N]` optional |
 | `series.<BODY>.margin_deg` | `[H, N]` elevation of the disc centre minus the terrain horizon at the same azimuth, for each observer height |
 | `series.<BODY>.visible_fraction` | `[H, N]` fraction of the disc area above the terrain horizon, 0 to 1 |
+| `series.<BODY>.blocker_azimuth_index` | `[H, N]` `<i4`, since 0.2. For every sample, the azimuth index of the horizon sample that limits the view of the disc; see 5.5 |
 | `events[]` | Rise and set events, sorted by time |
 | `windows[]` | Interval sets |
 | `metrics[]` | Summary numbers |
+| `blockers[]` | Since 0.2. The obstacles that cost visible time compared with a smooth sphere; see 5.5 |
 
 **Event:** `type` (`rise`, `set`), `body`, `height_index`, `et_s`, `utc`, `azimuth_deg`
 (of the body at the event), `horizon_elevation_deg` and `obstacle_distance_m` (of the
@@ -244,8 +271,73 @@ true start or end is unknown), `method`.
 
 **Metric:** `id`, `label`, `value`, `unit`, `height_index` (or `null`), `method`.
 
+Window ids written by the core, each per observer height: `<body>_visible` (the
+scenario's condition), `<body>_any_part_visible`, `<body>_full_disc_visible`,
+`sun_and_earth_visible`, and since 0.2 `<body>_visible_smooth_sphere`,
+`<body>_lost_to_terrain`, `<body>_gained_from_terrain` (5.5). `<body>` is `sun` or `earth`.
+
 In Python, a window is a `lsncore.timeline.IntervalSet`. Union, intersection, complement,
 `close_gaps` and `drop_short` are defined there once and used by every feature.
+
+### 5.5 Showing the obstacle (since 0.2)
+
+These fields answer three questions for a site: what is in the way of the Sun or the
+Earth at a given time, where it is, and what it costs.
+
+**The comparison.** For every body and observer height the core also evaluates the
+scenario's visibility condition over a *smooth sphere through the site*: no terrain, the
+horizon a circle below the horizontal by the dip angle of the observer height. Then
+
+```
+<body>_lost_to_terrain     = visible over the smooth sphere AND NOT visible over the terrain
+<body>_gained_from_terrain = visible over the terrain AND NOT visible over the smooth sphere
+visible over the terrain   = smooth sphere - lost + gained          (as sets of time)
+```
+
+Time is gained where the terrain lies below the smooth horizon, as it does around a site
+on a summit. The three windows are in `windows[]`; their durations are the metrics
+`<body>_visible_s`, `<body>_visible_smooth_sphere_s`, `<body>_lost_to_terrain_s` and
+`<body>_gained_from_terrain_s` (seconds).
+
+**Per sample.** `series.<BODY>.blocker_azimuth_index[h, i]` is the azimuth index `j` of
+the horizon sample that limits the view of the disc at sample `i`. Which sample that is
+depends on the scenario's condition for the body: for "any part visible" it is, among
+the horizon samples under the disc, the one where the upper edge of the disc stands
+highest above the horizon (for a hidden disc: where its first light will appear); for
+the centre condition it is the sample nearest to the azimuth of the centre; for "whole
+disc visible" the one where the horizon reaches highest above the lower edge. The index
+is defined at every sample, also while the body is visible.
+
+**Blocker** (one record per body, observer height and obstacle that costs time; sorted by
+cost, largest first):
+
+| Field | Content |
+|---|---|
+| `body`, `height_index` | What is hidden, for which observer height |
+| `obstacle_id` | Index into `horizon.obstacles`; -1 if the limiting sample has no data |
+| `lost_s` | Part of `<body>_lost_to_terrain` during which this obstacle is the limiting one, in seconds |
+| `share_of_lost` | `lost_s` divided by the total lost time of that body and height |
+| `intervals_et_s`, `intervals_utc` | When: sorted, disjoint intervals |
+| `azimuth_start_deg`, `azimuth_end_deg`, `peak_azimuth_deg`, `peak_elevation_deg`, `peak_distance_m`, `peak_lat_deg`, `peak_lon_deg`, `peak_height_m`, `near_field` | Copied from the obstacle record, so that a label needs no second lookup |
+| `method` | Method card |
+
+The totals come from the visibility windows and have the accuracy of the event times.
+The split between obstacles is resolved to the step of the series: each sample stands
+for the half step before and after it.
+
+**Recipe for a viewer** (height index `h`, body `B`, time-slider sample `i`):
+
+1. `f = series.B.visible_fraction[h, i]`: 1 whole disc visible, 0 hidden, between: partly hidden.
+2. `j = series.B.blocker_azimuth_index[h, i]`. The limiting terrain point is at azimuth
+   `j * step_deg`, distance `horizon.distance_m[h, j]`, position
+   `horizon.obstacle_lat_deg[h, j]`, `obstacle_lon_deg[h, j]`, `obstacle_height_m[h, j]`.
+3. `k = horizon.obstacle_id[h, j]`; `horizon.obstacles[k]` gives the run of azimuths to
+   highlight and the peak for a label.
+4. The record in `timeline.blockers` with the same `body`, `height_index` and
+   `obstacle_id` gives the hours this obstacle costs in the computed window
+   (`lost_s / 3600`); there is none if it costs nothing.
+5. Show the method card and, if `near_field` is true, say that the obstacle is within
+   1 km and depends on single pixels of the elevation model.
 
 ## 6. Direction-table package (decision 3)
 
@@ -285,7 +377,8 @@ margins and visible fractions are read from the site package, never recomputed.
 The version is `major.minor`. Adding an optional field raises the minor number; readers
 must ignore fields they do not know and keep working. Changing the meaning, unit or layout
 of an existing field raises the major number; a reader must refuse a package with another
-major number and say why. While the major number is 0 the format may still change, but
+major number and say why. A reader written for 0.2 reads 0.1 packages (it finds the 0.2
+fields absent); the validator accepts every minor version up to its own. While the major number is 0 the format may still change, but
 only in announced batches, and every change updates this document, the schema and the
 sample in the same commit.
 
@@ -301,3 +394,16 @@ with the stated size, digest and NaN count; every `method` has a card and every 
 used; array shapes agree with the axes; events are sorted and inside the time grid;
 intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
+
+## 10. Changes
+
+### 0.2 (14 November 2026)
+
+Additive; nothing that existed in 0.1 changed its meaning, name, unit or layout.
+
+- `horizon.obstacle_id`, `horizon.obstacles[]`: the profile grouped into obstacles (5.3).
+- `timeline.series.<BODY>.blocker_azimuth_index`, `timeline.blockers[]` (5.5).
+- New window ids `<body>_visible_smooth_sphere`, `<body>_lost_to_terrain`, `<body>_gained_from_terrain` and metrics `<body>_visible_s`, `<body>_visible_smooth_sphere_s`, `<body>_lost_to_terrain_s`, `<body>_gained_from_terrain_s` (5.5).
+- New method card ids: `horizon.obstacles`, `timeline.smooth_sphere`, `timeline.blocking`.
+- The validator accepts packages of older minor versions.
+- The sample was regenerated: its package ids changed (new directories), and its invented horizon now has a far ridge and a near rock field so that it falls into several obstacles. Find the packages through `index.json`.

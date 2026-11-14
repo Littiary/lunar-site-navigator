@@ -1,23 +1,23 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.1"
+    "version": "0.2"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T10:22:41.491Z",
+  "generated_utc": "2026-11-14T11:40:38.945Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
       "kind": "direction_table",
-      "package_id": "dirtab-a0525ccdcf377912",
-      "path": "direction_table/dirtab-a0525ccdcf377912",
+      "package_id": "dirtab-d96af27ea88fdf07",
+      "path": "direction_table/dirtab-d96af27ea88fdf07",
       "synthetic": true,
       "status": "ok"
     },
     {
       "kind": "site",
-      "package_id": "site-a02ee316b65e2af1",
-      "path": "site/synthetic-sample-site/site-a02ee316b65e2af1",
+      "package_id": "site-f7077486e768bf0c",
+      "path": "site/synthetic-sample-site/site-f7077486e768bf0c",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",

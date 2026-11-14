@@ -40,6 +40,7 @@ import numpy as np
 
 from .dem import Terrain
 from .geometry import DEG, site_frame
+from .obstacles import segment_obstacles
 from .results import HorizonResult
 
 M_FAR_FIELD = "horizon.far_field_bound"
@@ -383,7 +384,7 @@ def compute_horizon(
         )
 
     lattice_points = int(cell_count.sum()) * n_az
-    return HorizonResult(
+    result = HorizonResult(
         azimuth_step_deg=float(azimuth_step_deg),
         observer_heights_m=[float(h) for h in heights],
         max_range_m=float(max_range_m),
@@ -409,3 +410,6 @@ def compute_horizon(
             "crease_points": int(kink_points),
         },
     )
+    grouping = segment_obstacles(result)
+    result.obstacle_id, result.obstacles = grouping.obstacle_id, grouping.obstacles
+    return result
