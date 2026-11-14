@@ -220,7 +220,7 @@ bool FLsnPlannerLogicTest::RunTest(const FString& Parameters)
 	AddMetric(TEXT("sun_visible_fraction_of_time"), 2, 0.779);
 	AddMetric(TEXT("sun_longest_outage_s"), 2, 188.1 * 3600.0);
 	AddMetric(TEXT("earth_visible_fraction_of_time"), 2, 0.509);
-	AddMetric(TEXT("sun_lost_to_terrain_s"), 2, 545.5 * 3600.0);
+	AddMetric(TEXT("sun_lost_to_terrain_s"), 2, 545.2 * 3600.0);
 	AddMetric(TEXT("sun_gained_from_terrain_s"), 2, 2369.2 * 3600.0);
 	AddMetric(TEXT("sun_visible_fraction_of_time"), 0, 0.5);
 	TArray<FString> Lines;
@@ -231,7 +231,8 @@ bool FLsnPlannerLogicTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("Q: share of Sun"), Lines[0], FString(TEXT("Sun visible 77.9 % of the window")));
 		TestEqual(TEXT("Q: longest outage"), Lines[1], FString(TEXT("longest time without Sun 188.1 h")));
 		TestEqual(TEXT("Q: share of Earth"), Lines[2], FString(TEXT("Earth visible 50.9 % of the window")));
-		TestEqual(TEXT("Q: terrain"), Lines[3], FString(TEXT("terrain against a smooth sphere: Sun -545.5 h, +2369.2 h")));
+		// One plain sentence (wording changed on 2026-11-14 at the team lead's request; the numbers are the package metrics in whole hours).
+		TestEqual(TEXT("Q: terrain"), Lines[3], FString(TEXT("Terrain here costs 545 h of Sun and gives 2369 h that a smooth sphere would not have")));
 	}
 	LsnPlanner::BuildMetricLines(M, 1, Lines);
 	TestEqual(TEXT("Q: a height without metrics gives no lines"), Lines.Num(), 0);

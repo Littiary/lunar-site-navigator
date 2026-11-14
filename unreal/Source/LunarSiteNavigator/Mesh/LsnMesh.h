@@ -100,6 +100,15 @@ namespace LsnMesh
 	 * that are not relief. The positions, and with them the silhouette and every test
 	 * against the package horizon, are the same with and without smoothing.
 	 */
+	/**
+	 * Share (0 .. 1) of the drawn ground between 2 m and MaxDistanceM from the site that
+	 * faces away from the Sun: where the elevation samples rise towards the Sun's azimuth
+	 * more steeply than the Sun stands high, so that the ground lies in its own shadow.
+	 * A statement about the drawing, made from the viewer's elevation samples and the
+	 * package's Sun direction; it is no visibility result and changes none.
+	 */
+	LUNARSITENAVIGATOR_API double NearGroundFacingAwayShare(const struct FLsnTerrainGrid& Grid, double SiteHeightM, double SunAzimuthDeg, double SunElevationDeg, double MaxDistanceM);
+
 	LUNARSITENAVIGATOR_API void BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
 		const FLsnTerrainGrid& Grid, float Albedo, double NormalSmoothingM, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples);
 

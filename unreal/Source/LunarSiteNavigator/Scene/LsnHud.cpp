@@ -475,7 +475,8 @@ void ALsnHud::DrawHUD()
 		const FString Viewpoint = (Pawn && Pawn->IsOverview()) ? (Pawn->GetCameraUpM() >= 1000.0 ? FString::Printf(TEXT("overview from %.0f km above the site, not the observer's view"), Pawn->GetCameraUpM() / 1000.0)
 			: FString::Printf(TEXT("camera %.0f m above and behind the observer, not the observer's view"), Pawn->GetCameraUpM()))
 			: FString::Printf(TEXT("observer %.1f m"), P.ObserverHeightsM[H]);
-		DrawText(FString::Printf(TEXT("%s   %s   %s   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), *Viewpoint, *P.PackageId, *P.ContractVersion),
+		DrawText(FString::Printf(TEXT("%s   %s   %s   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), *Viewpoint, *P.PackageId, *P.ContractVersion)
+			+ (Scene->IsFillForced() ? TEXT("   weak fill light on as a viewing aid: shadows are black without it") : TEXT("")),
 			Dim, Margin, SizeY - 26.0f * Scale, Font, Scale * 0.9f);
 		return;
 	}
@@ -633,8 +634,7 @@ void ALsnHud::DrawHUD()
 			RightY += 19.0f * Scale;
 			for (const FString& Metric : Metrics)
 			{
-				DrawFit(Metric, White, Pano.Box.Min.X, RightY, Pano.Box.Max.X - Pano.Box.Min.X, TypeM);
-				RightY += 21.0f * Scale;
+				RightY = DrawWrapped(Metric, White, Pano.Box.Min.X, RightY, Pano.Box.Max.X - Pano.Box.Min.X, TypeM) + 2.0f * Scale;
 			}
 		}
 	}
@@ -661,6 +661,14 @@ void ALsnHud::DrawHUD()
 	for (const FString& Warning : P.Warnings)
 	{
 		Notice(FString::Printf(TEXT("warning of the package: %s"), *Warning));
+	}
+	if (Scene->GetNearGroundShadeShare() >= 0.05 && !bOverview && Page == ELsnPlannerPage::Summary)
+	{
+		// The scene must not seem to contradict the package where the user looks: say what the dark ground is.
+		FLsnBodyAtTime SunNow;
+		Scene->SampleBody(TEXT("SUN"), Position, SunNow);
+		Y = DrawWrapped(FString::Printf(TEXT("About %.0f %% of the ground within %.0f m is drawn in shadow: the elevation data rises towards the Sun there by more than the Sun's height of %.1f deg. The package's horizon search starts %.0f m out; its result is for the observer at the site, who is in sunlight."),
+			100.0 * Scene->GetNearGroundShadeShare(), FMath::Max(P.HorizonSearchStartM(), 5.0), SunNow.ElevationDeg, P.HorizonSearchStartM()), White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
 	}
 	const bool bDetails = LeftPawn && LeftPawn->AreDetailsShown();
 	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(SizeX, SizeY, P);

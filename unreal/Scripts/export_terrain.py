@@ -30,11 +30,11 @@ from pathlib import Path
 import numpy as np
 
 FORMAT = {"name": "lsn-unreal-terrain-grid", "version": "1"}
-NEAREST_RING_M = 5.0
+NEAREST_RING_M = 1.0
 
 
 def ring_distances(max_range_m: float, count: int) -> np.ndarray:
-    """Ring distances from 5 m to the search radius, growing by a constant factor."""
+    """Ring distances from 1 m to the search radius, growing by a constant factor."""
     return np.geomspace(NEAREST_RING_M, max_range_m, count)
 
 

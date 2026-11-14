@@ -129,7 +129,7 @@ void LsnPlanner::BuildMetricLines(const FLsnSitePackage& Package, int32 HeightIn
 	}
 	if (Value(TEXT("sun_lost_to_terrain_s"), V) && Value(TEXT("sun_gained_from_terrain_s"), W))
 	{
-		OutLines.Add(FString::Printf(TEXT("terrain against a smooth sphere: Sun -%.1f h, +%.1f h"), V / 3600.0, W / 3600.0));
+		OutLines.Add(FString::Printf(TEXT("Terrain here costs %.0f h of Sun and gives %.0f h that a smooth sphere would not have"), V / 3600.0, W / 3600.0));
 	}
 }
 

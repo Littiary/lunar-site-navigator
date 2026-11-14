@@ -109,6 +109,15 @@ public:
 	/** A point of the drawn ground at an azimuth and distance from the site, relative to the actor; false without elevation data there. */
 	bool GroundPointUnreal(double AzimuthDeg, double DistanceM, FVector& OutPoint) const;
 
+	/**
+	 * Share of the drawn ground within the start distance of the package's horizon search
+	 * that lies in its own shadow at the selected sample (see LsnMesh::NearGroundFacingAwayShare);
+	 * 0 without elevation samples or while the package gives the Sun as hidden.
+	 */
+	double GetNearGroundShadeShare() const { return NearGroundShadeShare; }
+	/** The fill light on whatever the Sun does: for overview stills, labelled as a viewing aid. */
+	bool IsFillForced() const { return bForceFill; }
+
 	/** True if the star field is drawn: the star list and the sky orientation exported for this package are there. */
 	bool HasStars() const { return bHasSky; }
 	UProceduralMeshComponent* GetStarsComponent() const { return Stars; }
@@ -235,6 +244,8 @@ private:
 	int32 SceneSlot = 0;
 	bool bObstacleViewEnabled = true;
 	bool bFillLightWanted = true;
+	bool bForceFill = false;
+	double NearGroundShadeShare = 0.0;
 	bool bHasSky = false;
 	FLsnSkyOrientation Sky;
 	void UpdateLook();

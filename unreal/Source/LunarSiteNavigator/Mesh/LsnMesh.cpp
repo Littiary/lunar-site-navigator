@@ -712,3 +712,58 @@ bool FLsnSilhouette::MaxElevationDeg(double AzimuthDeg, double& OutElevationDeg)
 	}
 	return bFound;
 }
+
+double LsnMesh::NearGroundFacingAwayShare(const FLsnTerrainGrid& Grid, double SiteHeightM, double SunAzimuthDeg, double SunElevationDeg, double MaxDistanceM)
+{
+	const int32 Rings = Grid.RingDistanceM.Num();
+	if (Rings < 2 || Grid.AzimuthCount <= 0 || Grid.HeightsM.Num() != Grid.AzimuthCount * Rings || !(Grid.AzimuthStepDeg > 0.0))
+	{
+		return 0.0;
+	}
+	// Height of the samples at a point east and north of the site: linear between the azimuth
+	// samples and between the rings (and between the site and the first ring).
+	auto HeightAt = [&](double EastM, double NorthM, bool& bKnown)
+	{
+		const double Distance = FMath::Sqrt(EastM * EastM + NorthM * NorthM);
+		const double AzimuthPosition = FMath::Fmod(FMath::RadiansToDegrees(FMath::Atan2(EastM, NorthM)) - Grid.AzimuthStartDeg + 720.0, 360.0) / Grid.AzimuthStepDeg;
+		const int32 A0 = static_cast<int32>(FMath::FloorToDouble(AzimuthPosition)) % Grid.AzimuthCount, A1 = (A0 + 1) % Grid.AzimuthCount;
+		const double Fa = AzimuthPosition - FMath::FloorToDouble(AzimuthPosition);
+		auto Along = [&](int32 A)
+		{
+			if (Distance <= Grid.RingDistanceM[0])
+			{
+				return FMath::Lerp(SiteHeightM, static_cast<double>(Grid.HeightsM[A * Rings]), Distance / Grid.RingDistanceM[0]);
+			}
+			int32 R = 0;
+			while (R + 2 < Rings && Grid.RingDistanceM[R + 1] < Distance)
+			{
+				++R;
+			}
+			const double F = FMath::Clamp((Distance - Grid.RingDistanceM[R]) / (Grid.RingDistanceM[R + 1] - Grid.RingDistanceM[R]), 0.0, 1.0);
+			return FMath::Lerp(static_cast<double>(Grid.HeightsM[A * Rings + R]), static_cast<double>(Grid.HeightsM[A * Rings + R + 1]), F);
+		};
+		const double Value = FMath::Lerp(Along(A0), Along(A1), Fa);
+		bKnown = bKnown && !FMath::IsNaN(Value);
+		return Value;
+	};
+	const double SunEast = FMath::Sin(FMath::DegreesToRadians(SunAzimuthDeg)), SunNorth = FMath::Cos(FMath::DegreesToRadians(SunAzimuthDeg));
+	const double TanSun = FMath::Tan(FMath::DegreesToRadians(SunElevationDeg));
+	int32 Points = 0, Away = 0;
+	for (int32 Step = 0; Step < 6; ++Step)
+	{
+		const double Distance = 2.0 + (MaxDistanceM - 2.0) * (Step + 0.5) / 6.0;
+		for (int32 AzimuthDeg = 0; AzimuthDeg < 360; AzimuthDeg += 10)
+		{
+			const double East = Distance * FMath::Sin(FMath::DegreesToRadians(static_cast<double>(AzimuthDeg))), North = Distance * FMath::Cos(FMath::DegreesToRadians(static_cast<double>(AzimuthDeg)));
+			// Rise of the ground over one metre towards the Sun, centred on the point.
+			bool bKnown = true;
+			const double Rise = HeightAt(East + 0.5 * SunEast, North + 0.5 * SunNorth, bKnown) - HeightAt(East - 0.5 * SunEast, North - 0.5 * SunNorth, bKnown);
+			if (bKnown)
+			{
+				++Points;
+				Away += Rise > TanSun ? 1 : 0;
+			}
+		}
+	}
+	return Points > 0 ? static_cast<double>(Away) / Points : 0.0;
+}

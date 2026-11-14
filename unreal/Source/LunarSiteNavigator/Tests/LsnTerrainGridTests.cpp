@@ -47,6 +47,13 @@
 #include "Scene/LsnSiteScene.h"
 #include "Terrain/LsnTerrainGrid.h"
 
+// J. Near ground that faces away from the Sun (a statement about the drawing, for the notice on screen).
+//    Written before the first run. On a hand-made grid that is a plane rising towards azimuth
+//    40 deg at 5 deg: with the Sun at azimuth 40 deg and 2 deg high, the whole near ground
+//    faces away from it (share 1); with the Sun 6 deg high, none of it (share 0); with the
+//    Sun at azimuth 220 deg (behind the slope), none; on level ground, none. A plane rising
+//    at exactly the Sun's height is the boundary and is not tested.
+
 #if WITH_DEV_AUTOMATION_TESTS
 
 namespace LsnTerrainTest
@@ -419,3 +426,39 @@ bool FLsnTerrainRealTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLsnNearGroundShadeTest, "LunarSiteNavigator.Terrain.NearGroundFacingAwayFromTheSun", LsnTest::Flags)
+bool FLsnNearGroundShadeTest::RunTest(const FString& Parameters)
+{
+	auto MakePlane = [](double RiseAzimuthDeg, double SlopeDeg)
+	{
+		FLsnTerrainGrid Grid;
+		Grid.AzimuthStartDeg = 0.0;
+		Grid.AzimuthStepDeg = 1.0;
+		Grid.AzimuthCount = 360;
+		Grid.RingDistanceM = { 1.0, 2.0, 4.0, 8.0, 16.0, 32.0 };
+		const int32 Rings = Grid.RingDistanceM.Num();
+		Grid.HeightsM.SetNumUninitialized(360 * Rings);
+		for (int32 A = 0; A < 360; ++A)
+		{
+			for (int32 R = 0; R < Rings; ++R)
+			{
+				// Height above the site: distance along the direction of rise times the slope.
+				const double Along = Grid.RingDistanceM[R] * FMath::Cos(FMath::DegreesToRadians(A - RiseAzimuthDeg));
+				Grid.HeightsM[A * Rings + R] = static_cast<float>(100.0 + Along * FMath::Tan(FMath::DegreesToRadians(SlopeDeg)));
+			}
+		}
+		return Grid;
+	};
+	const FLsnTerrainGrid Slope = MakePlane(40.0, 5.0), Level = MakePlane(40.0, 0.0);
+	TestEqual(TEXT("J: Sun low in the direction of rise: all of the near ground faces away"), LsnMesh::NearGroundFacingAwayShare(Slope, 100.0, 40.0, 2.0, 20.0), 1.0, 1e-9);
+	TestEqual(TEXT("J: Sun higher than the slope: none"), LsnMesh::NearGroundFacingAwayShare(Slope, 100.0, 40.0, 6.0, 20.0), 0.0, 1e-9);
+	TestEqual(TEXT("J: Sun behind the slope: none"), LsnMesh::NearGroundFacingAwayShare(Slope, 100.0, 220.0, 2.0, 20.0), 0.0, 1e-9);
+	TestEqual(TEXT("J: level ground: none"), LsnMesh::NearGroundFacingAwayShare(Level, 100.0, 40.0, 2.0, 20.0), 0.0, 1e-9);
+	TestEqual(TEXT("J: no grid: none"), LsnMesh::NearGroundFacingAwayShare(FLsnTerrainGrid(), 100.0, 40.0, 2.0, 20.0), 0.0, 1e-9);
+	return true;
+}
+
+#endif

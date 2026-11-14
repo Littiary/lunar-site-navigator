@@ -172,7 +172,15 @@ void ALsnSiteScene::UpdateLook()
 	// visible at the selected sample. Nothing here changes a number or a position.
 	const double SunShare = GetSunVisibleFraction();
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
-	FillLight->SetVisibility(bFillLightWanted && bHasPackage && SunShare <= 0.0);
+	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
+	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
+	// Ground close to the site that the drawing puts in its own shadow while the package gives the Sun as visible.
+	NearGroundShadeShare = 0.0;
+	FLsnBodyAtTime SunNow;
+	if (bHasRealTerrain && SunShare > 0.0 && SampleBody(TEXT("SUN"), TimePosition, SunNow))
+	{
+		NearGroundShadeShare = LsnMesh::NearGroundFacingAwayShare(TerrainGrid, Package.SurfaceHeightM, SunNow.AzimuthDeg, SunNow.ElevationDeg, FMath::Max(Package.HorizonSearchStartM(), 5.0));
+	}
 	// The shaded sides of the scale objects: with the Sun up, light reflected from the sunlit
 	// ground reaches them; with the fill on, a little of it. Stand-ins chosen by eye.
 	const float Ambient = ObjectAmbient * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
