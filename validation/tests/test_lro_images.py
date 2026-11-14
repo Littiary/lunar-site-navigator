@@ -74,7 +74,7 @@ def test_recorded_browse_file_is_the_one_that_was_read():
 
 def test_image_reading_repeats_from_the_downloaded_browse():
     if not (compare.cache_dir() / compare.BROWSE_NAME).exists():
-        pytest.skip("browse image not downloaded")
+        pytest.skip("browse image not downloaded (python -m validation.lro_images.fetch)")
     pytest.importorskip("PIL")
     pytest.importorskip("lsn_data")
     stored = _stored()

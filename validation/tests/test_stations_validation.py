@@ -7,7 +7,7 @@ import pytest
 
 from lsncore.ephem import kernels
 
-pytestmark = pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded")
+pytestmark = pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded (python -m lsncore.ephem.fetch_kernels)")
 
 
 def test_station_geometry_agrees_with_horizons_within_fixed_thresholds():

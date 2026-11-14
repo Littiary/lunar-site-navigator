@@ -255,7 +255,7 @@ def test_eclipse_of_march_2025_appears_in_the_timeline(tmp_path):
 # ------------------------------------------------------------------ ground stations in the timeline
 
 
-@pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded")
+@pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded (python -m lsncore.ephem.fetch_kernels)")
 def test_station_windows_and_relay_need_in_the_timeline(timeline, tmp_path, table_dir, horizon):
     by_id = {(w["id"], w["height_index"]): w for w in timeline.windows}
     metrics = {(m["id"], m["height_index"]): m for m in timeline.metrics}
