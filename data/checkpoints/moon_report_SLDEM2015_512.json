@@ -1,0 +1,1720 @@
+{
+ "generated_utc": "2026-11-14T19:21:36Z",
+ "criterion": "data/checkpoints/thresholds_moon.json",
+ "coverage": [
+  {
+   "product_id": "LDEM_80S_20M",
+   "kind": "polar stereographic",
+   "pole": "south",
+   "pixel_m": 20.0,
+   "covers": "its square: +-304 km from the pole"
+  },
+  {
+   "product_id": "LDEM_60S_60M",
+   "kind": "polar stereographic",
+   "pole": "south",
+   "pixel_m": 60.0,
+   "covers": "its square: +-931 km from the pole"
+  },
+  {
+   "product_id": "LDEM_80N_20M",
+   "kind": "polar stereographic",
+   "pole": "north",
+   "pixel_m": 20.0,
+   "covers": "its square: +-304 km from the pole"
+  },
+  {
+   "product_id": "LDEM_60N_60M",
+   "kind": "polar stereographic",
+   "pole": "north",
+   "pixel_m": 60.0,
+   "covers": "its square: +-931 km from the pole"
+  },
+  {
+   "product_id": "SLDEM2015_512",
+   "kind": "simple cylindrical",
+   "pixel_m": 59.225293797166955,
+   "covers": "latitude -60..60, 32 tile(s)"
+  },
+  {
+   "product_id": "SLDEM2015_256",
+   "kind": "simple cylindrical",
+   "pixel_m": 118.45058759433391,
+   "covers": "latitude -60..60, 6 tile(s)"
+  },
+  {
+   "product_id": "LDEM_128",
+   "kind": "simple cylindrical",
+   "pixel_m": 236.90117518866782,
+   "covers": "latitude -90..90, 1 tile(s)"
+  }
+ ],
+ "candidates_not_yet_approved": [
+  "SLDEM2015_512"
+ ],
+ "checkpoint_1": {
+  "files": [
+   "raw/lola/LDEM_128/ldem_128.img",
+   "raw/lola/LDEM_128/ldem_128.lbl",
+   "raw/lola/LDEM_128/ldem_128.xml",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.img",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.lbl",
+   "raw/lola/LDEM_60N_60M/ldem_60n_60m.xml",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.img",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.lbl",
+   "raw/lola/LDEM_80N_20M/ldem_80n_20m.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_000_120_FLOAT/sldem2015_256_0n_60n_000_120_float.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_120_240_FLOAT/sldem2015_256_0n_60n_120_240_float.xml",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.img",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.lbl",
+   "raw/lola/SLDEM2015_256_0N_60N_240_360_FLOAT/sldem2015_256_0n_60n_240_360_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_000_120_FLOAT/sldem2015_256_60s_0s_000_120_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_120_240_FLOAT/sldem2015_256_60s_0s_120_240_float.xml",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.img",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.lbl",
+   "raw/lola/SLDEM2015_256_60S_0S_240_360_FLOAT/sldem2015_256_60s_0s_240_360_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_000_045_FLOAT/sldem2015_512_00n_30n_000_045_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_000_045_FLOAT/sldem2015_512_00n_30n_000_045_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_000_045_FLOAT/sldem2015_512_00n_30n_000_045_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_045_090_FLOAT/sldem2015_512_00n_30n_045_090_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_045_090_FLOAT/sldem2015_512_00n_30n_045_090_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_045_090_FLOAT/sldem2015_512_00n_30n_045_090_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_090_135_FLOAT/sldem2015_512_00n_30n_090_135_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_090_135_FLOAT/sldem2015_512_00n_30n_090_135_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_090_135_FLOAT/sldem2015_512_00n_30n_090_135_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_135_180_FLOAT/sldem2015_512_00n_30n_135_180_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_135_180_FLOAT/sldem2015_512_00n_30n_135_180_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_135_180_FLOAT/sldem2015_512_00n_30n_135_180_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_180_225_FLOAT/sldem2015_512_00n_30n_180_225_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_180_225_FLOAT/sldem2015_512_00n_30n_180_225_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_180_225_FLOAT/sldem2015_512_00n_30n_180_225_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_225_270_FLOAT/sldem2015_512_00n_30n_225_270_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_225_270_FLOAT/sldem2015_512_00n_30n_225_270_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_225_270_FLOAT/sldem2015_512_00n_30n_225_270_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_270_315_FLOAT/sldem2015_512_00n_30n_270_315_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_270_315_FLOAT/sldem2015_512_00n_30n_270_315_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_270_315_FLOAT/sldem2015_512_00n_30n_270_315_float.xml",
+   "raw/lola/SLDEM2015_512_00N_30N_315_360_FLOAT/sldem2015_512_00n_30n_315_360_float.img",
+   "raw/lola/SLDEM2015_512_00N_30N_315_360_FLOAT/sldem2015_512_00n_30n_315_360_float.lbl",
+   "raw/lola/SLDEM2015_512_00N_30N_315_360_FLOAT/sldem2015_512_00n_30n_315_360_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_000_045_FLOAT/sldem2015_512_30n_60n_000_045_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_000_045_FLOAT/sldem2015_512_30n_60n_000_045_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_000_045_FLOAT/sldem2015_512_30n_60n_000_045_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_045_090_FLOAT/sldem2015_512_30n_60n_045_090_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_045_090_FLOAT/sldem2015_512_30n_60n_045_090_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_045_090_FLOAT/sldem2015_512_30n_60n_045_090_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_090_135_FLOAT/sldem2015_512_30n_60n_090_135_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_090_135_FLOAT/sldem2015_512_30n_60n_090_135_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_090_135_FLOAT/sldem2015_512_30n_60n_090_135_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_135_180_FLOAT/sldem2015_512_30n_60n_135_180_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_135_180_FLOAT/sldem2015_512_30n_60n_135_180_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_135_180_FLOAT/sldem2015_512_30n_60n_135_180_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_180_225_FLOAT/sldem2015_512_30n_60n_180_225_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_180_225_FLOAT/sldem2015_512_30n_60n_180_225_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_180_225_FLOAT/sldem2015_512_30n_60n_180_225_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_225_270_FLOAT/sldem2015_512_30n_60n_225_270_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_225_270_FLOAT/sldem2015_512_30n_60n_225_270_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_225_270_FLOAT/sldem2015_512_30n_60n_225_270_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_270_315_FLOAT/sldem2015_512_30n_60n_270_315_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_270_315_FLOAT/sldem2015_512_30n_60n_270_315_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_270_315_FLOAT/sldem2015_512_30n_60n_270_315_float.xml",
+   "raw/lola/SLDEM2015_512_30N_60N_315_360_FLOAT/sldem2015_512_30n_60n_315_360_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_315_360_FLOAT/sldem2015_512_30n_60n_315_360_float.lbl",
+   "raw/lola/SLDEM2015_512_30N_60N_315_360_FLOAT/sldem2015_512_30n_60n_315_360_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_000_045_FLOAT/sldem2015_512_30s_00s_000_045_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_000_045_FLOAT/sldem2015_512_30s_00s_000_045_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_000_045_FLOAT/sldem2015_512_30s_00s_000_045_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_045_090_FLOAT/sldem2015_512_30s_00s_045_090_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_045_090_FLOAT/sldem2015_512_30s_00s_045_090_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_045_090_FLOAT/sldem2015_512_30s_00s_045_090_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_090_135_FLOAT/sldem2015_512_30s_00s_090_135_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_090_135_FLOAT/sldem2015_512_30s_00s_090_135_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_090_135_FLOAT/sldem2015_512_30s_00s_090_135_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_135_180_FLOAT/sldem2015_512_30s_00s_135_180_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_135_180_FLOAT/sldem2015_512_30s_00s_135_180_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_135_180_FLOAT/sldem2015_512_30s_00s_135_180_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_180_225_FLOAT/sldem2015_512_30s_00s_180_225_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_180_225_FLOAT/sldem2015_512_30s_00s_180_225_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_180_225_FLOAT/sldem2015_512_30s_00s_180_225_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_225_270_FLOAT/sldem2015_512_30s_00s_225_270_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_225_270_FLOAT/sldem2015_512_30s_00s_225_270_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_225_270_FLOAT/sldem2015_512_30s_00s_225_270_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_270_315_FLOAT/sldem2015_512_30s_00s_270_315_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_270_315_FLOAT/sldem2015_512_30s_00s_270_315_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_270_315_FLOAT/sldem2015_512_30s_00s_270_315_float.xml",
+   "raw/lola/SLDEM2015_512_30S_00S_315_360_FLOAT/sldem2015_512_30s_00s_315_360_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_315_360_FLOAT/sldem2015_512_30s_00s_315_360_float.lbl",
+   "raw/lola/SLDEM2015_512_30S_00S_315_360_FLOAT/sldem2015_512_30s_00s_315_360_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_000_045_FLOAT/sldem2015_512_60s_30s_000_045_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_000_045_FLOAT/sldem2015_512_60s_30s_000_045_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_000_045_FLOAT/sldem2015_512_60s_30s_000_045_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_045_090_FLOAT/sldem2015_512_60s_30s_045_090_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_045_090_FLOAT/sldem2015_512_60s_30s_045_090_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_045_090_FLOAT/sldem2015_512_60s_30s_045_090_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_090_135_FLOAT/sldem2015_512_60s_30s_090_135_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_090_135_FLOAT/sldem2015_512_60s_30s_090_135_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_090_135_FLOAT/sldem2015_512_60s_30s_090_135_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_135_180_FLOAT/sldem2015_512_60s_30s_135_180_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_135_180_FLOAT/sldem2015_512_60s_30s_135_180_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_135_180_FLOAT/sldem2015_512_60s_30s_135_180_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_180_225_FLOAT/sldem2015_512_60s_30s_180_225_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_180_225_FLOAT/sldem2015_512_60s_30s_180_225_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_180_225_FLOAT/sldem2015_512_60s_30s_180_225_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_225_270_FLOAT/sldem2015_512_60s_30s_225_270_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_225_270_FLOAT/sldem2015_512_60s_30s_225_270_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_225_270_FLOAT/sldem2015_512_60s_30s_225_270_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_270_315_FLOAT/sldem2015_512_60s_30s_270_315_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_270_315_FLOAT/sldem2015_512_60s_30s_270_315_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_270_315_FLOAT/sldem2015_512_60s_30s_270_315_float.xml",
+   "raw/lola/SLDEM2015_512_60S_30S_315_360_FLOAT/sldem2015_512_60s_30s_315_360_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_315_360_FLOAT/sldem2015_512_60s_30s_315_360_float.lbl",
+   "raw/lola/SLDEM2015_512_60S_30S_315_360_FLOAT/sldem2015_512_60s_30s_315_360_float.xml",
+   "raw/lola_rdr/LOLARDR_100951948/lolardr_100951948.dat",
+   "raw/lola_rdr/LOLARDR_100951948/lolardr_100951948.lbl",
+   "raw/lola_rdr/LOLARDR_100972243/lolardr_100972243.dat",
+   "raw/lola_rdr/LOLARDR_100972243/lolardr_100972243.lbl",
+   "raw/lola_rdr/LOLARDR_101000137/lolardr_101000137.dat",
+   "raw/lola_rdr/LOLARDR_101000137/lolardr_101000137.lbl",
+   "raw/lola_rdr/LOLARDR_101020431/lolardr_101020431.dat",
+   "raw/lola_rdr/LOLARDR_101020431/lolardr_101020431.lbl",
+   "raw/lola_rdr/LOLARDR_101040726/lolardr_101040726.dat",
+   "raw/lola_rdr/LOLARDR_101040726/lolardr_101040726.lbl",
+   "raw/lola_rdr/LOLARDR_101061019/lolardr_101061019.dat",
+   "raw/lola_rdr/LOLARDR_101061019/lolardr_101061019.lbl",
+   "raw/lola_rdr/LOLARDR_101081314/lolardr_101081314.dat",
+   "raw/lola_rdr/LOLARDR_101081314/lolardr_101081314.lbl",
+   "raw/lola_rdr/LOLARDR_101101608/lolardr_101101608.dat",
+   "raw/lola_rdr/LOLARDR_101101608/lolardr_101101608.lbl",
+   "raw/lola_rdr/LOLARDR_101121901/lolardr_101121901.dat",
+   "raw/lola_rdr/LOLARDR_101121901/lolardr_101121901.lbl",
+   "raw/lola_rdr/LOLARDR_101142154/lolardr_101142154.dat",
+   "raw/lola_rdr/LOLARDR_101142154/lolardr_101142154.lbl",
+   "raw/lola_rdr/LOLARDR_101170047/lolardr_101170047.dat",
+   "raw/lola_rdr/LOLARDR_101170047/lolardr_101170047.lbl",
+   "raw/lola_rdr/LOLARDR_101190339/lolardr_101190339.dat",
+   "raw/lola_rdr/LOLARDR_101190339/lolardr_101190339.lbl",
+   "raw/lola_rdr/LOLARDR_101210632/lolardr_101210632.dat",
+   "raw/lola_rdr/LOLARDR_101210632/lolardr_101210632.lbl",
+   "raw/lola_rdr/LOLARDR_101230925/lolardr_101230925.dat",
+   "raw/lola_rdr/LOLARDR_101230925/lolardr_101230925.lbl",
+   "raw/lola_rdr/LOLARDR_110320314/lolardr_110320314.dat",
+   "raw/lola_rdr/LOLARDR_110320314/lolardr_110320314.lbl",
+   "raw/lola_rdr/LOLARDR_110340414/lolardr_110340414.dat",
+   "raw/lola_rdr/LOLARDR_110340414/lolardr_110340414.lbl",
+   "raw/lola_rdr/LOLARDR_110360514/lolardr_110360514.dat",
+   "raw/lola_rdr/LOLARDR_110360514/lolardr_110360514.lbl",
+   "raw/lola_rdr/LOLARDR_110380613/lolardr_110380613.dat",
+   "raw/lola_rdr/LOLARDR_110380613/lolardr_110380613.lbl",
+   "raw/lola_rdr/LOLARDR_110400713/lolardr_110400713.dat",
+   "raw/lola_rdr/LOLARDR_110400713/lolardr_110400713.lbl",
+   "raw/lola_rdr/LOLARDR_110420812/lolardr_110420812.dat",
+   "raw/lola_rdr/LOLARDR_110420812/lolardr_110420812.lbl",
+   "raw/lola_rdr/LOLARDR_110440912/lolardr_110440912.dat",
+   "raw/lola_rdr/LOLARDR_110440912/lolardr_110440912.lbl",
+   "raw/lola_rdr/LOLARDR_110461013/lolardr_110461013.dat",
+   "raw/lola_rdr/LOLARDR_110461013/lolardr_110461013.lbl",
+   "raw/lola_rdr/LOLARDR_110481113/lolardr_110481113.dat",
+   "raw/lola_rdr/LOLARDR_110481113/lolardr_110481113.lbl",
+   "raw/lola_rdr/LOLARDR_110501213/lolardr_110501213.dat",
+   "raw/lola_rdr/LOLARDR_110501213/lolardr_110501213.lbl",
+   "raw/lola_rdr/LOLARDR_110521312/lolardr_110521312.dat",
+   "raw/lola_rdr/LOLARDR_110521312/lolardr_110521312.lbl",
+   "raw/lola_rdr/LOLARDR_110561318/lolardr_110561318.dat",
+   "raw/lola_rdr/LOLARDR_110561318/lolardr_110561318.lbl",
+   "raw/lola_rdr/LOLARDR_110581419/lolardr_110581419.dat",
+   "raw/lola_rdr/LOLARDR_110581419/lolardr_110581419.lbl"
+  ],
+  "problems": [],
+  "cross_check_failed": [
+   "raw/lola/LDEM_128/ldem_128.img"
+  ],
+  "data_files_without_matching_cross_check": [
+   "raw/lola/LDEM_128/ldem_128.img",
+   "raw/lola/SLDEM2015_512_30N_60N_045_090_FLOAT/sldem2015_512_30n_60n_045_090_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_090_135_FLOAT/sldem2015_512_30n_60n_090_135_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_135_180_FLOAT/sldem2015_512_30n_60n_135_180_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_180_225_FLOAT/sldem2015_512_30n_60n_180_225_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_225_270_FLOAT/sldem2015_512_30n_60n_225_270_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_270_315_FLOAT/sldem2015_512_30n_60n_270_315_float.img",
+   "raw/lola/SLDEM2015_512_30N_60N_315_360_FLOAT/sldem2015_512_30n_60n_315_360_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_000_045_FLOAT/sldem2015_512_30s_00s_000_045_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_045_090_FLOAT/sldem2015_512_30s_00s_045_090_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_090_135_FLOAT/sldem2015_512_30s_00s_090_135_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_135_180_FLOAT/sldem2015_512_30s_00s_135_180_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_180_225_FLOAT/sldem2015_512_30s_00s_180_225_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_225_270_FLOAT/sldem2015_512_30s_00s_225_270_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_270_315_FLOAT/sldem2015_512_30s_00s_270_315_float.img",
+   "raw/lola/SLDEM2015_512_30S_00S_315_360_FLOAT/sldem2015_512_30s_00s_315_360_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_000_045_FLOAT/sldem2015_512_60s_30s_000_045_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_045_090_FLOAT/sldem2015_512_60s_30s_045_090_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_090_135_FLOAT/sldem2015_512_60s_30s_090_135_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_135_180_FLOAT/sldem2015_512_60s_30s_135_180_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_180_225_FLOAT/sldem2015_512_60s_30s_180_225_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_225_270_FLOAT/sldem2015_512_60s_30s_225_270_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_270_315_FLOAT/sldem2015_512_60s_30s_270_315_float.img",
+   "raw/lola/SLDEM2015_512_60S_30S_315_360_FLOAT/sldem2015_512_60s_30s_315_360_float.img"
+  ],
+  "passed": false
+ },
+ "deviation": "north-polar products compared with LRO_SM_06 plus LRO_NO_08 returns, selected with the validity rule of LOLARDR.FMT (least significant byte of SHOT_FLAG = 0, bit 10 clear) instead of SHOT_FLAG = 0, which leaves no returns north of 80.5 N; criteria unchanged",
+ "checkpoint_2": {
+  "LDEM_80N_20M": {
+   "ours": "LDEM_80N_20M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419, LOLARDR_100951948, LOLARDR_100972243, LOLARDR_101000137, LOLARDR_101020431, LOLARDR_101040726, LOLARDR_101061019, LOLARDR_101081314, LOLARDR_101101608, LOLARDR_101121901, LOLARDR_101142154, LOLARDR_101170047, LOLARDR_101190339, LOLARDR_101210632, LOLARDR_101230925",
+   "latitude_band": [
+    80.5,
+    89.8
+   ],
+   "spots_in_band": 521297,
+   "spots_compared": 521297,
+   "stats": {
+    "n": 521297,
+    "mean_d_m": -0.1849483932412937,
+    "median_abs_d_m": 0.34673586084977615,
+    "p95_abs_d_m": 1.6739358388291277,
+    "rms_d_m": 0.9368529041342529
+   },
+   "fit": {
+    "points_used": 496640,
+    "blocks": 761,
+    "height_offset_m": -0.1818884876753342,
+    "translation_x_m": -0.026911947923409486,
+    "translation_y_m": 0.3320136379295749,
+    "rotation_deg": -0.00012254034775626487,
+    "radial_scale": -4.031788791086094e-06,
+    "se": {
+     "height_offset_m": 0.010185002973707141,
+     "translation_x_m": 0.1477861328435068,
+     "translation_y_m": 0.12334223396308745,
+     "rotation_deg": 2.251276666034172e-05,
+     "radial_scale": 6.991891020072817e-07
+    },
+    "residual_rms_m": 0.8690665449853195
+   },
+   "mirror_rms_m": 1167.9882610789707,
+   "mirror_rms_ratio": 1246.714671988246,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "LDEM_60N_60M": {
+   "ours": "LDEM_60N_60M",
+   "spot_selection": "documented",
+   "reference": "LOLA RDR returns, LOLARDR_110320314, LOLARDR_110340414, LOLARDR_110360514, LOLARDR_110380613, LOLARDR_110400713, LOLARDR_110420812, LOLARDR_110440912, LOLARDR_110461013, LOLARDR_110481113, LOLARDR_110501213, LOLARDR_110521312, LOLARDR_110561318, LOLARDR_110581419, LOLARDR_100951948, LOLARDR_100972243, LOLARDR_101000137, LOLARDR_101020431, LOLARDR_101040726, LOLARDR_101061019, LOLARDR_101081314, LOLARDR_101101608, LOLARDR_101121901, LOLARDR_101142154, LOLARDR_101170047, LOLARDR_101190339, LOLARDR_101210632, LOLARDR_101230925",
+   "latitude_band": [
+    60.5,
+    79.5
+   ],
+   "spots_in_band": 1249617,
+   "spots_compared": 1249617,
+   "stats": {
+    "n": 1249617,
+    "mean_d_m": -0.12262339787137884,
+    "median_abs_d_m": 0.5904219747908428,
+    "p95_abs_d_m": 2.3980540963117734,
+    "rms_d_m": 1.2209532256614457
+   },
+   "fit": {
+    "points_used": 1173634,
+    "blocks": 2347,
+    "height_offset_m": -0.11973591157517723,
+    "translation_x_m": 0.18902234348688285,
+    "translation_y_m": 0.034091784034672265,
+    "rotation_deg": -5.3532401964460796e-05,
+    "radial_scale": -1.2219882540021043e-06,
+    "se": {
+     "height_offset_m": 0.008944783309683397,
+     "translation_x_m": 0.08965351526307141,
+     "translation_y_m": 0.08842092433039749,
+     "rotation_deg": 7.731895935308176e-06,
+     "radial_scale": 1.493579584788945e-07
+    },
+    "residual_rms_m": 1.1965761792451977
+   },
+   "mirror_rms_m": 1447.9776833758895,
+   "mirror_rms_ratio": 1185.9403398450866,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 1.0,
+     "median_abs_d_m": 3.0,
+     "abs_translation_component_m": 10.0,
+     "abs_rotation_deg": 0.005,
+     "abs_radial_scale": 5e-05,
+     "radial_scale_se_at_most": 2e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "SLDEM2015_512": {
+   "ours": "SLDEM2015_512",
+   "pixel_m": 59.225293797166955,
+   "latitude_band": [
+    -59.5,
+    59.5
+   ],
+   "spots_in_band": 443241,
+   "spots_compared": 443241,
+   "stats": {
+    "n": 443241,
+    "mean_d_m": 0.026698225028309035,
+    "median_abs_d_m": 1.3469593419181365,
+    "p95_abs_d_m": 8.438400802261413,
+    "rms_d_m": 4.11795866093963
+   },
+   "fit": {
+    "points_used": 401668,
+    "blocks": 762,
+    "height_offset_m": 0.021174739918605624,
+    "translation_east_m": 3.9829832209571077,
+    "translation_north_m": -1.4597811387284376,
+    "se": {
+     "height_offset_m": 0.06780078161036455,
+     "translation_east_m": 0.7177828858077988,
+     "translation_north_m": 1.166526479027942
+    }
+   },
+   "mirror_rms_m": 2166.592417901091,
+   "mirror_rms_ratio": 526.1326293661047,
+   "judgement": {
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_east": true,
+     "translation_north": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "SLDEM2015_256": {
+   "ours": "SLDEM2015_256",
+   "pixel_m": 118.45058759433391,
+   "latitude_band": [
+    -59.5,
+    59.5
+   ],
+   "spots_in_band": 443241,
+   "spots_compared": 443241,
+   "stats": {
+    "n": 443241,
+    "mean_d_m": 0.013244697226343874,
+    "median_abs_d_m": 1.7456440969828009,
+    "p95_abs_d_m": 8.721691711905805,
+    "rms_d_m": 4.2992083115672965
+   },
+   "fit": {
+    "points_used": 376933,
+    "blocks": 761,
+    "height_offset_m": -0.0018886918886995131,
+    "translation_east_m": 5.177650941675516,
+    "translation_north_m": -1.6126889330824823,
+    "se": {
+     "height_offset_m": 0.07255815900792431,
+     "translation_east_m": 0.7238410100829397,
+     "translation_north_m": 1.1822563647972286
+    }
+   },
+   "mirror_rms_m": 2166.567496520111,
+   "mirror_rms_ratio": 503.9456894170077,
+   "judgement": {
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_east": true,
+     "translation_north": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "LDEM_128": {
+   "ours": "LDEM_128",
+   "pixel_m": 236.90117518866782,
+   "latitude_band": [
+    -59.5,
+    59.5
+   ],
+   "spots_in_band": 443241,
+   "spots_compared": 443241,
+   "stats": {
+    "n": 443241,
+    "mean_d_m": -0.10380885648231458,
+    "median_abs_d_m": 1.7628936349934747,
+    "p95_abs_d_m": 8.23810831921935,
+    "rms_d_m": 4.0550316915227596
+   },
+   "fit": {
+    "points_used": 353629,
+    "blocks": 756,
+    "height_offset_m": -0.05234416935048184,
+    "translation_east_m": 2.5014126574444955,
+    "translation_north_m": -1.7816675158447215,
+    "se": {
+     "height_offset_m": 0.040245628644175496,
+     "translation_east_m": 0.5108901480445068,
+     "translation_north_m": 0.398225776618699
+    }
+   },
+   "mirror_rms_m": 2166.254009010615,
+   "mirror_rms_ratio": 534.2138295834467,
+   "judgement": {
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_east": true,
+     "translation_north": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  },
+  "LDEM_128_all_latitudes": {
+   "ours": "LDEM_128",
+   "pixel_m": 236.90117518866782,
+   "latitude_band": [
+    -89.5,
+    89.5
+   ],
+   "spots_in_band": 731685,
+   "spots_compared": 731685,
+   "stats": {
+    "n": 731685,
+    "mean_d_m": -0.18297124332286804,
+    "median_abs_d_m": 1.5983203239807153,
+    "p95_abs_d_m": 7.435417511488205,
+    "rms_d_m": 3.6637176822411246
+   },
+   "fit": {
+    "points_used": 620830,
+    "blocks": 1169,
+    "height_offset_m": -0.15646582757277874,
+    "translation_east_m": 1.3437747797083683,
+    "translation_north_m": -1.2188966113204385,
+    "se": {
+     "height_offset_m": 0.03152720282774062,
+     "translation_east_m": 0.38610953121859154,
+     "translation_north_m": 0.354118400494718
+    }
+   },
+   "mirror_rms_m": 2387.3427104632124,
+   "mirror_rms_ratio": 651.6175419397644,
+   "judgement": {
+    "reported_only": true,
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_east": true,
+     "translation_north": true,
+     "mirror": true
+    },
+    "passed": true
+   }
+  }
+ },
+ "checkpoint_3": {
+  "label_min_max": {
+   "LDEM_80N_20M": {
+    "measured_min_dn": -10105,
+    "measured_max_dn": 4800,
+    "label_min_dn": -10105,
+    "label_max_dn": 4800,
+    "passed": true,
+    "min_m": -5052.5,
+    "max_m": 2400.0
+   },
+   "LDEM_60N_60M": {
+    "measured_min_dn": -12210,
+    "measured_max_dn": 12475,
+    "label_min_dn": -12210,
+    "label_max_dn": 12475,
+    "passed": true,
+    "min_m": -6105.0,
+    "max_m": 6237.5
+   },
+   "SLDEM2015_512_60S_30S_000_045_FLOAT": {
+    "measured_min": -5.285924434661865,
+    "measured_max": 4.448277473449707,
+    "label_minimum": -5.286,
+    "label_maximum": 4.448,
+    "measured_min_m": -5285.924434661865,
+    "measured_max_m": 4448.277473449707,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.27747344970663335,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_045_090_FLOAT": {
+    "measured_min": -5.482016086578369,
+    "measured_max": 3.112011671066284,
+    "label_minimum": -5.482,
+    "label_maximum": 3.112,
+    "measured_min_m": -5482.016086578369,
+    "measured_max_m": 3112.011671066284,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.016086578368934568,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_090_135_FLOAT": {
+    "measured_min": -5.097714424133301,
+    "measured_max": 6.14947509765625,
+    "label_minimum": -5.098,
+    "label_maximum": 6.149,
+    "measured_min_m": -5097.714424133301,
+    "measured_max_m": 6149.47509765625,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4750976562499787,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_135_180_FLOAT": {
+    "measured_min": -7.910384178161621,
+    "measured_max": 5.679407596588135,
+    "label_minimum": -7.91,
+    "label_maximum": 5.679,
+    "measured_min_m": -7910.384178161621,
+    "measured_max_m": 5679.407596588135,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4075965881344956,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_180_225_FLOAT": {
+    "measured_min": -8.718863487243652,
+    "measured_max": 6.541360855102539,
+    "label_minimum": -8.719,
+    "label_maximum": 6.541,
+    "measured_min_m": -8718.863487243652,
+    "measured_max_m": 6541.360855102539,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.360855102538693,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_225_270_FLOAT": {
+    "measured_min": -7.601266384124756,
+    "measured_max": 6.739788055419922,
+    "label_minimum": -7.601,
+    "label_maximum": 6.74,
+    "measured_min_m": -7601.266384124756,
+    "measured_max_m": 6739.788055419922,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.2663841247558807,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_270_315_FLOAT": {
+    "measured_min": -3.4550676345825195,
+    "measured_max": 5.969122409820557,
+    "label_minimum": -3.455,
+    "label_maximum": 5.969,
+    "measured_min_m": -3455.0676345825195,
+    "measured_max_m": 5969.122409820557,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.12240982055633509,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_60S_30S_315_360_FLOAT": {
+    "measured_min": -6.111196517944336,
+    "measured_max": 2.426421642303467,
+    "label_minimum": -6.111,
+    "label_maximum": 2.426,
+    "measured_min_m": -6111.196517944336,
+    "measured_max_m": 2426.421642303467,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.42164230346664056,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_000_045_FLOAT": {
+    "measured_min": -4.94363260269165,
+    "measured_max": 4.832330703735352,
+    "label_minimum": -4.944,
+    "label_maximum": 4.832,
+    "measured_min_m": -4943.63260269165,
+    "measured_max_m": 4832.330703735352,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.36739730834955964,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_045_090_FLOAT": {
+    "measured_min": -5.886878490447998,
+    "measured_max": 3.299696683883667,
+    "label_minimum": -5.887,
+    "label_maximum": 3.3,
+    "measured_min_m": -5886.878490447998,
+    "measured_max_m": 3299.696683883667,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.3033161163328302,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_090_135_FLOAT": {
+    "measured_min": -5.749284267425537,
+    "measured_max": 5.650596618652344,
+    "label_minimum": -5.749,
+    "label_maximum": 5.651,
+    "measured_min_m": -5749.284267425537,
+    "measured_max_m": 5650.596618652344,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.40338134765605105,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_135_180_FLOAT": {
+    "measured_min": -6.701948165893555,
+    "measured_max": 7.561727523803711,
+    "label_minimum": -6.702,
+    "label_maximum": 7.562,
+    "measured_min_m": -6701.948165893555,
+    "measured_max_m": 7561.727523803711,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.2724761962893396,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_180_225_FLOAT": {
+    "measured_min": -6.101557731628418,
+    "measured_max": 9.337273597717285,
+    "label_minimum": -6.102,
+    "label_maximum": 9.337,
+    "measured_min_m": -6101.557731628418,
+    "measured_max_m": 9337.273597717285,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4422683715823439,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_225_270_FLOAT": {
+    "measured_min": -4.810145378112793,
+    "measured_max": 9.459831237792969,
+    "label_minimum": -4.81,
+    "label_maximum": 9.46,
+    "measured_min_m": -4810.145378112793,
+    "measured_max_m": 9459.831237792969,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.16876220703210265,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_270_315_FLOAT": {
+    "measured_min": -4.167579650878906,
+    "measured_max": 4.7972211837768555,
+    "label_minimum": -4.168,
+    "label_maximum": 4.797,
+    "measured_min_m": -4167.579650878906,
+    "measured_max_m": 4797.2211837768555,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4203491210938992,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30S_00S_315_360_FLOAT": {
+    "measured_min": -5.042964458465576,
+    "measured_max": 2.3994367122650146,
+    "label_minimum": -5.043,
+    "label_maximum": 2.399,
+    "measured_min_m": -5042.964458465576,
+    "measured_max_m": 2399.4367122650146,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4367122650146271,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_000_045_FLOAT": {
+    "measured_min": -4.898852348327637,
+    "measured_max": 3.4662704467773438,
+    "label_minimum": -4.899,
+    "label_maximum": 3.466,
+    "measured_min_m": -4898.852348327637,
+    "measured_max_m": 3466.2704467773438,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.27044677734355815,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_045_090_FLOAT": {
+    "measured_min": -5.567191123962402,
+    "measured_max": 3.359995126724243,
+    "label_minimum": -5.567,
+    "label_maximum": 3.36,
+    "measured_min_m": -5567.191123962402,
+    "measured_max_m": 3359.995126724243,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.19112396240217322,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_090_135_FLOAT": {
+    "measured_min": -6.438807487487793,
+    "measured_max": 6.402493000030518,
+    "label_minimum": -6.439,
+    "label_maximum": 6.402,
+    "measured_min_m": -6438.807487487793,
+    "measured_max_m": 6402.493000030518,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4930000305174431,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_135_180_FLOAT": {
+    "measured_min": -5.648280143737793,
+    "measured_max": 7.3653130531311035,
+    "label_minimum": -5.648,
+    "label_maximum": 7.365,
+    "measured_min_m": -5648.280143737793,
+    "measured_max_m": 7365.3130531311035,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.31305313110330246,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_180_225_FLOAT": {
+    "measured_min": -2.37245774269104,
+    "measured_max": 10.783296585083008,
+    "label_minimum": -2.372,
+    "label_maximum": 10.783,
+    "measured_min_m": -2372.45774269104,
+    "measured_max_m": 10783.296585083008,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.45774269104015275,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_225_270_FLOAT": {
+    "measured_min": -3.876631498336792,
+    "measured_max": 7.906988143920898,
+    "label_minimum": -3.877,
+    "label_maximum": 7.907,
+    "measured_min_m": -3876.631498336792,
+    "measured_max_m": 7906.988143920898,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.36850166320778754,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_270_315_FLOAT": {
+    "measured_min": -5.917294025421143,
+    "measured_max": 3.7204959392547607,
+    "label_minimum": -5.917,
+    "label_maximum": 3.72,
+    "measured_min_m": -5917.294025421143,
+    "measured_max_m": 3720.4959392547607,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4959392547605468,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_00N_30N_315_360_FLOAT": {
+    "measured_min": -4.8180766105651855,
+    "measured_max": 3.274076223373413,
+    "label_minimum": -4.818,
+    "label_maximum": 3.274,
+    "measured_min_m": -4818.076610565186,
+    "measured_max_m": 3274.076223373413,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.07661056518593057,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_000_045_FLOAT": {
+    "measured_min": -6.5990705490112305,
+    "measured_max": 3.6256799697875977,
+    "label_minimum": -6.599,
+    "label_maximum": 3.626,
+    "measured_min_m": -6599.0705490112305,
+    "measured_max_m": 3625.6799697875977,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.3200302124022336,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_045_090_FLOAT": {
+    "measured_min": -6.5534162521362305,
+    "measured_max": 2.4525136947631836,
+    "label_minimum": -6.553,
+    "label_maximum": 2.453,
+    "measured_min_m": -6553.4162521362305,
+    "measured_max_m": 2452.5136947631836,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4863052368162535,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_090_135_FLOAT": {
+    "measured_min": -6.857943058013916,
+    "measured_max": 3.5307869911193848,
+    "label_minimum": -6.858,
+    "label_maximum": 3.531,
+    "measured_min_m": -6857.943058013916,
+    "measured_max_m": 3530.7869911193848,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.21300888061537293,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_135_180_FLOAT": {
+    "measured_min": -3.9693691730499268,
+    "measured_max": 5.629100322723389,
+    "label_minimum": -3.969,
+    "label_maximum": 5.629,
+    "measured_min_m": -3969.3691730499268,
+    "measured_max_m": 5629.100322723389,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.36917304992689637,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_180_225_FLOAT": {
+    "measured_min": -3.621633291244507,
+    "measured_max": 6.991127967834473,
+    "label_minimum": -3.622,
+    "label_maximum": 6.991,
+    "measured_min_m": -3621.633291244507,
+    "measured_max_m": 6991.127967834473,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.3667087554930504,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_225_270_FLOAT": {
+    "measured_min": -4.852417945861816,
+    "measured_max": 6.350208282470703,
+    "label_minimum": -4.852,
+    "label_maximum": 6.35,
+    "measured_min_m": -4852.417945861816,
+    "measured_max_m": 6350.208282470703,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4179458618160936,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_270_315_FLOAT": {
+    "measured_min": -5.291712760925293,
+    "measured_max": 2.1139535903930664,
+    "label_minimum": -5.292,
+    "label_maximum": 2.114,
+    "measured_min_m": -5291.712760925293,
+    "measured_max_m": 2113.9535903930664,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.2872390747068465,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_512_30N_60N_315_360_FLOAT": {
+    "measured_min": -5.092388153076172,
+    "measured_max": 1.1585338115692139,
+    "label_minimum": -5.092,
+    "label_maximum": 1.159,
+    "measured_min_m": -5092.388153076172,
+    "measured_max_m": 1158.5338115692139,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.466188430786163,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_60S_0S_000_120_FLOAT": {
+    "measured_min": -5.8866801261901855,
+    "measured_max": 6.07667875289917,
+    "label_minimum": -5.887,
+    "label_maximum": 6.077,
+    "measured_min_m": -5886.680126190186,
+    "measured_max_m": 6076.67875289917,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.3212471008300355,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_60S_0S_120_240_FLOAT": {
+    "measured_min": -8.717449188232422,
+    "measured_max": 9.33483600616455,
+    "label_minimum": -8.717,
+    "label_maximum": 9.335,
+    "measured_min_m": -8717.449188232422,
+    "measured_max_m": 9334.83600616455,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4491882324213492,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_60S_0S_240_360_FLOAT": {
+    "measured_min": -6.109090328216553,
+    "measured_max": 9.454856872558594,
+    "label_minimum": -6.109,
+    "label_maximum": 9.455,
+    "measured_min_m": -6109.090328216553,
+    "measured_max_m": 9454.856872558594,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.14312744140632105,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_0N_60N_000_120_FLOAT": {
+    "measured_min": -6.855032920837402,
+    "measured_max": 3.9066553115844727,
+    "label_minimum": -6.855,
+    "label_maximum": 3.907,
+    "measured_min_m": -6855.032920837402,
+    "measured_max_m": 3906.6553115844727,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.34468841552737217,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_0N_60N_120_240_FLOAT": {
+    "measured_min": -5.640065670013428,
+    "measured_max": 10.781240463256836,
+    "label_minimum": -5.64,
+    "label_maximum": 10.781,
+    "measured_min_m": -5640.065670013428,
+    "measured_max_m": 10781.240463256836,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.24046325683535485,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "SLDEM2015_256_0N_60N_240_360_FLOAT": {
+    "measured_min": -5.914435386657715,
+    "measured_max": 7.4693756103515625,
+    "label_minimum": -5.914,
+    "label_maximum": 7.469,
+    "measured_min_m": -5914.435386657715,
+    "measured_max_m": 7469.3756103515625,
+    "passed": false,
+    "max_abs_difference_to_label_m": 0.4353866577151422,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   },
+   "LDEM_128": {
+    "measured_min": -18254.0,
+    "measured_max": 21557.0,
+    "label_minimum": -18255.0,
+    "label_maximum": 21557.0,
+    "measured_min_m": -9127.0,
+    "measured_max_m": 10778.5,
+    "passed": true,
+    "max_abs_difference_to_label_m": 0.5,
+    "note": "reported only: SLDEM2015 labels give MINIMUM/MAXIMUM rounded to 0.001 km, so up to 0.5 m outside is rounding"
+   }
+  },
+  "reference_radius": {
+   "LDEM_80S_20M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "LDEM_60S_60M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "LDEM_80N_20M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "LDEM_60N_60M": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_000_045_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_045_090_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_090_135_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_135_180_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_180_225_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_225_270_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_270_315_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_60S_30S_315_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_000_045_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_045_090_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_090_135_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_135_180_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_180_225_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_225_270_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_270_315_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30S_00S_315_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_000_045_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_045_090_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_090_135_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_135_180_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_180_225_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_225_270_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_270_315_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_00N_30N_315_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_000_045_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_045_090_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_090_135_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_135_180_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_180_225_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_225_270_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_270_315_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_512_30N_60N_315_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_000_120_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_120_240_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_60S_0S_240_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_000_120_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_120_240_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "SLDEM2015_256_0N_60N_240_360_FLOAT": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   },
+   "LDEM_128": {
+    "offset_km": 1737.4,
+    "axes_km": [
+     1737.4,
+     1737.4,
+     1737.4
+    ],
+    "passed": true
+   }
+  },
+  "north_overlap_20m_vs_60m": {
+   "pixels_compared": 102657424,
+   "mean_difference_m": 0.003669954603537917,
+   "median_abs_difference_m": 0.388916015625,
+   "p99_abs_difference_m": 3.0,
+   "passed": true
+  },
+  "published_spot_heights": {
+   "criterion": "data/checkpoints/thresholds_spot_heights.json",
+   "points": [
+    {
+     "name": "highest point",
+     "published_m": 10783.4,
+     "products": {
+      "SLDEM2015_512": {
+       "at_point_m": 10751.35218385317,
+       "point_difference_m": -32.047816146829064,
+       "extreme_m": 10780.797305827506,
+       "extreme_difference_m": -2.6026941724940116,
+       "extreme_distance_km": 0.3535533905932738,
+       "passed": true
+      },
+      "SLDEM2015_256": {
+       "at_point_m": 10751.246337692282,
+       "point_difference_m": -32.15366230771724,
+       "extreme_m": 10779.971371115795,
+       "extreme_difference_m": -3.4286288842049544,
+       "extreme_distance_km": 0.3535533905932738,
+       "passed": true
+      },
+      "LDEM_128": {
+       "at_point_m": 10756.032024000004,
+       "point_difference_m": -27.367975999995906,
+       "extreme_m": 10777.520585539087,
+       "extreme_difference_m": -5.8794144609128125,
+       "extreme_distance_km": 0.3535533905932738,
+       "passed": true
+      },
+      "LDEM_16": {
+       "at_point_m": 10642.36012800001,
+       "point_difference_m": -141.03987199999028,
+       "extreme_m": 10680.523924832083,
+       "extreme_difference_m": -102.8760751679165,
+       "extreme_distance_km": 1.0307764064044151,
+       "passed": false
+      }
+     }
+    },
+    {
+     "name": "lowest point, Antoniadi floor",
+     "published_m": -9117.0,
+     "products": {
+      "LDEM_128": {
+       "at_point_m": -9124.145776000008,
+       "point_difference_m": -7.145776000008482,
+       "extreme_m": -9124.145776000008,
+       "extreme_difference_m": -7.145776000008482,
+       "extreme_distance_km": 0.0,
+       "passed": true
+      },
+      "LDEM_60S_60M": {
+       "at_point_m": -9128.75554398397,
+       "point_difference_m": -11.75554398397071,
+       "extreme_m": -9128.75554398397,
+       "extreme_difference_m": -11.75554398397071,
+       "extreme_distance_km": 0.0,
+       "passed": true
+      },
+      "LDEM_16": {
+       "at_point_m": -8954.572367999983,
+       "point_difference_m": 162.42763200001718,
+       "extreme_m": -8979.431784418264,
+       "extreme_difference_m": 137.56821558173579,
+       "extreme_distance_km": 0.5590169943749475,
+       "passed": false
+      }
+     }
+    }
+   ],
+   "passed": false
+  }
+ },
+ "seams": {
+  "LDEM_60S_60M_vs_LDEM_128": {
+   "ours": "LDEM_60S_60M",
+   "reference": "LDEM_128",
+   "reference_version": "V3.0",
+   "latitude_band": [
+    -60.0,
+    -55.0
+   ],
+   "cells": 20000,
+   "stats": {
+    "n": 10104,
+    "mean_d_m": 0.07076654547590161,
+    "median_abs_d_m": 1.0693202438242224,
+    "p95_abs_d_m": 6.039943546523171,
+    "rms_d_m": 3.2039565513105037
+   },
+   "fit": {
+    "points_used": 9128,
+    "blocks": 4472,
+    "height_offset_m": 0.05295896632497359,
+    "translation_x_m": 0.014799591279622201,
+    "translation_y_m": -0.5162548887723151,
+    "rotation_deg": 1.0096325149719296e-05,
+    "radial_scale": -4.016639234775271e-07,
+    "se": {
+     "height_offset_m": 0.03190738925666538,
+     "translation_x_m": 0.3741592142308174,
+     "translation_y_m": 0.4062150372378043,
+     "rotation_deg": 2.0696294054597708e-05,
+     "radial_scale": 4.0262426886290276e-07
+    },
+    "residual_rms_m": 3.036621399486555
+   },
+   "mirror_rms_m": 2491.5760239474344,
+   "mirror_rms_ratio": 777.6559962800723,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 3.0,
+     "median_abs_d_m": 10.0,
+     "p95_abs_d_m": 60.0,
+     "abs_translation_component_m": 24.0,
+     "abs_rotation_deg": 0.01,
+     "abs_radial_scale": 0.0001,
+     "radial_scale_se_at_most": 3e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true,
+     "p95_abs_d_m": true
+    },
+    "passed": true
+   }
+  },
+  "LDEM_60N_60M_vs_LDEM_128": {
+   "ours": "LDEM_60N_60M",
+   "reference": "LDEM_128",
+   "reference_version": "V3.0",
+   "latitude_band": [
+    55.0,
+    60.0
+   ],
+   "cells": 20000,
+   "stats": {
+    "n": 10075,
+    "mean_d_m": 0.08371148707400168,
+    "median_abs_d_m": 1.243428584524736,
+    "p95_abs_d_m": 7.008498698289556,
+    "rms_d_m": 3.836863845556892
+   },
+   "fit": {
+    "points_used": 8214,
+    "blocks": 4136,
+    "height_offset_m": 0.06695610272714536,
+    "translation_x_m": -0.10750461100628565,
+    "translation_y_m": -0.6165875398813254,
+    "rotation_deg": 8.237758903005514e-06,
+    "radial_scale": -5.851638993706332e-07,
+    "se": {
+     "height_offset_m": 0.03986253779807202,
+     "translation_x_m": 0.5186065724874805,
+     "translation_y_m": 0.5313788860679189,
+     "rotation_deg": 2.9786674525223937e-05,
+     "radial_scale": 4.6978304545996964e-07
+    },
+    "residual_rms_m": 3.6016254400291263
+   },
+   "mirror_rms_m": 1881.287245814227,
+   "mirror_rms_ratio": 490.31900050161204,
+   "judgement": {
+    "criterion": {
+     "abs_mean_d_m": 3.0,
+     "median_abs_d_m": 10.0,
+     "p95_abs_d_m": 60.0,
+     "abs_translation_component_m": 24.0,
+     "abs_rotation_deg": 0.01,
+     "abs_radial_scale": 0.0001,
+     "radial_scale_se_at_most": 3e-05,
+     "mirror_rms_ratio_at_least": 3.0
+    },
+    "checks": {
+     "abs_mean_d_m": true,
+     "median_abs_d_m": true,
+     "translation_x": true,
+     "translation_y": true,
+     "rotation": true,
+     "radial_scale": true,
+     "radial_scale_se": true,
+     "mirror": true,
+     "p95_abs_d_m": true
+    },
+    "passed": true
+   }
+  },
+  "SLDEM2015_512_vs_LDEM_128": {
+   "ours": "SLDEM2015_512",
+   "reference": "LDEM_128",
+   "cells": 20000,
+   "stats": {
+    "n": 20000,
+    "mean_d_m": 0.09275029083746682,
+    "median_abs_d_m": 2.9316963411401957,
+    "p95_abs_d_m": 24.14901858936502,
+    "rms_d_m": 14.395519817343182
+   },
+   "passed": true
+  },
+  "SLDEM2015_256_vs_LDEM_128": {
+   "ours": "SLDEM2015_256",
+   "reference": "LDEM_128",
+   "cells": 20000,
+   "stats": {
+    "n": 20000,
+    "mean_d_m": 0.09989647045534059,
+    "median_abs_d_m": 2.950733916629474,
+    "p95_abs_d_m": 23.603205917589356,
+    "rms_d_m": 14.251272069209813
+   },
+   "passed": true
+  },
+  "moon_terrain_continuity": {
+   "edge_of_LDEM_80S_20M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_80S_20M"
+    ],
+    "outside_source": [
+     "LDEM_60S_60M"
+    ],
+    "median_abs_jump_m": 1.3763603938044042,
+    "p95_abs_jump_m": 9.757724503188456,
+    "passed": true
+   },
+   "edge_of_LDEM_60S_60M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_60S_60M"
+    ],
+    "outside_source": [
+     "SLDEM2015_512"
+    ],
+    "median_abs_jump_m": 4.289513823649941,
+    "p95_abs_jump_m": 24.15812927570114,
+    "passed": true
+   },
+   "edge_of_LDEM_80N_20M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_80N_20M"
+    ],
+    "outside_source": [
+     "LDEM_60N_60M"
+    ],
+    "median_abs_jump_m": 2.9444913033099738,
+    "p95_abs_jump_m": 23.830728907537765,
+    "passed": true
+   },
+   "edge_of_LDEM_60N_60M": {
+    "points": 2000,
+    "inside_source": [
+     "LDEM_60N_60M"
+    ],
+    "outside_source": [
+     "SLDEM2015_512"
+    ],
+    "median_abs_jump_m": 5.0406954148586465,
+    "p95_abs_jump_m": 40.60682401877204,
+    "passed": true
+   },
+   "tile_seams_of_SLDEM2015_512": {
+    "points": 56000,
+    "max_abs_jump_m": 5.358409011165918,
+    "passed": false
+   },
+   "outer_edge_of_SLDEM2015_512": {
+    "-60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60S_60M"
+     ],
+     "median_abs_jump_m": 0.06891020224912836,
+     "p95_abs_jump_m": 0.2737365965436197
+    },
+    "+60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60N_60M"
+     ],
+     "median_abs_jump_m": 0.04726585320986487,
+     "p95_abs_jump_m": 0.24774872155868477
+    },
+    "passed": true
+   },
+   "tile_seams_of_SLDEM2015_256": {
+    "points": 9000,
+    "max_abs_jump_m": 0.9000429339926086,
+    "passed": true
+   },
+   "outer_edge_of_SLDEM2015_256": {
+    "-60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60S_60M"
+     ],
+     "median_abs_jump_m": 0.06891020224912836,
+     "p95_abs_jump_m": 0.2737365965436197
+    },
+    "+60": {
+     "points": 2000,
+     "outside_source": [
+      "LDEM_60N_60M"
+     ],
+     "median_abs_jump_m": 0.04726585320986487,
+     "p95_abs_jump_m": 0.24774872155868477
+    },
+    "passed": true
+   }
+  }
+ }
+}
