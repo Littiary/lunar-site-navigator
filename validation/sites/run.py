@@ -1,10 +1,11 @@
 """End-to-end run for the south-polar site records of the data stream.
 
 Builds one scenario with every site record, runs the core pipeline (LOLA terrain horizon
--> SPICE direction table -> events, windows, countdowns -> obstacles, lunar-day calendar,
-landing windows for the example requirements, uncertainty band and landing-ellipse
-survey, mast-height trade, complementary site pairs), validates every package against
-the contract and writes a summary. The scenario and the summary are kept in this folder.
+-> SPICE direction table with the orientation of the Earth -> events, windows, countdowns
+-> obstacles, lunar-day calendar, landing windows for the example requirements,
+uncertainty band and landing-ellipse survey, mast-height trade, terrain patches for
+drawing, complementary site pairs), validates every package against the contract and
+writes a summary. The scenario and the summary are kept in this folder.
 
 Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
 
@@ -553,7 +554,10 @@ def write_readme(root: Path, written: list, scenario: dict, summary: dict, comma
         "- the obstacles that cost visible time compared with a smooth sphere (`timeline.blockers`);",
         "- the lunar-day calendar (`timeline.calendar`) and, for each example requirement and observer height, the landing windows and the slip report of the planned landing (`timeline.opportunities`);",
         "- the uncertainty band for the stated horizon error and the survey of the stated landing circle (`timeline.uncertainty`, `series.<BODY>.ellipse_visible_share`);",
-        "- the mast-height trade (`timeline.height_trade`).",
+        "- the mast-height trade (`timeline.height_trade`);",
+        "- three terrain patches around the site for drawing (`terrain.patches`: 4, 16 and 64 km wide). They are for drawing only: visibility, events and windows come from the timeline, which was computed on the finest elevation data.",
+        "",
+        "The direction table also holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
         "",
         "The site-pairs package compares every two sites at their default observer height: when at least one of them sees the Sun or the Earth, and the joint outages.",
         "",

@@ -126,9 +126,34 @@ def test_every_site_package_holds_every_field_the_core_writes():
         assert trade["observer_heights_m"] == heights
         assert {q["id"] for q in trade["quantities"]} >= {"sun_visible_s", "earth_visible_s", "sun_longest_outage_s", "sun_least_lunar_day_s"}
 
+        # Terrain patches for drawing (contract 0.7): the default near, mid and far patches, each a square grid around the site.
+        terrain = manifest["terrain"]
+        assert terrain["use"] == "drawing" and terrain["method"] == "terrain.patch" and "terrain.patch" in manifest["methods"]
+        assert [patch["id"] for patch in terrain["patches"]] == ["near", "mid", "far"] == [patch["id"] for patch in manifest["request"]["terrain_patches"]]
+        for patch in terrain["patches"]:
+            assert patch["up_m"]["shape"] == [patch["count_north"], patch["count_east"]], (site_id, patch["id"])
+            assert patch["count_east"] == patch["count_north"] == round(2 * patch["half_width_m"] / patch["spacing_m"]) + 1
+            assert patch["east_min_m"] == patch["north_min_m"] == -patch["half_width_m"]
+
         # Eclipses and ground stations, as before.
         window_ids = {window["id"] for window in timeline["windows"]}
         assert {"sun_lit", "sun_eclipsed_by_earth", "earth_network_dsn", "sun_lost_to_terrain", "sun_gained_from_terrain"} <= window_ids
+
+
+def test_direction_table_holds_the_orientation_of_the_earth():
+    """Contract 0.8: three series for drawing the Earth, with the kernels its orientation was read from."""
+    (table,) = _manifests("direction_table")
+    assert table["request"]["earth_view"] is True
+    count = table["time"]["count"]
+    assert set(table["earth_view"]) >= {"sub_lunar_lat_deg", "sub_lunar_lon_deg", "north_pole_angle_deg"}
+    for name in ("sub_lunar_lat_deg", "sub_lunar_lon_deg", "north_pole_angle_deg"):
+        assert table["earth_view"][name]["shape"] == [count] and table["earth_view"][name]["method"] == "dirtab.earth_view", name
+    assert "dirtab.earth_view" in table["methods"]
+    kernels = table["inputs"]["earth_orientation_kernels"]
+    assert len(kernels) >= 1
+    for kernel in kernels:
+        assert len(kernel["sha256"]) == 64 and kernel["source_url"].startswith("https://naif.jpl.nasa.gov/"), kernel["name"]
+    assert not any("earth_view" in warning for warning in table["warnings"])
 
 
 def test_site_pairs_package_compares_every_two_published_sites():
