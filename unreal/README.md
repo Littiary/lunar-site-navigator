@@ -53,6 +53,9 @@ with Git LFS: run `git lfs install` once per machine).
 | Uncertainty page: ellipse map and its hours | package: `timeline.uncertainty.landing_ellipse` (points, statistics), `series.SUN.ellipse_visible_share` |
 | Mast-height trade, site pairs | package (since 0.5, SPEC 5.8, 6a): `timeline.height_trade`; the `site_pairs` package of the root, shown only if it was computed from the very site package on screen |
 | Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
+| Surface shading | none (a display model): the engine's cosine law times a regolith factor 2 / (mu0 + mu), limited to 4, which together give the Lommel-Seeliger law used as a first description of dark, dusty surfaces. The Sun's direction in it is the package's. Uniform grey, no texture, no invented relief |
+| Earth's disc | package: direction and angular size; a plain sphere lit by the scene's Sun, so its phase follows from the two package directions. No map of the Earth: the package does not say which side faces the Moon |
+| Shadows | the engine's virtual shadow maps from the terrain mesh, with the Sun's angular diameter (package) as the light's source angle: hard shadows with the penumbra of the solar disc |
 | Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
 
 Between two time samples the Sun and the Earth are drawn at the linear interpolation of
@@ -187,4 +190,10 @@ without the LOLA files.
 - The split screen, the keys and the mouse are not covered by automated tests; they were
   checked on real captures (`docs/unreal/planner_*.png`, `compare_*.mp4`). Sites are
   selected with the number keys; there is no mouse menu.
-- Display values (light intensity, exposure, albedo, fill light) are not photometry.
+- `-LsnCameraUp=<m> -LsnCameraBack=<m>` lifts the camera above the observer for overview
+  stills; the read-out then says that this is not the observer's view, and the markers
+  that only make sense from the site are not drawn. `-LsnNoHud` leaves a caption line
+  (site, time, package) and, for a synthetic package, the synthetic marker.
+- Display values (light intensity, fixed exposure, albedo 0.13, fill light, the limit of
+  the regolith factor) are not photometry. The exposure is fixed for a Sun a few degrees
+  above the horizon; nothing adapts to the scene.

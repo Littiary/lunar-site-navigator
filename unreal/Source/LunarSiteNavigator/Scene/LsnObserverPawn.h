@@ -49,6 +49,9 @@ public:
 	bool IsPlaying() const { return bPlaying; }
 	double GetPlayRateSamplesPerSecond() const { return PlayRate; }
 	bool IsFollowingSun() const { return bFollowSun; }
+	/** True if the camera stands above or behind the observer (overview stills): not the observer's view. */
+	bool IsOverview() const { return CameraUpM > 0.0 || CameraBackM > 0.0; }
+	double GetCameraUpM() const { return CameraUpM; }
 	double GetFollowOffsetDeg() const { return FollowOffsetDeg; }
 	/** True once a stretch given on the command line has been played to its end. */
 	bool HasFinishedCommandLinePlay() const { return bCommandLinePlayDone; }
@@ -66,6 +69,10 @@ private:
 	double ElevationDeg = 0.0;
 	double FovDeg = 60.0;
 	bool bInitialised = false;
+
+	/** Overview camera: metres above and behind the observer along the viewing azimuth. */
+	double CameraUpM = 0.0;
+	double CameraBackM = 0.0;
 
 	/** Keep the view on the Sun's azimuth plus an offset the user turns. */
 	bool bFollowSun = false;

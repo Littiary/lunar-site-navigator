@@ -165,6 +165,14 @@ private:
 	UPROPERTY()
 	TObjectPtr<UMaterialInterface> SurfaceMaterial;
 
+	/** The regolith surface of this scene; its "SunDirection" follows the package. */
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> RegolithMaterial;
+
+	/** The Earth's disc: the same material with the plain cosine law. */
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> EarthMaterial;
+
 	UPROPERTY()
 	TObjectPtr<UMaterialInterface> EmissiveMaterial;
 

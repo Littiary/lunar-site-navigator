@@ -29,6 +29,10 @@ enum class ELsnPlannerPage : uint8
  *   -LsnYaw=<azimuth, deg>  -LsnPitch=<elevation, deg>  -LsnFov=<horizontal field of view, deg>
  *   -LsnPage=calendar|uncertainty|trade    (the planner page shown; default: summary)
  *   -LsnRequirement=<index>                (which requirement of the package the landing windows are shown for)
+ *   -LsnCameraUp=<m>  -LsnCameraBack=<m>   (overview: the camera stands that far above and behind the
+ *                                           observer; for stills, not the observer's view)
+ *   -LsnNoHud                              (for stills: no panels, only a caption line and, for a
+ *                                           synthetic package, the synthetic marker)
  *   -LsnFollowSun                          (keep the view on the Sun's azimuth; default when comparing)
  *   -LsnHorizonLine                        (draw the package horizon as a line)
  *   -LsnNoFillLight  -LsnNoObstacle        (switch the fill light or the obstacle view off)

@@ -1,6 +1,8 @@
 #include "Scene/LsnHud.h"
 
 #include "Engine/Canvas.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Engine/Engine.h"
 #include "EngineUtils.h"
 #include "Planner/LsnPlanner.h"
@@ -384,10 +386,24 @@ void ALsnHud::DrawHUD()
 	const double Position = Scene->GetTimePosition();
 	const ALsnObserverPawn* Pawn = Cast<ALsnObserverPawn>(GetOwningPawn());
 
+	// For stills: no panels. A synthetic package keeps its marker; every still keeps a caption
+	// that says which package, site and time it shows.
+	if (FParse::Param(FCommandLine::Get(), TEXT("LsnNoHud")))
+	{
+		if (P.bSynthetic)
+		{
+			Line(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, 1.4f);
+		}
+		DrawText(FString::Printf(TEXT("%s   %s   observer %.1f m   package %s (contract %s)"), *P.SiteName, *LsnHudText::UtcLabelOfPosition(P, Position), P.ObserverHeightsM[H], *P.PackageId, *P.ContractVersion),
+			Dim, X, SizeY - 26.0f * Scale, Font, Scale * 0.9f);
+		return;
+	}
+
 	// --- read-out, top left ------------------------------------------------------------
 	const ELsnPlannerPage Page = GameMode ? GameMode->GetPage() : ELsnPlannerPage::Summary;
 	// The calendar needs the middle of the screen: the read-out is then as short as side by side.
-	const bool bCompact = bComparing || Page == ELsnPlannerPage::Calendar;
+	const bool bOverview = Pawn && Pawn->IsOverview();
+	const bool bCompact = bComparing || bOverview || Page == ELsnPlannerPage::Calendar;
 	TArray<FLsnHudLine> Lines;
 	LsnHudText::BuildStatusLines(P, H, Position, Lines, Scene->GetGroundNote());
 	if (bCompact)
@@ -411,6 +427,10 @@ void ALsnHud::DrawHUD()
 	{
 		Line(FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
 			Pawn->IsFollowingSun() ? TEXT("   view follows the Sun's azimuth (F)") : TEXT("")), Dim);
+	}
+	if (bOverview)
+	{
+		Line(FString::Printf(TEXT("Overview from %.1f km above the site: not the observer's view. Horizon, countdowns and obstacle refer to the observer at the site."), Pawn->GetCameraUpM() / 1000.0), Alert, 1.1f);
 	}
 	if (Scene->GetSkippedHorizonSamples() > 0)
 	{
@@ -560,7 +580,7 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- where the Sun and the Earth are when they are outside the view -----------------
-	if (Pawn)
+	if (Pawn && !bOverview)
 	{
 		float IndicatorY = Layout.Zoom.Min.Y - 36.0f * Scale;
 		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
@@ -591,7 +611,7 @@ void ALsnHud::DrawHUD()
 	for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
 	{
 		FLsnBlocking Blocking;
-		if (!Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
+		if (bOverview || !Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
 		{
 			continue;
 		}

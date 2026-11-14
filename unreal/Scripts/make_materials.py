@@ -8,9 +8,18 @@ Run headless from the repository root:
 
     UnrealEditor-Cmd.exe unreal/LunarSiteNavigator.uproject -run=pythonscript -script=unreal/Scripts/make_materials.py
 
-M_LsnSurface   lit, base colour = vertex colour, fully rough, no specular,
-               two-sided (the terrain is an open sheet that must also block
-               light arriving from behind it).
+M_LsnSurface   lit, fully rough, no specular, two-sided (the terrain is an open
+               sheet that must also block light arriving from behind it).
+               Base colour = vertex colour x a regolith factor 2 / (mu0 + mu),
+               limited to 4, where mu0 and mu are the cosines of the Sun's and the
+               viewer's direction to the surface normal. With the engine's own
+               cosine law this gives the Lommel-Seeliger law mu0 / (mu0 + mu), the
+               usual first description of dark, dusty surfaces such as lunar
+               regolith: no darkening towards grazing light as on a matt painted
+               surface. Vector parameter "SunDirection" (world, from the package,
+               set by the scene); scalar parameter "RegolithShading" (1 for the
+               Moon, 0 for the plain cosine law, used for the Earth's disc).
+               A display model, not a calibrated photometric function.
 M_LsnEmissive  unlit, emissive = vertex colour x scalar parameter "Intensity".
                Used for the Sun disc and the horizon line overlay.
 """
@@ -41,8 +50,50 @@ def _constant(material, value, y):
 def make_surface():
     material, path = _new_material("M_LsnSurface")
     material.set_editor_property("two_sided", True)
-    colour = mel.create_material_expression(material, unreal.MaterialExpressionVertexColor, -400, 0)
-    mel.connect_material_property(colour, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    def node(cls, x, y):
+        return mel.create_material_expression(material, cls, x, y)
+
+    def link(source, target, name):
+        if not mel.connect_material_expressions(source, "", target, name):
+            raise RuntimeError(f"could not connect to input '{name}' of {target.get_class().get_name()}")
+
+    colour = node(unreal.MaterialExpressionVertexColor, -1400, 0)
+    sun = node(unreal.MaterialExpressionVectorParameter, -1400, 200)
+    sun.set_editor_property("parameter_name", "SunDirection")
+    sun.set_editor_property("default_value", unreal.LinearColor(0.0, 0.0, 1.0, 0.0))
+    normal = node(unreal.MaterialExpressionVertexNormalWS, -1400, 400)
+    view = node(unreal.MaterialExpressionCameraVectorWS, -1400, 500)
+    dot_sun = node(unreal.MaterialExpressionDotProduct, -1150, 250)
+    link(normal, dot_sun, "A")
+    link(sun, dot_sun, "B")
+    dot_view = node(unreal.MaterialExpressionDotProduct, -1150, 450)
+    link(normal, dot_view, "A")
+    link(view, dot_view, "B")
+    # The sheet is two-sided: use the size of both cosines, whichever side is seen.
+    mu0 = node(unreal.MaterialExpressionAbs, -950, 250)
+    link(dot_sun, mu0, "")
+    mu = node(unreal.MaterialExpressionAbs, -950, 450)
+    link(dot_view, mu, "")
+    total = node(unreal.MaterialExpressionAdd, -780, 350)
+    link(mu0, total, "A")
+    link(mu, total, "B")
+    floor = node(unreal.MaterialExpressionMax, -620, 350)
+    link(total, floor, "A")
+    link(_constant(material, 0.5, 600), floor, "B")  # limits the factor to 4
+    factor = node(unreal.MaterialExpressionDivide, -470, 350)
+    link(_constant(material, 2.0, 700), factor, "A")
+    link(floor, factor, "B")
+    amount = node(unreal.MaterialExpressionScalarParameter, -470, 550)
+    amount.set_editor_property("parameter_name", "RegolithShading")
+    amount.set_editor_property("default_value", 1.0)
+    blend = node(unreal.MaterialExpressionLinearInterpolate, -300, 400)
+    link(_constant(material, 1.0, 800), blend, "A")
+    link(factor, blend, "B")
+    link(amount, blend, "Alpha")
+    base = node(unreal.MaterialExpressionMultiply, -150, 100)
+    link(colour, base, "A")
+    link(blend, base, "B")
+    mel.connect_material_property(base, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(_constant(material, 1.0, 200), "", unreal.MaterialProperty.MP_ROUGHNESS)
     mel.connect_material_property(_constant(material, 0.0, 300), "", unreal.MaterialProperty.MP_SPECULAR)
     mel.connect_material_property(_constant(material, 0.0, 400), "", unreal.MaterialProperty.MP_METALLIC)

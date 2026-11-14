@@ -29,7 +29,9 @@ ALsnObserverPawn::ALsnObserverPawn()
 	Post.bOverride_AutoExposureApplyPhysicalCameraExposure = true;
 	Post.AutoExposureApplyPhysicalCameraExposure = false;
 	Post.bOverride_AutoExposureBias = true;
-	Post.AutoExposureBias = 1.0f;
+	// Chosen for a Sun a few degrees above the horizon: level ground in grazing light is a
+	// mid grey, slopes facing the Sun are bright, and nothing is lifted out of the shadows.
+	Post.AutoExposureBias = -0.5f;
 	Post.bOverride_BloomIntensity = true;
 	Post.BloomIntensity = 0.0f;
 	Post.bOverride_LensFlareIntensity = true;
@@ -58,6 +60,8 @@ void ALsnObserverPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	FParse::Value(FCommandLine::Get(), TEXT("LsnFov="), FovDeg);
+	FParse::Value(FCommandLine::Get(), TEXT("LsnCameraUp="), CameraUpM);
+	FParse::Value(FCommandLine::Get(), TEXT("LsnCameraBack="), CameraBackM);
 }
 
 void ALsnObserverPawn::ApplyView()
@@ -67,6 +71,14 @@ void ALsnObserverPawn::ApplyView()
 	FovDeg = FMath::Clamp(FovDeg, 1.0, 120.0);
 	// Yaw is azimuth and pitch is elevation in the site frame (see the frame tests).
 	SetActorRotation(FRotator(ElevationDeg, AzimuthDeg, 0.0));
+	if (IsOverview())
+	{
+		if (const ALsnSiteScene* Scene = FindScene())
+		{
+			const FVector Back = FLsnSiteFrame::AzElToUnrealDir(AzimuthDeg, 0.0) * (-CameraBackM * FLsnSiteFrame::CmPerM);
+			SetActorLocation(Scene->GetEyeUnreal() + Back + FVector(0.0, 0.0, CameraUpM * FLsnSiteFrame::CmPerM));
+		}
+	}
 	Camera->SetFieldOfView(static_cast<float>(FovDeg));
 }
 

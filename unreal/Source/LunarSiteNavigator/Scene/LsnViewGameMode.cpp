@@ -184,6 +184,21 @@ void ALsnViewGameMode::StartPlay()
 
 	// Two scenes: the second stands far away, is lit on its own lighting channel and is
 	// only ever seen by the right view of a comparison.
+	// An airless body has hard shadows whose only softness is the size of the Sun's disc:
+	// finer shadow pages and more rays for the penumbra than the engine's defaults.
+	const TPair<const TCHAR*, float> ShadowSettings[] = {
+		{ TEXT("r.Shadow.Virtual.ResolutionLodBiasDirectional"), -1.0f },
+		{ TEXT("r.Shadow.Virtual.SMRT.RayCountDirectional"), 16.0f },
+		{ TEXT("r.Shadow.Virtual.SMRT.SamplesPerRayDirectional"), 8.0f },
+	};
+	for (const TPair<const TCHAR*, float>& Setting : ShadowSettings)
+	{
+		if (IConsoleVariable* Variable = IConsoleManager::Get().FindConsoleVariable(Setting.Key))
+		{
+			Variable->Set(Setting.Value, ECVF_SetByGameSetting);
+		}
+	}
+
 	Scenes.Add(GetWorld()->SpawnActor<ALsnSiteScene>(ALsnSiteScene::StaticClass(), FTransform::Identity));
 	Scenes.Add(GetWorld()->SpawnActor<ALsnSiteScene>(ALsnSiteScene::StaticClass(), FTransform(LsnPlanner::SecondSceneOffsetCm())));
 	Scenes[0]->SetSceneSlot(0);

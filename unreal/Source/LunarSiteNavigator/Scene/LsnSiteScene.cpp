@@ -215,6 +215,10 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 		}
 	}
 
+	RegolithMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
+	EarthMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
+	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
+
 	RebuildGeometry();
 	SetTimeIndex(0);
 
@@ -264,7 +268,7 @@ void ALsnSiteScene::RebuildGeometry()
 	}
 	TerrainData.RoundPositionsToFloat();
 	Terrain->SetRelativeLocation(FVector::ZeroVector);
-	ApplyMesh(Terrain, TerrainData, SurfaceMaterial);
+	ApplyMesh(Terrain, TerrainData, RegolithMaterial);
 	if (SkippedHorizonSamples > 0)
 	{
 		UE_LOG(LogLsn, Warning, TEXT("%d horizon samples could not be placed (unknown values in the package)."), SkippedHorizonSamples);
@@ -294,7 +298,7 @@ void ALsnSiteScene::RebuildGeometry()
 		RegolithAlbedo, MoonSphereData);
 	MoonSphereData.RoundPositionsToFloat();
 	MoonSphere->SetRelativeLocation(Frame.MoonCentreUnreal());
-	ApplyMesh(MoonSphere, MoonSphereData, SurfaceMaterial);
+	ApplyMesh(MoonSphere, MoonSphereData, RegolithMaterial);
 
 	// Overlay: the package horizon as a line.
 	FLsnMeshData LineData;
@@ -308,8 +312,10 @@ void ALsnSiteScene::RebuildGeometry()
 	UMaterialInstanceDynamic* SunMaterial = UMaterialInstanceDynamic::Create(EmissiveMaterial, this);
 	SunMaterial->SetScalarParameterValue(TEXT("Intensity"), SunDiscEmissive);
 	EnsureUnitSphere(SunDisc, FColor(255, 250, 240, 255), SunMaterial);
-	// Placeholder colour until a NASA Earth texture is credited and added.
-	EnsureUnitSphere(EarthDisc, FColor(40, 70, 130, 255), SurfaceMaterial);
+	// A plain sphere in the Earth's direction and angular size, lit by the scene's Sun, so
+	// that its phase follows from the two package directions. It carries no map: the
+	// package does not say which side of the Earth faces the Moon.
+	EnsureUnitSphere(EarthDisc, FColor(86, 118, 178, 255), EarthMaterial);
 }
 
 void ALsnSiteScene::EnsureUnitSphere(UProceduralMeshComponent* Component, const FColor& Color, UMaterialInterface* Material)
@@ -402,6 +408,11 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	if (Sun.bValid)
 	{
 		const FVector ToSun = FLsnSiteFrame::AzElToUnrealDir(Sun.AzimuthDeg, Sun.ElevationDeg);
+		if (RegolithMaterial)
+		{
+			// The regolith shading needs the direction of the Sun; it is the package's.
+			RegolithMaterial->SetVectorParameterValue(TEXT("SunDirection"), FLinearColor(ToSun.X, ToSun.Y, ToSun.Z, 0.0f));
+		}
 		// A directional light shines along its forward axis: away from the Sun.
 		SunLight->SetWorldRotation((-ToSun).Rotation());
 		if (Sun.bHasAngularRadius)

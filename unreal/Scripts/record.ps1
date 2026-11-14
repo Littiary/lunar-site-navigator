@@ -18,7 +18,8 @@ param(
     [int]$ResX = 1280,
     [int]$ResY = 720,
     [int]$Fps = 30,
-    [string[]]$Extra = @(),
+    # Further arguments passed to the scene as they are, in one string separated by spaces.
+    [string]$Extra = "",
     [switch]$HorizonLine
 )
 $ErrorActionPreference = "Stop"
@@ -41,7 +42,7 @@ if ($Height -ge 0) { $args += "-LsnHeight=$Height" }
 if (-not [double]::IsNaN($Yaw)) { $args += "-LsnYaw=$($Yaw.ToString($inv))" }
 if (-not [double]::IsNaN($Pitch)) { $args += "-LsnPitch=$($Pitch.ToString($inv))" }
 if ($HorizonLine) { $args += "-LsnHorizonLine" }
-$args += $Extra
+if ($Extra -ne "") { $args += $Extra }
 $editor = "$EngineRoot\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 $proc = Start-Process -FilePath $editor -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardOutput (Join-Path $env:TEMP "lsn_record_stdout.txt")
 $count = @(Get-ChildItem -Path $frames -Filter "frame_*.png" -ErrorAction SilentlyContinue).Count
