@@ -31,7 +31,10 @@ def log(msg: str) -> None:
 
 def _urls(spec: catalog.FileSpec, prefer: str) -> list[str]:
     pds = spec.pds_path if spec.pds_path.startswith("http") else f"{catalog.PDS_ROOT}/{spec.pds_path}"
-    mit = f"{catalog.MIT_ROOT}/{spec.mit_path}" if spec.mit_path else None
+    if spec.mit_path and spec.mit_path.startswith("http"):
+        mit = spec.mit_path
+    else:
+        mit = f"{catalog.MIT_ROOT}/{spec.mit_path}" if spec.mit_path else None
     if prefer == "mit" and mit:
         return [mit, pds]
     return [pds] + ([mit] if mit else [])
