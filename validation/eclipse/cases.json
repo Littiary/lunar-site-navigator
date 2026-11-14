@@ -1,0 +1,63 @@
+{
+  "description": "The total lunar eclipse of 14 March 2025, which a lander on the Moon saw as an eclipse of the Sun by the Earth. Published values as printed, read from their sources on 14 November 2026. Committed before the eclipse code of the core was run on this eclipse.",
+  "sources": {
+    "firefly_live": {
+      "title": "Firefly Aerospace: Blue Ghost Mission 1 live updates (posts of 13 and 14 March 2025)",
+      "url": "https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/",
+      "retrieved_utc": "2026-11-14T11:07:59Z",
+      "page_sha256": "a8ac152d53d90bfd9f97bad6246136f00e32a1f674359f9b6d96002905cde349"
+    },
+    "lroc_blue_ghost": {
+      "title": "LROC: 'Blue Ghost Lunar Lander Seen From Above', 7 March 2025",
+      "url": "https://lroc.im-ldi.com/images/1407",
+      "retrieved_utc": "2026-11-14T11:08:00Z",
+      "page_sha256": "724e2388ed11493ff9f21fa016d4ec504568c888023fa80a65d7ed1afa5d6e23"
+    },
+    "nasa_gsfc_chart": {
+      "title": "F. Espenak, NASA's GSFC: chart 'Total Lunar Eclipse of 2025 Mar 14' (dated 2009 Apr 29)",
+      "url": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2025Mar14T.pdf",
+      "retrieved_utc": "2026-11-14T11:19:45Z",
+      "page_sha256": "4df1efa14457a1e925c2e63c0d8a7a428d30627532abc11e5c15e3e219d2d166",
+      "note": "The chart is an image; the values were read from a rendering of the PDF. Printed on the chart: Delta T = 75 s; Rule = CdT (Danjon); Eph. = VSOP87/ELP2000-85."
+    },
+    "nasa_science_page": {
+      "title": "NASA Science: 'What You Need To Know About the March 2025 Total Lunar Eclipse' (last updated 6 March 2025)",
+      "url": "https://science.nasa.gov/solar-system/moon/what-you-need-to-know-about-the-march-2025-total-lunar-eclipse/",
+      "retrieved_utc": "2026-11-14T11:19:43Z",
+      "page_sha256": "f7a0247aab75befc4c823d19738cd74aad2fc2a6718a7dd3e9c873f84018b171",
+      "note": "Gives the same six milestones to the minute in UTC: 03:57, 05:09, 06:26, 07:31, 08:47, 10:00. Used as a cross-check of the reading of the chart."
+    }
+  },
+  "site": {
+    "name": "Blue Ghost Mission 1 landing point, Mare Crisium",
+    "value": {"lat_deg": 18.5623, "lon_deg": 61.8103, "height_m": -3650.0},
+    "as_printed": "18.5623 N, 61.8103 E, -3650 [m]",
+    "source": "lroc_blue_ghost",
+    "note": "No terrain: the Sun and the Earth are about 29 degrees above the horizon during this eclipse."
+  },
+  "time_zone_of_the_firefly_times": {
+    "as_printed": "The post of 13 March 2025 labels its times 'CST'. The posts of 14 March 2025 about the same night use 'CDT'.",
+    "reading_used": "UTC-5. US daylight saving time began on 9 March 2025, so clocks in Texas showed Central Daylight Time on 13 and 14 March.",
+    "check_without_the_core": "Read as UTC-6, the eclipse at the landing site would end at 10:52 UTC, after the whole Moon has left the Earth's penumbra (P4 = 10:00:01 UT on the NASA chart), which is impossible. The UTC-5 reading is therefore fixed by the two publications alone."
+  },
+  "published": [
+    {"id": "firefly_partial_start", "value": "2025-03-14T05:00:00", "as_printed": "starting at 12 am CST", "source": "firefly_live", "precision": "printed without minutes; read as 12:00", "approximate": false, "nature": "prediction by the operator, published the day before"},
+    {"id": "firefly_totality_start", "value": "2025-03-14T06:18:00", "as_printed": "starting at 1:18 am CST", "source": "firefly_live", "precision": "1 minute", "approximate": false, "nature": "prediction by the operator"},
+    {"id": "firefly_totality_duration_min", "value": 136, "as_printed": "approximately 2 hours and 16 minutes of totality", "source": "firefly_live", "precision": "1 minute", "approximate": true, "nature": "prediction by the operator"},
+    {"id": "firefly_partial_end", "value": "2025-03-14T09:52:00", "as_printed": "through 4:52 am CST", "source": "firefly_live", "precision": "1 minute", "approximate": false, "nature": "prediction by the operator"},
+    {"id": "firefly_observed", "value": {"first_look": "2025-03-14T05:30:00", "red_surface_during_totality": "2025-03-14T07:30:00", "diamond_ring": "2025-03-14T08:30:00"}, "as_printed": "around 12:30 am CDT; around 2:30 am CDT; around 3:30 am CDT", "source": "firefly_live", "precision": "about half an hour", "approximate": true, "nature": "times of images taken on the Moon"},
+    {"id": "nasa_whole_moon_contacts", "value": {"P1": "2025-03-14T03:57:24", "U1": "2025-03-14T05:09:33", "U2": "2025-03-14T06:25:59", "U3": "2025-03-14T07:31:23", "U4": "2025-03-14T08:47:48", "P4": "2025-03-14T10:00:01"}, "as_printed": "P1 = 03:57:24 UT, U1 = 05:09:33 UT, U2 = 06:25:59 UT, U3 = 07:31:23 UT, U4 = 08:47:48 UT, P4 = 10:00:01 UT", "source": "nasa_gsfc_chart", "precision": "1 second", "approximate": false, "nature": "prediction for the Moon as a whole, seen from the Earth's centre, with an enlarged shadow"}
+  ],
+  "checks": [
+    {"id": "eclipse_partial_start", "rule": "E1_contact_time_at_the_site", "published": "firefly_partial_start", "computed": "C1 at the site", "kind": "pass_fail"},
+    {"id": "eclipse_totality_start", "rule": "E1_contact_time_at_the_site", "published": "firefly_totality_start", "computed": "C2 at the site", "kind": "pass_fail"},
+    {"id": "eclipse_partial_end", "rule": "E1_contact_time_at_the_site", "published": "firefly_partial_end", "computed": "C4 at the site", "kind": "pass_fail"},
+    {"id": "eclipse_totality_duration", "rule": "E2_duration_of_totality", "published": "firefly_totality_duration_min", "computed": "C3 minus C2 at the site", "kind": "pass_fail"},
+    {"id": "eclipse_c1_after_p1", "rule": "E3_nesting_inside_whole_moon_contacts", "published": "nasa_whole_moon_contacts.P1", "computed": "C1 at the site must not be earlier than P1 minus the allowance", "kind": "pass_fail"},
+    {"id": "eclipse_c2_between_u1_and_u2", "rule": "E3_nesting_inside_whole_moon_contacts", "published": "nasa_whole_moon_contacts.U1, U2", "computed": "C2 at the site must lie between U1 minus the allowance and U2 plus the allowance", "kind": "pass_fail"},
+    {"id": "eclipse_c3_between_u3_and_u4", "rule": "E3_nesting_inside_whole_moon_contacts", "published": "nasa_whole_moon_contacts.U3, U4", "computed": "C3 at the site must lie between U3 minus the allowance and U4 plus the allowance", "kind": "pass_fail"},
+    {"id": "eclipse_c4_before_p4", "rule": "E3_nesting_inside_whole_moon_contacts", "published": "nasa_whole_moon_contacts.P4", "computed": "C4 at the site must not be later than P4 plus the allowance", "kind": "pass_fail"},
+    {"id": "eclipse_observed_images", "published": "firefly_observed", "computed": "fraction of the Sun's disc hidden by the Earth at the three image times", "kind": "reported", "why_not_judged": "The image times are given to about half an hour. Expected, not judged: partly hidden at the first look, fully hidden during totality, close to the end of totality at the diamond ring."},
+    {"id": "eclipse_power_line", "published": "none", "computed": "fraction of the Sun's disc that is lit at the site through the eclipse (the eclipse-aware power line), sampled every 10 minutes; depth and duration of the loss of sunlight", "kind": "reported", "why_not_judged": "No published power curve was found. Firefly reports that the lander ran on batteries during totality."}
+  ]
+}
