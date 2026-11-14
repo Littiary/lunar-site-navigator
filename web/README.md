@@ -22,6 +22,19 @@ Before drawing, the reader checks each array file against the size and SHA-256 i
 
 Time-axis labels: dates at 00:00 UTC are placed as `start_utc` + elapsed seconds, which the contract allows only when `leap_seconds_in_range` is 0. Otherwise only the package's own UTC strings are used.
 
+## Evidence page (`lsn_web/evidence.py`)
+
+One self-contained HTML file per build. For each site package it shows the two charts, the site, frame, sphere radius and time window, the summary metrics and the rise and set events at the default observer height. It also shows every method card with its validation status, and the data and software versions. When given the ephemeris stream's `validation/card/validation_card.json`, it adds that card: checks, thresholds, measured values, what is not validated, and limits.
+
+```
+cd web
+python -m lsn_web.evidence <site package dir> [...] --card <validation_card.json> --out <file.html>
+```
+
+The page loads nothing from the network: the charts are embedded as data URIs and the styles are inline. The same file is therefore the offline copy, and it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
+
+Generated pages are not committed while only the synthetic sample exists. They will be built from the first frozen real package.
+
 ## Tests
 
 ```
@@ -29,3 +42,5 @@ python -I -m unittest discover -s web/tests -t web
 ```
 
 `tests/fixtures/contract-sample/` is a byte-for-byte copy of `docs/contract/sample/packages` from the core branch at commit `dfc5221`. It is synthetic: invented values that describe no real place. Refresh it only by copying it again from the core branch, never by editing it.
+
+`tests/fixtures/validation-card/validation_card.json` is a byte-for-byte copy of `validation/card/validation_card.json` from the ephemeris branch at commit `a8bbc5a`. The same rule applies.
