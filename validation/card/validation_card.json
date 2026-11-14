@@ -1,8 +1,8 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-14T11:13:57Z",
+  "generated_utc": "2026-11-14T11:48:38Z",
   "generated_from": {
-    "commit": "eaf5634",
+    "commit": "6f74153",
     "uncommitted_changes": true
   },
   "core": {
@@ -19,8 +19,8 @@
     ]
   },
   "summary": {
-    "checks": 17,
-    "passed": 17,
+    "checks": 24,
+    "passed": 24,
     "failed": 0
   },
   "checks": [
@@ -201,6 +201,111 @@
       "limits": []
     },
     {
+      "id": "station_earth_end",
+      "group": "Independent source",
+      "quantity": "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.42422114960522356,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_moon_end",
+      "group": "Independent source",
+      "quantity": "Moon end of a direct link: direction of a ground station seen from a lunar site (observer at the site)",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.1930506168742497,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
+      "id": "station_fast_path_earth_end",
+      "group": "Independent source",
+      "quantity": "Elevation of the lunar site at the station through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 0.012,
+        "unit": "deg",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 8.79670786204656e-05,
+        "unit": "deg"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin.",
+        "The fast path evaluates both ends at one instant."
+      ]
+    },
+    {
+      "id": "station_fast_path_moon_end",
+      "group": "Independent source",
+      "quantity": "Direction of the station seen from the lunar site through the fast path that the link windows use",
+      "compared_against": "JPL Horizons observer tables (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
+      "cases": "6 queries, 1734 rows: 3 Deep Space Network stations, a south-polar and an equatorial lunar site, 14-16 Nov 2026 at 10 min",
+      "threshold": {
+        "value": 1.0,
+        "unit": "arcsec",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the reference data was fetched or compared",
+        "where": "validation/stations/thresholds.json (commit 6f74153)"
+      },
+      "measured": {
+        "value": 0.2102176762149692,
+        "unit": "arcsec"
+      },
+      "status": "PASS",
+      "evidence": "validation/stations/results/validation_table.md; test validation/tests/test_stations_validation.py",
+      "limits": [
+        "No terrain at either end.",
+        "Both sides use JPL ephemerides and Earth orientation data of the same origin."
+      ]
+    },
+    {
       "id": "apollo_landing_angles",
       "group": "Published mission record",
       "quantity": "Sun and Earth altitude, azimuth and sub-points at the Apollo 11 and Apollo 16 landings, at the published landing times",
@@ -276,6 +381,83 @@
         "One-sided checks: they can show the core wrong, they do not confirm an event time.",
         "Blue Ghost recorded 346 h of daylight, ending 2.3 h before smooth-sphere last light; local terrain is not in the project data for that site.",
         "ISRO expected the wake-up about 1.8 days after the computed sunrise; ISRO published no sunrise time."
+      ]
+    },
+    {
+      "id": "eclipse_contact_times",
+      "group": "Published mission record",
+      "quantity": "Eclipse of the Sun by the Earth on 14 March 2025 at the Blue Ghost landing point: start of the partial phase, start of totality, end of the partial phase",
+      "compared_against": "Contact times predicted by the operator, Firefly Aerospace, printed to the minute (https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/), retrieved 2026-11-14",
+      "cases": "3 contact times at one site",
+      "threshold": {
+        "value": 2.0,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.8320313612620036,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Opaque Earth without atmosphere; the real edge of the shadow is soft over about a minute.",
+        "The operator's times are predictions, not measurements; its images of the eclipse are timed only to about half an hour.",
+        "The operator labels the times CST; they are read as local Texas time (UTC-5), which the NASA chart confirms independently."
+      ]
+    },
+    {
+      "id": "eclipse_totality_duration",
+      "group": "Published mission record",
+      "quantity": "Duration of totality at the Blue Ghost landing point, 14 March 2025 (the operator: approximately 2 hours and 16 minutes)",
+      "compared_against": "Firefly Aerospace, Blue Ghost Mission 1 live updates, retrieved 2026-11-14",
+      "cases": "1 duration",
+      "threshold": {
+        "value": 3.5,
+        "unit": "min",
+        "comparison": "<"
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 1.0234375,
+        "unit": "min"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "Called approximate by the source."
+      ]
+    },
+    {
+      "id": "eclipse_inside_whole_moon_contacts",
+      "group": "Independent source",
+      "quantity": "Contacts at the site that fall outside the whole-Moon contacts of the same eclipse (a point of the Moon cannot enter the shadow before the Moon does or leave it after)",
+      "compared_against": "NASA GSFC eclipse chart, F. Espenak, 'Total Lunar Eclipse of 2025 Mar 14' (https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2025Mar14T.pdf), retrieved 2026-11-14",
+      "cases": "4 inequalities, allowance 2 min for NASA's enlarged shadow",
+      "threshold": {
+        "value": 0,
+        "unit": "contacts outside",
+        "comparison": "<="
+      },
+      "threshold_fixed": {
+        "how": "committed on its own before the eclipse code was run on this eclipse; not blind (earlier research had computed these contacts with Horizons), so the thresholds follow fixed rules from the printed precision of each source",
+        "where": "validation/eclipse/thresholds.json and cases.json (commit a8bbc5a)"
+      },
+      "measured": {
+        "value": 0.0,
+        "unit": "contacts outside"
+      },
+      "status": "PASS",
+      "evidence": "validation/eclipse/results/validation_table.md; test validation/tests/test_eclipse_validation.py",
+      "limits": [
+        "One-sided: the margins are 9 to 63 min, so this only excludes gross errors."
       ]
     },
     {
@@ -465,14 +647,19 @@
       "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."
     },
     {
+      "item": "Direct-to-Earth windows",
+      "state": "geometry validated, windows not",
+      "reason": "Both ends of the link geometry agree with Horizons. The windows built from them, the station elevation limits as single numbers (no azimuth-dependent masks), and anything about link budget, multipath or scheduling have not been compared with an external source."
+    },
+    {
       "item": "Earth rise and set against an independent source",
       "state": "not done",
       "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."
     },
     {
-      "item": "Eclipses of the Sun by the Earth",
-      "state": "not modelled",
-      "reason": "The visible fraction of the Sun does not include occultation by the Earth."
+      "item": "Sunlight during an eclipse",
+      "state": "partly modelled",
+      "reason": "Eclipses of the Sun by the Earth are computed for an opaque Earth without atmosphere and checked against one published eclipse. The light that the Earth's atmosphere refracts into the shadow, and any measured power curve of a lander, are not modelled or compared."
     }
   ],
   "limits": [

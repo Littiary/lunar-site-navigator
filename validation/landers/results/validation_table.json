@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T11:12:44Z",
+  "generated_utc": "2026-11-14T11:31:35Z",
   "core": {
     "frame": "MOON_ME_DE440_ME421",
     "aberration_correction": "LT+S",
@@ -355,8 +355,8 @@
             ],
             "sunrise_first_light_terrain": "2023-09-20T00:05:04.453Z",
             "sunrise_azimuth_deg": 85.47535865037723,
-            "sunrise_horizon_elevation_deg": 1.1178889484721777,
-            "sunrise_obstacle_distance_km": 0.5023828125,
+            "sunrise_horizon_elevation_deg": 1.117889138307443,
+            "sunrise_obstacle_distance_km": 0.5023869087453591,
             "sunset_last_light_smooth_sphere": [
               "2023-09-04T18:05:25.547Z",
               "2023-10-04T10:02:04.454Z"

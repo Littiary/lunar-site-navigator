@@ -217,3 +217,69 @@ def test_site_package_with_real_timeline_is_valid(tmp_path, table_dir, horizon, 
     assert manifest["site"]["frame"] == "MOON_ME_DE440_ME421"
     assert manifest["methods"]["timeline.direction"]["validation"]["status"] == "externally-validated"
     assert manifest["methods"]["timeline.events"]["validation"]["status"] == "analytic-test-passed"
+
+
+# ------------------------------------------------------------------ eclipses in the timeline
+
+
+def test_window_without_eclipse_has_empty_eclipse_windows(timeline):
+    by_id = {(w["id"], w["height_index"]): w for w in timeline.windows}
+    metrics = {m["id"]: m for m in timeline.metrics if m["height_index"] is None}
+    for h in range(len(HEIGHTS)):
+        assert by_id[("sun_eclipsed_by_earth", h)]["intervals_et_s"] == []
+        assert by_id[("sun_totally_eclipsed_by_earth", h)]["intervals_et_s"] == []
+        assert by_id[("sun_lit", h)]["intervals_et_s"] == by_id[("sun_any_part_visible", h)]["intervals_et_s"]
+    assert metrics["sun_eclipse_count"]["value"] == 0.0 and metrics["sun_eclipse_max_covered_fraction"]["value"] == 0.0
+
+
+def test_eclipse_of_march_2025_appears_in_the_timeline(tmp_path):
+    window = {"start_utc": "2025-03-12T00:00:00.000Z", "end_utc": "2025-03-16T00:00:00.000Z", "step_s": 3600.0}
+    table_dir = tb.write_direction_table(tmp_path, window["start_utc"], window["end_utc"])
+    site = {"site_id": "test-near-side", "name": "Test point, near side", "lat_deg": 10.0, "lon_deg": -20.0}
+    horizon = smooth_sphere_horizon([2.0], azimuth_step_deg=1.0)
+    result = tl.compute_timeline(site, horizon, table_dir, window, ["SUN", "EARTH"], THRESHOLDS)
+    by_id = {w["id"]: w for w in result.windows}
+    (partial,) = by_id["sun_eclipsed_by_earth"]["intervals_et_s"]
+    (total,) = by_id["sun_totally_eclipsed_by_earth"]["intervals_et_s"]
+    assert partial[0] < total[0] < total[1] < partial[1]
+    assert 3.5 * 3600 < partial[1] - partial[0] < 6.5 * 3600 and 0.5 * 3600 < total[1] - total[0] < 3.0 * 3600
+    # The Sun is up at this site during the eclipse, so 'sun_lit' is the daylight window with totality removed.
+    lit = by_id["sun_lit"]["intervals_et_s"]
+    assert any(abs(b - total[0]) < 1e-6 for a, b in lit) and any(abs(a - total[1]) < 1e-6 for a, b in lit)
+    metrics = {m["id"]: m["value"] for m in result.metrics if m["height_index"] is None}
+    assert metrics["sun_eclipse_count"] == 1.0 and metrics["sun_eclipse_total_count"] == 1.0
+    assert metrics["sun_eclipse_max_covered_fraction"] == 1.0
+    assert abs(metrics["sun_eclipse_longest_totality_s"] - (total[1] - total[0])) < 1e-6
+
+
+# ------------------------------------------------------------------ ground stations in the timeline
+
+
+@pytest.mark.skipif(not kernels.stations_available(), reason="station kernels not downloaded")
+def test_station_windows_and_relay_need_in_the_timeline(timeline, tmp_path, table_dir, horizon):
+    by_id = {(w["id"], w["height_index"]): w for w in timeline.windows}
+    metrics = {(m["id"], m["height_index"]): m for m in timeline.metrics}
+    domain = (timeline.time["start_et_s"], visible_domain_end(timeline))
+    for h in range(len(HEIGHTS)):
+        network = by_id[("earth_network_dsn", h)]
+        assert network["method"] == tl.M_STATION_LINKS and network["subject"] == "EARTH"
+        # From 20 W, 2 N the Earth never sets: the only outages are station gaps, and three
+        # complexes spread around the Earth leave almost none.
+        assert by_id[("earth_stations_hidden_by_terrain", h)]["intervals_et_s"] == []
+        assert metrics[("dte_relay_need_level", h)]["value"] in (0.0, 1.0)
+        assert metrics[("dte_network_share", h)]["value"] > 0.95
+        assert metrics[("dte_network_receive_share", h)]["value"] >= metrics[("dte_network_share", h)]["value"]
+        assert metrics[("dte_longest_terrain_outage_s", h)]["value"] == 0.0
+        shares = [metrics[(f"dte_station_{name}_share", h)]["value"] for name in ("goldstone", "canberra", "madrid")]
+        assert all(0.25 < share < 0.6 for share in shares)
+        for name in ("goldstone", "canberra", "madrid"):
+            station = by_id[(f"earth_station_{name}", h)]["intervals_et_s"]
+            assert 40 <= len(station) <= 50  # one pass per Earth day in 45 days
+            assert all(domain[0] <= a < b <= domain[1] for a, b in station)
+    # The package with station windows passes the contract validator.
+    methods = {**tl.smooth_sphere_methods(), **tl.timeline_methods(table_dir, horizon_is_terrain=False)}
+    request = {"start_utc": WINDOW["start_utc"], "end_utc": WINDOW["end_utc"], "step_s": WINDOW["step_s"], "bodies": ["SUN", "EARTH"], "thresholds": THRESHOLDS}
+    out = build_site_package(tmp_path, site=SITE, frame_name=d.FRAME, dem_input={"dem_set_id": "none-smooth-sphere", "layers": []}, horizon=horizon, methods=methods,
+                             synthetic=False, timeline=timeline, timeline_request=request, default_height_m=2.0, status="partial", warnings=["No terrain."])
+    manifest = validate_package(out)
+    assert manifest["methods"][tl.M_STATION_LINKS]["parameters"]["transmit_mask_deg"] == 10.0

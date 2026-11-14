@@ -14,11 +14,13 @@ import numpy as np
 from .. import packaging as pk
 from ..contract import read_package
 from ..ephem import directions as d
+from ..ephem import kernels
+from ..ephem import stations
 from ..ephem import table as tb
 from ..results import BodySeries, HorizonResult, TimelineResult
 from ..scenario import canonical_site
 from ..timeline import IntervalSet, TimeGrid
-from . import finder
+from . import eclipse, finder, links
 
 DEFAULT_THRESHOLDS = {
     "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
@@ -28,13 +30,23 @@ _ANY_PART = {"quantity": "visible_fraction", "op": ">", "value": 0.0}
 _FULL_DISC = {"quantity": "visible_fraction", "op": ">=", "value": 1.0}
 _NAMES = {"SUN": "Sun", "EARTH": "Earth"}
 _RATE_HALF_SPAN_S = 30.0
+M_STATION_LINKS = "timeline.station_links"
+_STATION_TABLES: dict = {}
+
+
+def _station_table(domain: tuple) -> stations.StationTable:
+    """Station table for a time range; computed once and shared by all sites of a run."""
+    if domain not in _STATION_TABLES:
+        _STATION_TABLES.clear()
+        _STATION_TABLES[domain] = stations.station_table(domain[0], domain[1])
+    return _STATION_TABLES[domain]
 
 
 def _describe(threshold: dict) -> str:
     return f"{threshold['quantity']} {threshold['op']} {threshold['value']:g}"
 
 
-def _window(wid: str, subject: str, h: int, definition: str, intervals: IntervalSet, threshold: dict | None) -> dict:
+def _window(wid: str, subject: str, h: int, definition: str, intervals: IntervalSet, threshold: dict | None, method: str = pk.M_WINDOWS) -> dict:
     out = {
         "id": wid,
         "subject": subject,
@@ -44,15 +56,15 @@ def _window(wid: str, subject: str, h: int, definition: str, intervals: Interval
         "intervals_utc": [[d.et_to_utc_z(a), d.et_to_utc_z(b)] for a, b in intervals.intervals],
         "clipped_start": bool(intervals.clipped_start),
         "clipped_end": bool(intervals.clipped_end),
-        "method": pk.M_WINDOWS,
+        "method": method,
     }
     if threshold is not None:
         out["threshold"] = threshold
     return out
 
 
-def _metric(mid: str, label: str, value, unit: str, h: int) -> dict:
-    return {"id": mid, "label": label, "value": None if value is None else float(value), "unit": unit, "height_index": h, "method": pk.M_METRICS}
+def _metric(mid: str, label: str, value, unit: str, h: int | None, method: str = pk.M_METRICS) -> dict:
+    return {"id": mid, "label": label, "value": None if value is None else float(value), "unit": unit, "height_index": h, "method": method}
 
 
 def _nearest(values: np.ndarray | None, h: int, azimuth_deg: float, step_deg: float):
@@ -115,6 +127,7 @@ def compute_timeline(
     windows: list[dict] = []
     metrics: list[dict] = []
     visible: dict[tuple[str, int], IntervalSet] = {}
+    any_part: dict[tuple[str, int], IntervalSet] = {}
 
     for body in bodies:
         name, tag = _NAMES[body], body.lower()
@@ -140,6 +153,7 @@ def compute_timeline(
                 found = finder.windows(result, label)
                 sets[label] = IntervalSet(found.intervals_et_s, domain)
             visible[(body, h)] = sets["visible"]
+            any_part[(body, h)] = sets["any_part"]
 
             windows.append(_window(f"{tag}_visible", body, h, f"{name} visible: {_describe(threshold)}", sets["visible"], threshold))
             windows.append(_window(f"{tag}_any_part_visible", body, h, f"Any part of the {name}'s disc is above the horizon", sets["any_part"], _ANY_PART))
@@ -194,6 +208,46 @@ def compute_timeline(
             both = visible[("SUN", h)].intersection(visible[("EARTH", h)])
             windows.append(_window("sun_and_earth_visible", "COMBINED", h, "Sun visible and Earth visible at the same time", both, None))
 
+    if "SUN" in bodies:
+        # Eclipses of the Sun by the Earth: the same for every observer height.
+        found = eclipse.find_eclipses(eclipse.site_geometry(ground, table), domain[0], domain[1], scan_step_s, tol_s)
+        partial = IntervalSet([(e.partial_start_et_s, e.partial_end_et_s) for e in found], domain)
+        total = IntervalSet([(e.total_start_et_s, e.total_end_et_s) for e in found if e.total_start_et_s is not None], domain)
+        for h in range(len(heights)):
+            windows.append(_window("sun_eclipsed_by_earth", "SUN", h, "Part or all of the Sun's disc is hidden by the Earth (opaque Earth disc, no atmosphere), whether or not the Sun is above the terrain horizon", partial, None))
+            windows.append(_window("sun_totally_eclipsed_by_earth", "SUN", h, "The whole disc of the Sun is hidden by the Earth (opaque Earth disc, no atmosphere)", total, None))
+            lit = any_part[("SUN", h)].intersection(total.complement())
+            windows.append(_window("sun_lit", "SUN", h, "Some part of the Sun's disc is above the terrain horizon and the Sun is not totally eclipsed by the Earth", lit, None))
+        totals = [e.total_end_et_s - e.total_start_et_s for e in found if e.total_start_et_s is not None]
+        metrics.append(_metric("sun_eclipse_count", "Number of eclipses of the Sun by the Earth in the window (partial or total at the site)", len(found), "1", None))
+        metrics.append(_metric("sun_eclipse_total_count", "Number of those eclipses that are total at the site", len(totals), "1", None))
+        metrics.append(_metric("sun_eclipse_longest_totality_s", "Longest time with the whole Sun hidden by the Earth", max(totals) if totals else 0.0, "s", None))
+        metrics.append(_metric("sun_eclipse_max_covered_fraction", "Largest fraction of the Sun's disc hidden by the Earth in the window", max((e.max_covered_fraction for e in found), default=0.0), "1", None))
+
+    if "EARTH" in bodies and kernels.stations_available():
+        # Direct-to-Earth windows per ground station. Absent when the station kernels are not installed.
+        geometry = stations.site_link_geometry(ground, _station_table(domain))
+        span = domain[1] - domain[0]
+        transmit, receive = stations.TRANSMIT_MASK_DEG, stations.RECEIVE_MASK_DEG
+        for h in range(len(heights)):
+            profile = finder.Horizon(0.0, step_deg, np.asarray(horizon.elevation_deg[h], dtype=np.float64), np.asarray(horizon.distance_m[h], dtype=np.float64))
+            two_way = links.find_link_windows(geometry, profile, domain[0], domain[1], transmit)
+            listen = links.find_link_windows(geometry, profile, domain[0], domain[1], receive)
+            for station, found in zip(stations.DSN_STATIONS, two_way.station_windows):
+                iv = IntervalSet(found, domain)
+                windows.append(_window(f"earth_station_{station.window_id}", "EARTH", h, f"Direct two-way link with {station.place} is geometrically possible: the station is above the terrain horizon of the site and the site is at least {transmit:g} deg above the station's horizon", iv, None, M_STATION_LINKS))
+                metrics.append(_metric(f"dte_station_{station.window_id}_share", f"Share of the window with a possible two-way link to {station.place}", iv.total_s() / span, "1", h, M_STATION_LINKS))
+            network = IntervalSet(two_way.network_windows, domain)
+            windows.append(_window("earth_network_dsn", "EARTH", h, f"Direct two-way link with at least one of the three Deep Space Network complexes is geometrically possible (station mask {transmit:g} deg)", network, None, M_STATION_LINKS))
+            windows.append(_window("earth_network_dsn_receive", "EARTH", h, f"At least one of the three Deep Space Network complexes can receive from the site (station mask {receive:g} deg)", IntervalSet(listen.network_windows, domain), None, M_STATION_LINKS))
+            windows.append(_window("earth_stations_hidden_by_terrain", "EARTH", h, "No Deep Space Network station is above the terrain horizon of the site: a direct link is impossible whatever the station", IntervalSet(two_way.terrain_outages, domain), None, M_STATION_LINKS))
+            level = two_way.relay_need_level
+            metrics.append(_metric("dte_relay_need_level", "Relay need, 0 to 3: 0 = direct link possible at all times; 1 = interrupted only by station gaps on the Earth; 2 = interrupted by lunar terrain for part of the time (relay or waiting needed); 3 = no station is ever above the lunar terrain (relay required). Value for this window: " + links.RELAY_NEED_LABELS[level], level, "1", h, M_STATION_LINKS))
+            metrics.append(_metric("dte_network_share", "Share of the window with a possible two-way link to the Deep Space Network", two_way.network_share(), "1", h, M_STATION_LINKS))
+            metrics.append(_metric("dte_network_receive_share", "Share of the window in which the Deep Space Network can receive from the site", listen.network_share(), "1", h, M_STATION_LINKS))
+            metrics.append(_metric("dte_longest_outage_s", "Longest time without a possible two-way link to the Deep Space Network", two_way.longest_outage_s(), "s", h, M_STATION_LINKS))
+            metrics.append(_metric("dte_longest_terrain_outage_s", "Longest time with every station hidden by the lunar terrain", two_way.longest_terrain_outage_s(), "s", h, M_STATION_LINKS))
+
     events.sort(key=lambda event: (event["et_s"], event["body"], event["height_index"]))
     return TimelineResult(
         direction_table_id=table_package.package_id,
@@ -242,7 +296,33 @@ def timeline_methods(
     )
     direction_evidence = table["methods"][pk.M_DIRTAB_POSITIONS]["validation"]["evidence"]
     params = {"scan_step_s": float(scan_step_s), "bisection_tolerance_s": float(tol_s), "disc_strips": int(n_strips)}
+    station_card = {}
+    if kernels.stations_available():
+        manifest = kernels.read_manifest()["station_kernels"]
+        station_card[M_STATION_LINKS] = pk.method_card(
+            title="Direct-to-Earth windows per ground station and relay need",
+            definition="A two-way link with a station is geometrically possible when the station (a point on the Earth) is above the terrain horizon of the site and the site is at least 10 deg above the station's horizon; 'receive' uses 6 deg. The network window is the union over the three Deep Space Network complexes, each represented by its 70 m antenna. Relay need: 0 direct link possible at all times; 1 interrupted only by station gaps; 2 interrupted by lunar terrain for part of the time; 3 no station ever above the lunar terrain.",
+            algorithm=f"Station positions and local verticals relative to the Moon's centre, tabulated every {stations.TABLE_STEP_S:g} s in the Moon body-fixed frame (SPICE, LT+S) and interpolated; both conditions sampled every {links.DEFAULT_SCAN_STEP_S:g} s; changes located by bisection to {links.DEFAULT_TOL_S:g} s. {horizon_note}",
+            frame=local,
+            time_scale="TDB",
+            data=data + [f"{entry['name']} (sha256 {entry['sha256'][:12]})" for entry in manifest],
+            parameters={"transmit_mask_deg": stations.TRANSMIT_MASK_DEG, "receive_mask_deg": stations.RECEIVE_MASK_DEG, "lunar_end_mask_deg": 0.0, "mask_source": stations.MASK_SOURCE,
+                        "stations": [s.name for s in stations.DSN_STATIONS], "scan_step_s": links.DEFAULT_SCAN_STEP_S},
+            status="analytic-test-passed",
+            evidence=[
+                "core/tests/events/test_stations.py: window logic on cases with a known answer; fast path against direct SPICE.",
+                "validation/stations: both ends of the link against JPL Horizons, 12 queries, 3468 rows: lunar site seen from the station within 0.42 arcsec, station seen from the lunar site within 0.21 arcsec (threshold 1 arcsec). The windows themselves have not been compared with an external source.",
+            ],
+            limits=[
+                "Geometry only: no link budget, antenna pattern, frequency, weather or station scheduling.",
+                "Station masks are single elevation limits; the azimuth-dependent horizon masks of the stations, the 13.5 deg limit for high-power transmit and the keyhole near the zenith are not modelled.",
+                "Only the three Deep Space Network complexes; other networks would shorten the station gaps but cannot remove an outage caused by lunar terrain.",
+                "Near the lunar horizon a real link suffers from multipath; the lunar-end mask is 0 deg here.",
+                terrain_limit,
+            ],
+        )
     return {
+        **station_card,
         pk.M_DIRECTION: pk.method_card(
             title="Direction and apparent size of the body",
             definition="Azimuth and elevation of the centre of the disc and its angular radius, seen from the ground point of the site. Elevation is measured from the local horizontal plane, not from the visible horizon.",
@@ -277,7 +357,7 @@ def timeline_methods(
             parameters={"disc_strips": int(n_strips)},
             status="analytic-test-passed",
             evidence=["core/tests/events/test_events.py::test_visible_fraction_matches_closed_form_on_flat_horizon: within 0.002 of the closed form for a straight horizon (measured 0.00006)."],
-            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "Eclipses of the Sun by the Earth are not included."],
+            limits=[terrain_limit, "The horizon profile must be sampled finer than the disc radius (0.26 deg for the Sun) for the fraction to be meaningful.", "This fraction is cut by the terrain only. Eclipses of the Sun by the Earth are given as the windows 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth'."],
         ),
         pk.M_EVENTS: pk.method_card(
             title="Rise and set events",
@@ -300,19 +380,22 @@ def timeline_methods(
         ),
         pk.M_WINDOWS: pk.method_card(
             title="Visibility windows",
-            definition="Intervals during which the stated condition holds. '*_visible' uses the scenario threshold; '*_any_part_visible' and '*_full_disc_visible' bracket the partial phase: between them the disc is partly hidden and 'visible_fraction' says how much.",
-            algorithm="Built from the refined event times; 'sun_and_earth_visible' is the intersection of the two '*_visible' sets. A window that touches the start or the end of the computed range is marked clipped.",
+            definition="Intervals during which the stated condition holds. '*_visible' uses the scenario threshold; '*_any_part_visible' and '*_full_disc_visible' bracket the partial phase: between them the disc is partly hidden and 'visible_fraction' says how much. 'sun_eclipsed_by_earth' and 'sun_totally_eclipsed_by_earth' are eclipses of the Sun by the Earth seen from the site; 'sun_lit' is 'sun_any_part_visible' without the total eclipses.",
+            algorithm="Built from the refined event times; 'sun_and_earth_visible' is the intersection of the two '*_visible' sets. Eclipse contacts: the separation of the Sun and the Earth seen from the site equals the sum (partial) or the difference (total) of their angular radii; Earth as an opaque disc of its equatorial radius without atmosphere; located by bisection like the events. A window that touches the start or the end of the computed range is marked clipped.",
             frame=local,
             time_scale="TDB",
             data=data,
             parameters=params,
             status="analytic-test-passed",
-            evidence=["core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic)."],
-            limits=[terrain_limit],
+            evidence=[
+                "core/tests/events/test_events.py::test_windows_and_countdown; core/tests/test_timeline.py (interval arithmetic).",
+                "Eclipse contacts: core/tests/events/test_eclipse.py (analytic pass within 1 s) and validation/eclipse (eclipse of 14 March 2025 at a lander site: within 0.9 min of the operator's predicted contacts, inside NASA's whole-Moon contacts).",
+            ],
+            limits=[terrain_limit, "Eclipses: the Earth's atmosphere is not modelled; the real edge of the shadow is soft over about a minute and totality is dim, not black."],
         ),
         pk.M_METRICS: pk.method_card(
             title="Window statistics and countdowns",
-            definition="Share of the window, longest visibility and longest outage per body; time from the reference instant to the next set and the next rise. A countdown with its 'is_lower_bound' flag set to 1 means that no such event lies inside the computed range.",
+            definition="Share of the window, longest visibility and longest outage per body; time from the reference instant to the next set and the next rise. A countdown with its 'is_lower_bound' flag set to 1 means that no such event lies inside the computed range. 'sun_eclipse_*' count and measure the eclipses of the Sun by the Earth; they do not depend on the observer height.",
             algorithm="Derived from the visibility windows and the event list.",
             frame=local,
             time_scale="TDB",

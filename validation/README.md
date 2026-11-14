@@ -6,9 +6,11 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 `card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code; `tests/test_card.py` fails if the committed card and a fresh build disagree.
 
-## `sites/` — end-to-end results for the south-polar site records
+## `sites/` — end-to-end results for the south-polar site records, and the published packages
 
-`python -m validation.sites.run <sites.json>` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, countdowns) for the site records of the data stream and validates the packages against the contract. `sites/scenario.json` is the input, `sites/results/site_summary.md` and `.json` the summary. The packages go to `build/packages/sites` (not under version control). These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
+`python -m validation.sites.run data/sites/sites.json --publish` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, eclipses, ground-station windows, countdowns) for the site records of the data stream, validates the packages against the contract and publishes them in [`packages/`](../packages/README.md) at the repository root, where the web pages and the Unreal scene read them. `packages/README.md` is written by the same command and names the commit, the terrain and kernel versions and every package id. `sites/scenario.json` is the input; `sites/results/site_summary.md` and `.json` summarise the results per site and observer height. `tests/test_published_packages.py` checks that the published packages pass the contract validator as they are.
+
+The published packages are regenerated, never edited by hand, and are republished in the same commit as any change that alters results. These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
 ## `landers/` — published records of real lunar landers
 
@@ -30,6 +32,54 @@ Independent checks of the science core. Each check has a threshold file that is 
 * Only the Chandrayaan-3 case uses terrain (60 m grid). Its sunrise is set by terrain 0.5 km from the lander, where the grid limits the accuracy.
 * The reference frame of the LROC coordinates is not stated on the two LROC pages (unverified; assumed mean-Earth/polar-axis).
 * UTC before 1972 is handled by the leap-second kernel with a constant offset; the error is about one second, far below the thresholds.
+
+## `eclipse/` — eclipse of the Sun by the Earth, 14 March 2025
+
+**What is compared.** What the Earth sees as a lunar eclipse is, at a lunar site, an eclipse of the Sun by the Earth: solar power drops or stops although the Sun is high above the terrain. `core/lsncore/events/eclipse.py` computes the contacts at a site and the eclipse-aware power line (the fraction of the Sun's disc that is above the terrain horizon and not hidden by the Earth). It is checked on the eclipse of 14 March 2025 at the Blue Ghost Mission 1 landing point against (a) the contact times the operator predicted for its site, printed to the minute, and (b) the whole-Moon contacts of the NASA GSFC chart, which every point of the Moon must respect. Cases and thresholds were committed before the first run (commit a8bbc5a); the test is not blind (see `eclipse/thresholds.json`).
+
+**Result** (`eclipse/results/validation_table.md`): 8 of 8 pass/fail checks pass.
+
+| Contact at the site | Operator's prediction (UTC) | Core (UTC) | Difference |
+|---|---|---|---|
+| Partial eclipse begins (C1) | 05:00 | 05:00:42 | +0.7 min |
+| Totality begins (C2) | 06:18 | 06:17:23 | −0.6 min |
+| Totality ends (C3) | "approximately 2 hours and 16 minutes" later | 08:34:25 (137.0 min of totality) | +1.0 min in duration |
+| Partial eclipse ends (C4) | 09:52 | 09:51:10 | −0.8 min |
+
+Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie inside NASA's whole-Moon contacts with margins of 9 to 63 min. At the site the Sun is completely hidden for 2.28 h and partly hidden for 4.84 h; from the Earth, totality of the same eclipse lasts 65 min: the loss of sunlight depends on where on the Moon the lander stands.
+
+**Limits.**
+
+* The Earth is an opaque disc of its equatorial radius. Its atmosphere is not modelled: the real edge of the shadow is soft over about a minute, and during totality some red light still reaches the surface. The power line is therefore 0 in totality, where a real panel would see a very small, non-zero flux.
+* The operator's times are predictions; its images of the eclipse are timed to about half an hour, which is too coarse to test contacts. No measured power curve was found.
+* The operator labels its predicted times "CST". They are read as local Texas time on that date (UTC−5); read as UTC−6 the eclipse would end after the Moon has left the Earth's penumbra, which the NASA chart excludes.
+* One eclipse, one site.
+* The package does not yet carry the power line as a time series (a contract field is needed); it carries the eclipse windows and metrics.
+
+## `stations/` — ground-station geometry versus JPL Horizons
+
+**What is compared.** The two conditions of a direct link between a lunar site and a ground station: how high the lunar site stands above the station's horizon (Earth end), and where the station appears in the sky of the lunar site (Moon end). The core computes them from the NAIF station and Earth orientation kernels (`core/lsncore/ephem/stations.py`); Horizons computes them with a Deep Space Network station as observer, and with the station's coordinates as a target seen from the Moon. Thresholds and queries were committed before any response was fetched (commit 6f74153).
+
+**Result** (`stations/results/validation_table.md`): 12 of 12 cases pass, 3468 rows (three stations, a south-polar and an equatorial lunar site, 14 to 16 November 2026 at 10 minutes).
+
+| Quantity | Threshold | Largest difference found |
+|---|---|---|
+| Earth end, observer at the station | 1″ | 0.42″ |
+| Moon end, observer at the lunar site | 1″ | 0.19″ |
+| Earth end through the fast path of the link windows (elevation) | 0.012° | 0.00009° |
+| Moon end through the fast path | 1″ | 0.21″ |
+
+The remaining 0.2″ to 0.4″ are larger than for the Sun and the Earth's centre (0.005″) and were not traced further; they are consistent with small differences in Earth orientation data and in how the two programs treat the Earth's rotation during the light time.
+
+**What is built on it** (`core/lsncore/events/links.py`): per-station windows (station above the lunar terrain horizon, and the site at least 10° above the station's horizon; 6° to receive: the generic elevation limits of DSN 810-005 module 301), the network window of the three complexes, and a relay-need level that separates outages a second station would close from outages caused by lunar terrain.
+
+**Limits.**
+
+* Only the geometry is validated against an external source. The windows themselves are tested on cases with a known answer, not against a mission's contact schedule.
+* Station masks are single elevation limits: azimuth-dependent horizon masks of the stations, the 13.5° limit for high-power transmit, the keyhole near the zenith, weather and scheduling are not modelled.
+* No link budget, antenna pattern or frequency; near the lunar horizon a real link suffers from multipath, and the lunar-end mask is 0° here.
+* Three Deep Space Network complexes only.
+* Dates after 8 February 2027 use the long-term Earth orientation kernel, whose rotation angle is a prediction; the effect on a station rise or set is of the order of a second.
 
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 

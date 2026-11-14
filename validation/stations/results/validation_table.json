@@ -1,0 +1,388 @@
+{
+  "generated_utc": "2026-11-14T11:41:00Z",
+  "thresholds": {
+    "earth_end_direction_arcsec_max": 1.0,
+    "moon_end_direction_arcsec_max": 1.0,
+    "fast_path_earth_end_deg_max": 0.012,
+    "fast_path_moon_end_arcsec_max": 1.0
+  },
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "kernel_set_id": "bfe870fccfa5",
+    "station_kernel_set_id": "bacdf4d6169a",
+    "station_kernels": [
+      "earth_1962_260806_2126_combined.bpc",
+      "earth_000101_270208_261113.bpc",
+      "earthstns_itrf93_260814.bsp",
+      "earth_topo_260814.tf"
+    ]
+  },
+  "summary": {
+    "cases": 12,
+    "passed": 12,
+    "rows": 3468,
+    "earth_end_exact_arcsec_max": 0.42422114960522356,
+    "earth_end_fast_elevation_deg_max": 8.79670786204656e-05,
+    "moon_end_exact_arcsec_max": 0.1930506168742497,
+    "moon_end_fast_arcsec_max": 0.2102176762149692
+  },
+  "horizons_headers": {
+    "earth_end__dss14__polar": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-14 (70-m)",
+      "Target geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 243.1104618,35.4259009,1.00139  {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "earth_end__dss43__polar": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-43 (70-m)",
+      "Target geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 148.9812673,-35.4024242,.688867 {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "earth_end__dss63__polar": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-63 (70-m)",
+      "Target geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 355.7519915, 40.4312097, .86482 {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "earth_end__dss14__equator": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-14 (70-m)",
+      "Target geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 243.1104618,35.4259009,1.00139  {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "earth_end__dss43__equator": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-43 (70-m)",
+      "Target geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 148.9812673,-35.4024242,.688867 {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "earth_end__dss63__equator": [
+      "Target body name: Moon (301)                      {source: DE441}",
+      "Center body name: Earth (399)                     {source: DE441}",
+      "Center-site name: DSS-63 (70-m)",
+      "Target geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center geodetic : 355.7519915, 40.4312097, .86482 {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}"
+    ],
+    "moon_end__dss14__polar": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 243.110457, 35.4259, 1.00138    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ],
+    "moon_end__dss43__polar": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 148.981273, -35.402414, .68884  {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ],
+    "moon_end__dss63__polar": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 355.751998, 40.431214, .86485   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 205.76891, -89.80531, 1.7011    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ],
+    "moon_end__dss14__equator": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 243.110457, 35.4259, 1.00138    {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ],
+    "moon_end__dss43__equator": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 148.981273, -35.402414, .68884  {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ],
+    "moon_end__dss63__equator": [
+      "Target body name: Earth (399)                     {source: DE441}",
+      "Center body name: Moon (301)                      {source: DE441}",
+      "Center-site name: (user defined site below)",
+      "Target geodetic : 355.751998, 40.431214, .86485   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "earth_end__dss14__polar",
+      "end": "earth",
+      "station": "DSS-14",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:15Z",
+      "raw_sha256": "7b0fba9d297f2ff889929d74e4e1d6739e49ef5dc899c93cb272388a6b5a395c",
+      "elevation_range_deg": [
+        -79.939596,
+        32.464939
+      ],
+      "exact_direction_arcsec_max": 0.3751793179532746,
+      "exact_elevation_arcsec_max": 0.23146114871792633,
+      "fast_elevation_deg_max": 8.79670786204656e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "earth_end__dss43__polar",
+      "end": "earth",
+      "station": "DSS-43",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:17Z",
+      "raw_sha256": "699b5094d834e6f5e0d2fb929305954f75724f454ed127cc2e533c3232bfae2f",
+      "elevation_range_deg": [
+        -34.301464,
+        80.233498
+      ],
+      "exact_direction_arcsec_max": 0.3416442773973356,
+      "exact_elevation_arcsec_max": 0.22953224204513845,
+      "fast_elevation_deg_max": 8.62919205246726e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "earth_end__dss63__polar",
+      "end": "earth",
+      "station": "DSS-63",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:19Z",
+      "raw_sha256": "620b567720e0f985bdbd3da73196546d7b4f2d8e45698c06cbfdfd790d0d12f1",
+      "elevation_range_deg": [
+        -75.760112,
+        27.43468
+      ],
+      "exact_direction_arcsec_max": 0.42422114960522356,
+      "exact_elevation_arcsec_max": 0.15604536510949174,
+      "fast_elevation_deg_max": 6.525904910859026e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "earth_end__dss14__equator",
+      "end": "earth",
+      "station": "DSS-14",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:22Z",
+      "raw_sha256": "24d8a99194a259d13180cd8b88d52ecdc5bb3c7ddda53c2594716a8c50243b21",
+      "elevation_range_deg": [
+        -79.717278,
+        32.701133
+      ],
+      "exact_direction_arcsec_max": 0.40416488734916783,
+      "exact_elevation_arcsec_max": 0.2444153898537138,
+      "fast_elevation_deg_max": 7.028158361421788e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "earth_end__dss43__equator",
+      "end": "earth",
+      "station": "DSS-43",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:24Z",
+      "raw_sha256": "570d781ee98705efaba86f284301f73370e8179d99bb713895905cc8b99006a6",
+      "elevation_range_deg": [
+        -34.528698,
+        80.006913
+      ],
+      "exact_direction_arcsec_max": 0.34130464049054693,
+      "exact_elevation_arcsec_max": 0.24566275655644176,
+      "fast_elevation_deg_max": 7.025214051026296e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "earth_end__dss63__equator",
+      "end": "earth",
+      "station": "DSS-63",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:27Z",
+      "raw_sha256": "c732bf8457ca3a11e009d47a5fca7935d8ec19f61238530f3d34a255d10848a6",
+      "elevation_range_deg": [
+        -75.540664,
+        27.658629
+      ],
+      "exact_direction_arcsec_max": 0.41596395880913295,
+      "exact_elevation_arcsec_max": 0.175440782528824,
+      "fast_elevation_deg_max": 5.1493444100714214e-05,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss14__polar",
+      "end": "moon",
+      "station": "DSS-14",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:29Z",
+      "raw_sha256": "2d610a5aced934da5b24c8b4d5e785dd8b62642ead13d1ec09308a97f003019a",
+      "elevation_range_deg": [
+        -5.597729,
+        -3.243347
+      ],
+      "exact_direction_arcsec_max": 0.17871856796601382,
+      "fast_direction_arcsec_max": 0.2001529289750952,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss43__polar",
+      "end": "moon",
+      "station": "DSS-43",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:31Z",
+      "raw_sha256": "b2e19ab99b534b3198e574a33b8b34aa5bbee5d483fab111ddc47dbbc331c1c1",
+      "elevation_range_deg": [
+        -4.520769,
+        -2.022663
+      ],
+      "exact_direction_arcsec_max": 0.1930506168742497,
+      "fast_direction_arcsec_max": 0.20016953911210902,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss63__polar",
+      "end": "moon",
+      "station": "DSS-63",
+      "lunar_site": "polar",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:34Z",
+      "raw_sha256": "ec06ea5c4a1dbd0da020df71e7f6f9b9231da5ffc50b85e5fc8e5f2e009143eb",
+      "elevation_range_deg": [
+        -5.120346,
+        -2.81097
+      ],
+      "exact_direction_arcsec_max": 0.1916087458702119,
+      "fast_direction_arcsec_max": 0.2102176762149692,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss14__equator",
+      "end": "moon",
+      "station": "DSS-14",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:36Z",
+      "raw_sha256": "d5a72d4a194fbe699ebfc3e79023d982857d57adcb1a70184aa9366998a07b9a",
+      "elevation_range_deg": [
+        84.603467,
+        85.76955
+      ],
+      "exact_direction_arcsec_max": 0.1784666415636222,
+      "fast_direction_arcsec_max": 0.18860356892966038,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss43__equator",
+      "end": "moon",
+      "station": "DSS-43",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:39Z",
+      "raw_sha256": "72af16bc2159aa6563e8549fdd84bcdb30ef4ebb8e2d8e56d33e93ce3c456a77",
+      "elevation_range_deg": [
+        85.504337,
+        86.599417
+      ],
+      "exact_direction_arcsec_max": 0.19265463947769274,
+      "fast_direction_arcsec_max": 0.1853823648138251,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    },
+    {
+      "case_id": "moon_end__dss63__equator",
+      "end": "moon",
+      "station": "DSS-63",
+      "lunar_site": "equator",
+      "rows": 289,
+      "retrieved_utc": "2026-11-14T11:38:41Z",
+      "raw_sha256": "ed51efbb4e73974144f0f1a67de375d3ef358a10d6abc837738358f23e77d35a",
+      "elevation_range_deg": [
+        84.628316,
+        85.710532
+      ],
+      "exact_direction_arcsec_max": 0.1909373873310462,
+      "fast_direction_arcsec_max": 0.20035993150682307,
+      "checks": {
+        "exact": true,
+        "fast": true
+      },
+      "status": "PASS"
+    }
+  ]
+}

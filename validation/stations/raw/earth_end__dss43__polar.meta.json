@@ -1,0 +1,29 @@
+{
+  "case_id": "earth_end__dss43__polar",
+  "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&QUANTITIES=%274%2C20%27&ANG_FORMAT=%27DEG%27&TIME_DIGITS=%27SECONDS%27&CSV_FORMAT=%27YES%27&APPARENT=%27AIRLESS%27&START_TIME=%272026-11-14%2000%3A00%27&STOP_TIME=%272026-11-16%2000%3A00%27&STEP_SIZE=%2710%20m%27&COMMAND=%27g%3A%20205.76891%2C%20-89.80531%2C%201.7011%20%40%20301%27&CENTER=%27-43%40399%27",
+  "parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "QUANTITIES": "4,20",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS",
+    "START_TIME": "2026-11-14 00:00",
+    "STOP_TIME": "2026-11-16 00:00",
+    "STEP_SIZE": "10 m",
+    "COMMAND": "g: 205.76891, -89.80531, 1.7011 @ 301",
+    "CENTER": "-43@399"
+  },
+  "retrieved_utc": "2026-11-14T11:38:17Z",
+  "http_status": 200,
+  "bytes": 34616,
+  "sha256": "699b5094d834e6f5e0d2fb929305954f75724f454ed127cc2e533c3232bfae2f",
+  "api_signature": {
+    "source": "NASA/JPL Horizons API",
+    "version": "1.2"
+  },
+  "user_agent": "lunar-ephemeris-validation/0.1 (python-urllib; sequential, cached)"
+}

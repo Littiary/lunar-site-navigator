@@ -36,7 +36,18 @@ def load_cases(base: Path = HERE) -> dict:
 
 
 def iter_cases(cases: dict):
-    """Yield (case_id, site, body, span, parameters) for every query."""
+    """Yield (case_id, site, body, span, parameters) for every query.
+
+    A case file either lists sites, targets and spans (every combination is a query) or
+    lists explicit ``queries``, each with an id and its own parameters; then the query
+    itself is yielded in place of the site, and body and span are None.
+    """
+    if "queries" in cases:
+        for query in cases["queries"]:
+            params = dict(cases["common_parameters"])
+            params.update(query["parameters"])
+            yield query["id"], query, None, None, params
+        return
     for span in cases["spans"]:
         for site in cases["sites"]:
             for body, command in cases["targets"].items():
