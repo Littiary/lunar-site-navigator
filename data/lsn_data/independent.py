@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from . import catalog, checkpoints as cp, manifest as mf
-from .cylindrical import CylDEM
+from .cylindrical import CylDEM, CylMosaic
 from .dem import PolarDEM
 from .georef import lonlat_to_xy
 from .paths import data_root, raw_dir, repo_data_dir
@@ -247,7 +247,8 @@ def run(root: Path | None = None) -> dict:
     th = thresholds()
     d20, d60 = cp.open_products(root)
     out = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_independent.json", "results": {}}
-    l128 = CylDEM(raw_dir(root) / "LDEM_128" / "ldem_128.lbl")
+    have128 = (raw_dir(root) / "LDEM_128" / "ldem_128.img").exists()
+    l128 = CylDEM(raw_dir(root) / "LDEM_128" / "ldem_128.lbl") if have128 else None
     l16 = CylDEM(raw_dir(root) / "LDEM_16" / "ldem_16.lbl")
     crit_a = th["A_cylindrical_LDEM_128"]["pass_if"]
     for name, dem, cyl, band, crit in (
@@ -256,7 +257,11 @@ def run(root: Path | None = None) -> dict:
         ("A2_LDEM_80S_20M_vs_LDEM_16", d20, l16, (-89.5, -80.5), None),
         ("A2_LDEM_60S_60M_vs_LDEM_16", d60, l16, (-79.5, -60.5), None),
     ):
-        r = compare_cylindrical(dem, cyl, *band)
+        if cyl is None:
+            out["results"][name] = {"pending": "LDEM_128 is not downloaded yet", "judgement": {"criterion": crit, "passed": None}}
+            continue
+        # A2 (LDEM_16, reported only): 5 000 cells instead of 20 000, because a 1.9 km cell needs ~40x more samples
+        r = compare_cylindrical(dem, cyl, *band, n=20_000 if crit else 5_000)
         r["judgement"] = _judge(r["stats"], r["fit"], r["mirror_rms_ratio"], crit)
         out["results"][name] = r
     rdr = [Path(root) / "raw" / "lola_rdr" / n / f"{n.lower()}.dat" for n in catalog.RDR_SAMPLE]
@@ -265,9 +270,60 @@ def run(root: Path | None = None) -> dict:
         r = compare_rdr(dem, rdr, *band)
         r["judgement"] = _judge(r["stats"], r["fit"], r["mirror_rms_ratio"], crit_b)
         out["results"][name] = r
-    out["all_with_criterion_passed"] = all(
-        v["judgement"]["passed"] for v in out["results"].values() if v["judgement"]["criterion"] is not None
-    )
+    sh = {"LDEM_16": CylMosaic([l16]).height_m, "LDEM_60S_60M": d60.height_m}
+    if l128 is not None:
+        sh["LDEM_128"] = CylMosaic([l128]).height_m
+    out["spot_heights"] = spot_heights(sh)
+    judged = [v["judgement"]["passed"] for v in out["results"].values() if v["judgement"]["criterion"] is not None]
+    out["complete"] = None not in judged
+    out["all_with_criterion_passed"] = bool(all(j for j in judged if j is not None)) and out["spot_heights"]["passed"]
+    return out
+
+
+
+
+# -- C: published spot heights -------------------------------------------------------------------
+def _disc_lonlat(lon0, lat0, radius_km=5.0, step_m=250.0, R=1_737_400.0):
+    """Points of a 250 m grid within ``radius_km`` of (lon0, lat0) on the sphere (local east/north metres)."""
+    n = int(radius_km * 1000 // step_m)
+    e, nn = np.meshgrid(np.arange(-n, n + 1) * step_m, np.arange(-n, n + 1) * step_m)
+    keep = np.hypot(e, nn) <= radius_km * 1000
+    e, nn = e[keep], nn[keep]
+    lat = lat0 + np.degrees(nn / R)
+    lon = lon0 + np.degrees(e / (R * np.cos(np.radians(lat0))))
+    return lon, lat, np.hypot(e, nn)
+
+
+def spot_heights(products: dict) -> dict:
+    """``products``: {name: callable(lon, lat) -> heights in m}. Criterion: thresholds_spot_heights.json."""
+    th = json.loads((repo_data_dir() / "checkpoints" / "thresholds_spot_heights.json").read_text(encoding="utf-8"))
+    crit = th["pass_if"]
+    out = {"criterion": "data/checkpoints/thresholds_spot_heights.json", "points": []}
+    for pt in th["points"]:
+        lon0, lat0, h0 = pt["lon_deg_east"], pt["lat_deg"], pt["height_m"]
+        lon, lat, dist = _disc_lonlat(lon0, lat0)
+        res = {"name": pt["name"], "published_m": h0, "products": {}}
+        for name, f in products.items():
+            hp = float(np.asarray(f(lon0, lat0)))
+            if not np.isfinite(hp):
+                continue
+            h = np.asarray(f(lon, lat), dtype=float)
+            i = int(np.nanargmax(h) if pt["extremum"] == "max" else np.nanargmin(h))
+            r = {
+                "at_point_m": hp,
+                "point_difference_m": hp - h0,
+                "extreme_m": float(h[i]),
+                "extreme_difference_m": float(h[i] - h0),
+                "extreme_distance_km": float(dist[i] / 1000),
+            }
+            r["passed"] = bool(
+                abs(r["extreme_difference_m"]) <= crit["abs_extreme_difference_m"]
+                and r["extreme_distance_km"] <= crit["extreme_within_km"]
+                and abs(r["point_difference_m"]) <= crit["abs_point_difference_m"]
+            )
+            res["products"][name] = r
+        out["points"].append(res)
+    out["passed"] = all(r["passed"] for p in out["points"] for r in p["products"].values())
     return out
 
 
