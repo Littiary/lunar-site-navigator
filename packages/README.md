@@ -9,12 +9,13 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Item | Value |
 |---|---|
 | Command | `python -m validation.sites.run data/sites/sites.json --publish` |
-| Code | commit `02b1b4c` (clean working tree, as recorded in the provenance of every package) |
-| Generated | 2026-11-14T17:42:17Z |
+| Code | commit `09d1ab6` (clean working tree, as recorded in the provenance of every package) |
+| Generated | 2026-11-14T19:54:43Z |
 | Contract | `lsn-package` version 0.11 |
 | Time range | 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z, series step 3600 s, the same for every site |
 | Scenario of the project sites | `validation/sites/scenario.json` (`south-polar-sites`): 3 sites, observer heights 0, 1, 2, 5, 10, 20 m, **5 m near field on**; uncertainty band of the height-error model `lola-two-sigma-2026-11`; landing circle of 100 m radius, 13 points; planned landing 2027-01-10T00:00:00.000Z at every site; site pairs |
-| Scenario of the other sites | `validation/sites/scenario_curated.json` (`curated-sites`): 17 sites of `data/sites/curated_sites.json`, observer heights 0, 2, 10 m, near field off, no stated uncertainty, no planned landing; their pairs are not published |
+| Scenario of the other sites on the polar products | `validation/sites/scenario_curated_polar.json` (`curated-sites-polar`): 4 sites of `data/sites/curated_sites.json`, observer heights 0, 2, 10 m, near field off, uncertainty band of the same height-error model, no planned landing; their pairs are not published |
+| Scenario of the sites on the latitude-longitude product | `validation/sites/scenario_curated.json` (`curated-sites`): 13 sites of `data/sites/curated_sites.json`, observer heights 0, 2, 10 m, near field off, no stated uncertainty, no planned landing; their pairs are not published |
 | Example requirements | `example-standard`, `example-strict`, `example-loose` in both scenarios: the examples of `docs/contract/presets/requirements.json`, **not requirements of NASA or of any mission** |
 | Height-error model | `lola-two-sigma-2026-11`: Two sigma for the LOLA products: on the 5 m site rasters twice the producers' RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above. Source: Data stream, 14 November 2026: data/checkpoints/near_field_report.json (20 m product minus 5 m site rasters, 0.64 to 1.1 million points per site, by slope class) and data/checkpoints/height_error_report.json; RMS maps *_toterr of the 5 m site rasters of Barker et al. (2021), read through lsn_data sample_quality. The RMS maps are the producers' model estimate, not a test against independent data. Every product is built from LOLA returns: errors common to all LOLA products are not covered. |
 | Elevation product | LOLA5MPP_SITE04 None, 5 m; sha256 `38ff70dbdf2f066c2cfa94a646c3a59d653ce7f6b4528b15fc1b43ee397ce758`, https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_surf.tif; served at least one site |
@@ -29,7 +30,7 @@ Real result packages of the science core, in the format of [the contract](../doc
 | Kernel set | `bfe870fccfa5`: naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf |
 | Station and Earth orientation kernels | `bacdf4d6169a`: earth_1962_260806_2126_combined.bpc, earth_000101_270208_261113.bpc, earthstns_itrf93_260814.bsp, earth_topo_260814.tf |
 | Body-fixed frame | `MOON_ME_DE440_ME421`, aberration correction `LT+S` |
-| Size | 106.8 MB in 479 files (without this file): direction table 1.1 MB, site packages 105.6 MB, site pairs 0.08 MB |
+| Size | 85.1 MB in 490 files (without this file): direction table 1.1 MB, site packages 84.0 MB, site pairs 0.04 MB |
 
 Kernel checksums are in `core/lsncore/ephem/kernel_manifest.json`; the elevation files are described in `data/manifest/manifest.json`.
 
@@ -39,31 +40,32 @@ Every site package holds, each with its method card: the 360 degree terrain hori
 
 | Site | Kind | Height at the site read from | Class | Horizon at 2 m set by | Near field | Observer heights | Uncertainty band | Landing-circle survey | Planned landing | Size |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Shackleton crater rim crest (`shackleton-rim-crest`) | Project sites: project site | LOLA5MPP_SITE04 (5 m) | fine | LDEM_80S_20M (20 m) 78 %, LOLA5MPP_SITE04 (5 m) 22 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 9.6 MB |
-| de Gerlache crater rim crest (`de-gerlache-rim-crest`) | Project sites: project site | LOLA5MPP_SITE11 (5 m) | fine | LDEM_80S_20M (20 m) 79 %, LOLA5MPP_SITE11 (5 m) 21 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 8.6 MB |
-| Mons Malapert (Malapert massif) summit (`malapert-massif-summit`) | Project sites: project site | LOLA5MPP_SITE23 (5 m) | fine | LOLA5MPP_SITE23 (5 m) 85 %, LDEM_80S_20M (20 m) 15 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 9.5 MB |
-| Apollo 11 (Lunar Module Eagle descent stage) (`apollo-11`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 12 (Lunar Module Intrepid descent stage) (`apollo-12`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 14 (Lunar Module Antares descent stage) (`apollo-14`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 15 (Lunar Module Falcon descent stage) (`apollo-15`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.7 MB |
-| Apollo 16 (Lunar Module Orion descent stage) (`apollo-16`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Apollo 17 (Lunar Module Challenger descent stage) (`apollo-17`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Surveyor 1 lander (`surveyor-1`) | Surveyor: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Chang'e 3 lander (`change-3`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Chang'e 4 lander (`change-4`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.0 MB |
-| Chang'e 5 lander (`change-5`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Chang'e 6 lander (`change-6`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.1 MB |
-| Chandrayaan-3 Vikram lander (`chandrayaan-3`) | Chandrayaan: past landing | LDEM_60S_60M (60 m) | medium | LDEM_60S_60M (60 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| SLIM lander (`slim`) | SLIM: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.7 MB |
-| IM-1 Odysseus lander (CLPS) (`im-1-odysseus`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 93 %, LDEM_60S_60M (60 m) 7 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) (`blue-ghost-1`) | CLPS: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.8 MB |
-| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (`im-2-athena`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.9 MB |
-| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (`artemis3-region-mons-mouton-representative`) | Artemis: candidate | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | none | no | none | 4.5 MB |
+| Shackleton crater rim crest (`shackleton-rim-crest`) | Project sites: project site | LOLA5MPP_SITE04 (5 m) | fine | LDEM_80S_20M (20 m) 78 %, LOLA5MPP_SITE04 (5 m) 22 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 7.5 MB |
+| de Gerlache crater rim crest (`de-gerlache-rim-crest`) | Project sites: project site | LOLA5MPP_SITE11 (5 m) | fine | LDEM_80S_20M (20 m) 79 %, LOLA5MPP_SITE11 (5 m) 21 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 6.9 MB |
+| Mons Malapert (Malapert massif) summit (`malapert-massif-summit`) | Project sites: project site | LOLA5MPP_SITE23 (5 m) | fine | LOLA5MPP_SITE23 (5 m) 85 %, LDEM_80S_20M (20 m) 15 % | on | 0, 1, 2, 5, 10, 20 m | `lola-two-sigma-2026-11` | yes | 2027-01-10 | 7.3 MB |
+| Chandrayaan-3 Vikram lander (`chandrayaan-3`) | Chandrayaan: past landing | LDEM_60S_60M (60 m) | medium | LDEM_60S_60M (60 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.9 MB |
+| IM-1 Odysseus lander (CLPS) (`im-1-odysseus`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 93 %, LDEM_60S_60M (60 m) 7 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.9 MB |
+| IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (`im-2-athena`) | CLPS: past landing | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 4.0 MB |
+| Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (`artemis3-region-mons-mouton-representative`) | Artemis: candidate | LDEM_80S_20M (20 m) | fine | LDEM_80S_20M (20 m) 100 % | off | 0, 2, 10 m | `lola-two-sigma-2026-11` | no | none | 3.8 MB |
+| Apollo 11 (Lunar Module Eagle descent stage) (`apollo-11`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 12 (Lunar Module Intrepid descent stage) (`apollo-12`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Apollo 14 (Lunar Module Antares descent stage) (`apollo-14`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 15 (Lunar Module Falcon descent stage) (`apollo-15`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 16 (Lunar Module Orion descent stage) (`apollo-16`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Apollo 17 (Lunar Module Challenger descent stage) (`apollo-17`) | Apollo: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Surveyor 1 lander (`surveyor-1`) | Surveyor: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 3 lander (`change-3`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 4 lander (`change-4`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 2.8 MB |
+| Chang'e 5 lander (`change-5`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.8 MB |
+| Chang'e 6 lander (`change-6`) | Chang'e: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 2.9 MB |
+| SLIM lander (`slim`) | SLIM: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
+| Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) (`blue-ghost-1`) | CLPS: past landing | SLDEM2015_256 (118 m) | medium | SLDEM2015_256 (118 m) 100 % | off | 0, 2, 10 m | none | no | none | 3.7 MB |
 
 - **Near field on** means: inside the 5 m site raster of the data stream the terrain is read from it, elsewhere from the 20 m and 60 m products. The 5 m rasters exist for the three project sites only.
-- **Class** is the resolution class the core writes (`horizon.terrain_source.resolution_class`: fine up to 30 m pixels at the site, medium up to 120 m, coarse above). A package whose class is not fine carries a warning that names the pixel: relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m) and calls the 118 m product coarse.
-- **Uncertainty band** and **landing-circle survey** are in the project sites only. The height-error model was measured on the polar products; it is not applied to sites served by the 118 m product, where unresolved relief, not height error, limits the horizon.
-- The terrain patches are for drawing only. **A viewer selects a patch by its `id`, not by its position in the list**: in this set every site: `near`, `mid`, `far`. From the next publish on the project sites also hold a patch `site` (1 km wide at 5 m spacing, read from the 5 m site raster). The list is written finest first, so `site` will stand first, where `near` stands now: a viewer that takes patches by position would then draw the wrong one. With the near field on, a patch is read from the 5 m site raster where the raster has a level of the patch spacing, otherwise from the 20 m product and coarser.
+- **Class** is the resolution class the core writes (`horizon.terrain_source.resolution_class`: fine up to 30 m pixels at the site, medium up to 120 m, coarse above). A package whose class is not fine carries a warning that names the pixel: relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m) and calls the 118 m product SLDEM2015_256 coarse where the core says medium.
+- **Uncertainty band and `terrain_quality`**: every event of 7 site packages carries the range of its time for the stated height error and a `terrain_quality` record (the product, whether the pixel of the limiting terrain holds a laser return, the height error used): Shackleton crater rim crest, de Gerlache crater rim crest, Mons Malapert (Malapert massif) summit, Chandrayaan-3 Vikram lander, IM-1 Odysseus lander (CLPS), IM-2 Athena lander (CLPS; south-polar, Mons Mouton), Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton). The other 13 (Apollo 11 (Lunar Module Eagle descent stage), Apollo 12 (Lunar Module Intrepid descent stage), Apollo 14 (Lunar Module Antares descent stage), Apollo 15 (Lunar Module Falcon descent stage), Apollo 16 (Lunar Module Orion descent stage), Apollo 17 (Lunar Module Challenger descent stage), Surveyor 1 lander, Chang'e 3 lander, Chang'e 4 lander, Chang'e 5 lander, Chang'e 6 lander, SLIM lander, Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)) are served by SLDEM2015_256, for which the data stream has measured no terrain height error (`data/checkpoints/height_error_report.json` covers the LOLA polar products). No band and no `terrain_quality` is written for them, rather than one from a number that was not measured; there unresolved relief, not height error, limits the horizon, and the package says so in its warning.
+- The **landing-circle survey** and the **planned landing** are in the project sites only.
+- The terrain patches are for drawing only. **A viewer selects a patch by its `id`, not by its position in the list**: in this set the 17 other sites: `near`, `mid`, `far`; Shackleton crater rim crest, de Gerlache crater rim crest, Mons Malapert (Malapert massif) summit: `site`, `near`, `mid`, `far`. With the near field on, a patch is read from the 5 m site raster where the raster has a level of the patch spacing, otherwise from the 20 m product and coarser.
 - The direction table holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.
 - **Kind** gives the labels `programme` and `category` that every site package and its entry in `index.json` carry, as the data stream states them in `data/sites/curated_sites.json`; a site picker can group by them.
 
@@ -74,9 +76,13 @@ Every site package holds, each with its method card: the 360 degree terrain hori
 | Kind | Package | Site | Status | Path |
 |---|---|---|---|---|
 | direction table | `dirtab-fbc51d64e42ab803` | all sites | ok | `direction_table/dirtab-fbc51d64e42ab803` |
-| site | `site-e3810b35dcfa4777` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-e3810b35dcfa4777` |
-| site | `site-66887386ea4fc6ea` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-66887386ea4fc6ea` |
-| site | `site-3c901dfc80efc5b8` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-3c901dfc80efc5b8` |
+| site | `site-38037e9b701a7d2d` | Shackleton crater rim crest (-89.80531, -154.23109) | ok | `site/shackleton-rim-crest/site-38037e9b701a7d2d` |
+| site | `site-61a82bfea156b494` | de Gerlache crater rim crest (-88.66410, -68.41044) | ok | `site/de-gerlache-rim-crest/site-61a82bfea156b494` |
+| site | `site-1c04d3ed1ebd94ec` | Mons Malapert (Malapert massif) summit (-85.98795, 2.05767) | ok | `site/malapert-massif-summit/site-1c04d3ed1ebd94ec` |
+| site | `site-f905e843230e82ee` | Chandrayaan-3 Vikram lander (-69.37400, 32.31870) | ok | `site/chandrayaan-3/site-f905e843230e82ee` |
+| site | `site-45ae374a37859245` | IM-1 Odysseus lander (CLPS) (-80.12760, 1.43670) | ok | `site/im-1-odysseus/site-45ae374a37859245` |
+| site | `site-1d181df54766007c` | IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (-84.79060, 29.19567) | ok | `site/im-2-athena/site-1d181df54766007c` |
+| site | `site-08b49335c4bf11d6` | Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (-84.60000, 31.00000) | ok | `site/artemis3-region-mons-mouton-representative/site-08b49335c4bf11d6` |
 | site | `site-ee13bd9a51f205fe` | Apollo 11 (Lunar Module Eagle descent stage) (0.67416, 23.47314) | ok | `site/apollo-11/site-ee13bd9a51f205fe` |
 | site | `site-98524d78724d1ecc` | Apollo 12 (Lunar Module Intrepid descent stage) (-3.01280, -23.42190) | ok | `site/apollo-12/site-98524d78724d1ecc` |
 | site | `site-5a075b21883e2a3d` | Apollo 14 (Lunar Module Antares descent stage) (-3.64589, -17.47194) | ok | `site/apollo-14/site-5a075b21883e2a3d` |
@@ -88,13 +94,9 @@ Every site package holds, each with its method card: the 360 degree terrain hori
 | site | `site-fefbc660d3c9e798` | Chang'e 4 lander (-45.45620, 177.58860) | ok | `site/change-4/site-fefbc660d3c9e798` |
 | site | `site-3702f5f79e1c6e96` | Chang'e 5 lander (43.05760, -51.91610) | ok | `site/change-5/site-3702f5f79e1c6e96` |
 | site | `site-1b8dbb0c74478182` | Chang'e 6 lander (-41.63830, -153.98570) | ok | `site/change-6/site-1b8dbb0c74478182` |
-| site | `site-85f12504d6b4c936` | Chandrayaan-3 Vikram lander (-69.37400, 32.31870) | ok | `site/chandrayaan-3/site-85f12504d6b4c936` |
 | site | `site-c8d49af58adc3c0b` | SLIM lander (-13.31600, 25.25100) | ok | `site/slim/site-c8d49af58adc3c0b` |
-| site | `site-7c0f5b780fac37ab` | IM-1 Odysseus lander (CLPS) (-80.12760, 1.43670) | ok | `site/im-1-odysseus/site-7c0f5b780fac37ab` |
 | site | `site-512a61554b1acc73` | Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander) (18.56220, 61.81020) | ok | `site/blue-ghost-1/site-512a61554b1acc73` |
-| site | `site-6ce63d6cbe2a89ea` | IM-2 Athena lander (CLPS; south-polar, Mons Mouton) (-84.79060, 29.19567) | ok | `site/im-2-athena/site-6ce63d6cbe2a89ea` |
-| site | `site-3bb0ec10083e4b7d` | Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton) (-84.60000, 31.00000) | ok | `site/artemis3-region-mons-mouton-representative/site-3bb0ec10083e4b7d` |
-| site pairs | `pairs-c6ab3aaa46a3aa80` | every two of the 3 project sites | ok | `site_pairs/pairs-c6ab3aaa46a3aa80` |
+| site pairs | `pairs-3e732d6996294120` | every two of the 3 project sites | ok | `site_pairs/pairs-3e732d6996294120` |
 
 ## What these numbers are
 

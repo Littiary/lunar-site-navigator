@@ -8,9 +8,15 @@ landing windows for the example requirements, mast-height trade, terrain patches
 * ``south-polar-sites``: the three project sites, with the 5 m near field, six observer
   heights, the uncertainty band of the sourced height-error model, the landing-circle
   survey, a planned landing and the site pairs;
-* ``curated-sites``: the other sites of the curated list (past landings and one
-  representative Artemis III point), without the near field, three observer heights, no
-  stated uncertainty and no planned landing. Their pairs are not published.
+* ``curated-sites-polar``: the other sites of the curated list that a LOLA polar product
+  serves, without the near field, three observer heights, the uncertainty band of the
+  same height-error model (which the data stream measured on those products) and no
+  planned landing;
+* ``curated-sites``: the sites that the latitude-longitude product serves, like the
+  former but without a stated uncertainty: no height error has been measured for that
+  product, so no band and no ``terrain_quality`` is written.
+
+The pairs of the last two are not published.
 
 The project sites are also computed without the near field (not published), so that the
 summary can put the numbers before and after side by side. Every package is validated
@@ -65,7 +71,12 @@ DEFAULT_END = "2028-11-14T00:00:00.000Z"
 
 CURATED_SITES = REPO / "data" / "sites" / "curated_sites.json"
 PROJECT_SCENARIO_ID = "south-polar-sites"
+CURATED_POLAR_SCENARIO_ID = "curated-sites-polar"
 CURATED_SCENARIO_ID = "curated-sites"
+SCENARIO_FILES = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_POLAR_SCENARIO_ID: "scenario_curated_polar.json", CURATED_SCENARIO_ID: "scenario_curated.json"}
+# The LOLA polar products. The data stream measured the terrain height error on the south-polar
+# ones (data/checkpoints/height_error_report.json); the height-error model rests on that.
+POLAR_PRODUCTS = ("LDEM_80S_20M", "LDEM_60S_60M", "LDEM_80N_20M", "LDEM_60N_60M")
 
 # Stated inputs of the published scenarios. The landing circle and the planned landing time
 # are chosen by the team to show what follows from them; they are not properties of the
@@ -148,16 +159,36 @@ def record_kind(record: dict) -> str:
     return record.get("kind", record["category"])
 
 
-def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
-    """The sites of the curated list that are not project sites: fewer observer heights, no stated uncertainty, no planned landing."""
+def served_by_polar_product(record: dict) -> bool:
+    """True if the site list of the data stream says a LOLA polar product serves the site."""
+    return record["terrain"]["default"]["product_id"] in POLAR_PRODUCTS
+
+
+def build_curated_scenario(records: list, start_utc: str, end_utc: str, polar: bool) -> dict:
+    """The sites of the curated list that are not project sites, in two groups.
+
+    ``polar``: the sites a LOLA polar product serves, with the uncertainty band of the stated
+    height-error model. Otherwise the sites the latitude-longitude product serves, without a
+    stated uncertainty. Both: three observer heights, no near field, no planned landing.
+    """
     scenario = {
         "contract": contract_header(),
         "kind": "scenario",
-        "scenario_id": CURATED_SCENARIO_ID,
-        "title": "Curated list without the project sites: past landings and one representative Artemis III point, 24 months",
-        "description": "Site records of the data stream (data/sites/curated_sites.json): past landing sites at the lander positions measured on LROC images, and one representative point "
-        "of an Artemis III candidate region. Real terrain from every installed elevation product, without the 5 m near field; SPICE ephemeris. "
-        "The requirements are the team's examples, not requirements of NASA or of any mission. No uncertainty is stated for these sites.",
+        "scenario_id": CURATED_POLAR_SCENARIO_ID if polar else CURATED_SCENARIO_ID,
+        "title": (
+            "Curated list, sites on the LOLA polar products: past landings and one representative Artemis III point, 24 months"
+            if polar
+            else "Curated list, sites on the latitude-longitude product: past landings, 24 months"
+        ),
+        "description": "Site records of the data stream (data/sites/curated_sites.json): past landing sites at the lander positions measured on LROC images"
+        + (", and one representative point of an Artemis III candidate region" if polar else "")
+        + ". Real terrain from every approved elevation product, without the 5 m near field; SPICE ephemeris. "
+        "The requirements are the team's examples, not requirements of NASA or of any mission. "
+        + (
+            "The terrain height error is the sourced default model of the contract, which the data stream measured on the polar products that serve these sites."
+            if polar
+            else "No uncertainty is stated for these sites: no terrain height error has been measured for the product that serves them."
+        ),
         "synthetic": False,
         "sites": [
             {
@@ -169,7 +200,7 @@ def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
                 **site_labels(record),
             }
             for record in records
-            if record_kind(record) != "project_candidate"
+            if record_kind(record) != "project_candidate" and served_by_polar_product(record) == polar
         ],
         "observer_heights_m": CURATED_HEIGHTS_M,
         "default_height_m": 2.0,
@@ -178,11 +209,12 @@ def build_curated_scenario(records: list, start_utc: str, end_utc: str) -> dict:
         "bodies": ["SUN", "EARTH"],
         "thresholds": THRESHOLDS,
         "mission_profile": None,
-        # No particular set of elevation products is asked for: with the near field the products
-        # that serve a site differ from site to site, and each package records the ones it used.
+        # No particular set of elevation products is asked for: each package records the ones it used.
         "data": {"dem_set_id": "any", "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
         "requirements": list(requirement_presets().values()),
     }
+    if polar:
+        scenario["uncertainty"] = {"dem_height_error_model": stated_height_error_model()}
     validate_document(scenario)
     return scenario
 
@@ -477,7 +509,7 @@ def to_markdown(summary: dict) -> str:
         "- Shares and longest outages describe this 24-month window only; they are not multi-year averages.",
         "- Landing windows hold for the stated example requirements only; the tool reports when a stated requirement holds, it does not know what a mission needs. Landings later than the end of the window minus the mission duration cannot be judged.",
         "- The uncertainty band shows what follows from the stated height-error model: per azimuth the horizon is raised and lowered by the angle that height error spans at the distance of the limiting terrain. Every elevation product is built from LOLA returns, so an error common to all of them is in no band. The landing-circle survey over 13 points is not a probability.",
-        "- The sites of the curated list other than the project sites carry no uncertainty band: the height-error model was measured on the polar products, and where a site is served by the 118 m product it is unresolved relief, not height error, that limits the horizon. Their packages carry the core's resolution warning.",
+        "- The uncertainty band and `terrain_quality` are written for the sites that a LOLA polar product serves, because the height-error model was measured on those products. The sites served by the latitude-longitude product carry neither: no height error has been measured for it, and there unresolved relief, not height error, limits the horizon. Their packages carry the core's resolution warning.",
         "- The site pairs say when at least one of two sites sees the body; they do not say that power or data can be moved between the sites.",
         "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.",
         "- Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.",
@@ -706,7 +738,8 @@ def before_after(before: list, after: list) -> list:
             "sun_lost_to_terrain_h_2m": pair(lambda s: s["planning"]["terrain_against_smooth_sphere"]["sun"]["lost_to_terrain_h"]),
             "sun_gained_from_terrain_h_2m": pair(lambda s: s["planning"]["terrain_against_smooth_sphere"]["sun"]["gained_from_terrain_h"]),
             "landing_windows_example_standard": pair(lambda s: [standard(s)["window_count"], standard(s)["feasible_fraction"]]),
-            "planned_landing_feasible": pair(lambda s: standard(s)["planned_landing"]["feasible"]),
+            # None when the planned landing lies outside the computed range
+            "planned_landing_feasible": pair(lambda s: None if standard(s)["planned_landing"] is None else standard(s)["planned_landing"]["feasible"]),
             "band_sun_certain_possible_h_2m": pair(lambda s: [s["planning"]["uncertainty"]["visible_h"]["sun"]["certain"], s["planning"]["uncertainty"]["visible_h"]["sun"]["possible"]]),
             "applied_horizon_error_deg_median": pair(lambda s: s["planning"]["uncertainty"]["applied_horizon_error_deg_min_median_max"][1]),
             "landing_circle_sun_least_median_h": pair(lambda s: [s["planning"]["uncertainty"]["landing_ellipse"]["visible_h"]["sun"]["min"], s["planning"]["uncertainty"]["landing_ellipse"]["visible_h"]["sun"]["median"]]),
@@ -735,13 +768,13 @@ def _before_after_markdown(rows: list) -> list:
         "| Sun visible at 2 m | " + " | ".join(cell(row["sun_visible_share_2m"], pct) for row in rows) + " |",
         "| Sun visible at 10 m | " + " | ".join(cell(row["sun_visible_share_10m"], pct) for row in rows) + " |",
         "| Longest time without the Sun at 2 m | " + " | ".join(cell(row["sun_longest_outage_h_2m"], hours) for row in rows) + " |",
-        "| Sun-visible hours per complete lunar day at 2 m: least, median, most | " + " | ".join(cell(row["sun_visible_h_per_lunar_day_least_median_most_2m"], lambda v: ", ".join(f"{x:.0f}" for x in v)) for row in rows) + " |",
+        "| Sun-visible hours per complete lunar day at 2 m: least, median, most | " + " | ".join(cell(row["sun_visible_h_per_lunar_day_least_median_most_2m"], lambda v: "n/a" if v[0] is None else ", ".join(f"{x:.0f}" for x in v)) for row in rows) + " |",
         "| Sun time the terrain takes at 2 m, against a smooth sphere | " + " | ".join(cell(row["sun_lost_to_terrain_h_2m"], hours) for row in rows) + " |",
         "| Sun time the terrain gives at 2 m | " + " | ".join(cell(row["sun_gained_from_terrain_h_2m"], hours) for row in rows) + " |",
         "| Earth visible at 2 m | " + " | ".join(cell(row["earth_visible_share_2m"], pct) for row in rows) + " |",
         "| Earth visible at 10 m | " + " | ".join(cell(row["earth_visible_share_10m"], pct) for row in rows) + " |",
         "| Landing windows for `example-standard` at 2 m: number, share of the judged range | " + " | ".join(cell(row["landing_windows_example_standard"], lambda v: f"{v[0]}, {100 * v[1]:.1f} %") for row in rows) + " |",
-        "| Planned landing feasible for `example-standard` | " + " | ".join(cell(row["planned_landing_feasible"], lambda v: "yes" if v else "no") for row in rows) + " |",
+        "| Planned landing feasible for `example-standard` | " + " | ".join(cell(row["planned_landing_feasible"], lambda v: "n/a" if v is None else ("yes" if v else "no")) for row in rows) + " |",
         "| Band at 2 m: Sun visible for certain, possibly | " + " | ".join(cell(row["band_sun_certain_possible_h_2m"], lambda v: f"{v[0]:.0f}, {v[1]:.0f} h") for row in rows) + " |",
         "| Horizon error the model gives, median over the azimuths | " + " | ".join(cell(row["applied_horizon_error_deg_median"], lambda v: f"{v:.3f} deg") for row in rows) + " |",
         "| Landing circle of 100 m, 13 points, Sun: least, median | " + " | ".join(cell(row["landing_circle_sun_least_median_h"], lambda v: f"{v[0]:.0f}, {v[1]:.0f} h") for row in rows) + " |",
@@ -779,7 +812,7 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
     sites = [m for m in manifests if m["kind"] == "site"]
     pairs = [m for m in manifests if m["kind"] == "site_pairs"]
     kernel_manifest = kernels.read_manifest()
-    project, curated = scenarios[PROJECT_SCENARIO_ID], scenarios[CURATED_SCENARIO_ID]
+    project, polar, curated = scenarios[PROJECT_SCENARIO_ID], scenarios[CURATED_POLAR_SCENARIO_ID], scenarios[CURATED_SCENARIO_ID]
     w = project["time_window"]
     model = project["uncertainty"]["dem_height_error_model"]
     layers = {}
@@ -807,7 +840,9 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         f"| Scenario of the project sites | `validation/sites/scenario.json` (`{project['scenario_id']}`): {len(project['sites'])} sites, observer heights {', '.join(f'{h:g}' for h in project['observer_heights_m'])} m, "
         f"**5 m near field on**; uncertainty band of the height-error model `{model['id']}`; landing circle of {project['uncertainty']['landing_ellipse']['semi_major_m']:g} m radius, "
         f"{project['uncertainty']['landing_ellipse']['points']} points; planned landing {project['sites'][0]['landing_utc']} at every site; site pairs |",
-        f"| Scenario of the other sites | `validation/sites/scenario_curated.json` (`{curated['scenario_id']}`): {len(curated['sites'])} sites of `data/sites/curated_sites.json`, observer heights "
+        f"| Scenario of the other sites on the polar products | `validation/sites/scenario_curated_polar.json` (`{polar['scenario_id']}`): {len(polar['sites'])} sites of `data/sites/curated_sites.json`, observer heights "
+        f"{', '.join(f'{h:g}' for h in polar['observer_heights_m'])} m, near field off, uncertainty band of the same height-error model, no planned landing; their pairs are not published |",
+        f"| Scenario of the sites on the latitude-longitude product | `validation/sites/scenario_curated.json` (`{curated['scenario_id']}`): {len(curated['sites'])} sites of `data/sites/curated_sites.json`, observer heights "
         f"{', '.join(f'{h:g}' for h in curated['observer_heights_m'])} m, near field off, no stated uncertainty, no planned landing; their pairs are not published |",
         "| Example requirements | " + ", ".join(f"`{r['id']}`" for r in project["requirements"]) + " in both scenarios: the examples of `docs/contract/presets/requirements.json`, **not requirements of NASA or of any mission** |",
         f"| Height-error model | `{model['id']}`: {model['label']}. Source: {model['source']} |",
@@ -845,9 +880,9 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         "",
         "- **Near field on** means: inside the 5 m site raster of the data stream the terrain is read from it, elsewhere from the 20 m and 60 m products. The 5 m rasters exist for the three project sites only.",
         "- **Class** is the resolution class the core writes (`horizon.terrain_source.resolution_class`: fine up to 30 m pixels at the site, medium up to 120 m, coarse above). A package whose class is not fine carries a warning that names the pixel: "
-        "relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m) and calls the 118 m product coarse.",
-        "- **Uncertainty band** and **landing-circle survey** are in the project sites only. The height-error model was measured on the polar products; it is not applied to sites served by the 118 m product, "
-        "where unresolved relief, not height error, limits the horizon.",
+        "relief narrower than about two pixels is not in its horizon. The site list of the data stream uses narrower classes (fine up to 20 m, medium up to 60 m)" + _class_note(summary["all_sites"]) + ".",
+        "- **Uncertainty band and `terrain_quality`**: " + _quality_sentence(summary["all_sites"]),
+        "- The **landing-circle survey** and the **planned landing** are in the project sites only.",
         "- The terrain patches are for drawing only. **A viewer selects a patch by its `id`, not by its position in the list**: " + _patch_sentence(sites),
         "- The direction table holds the orientation of the Earth for every record (`earth_view`), so that a viewer can turn a textured Earth the right way.",
         "- **Kind** gives the labels `programme` and `category` that every site package and its entry in `index.json` carry, as the data stream states them in `data/sites/curated_sites.json`; a site picker can group by them.",
@@ -900,6 +935,37 @@ def _file_bytes(path: Path) -> int:
     return path.stat().st_size
 
 
+def _not_fine(sites: list) -> list:
+    """Products that serve a published site and are not of class fine: (pixel in whole metres, product id), coarsest last."""
+    return sorted({(round(s["terrain_at_site"]["pixel_m"]), s["terrain_at_site"]["product_id"]) for s in sites if s["resolution_class"] != "fine"})
+
+
+def _not_fine_products(sites: list) -> str:
+    cylindrical = [f"{name}, {pixel} m" for pixel, name in _not_fine(sites) if not name.startswith("LDEM_") or name in ("LDEM_128", "LDEM_16")]
+    return f" ({'; '.join(cylindrical)})" if cylindrical else ""
+
+
+def _class_note(sites: list) -> str:
+    """Where the class names of the core and of the data stream's site list differ for a published site."""
+    differing = [f"the {pixel} m product {name}" for pixel, name in _not_fine(sites) if 60 < pixel <= 120]
+    return f" and calls {' and '.join(differing)} coarse where the core says medium" if differing else ""
+
+
+def _quality_sentence(sites: list) -> str:
+    """Which published sites carry the band and terrain_quality, and why the others do not."""
+    with_band = [s["name"] for s in sites if s["uncertainty_band"]]
+    without = [s for s in sites if not s["uncertainty_band"]]
+    text = f"every event of {len(with_band)} site packages carries the range of its time for the stated height error and a `terrain_quality` record (the product, whether the pixel of the limiting terrain holds a laser return, the height error used): {', '.join(with_band)}. "
+    if without:
+        products = sorted({s["terrain_at_site"]["product_id"] for s in without})
+        text += (
+            f"The other {len(without)} ({', '.join(s['name'] for s in without)}) are served by {' and '.join(products)}, for which the data stream has measured no terrain height error "
+            "(`data/checkpoints/height_error_report.json` covers the LOLA polar products). No band and no `terrain_quality` is written for them, rather than one from a number that was not measured; "
+            "there unresolved relief, not height error, limits the horizon, and the package says so in its warning."
+        )
+    return text
+
+
 def _patch_sentence(sites: list) -> str:
     """Which terrain patches the published site packages hold, by id."""
     ids = {}
@@ -942,8 +1008,7 @@ def main() -> None:
         # The README is a product of this command, like the packages; this writes it again from
         # what is published, with the scenarios that produced the packages, not the ones the
         # code would build today.
-        stored = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_SCENARIO_ID: "scenario_curated.json"}
-        scenarios = {scenario_id: json.loads((HERE / name).read_text(encoding="utf-8")) for scenario_id, name in stored.items()}
+        scenarios = {scenario_id: json.loads((HERE / name).read_text(encoding="utf-8")) for scenario_id, name in SCENARIO_FILES.items()}
         summary = json.loads((HERE / "results" / "site_summary.json").read_text(encoding="utf-8"))
         order = {site["site_id"]: k for k, site in enumerate(summary["all_sites"])}
         manifests = {path.parent: json.loads(path.read_text(encoding="utf-8")) for path in PUBLISHED.rglob("manifest.json")}
@@ -962,9 +1027,10 @@ def main() -> None:
     project_terrain, curated_terrain = near_field(), open_moon()
     scenarios = {
         PROJECT_SCENARIO_ID: build_scenario(project_records, {record["site_id"].replace("_", "-"): site_labels(record) for record in curated_records}, args.start, args.end),
-        CURATED_SCENARIO_ID: build_curated_scenario(curated_records, args.start, args.end),
+        CURATED_POLAR_SCENARIO_ID: build_curated_scenario(curated_records, args.start, args.end, polar=True),
+        CURATED_SCENARIO_ID: build_curated_scenario(curated_records, args.start, args.end, polar=False),
     }
-    files = {PROJECT_SCENARIO_ID: "scenario.json", CURATED_SCENARIO_ID: "scenario_curated.json"}
+    files = SCENARIO_FILES
 
     out = STAGING if args.publish else Path(args.out)
     before_root = out.parent / (out.name + "-before-near-field")
@@ -1000,11 +1066,12 @@ def main() -> None:
     if args.only != "curated":
         written += run_scenario(scenarios[PROJECT_SCENARIO_ID], out, project_terrain, jobs=jobs, terrain_factory=near_field)
     if args.only != "project":
-        for path in run_scenario(scenarios[CURATED_SCENARIO_ID], out, curated_terrain, jobs=jobs, terrain_factory=open_moon):
-            if read_package(path).manifest["kind"] == "site_pairs":
-                shutil.rmtree(path)  # pairs are published among the project sites only
-            elif path not in written:
-                written.append(path)
+        for scenario_id in (CURATED_POLAR_SCENARIO_ID, CURATED_SCENARIO_ID):
+            for path in run_scenario(scenarios[scenario_id], out, curated_terrain, jobs=jobs, terrain_factory=open_moon):
+                if read_package(path).manifest["kind"] == "site_pairs":
+                    shutil.rmtree(path)  # pairs are published among the project sites only
+                elif path not in written:
+                    written.append(path)
     write_index(out, None)  # one index for both scenarios
     elapsed = time.perf_counter() - t0
     for path in written:

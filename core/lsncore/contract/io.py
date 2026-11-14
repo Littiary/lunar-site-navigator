@@ -121,8 +121,14 @@ def build_provenance(scenario_id: str | None = None, timings_s: dict | None = No
     }
 
 
-def write_json(path: Path, obj: Any) -> None:
-    text = json.dumps(obj, indent=2, ensure_ascii=True, allow_nan=False)
+def write_json(path: Path, obj: Any, compact: bool = False) -> None:
+    """Write a JSON file: indented for files people read (index, scenario), compact for
+    manifests, which programs read and which made up nearly half of a published set.
+    Whitespace is not part of the value: ids and digests come from canonical_json."""
+    if compact:
+        text = json.dumps(obj, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
+    else:
+        text = json.dumps(obj, indent=2, ensure_ascii=True, allow_nan=False)
     path.write_text(text + "\n", encoding="ascii", newline="\n")
 
 
@@ -205,7 +211,7 @@ class PackageWriter:
         tmp.mkdir(parents=True)
         for file, data in self._blobs.items():
             (tmp / file).write_bytes(data)
-        write_json(tmp / "manifest.json", manifest)
+        write_json(tmp / "manifest.json", manifest, compact=True)
         if final.exists():
             shutil.rmtree(final)
         # On Windows another process (a virus scanner, an indexer) may hold the fresh files

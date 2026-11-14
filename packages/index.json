@@ -4,7 +4,7 @@
     "version": "0.11"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T17:39:29.528Z",
+  "generated_utc": "2026-11-14T19:49:31.455Z",
   "scenario_id": null,
   "packages": [
     {
@@ -100,8 +100,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-3bb0ec10083e4b7d",
-      "path": "site/artemis3-region-mons-mouton-representative/site-3bb0ec10083e4b7d",
+      "package_id": "site-08b49335c4bf11d6",
+      "path": "site/artemis3-region-mons-mouton-representative/site-08b49335c4bf11d6",
       "synthetic": false,
       "status": "ok",
       "site_id": "artemis3-region-mons-mouton-representative",
@@ -128,8 +128,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-85f12504d6b4c936",
-      "path": "site/chandrayaan-3/site-85f12504d6b4c936",
+      "package_id": "site-f905e843230e82ee",
+      "path": "site/chandrayaan-3/site-f905e843230e82ee",
       "synthetic": false,
       "status": "ok",
       "site_id": "chandrayaan-3",
@@ -198,8 +198,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-66887386ea4fc6ea",
-      "path": "site/de-gerlache-rim-crest/site-66887386ea4fc6ea",
+      "package_id": "site-61a82bfea156b494",
+      "path": "site/de-gerlache-rim-crest/site-61a82bfea156b494",
       "synthetic": false,
       "status": "ok",
       "site_id": "de-gerlache-rim-crest",
@@ -212,8 +212,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-7c0f5b780fac37ab",
-      "path": "site/im-1-odysseus/site-7c0f5b780fac37ab",
+      "package_id": "site-45ae374a37859245",
+      "path": "site/im-1-odysseus/site-45ae374a37859245",
       "synthetic": false,
       "status": "ok",
       "site_id": "im-1-odysseus",
@@ -226,8 +226,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-6ce63d6cbe2a89ea",
-      "path": "site/im-2-athena/site-6ce63d6cbe2a89ea",
+      "package_id": "site-1d181df54766007c",
+      "path": "site/im-2-athena/site-1d181df54766007c",
       "synthetic": false,
       "status": "ok",
       "site_id": "im-2-athena",
@@ -240,8 +240,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-3c901dfc80efc5b8",
-      "path": "site/malapert-massif-summit/site-3c901dfc80efc5b8",
+      "package_id": "site-1c04d3ed1ebd94ec",
+      "path": "site/malapert-massif-summit/site-1c04d3ed1ebd94ec",
       "synthetic": false,
       "status": "ok",
       "site_id": "malapert-massif-summit",
@@ -254,8 +254,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-e3810b35dcfa4777",
-      "path": "site/shackleton-rim-crest/site-e3810b35dcfa4777",
+      "package_id": "site-38037e9b701a7d2d",
+      "path": "site/shackleton-rim-crest/site-38037e9b701a7d2d",
       "synthetic": false,
       "status": "ok",
       "site_id": "shackleton-rim-crest",
@@ -296,8 +296,8 @@
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-c6ab3aaa46a3aa80",
-      "path": "site_pairs/pairs-c6ab3aaa46a3aa80",
+      "package_id": "pairs-3e732d6996294120",
+      "path": "site_pairs/pairs-3e732d6996294120",
       "synthetic": false,
       "status": "ok",
       "site_ids": [

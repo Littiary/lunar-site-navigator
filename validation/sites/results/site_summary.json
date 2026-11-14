@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T17:42:17Z",
+  "generated_utc": "2026-11-14T19:54:43Z",
   "contract_version": "0.11",
   "window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
@@ -44,8 +44,8 @@
     ]
   },
   "site_pairs": {
-    "package_id": "pairs-c6ab3aaa46a3aa80",
-    "content_sha256": "61380e731ae15632ccf22eea6d17620bc12a0ca3f729e2a73edeb0e4471745ed",
+    "package_id": "pairs-3e732d6996294120",
+    "content_sha256": "51465f622e96eb2069fc930860faa022a73bbabdbba05eee02aaa1c4fed073c4",
     "observer_heights_m": [
       2.0,
       2.0,
@@ -174,8 +174,8 @@
   "dem_set_id": "lola:LOLA5MPP_SITE04@None+LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
   "kernel_set_id": "bfe870fccfa5",
   "direction_table_id": "dirtab-fbc51d64e42ab803",
-  "run_time_s": 432.34864829998696,
-  "run_time_without_near_field_s": 147.6151591000089,
+  "run_time_s": 852.3542078000028,
+  "run_time_without_near_field_s": 269.89985549999983,
   "jobs": 8,
   "status": "method checked against the published LOLA illumination maps on 60 m terrain (validation/pgda); one of two dated-image checks fails its registered criterion (validation/lro_images); the numbers of these sites themselves have no independent counterpart",
   "sites": [
@@ -185,8 +185,8 @@
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
       "surface_height_m": 1701.016555680504,
-      "package_id": "site-e3810b35dcfa4777",
-      "content_sha256": "4bc707d66d130c5d350bf3e6d11a11dd57df126417005602aecff8c2ed03ae18",
+      "package_id": "site-38037e9b701a7d2d",
+      "content_sha256": "68ffa7d63a4a168bfca9a2268a5a1174d3141a44539f587c878dc325f2649a59",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -220,9 +220,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 5.093166,
-        "timeline": 251.465111,
-        "terrain_patches": 0.311852
+        "horizon": 17.245244,
+        "timeline": 468.020715,
+        "terrain_patches": 0.267306
       },
       "sun_centre_elevation_range_deg": [
         -1.7216328382492065,
@@ -675,8 +675,8 @@
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
       "surface_height_m": 1815.33166308619,
-      "package_id": "site-66887386ea4fc6ea",
-      "content_sha256": "b3db93218a462d44e0f7e2a49564c8dc07fdef229254be8edce5d9fbc6ded556",
+      "package_id": "site-61a82bfea156b494",
+      "content_sha256": "74d823399a168045215f4a1f2d2558b8e7b24bfa4b82c50eea1699bea3067817",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -710,9 +710,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 5.114175,
-        "timeline": 234.967562,
-        "terrain_patches": 0.475307
+        "horizon": 19.976716,
+        "timeline": 454.436719,
+        "terrain_patches": 0.364054
       },
       "sun_centre_elevation_range_deg": [
         -2.847119092941284,
@@ -1140,8 +1140,8 @@
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
       "surface_height_m": 5172.886839634902,
-      "package_id": "site-3c901dfc80efc5b8",
-      "content_sha256": "d11327ee9ca1953fb5bdefc135630f408eb1655bfdba6bd7a6144514478e1889",
+      "package_id": "site-1c04d3ed1ebd94ec",
+      "content_sha256": "6d39b2ec035450e56c65b6bf5a2d809c7d49c84e813120ac45ddfd608dfdb53f",
       "status": "ok",
       "warnings": [],
       "direction_table_id": "dirtab-fbc51d64e42ab803",
@@ -1175,9 +1175,9 @@
         ]
       },
       "timings_s": {
-        "horizon": 5.450899,
-        "timeline": 238.462252,
-        "terrain_patches": 0.372609
+        "horizon": 18.956719,
+        "timeline": 456.585288,
+        "terrain_patches": 0.335797
       },
       "sun_centre_elevation_range_deg": [
         -5.556787014007568,
@@ -1905,7 +1905,7 @@
       "label": "project site",
       "lat_deg": -89.80531,
       "lon_deg": -154.23109,
-      "package_id": "site-e3810b35dcfa4777",
+      "package_id": "site-38037e9b701a7d2d",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -1958,8 +1958,8 @@
         "count": 15,
         "feasible_fraction": 0.1957974599875076
       },
-      "size_bytes": 9572528,
-      "manifest_bytes": 5233116
+      "size_bytes": 7476855,
+      "manifest_bytes": 2975839
     },
     {
       "site_id": "de-gerlache-rim-crest",
@@ -1969,7 +1969,7 @@
       "label": "project site",
       "lat_deg": -88.6641,
       "lon_deg": -68.41044,
-      "package_id": "site-66887386ea4fc6ea",
+      "package_id": "site-61a82bfea156b494",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2022,8 +2022,8 @@
         "count": 21,
         "feasible_fraction": 0.3320507211332934
       },
-      "size_bytes": 8641306,
-      "manifest_bytes": 4301894
+      "size_bytes": 6912063,
+      "manifest_bytes": 2411047
     },
     {
       "site_id": "malapert-massif-summit",
@@ -2033,7 +2033,7 @@
       "label": "project site",
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
-      "package_id": "site-3c901dfc80efc5b8",
+      "package_id": "site-1c04d3ed1ebd94ec",
       "status": "ok",
       "warnings": [],
       "observer_heights_m": [
@@ -2086,8 +2086,236 @@
         "count": 27,
         "feasible_fraction": 0.28628143435790016
       },
-      "size_bytes": 9480588,
-      "manifest_bytes": 5141176
+      "size_bytes": 7280519,
+      "manifest_bytes": 2779503
+    },
+    {
+      "site_id": "chandrayaan-3",
+      "name": "Chandrayaan-3 Vikram lander",
+      "category": "past_landing",
+      "programme": "Chandrayaan",
+      "label": "past landing",
+      "lat_deg": -69.374,
+      "lon_deg": 32.3187,
+      "package_id": "site-f905e843230e82ee",
+      "status": "ok",
+      "warnings": [
+        "terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown"
+      ],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_60S_60M",
+        "pixel_m": 60.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "medium",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_60S_60M",
+          "pixel_m": 60.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4878681072113923,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 382.26940104166664,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        325.73450520833336,
+        339.787890625,
+        357.422265625
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.1458708431895045
+      },
+      "size_bytes": 3852826,
+      "manifest_bytes": 1300354
+    },
+    {
+      "site_id": "im-1-odysseus",
+      "name": "IM-1 Odysseus lander (CLPS)",
+      "category": "past_landing",
+      "programme": "CLPS",
+      "label": "past landing",
+      "lat_deg": -80.1276,
+      "lon_deg": 1.4367,
+      "package_id": "site-45ae374a37859245",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.9263888888888889
+        },
+        {
+          "product_id": "LDEM_60S_60M",
+          "pixel_m": 60.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 0.07361111111111111
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.4049845655922253,
+      "earth_visible_share": 1.0,
+      "sun_longest_outage_h": 450.19830729166665,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        258.143359375,
+        277.9796875,
+        309.041796875
+      ],
+      "landing_windows_example_standard": {
+        "count": 25,
+        "feasible_fraction": 0.06298730157033744
+      },
+      "size_bytes": 3850301,
+      "manifest_bytes": 1297829
+    },
+    {
+      "site_id": "im-2-athena",
+      "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
+      "category": "past_landing",
+      "programme": "CLPS",
+      "label": "past landing",
+      "lat_deg": -84.7906,
+      "lon_deg": 29.19567,
+      "package_id": "site-1d181df54766007c",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.47676795812196004,
+      "earth_visible_share": 0.8208646719498119,
+      "sun_longest_outage_h": 411.52552083333336,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        272.00182291666664,
+        328.37408854166665,
+        380.32005208333334
+      ],
+      "landing_windows_example_standard": {
+        "count": 23,
+        "feasible_fraction": 0.107312447750418
+      },
+      "size_bytes": 4027540,
+      "manifest_bytes": 1475068
+    },
+    {
+      "site_id": "artemis3-region-mons-mouton-representative",
+      "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
+      "category": "artemis_iii_candidate_region_representative",
+      "programme": "Artemis",
+      "label": "candidate",
+      "lat_deg": -84.6,
+      "lon_deg": 31.0,
+      "package_id": "site-08b49335c4bf11d6",
+      "status": "ok",
+      "warnings": [],
+      "observer_heights_m": [
+        0.0,
+        2.0,
+        10.0
+      ],
+      "terrain_at_site": {
+        "product_id": "LDEM_80S_20M",
+        "pixel_m": 20.0,
+        "projection": "polar stereographic on a sphere, true scale at the pole"
+      },
+      "resolution_class": "fine",
+      "horizon_products": [
+        {
+          "product_id": "LDEM_80S_20M",
+          "pixel_m": 20.0,
+          "projection": "polar stereographic on a sphere, true scale at the pole",
+          "azimuth_share": 1.0
+        }
+      ],
+      "near_field": false,
+      "uncertainty_band": "lola-two-sigma-2026-11",
+      "landing_circle_survey": false,
+      "planned_landing_utc": null,
+      "requirements": [
+        "example-standard",
+        "example-strict",
+        "example-loose"
+      ],
+      "ground_stations": true,
+      "sun_visible_share": 0.34018893864474087,
+      "earth_visible_share": 0.5846092176575087,
+      "sun_longest_outage_h": 548.8098958333334,
+      "sun_visible_h_per_lunar_day_least_median_most": [
+        110.24283854166667,
+        257.32981770833334,
+        298.313671875
+      ],
+      "landing_windows_example_standard": {
+        "count": 12,
+        "feasible_fraction": 0.028628547924741603
+      },
+      "size_bytes": 3847625,
+      "manifest_bytes": 1295153
     },
     {
       "site_id": "apollo-11",
@@ -2143,8 +2371,8 @@
         "count": 25,
         "feasible_fraction": 0.16280332218279753
       },
-      "size_bytes": 4774635,
-      "manifest_bytes": 2256723
+      "size_bytes": 3714327,
+      "manifest_bytes": 1196415
     },
     {
       "site_id": "apollo-12",
@@ -2200,8 +2428,8 @@
         "count": 25,
         "feasible_fraction": 0.16502005523018315
       },
-      "size_bytes": 4845593,
-      "manifest_bytes": 2327681
+      "size_bytes": 3764445,
+      "manifest_bytes": 1246533
     },
     {
       "site_id": "apollo-14",
@@ -2257,8 +2485,8 @@
         "count": 25,
         "feasible_fraction": 0.15567439366735067
       },
-      "size_bytes": 4754740,
-      "manifest_bytes": 2236828
+      "size_bytes": 3696681,
+      "manifest_bytes": 1178769
     },
     {
       "site_id": "apollo-15",
@@ -2314,8 +2542,8 @@
         "count": 25,
         "feasible_fraction": 0.1386640152972526
       },
-      "size_bytes": 4749408,
-      "manifest_bytes": 2231496
+      "size_bytes": 3694530,
+      "manifest_bytes": 1176618
     },
     {
       "site_id": "apollo-16",
@@ -2371,8 +2599,8 @@
         "count": 25,
         "feasible_fraction": 0.16154576232140144
       },
-      "size_bytes": 4785511,
-      "manifest_bytes": 2267599
+      "size_bytes": 3718460,
+      "manifest_bytes": 1200548
     },
     {
       "site_id": "apollo-17",
@@ -2428,8 +2656,8 @@
         "count": 25,
         "feasible_fraction": 0.14319307437728
       },
-      "size_bytes": 4755976,
-      "manifest_bytes": 2238064
+      "size_bytes": 3698045,
+      "manifest_bytes": 1180133
     },
     {
       "site_id": "surveyor-1",
@@ -2485,8 +2713,8 @@
         "count": 25,
         "feasible_fraction": 0.16330848064152986
       },
-      "size_bytes": 4841997,
-      "manifest_bytes": 2324085
+      "size_bytes": 3759703,
+      "manifest_bytes": 1241791
     },
     {
       "site_id": "change-3",
@@ -2542,8 +2770,8 @@
         "count": 25,
         "feasible_fraction": 0.16585061577319882
       },
-      "size_bytes": 4887827,
-      "manifest_bytes": 2369915
+      "size_bytes": 3795714,
+      "manifest_bytes": 1277802
     },
     {
       "site_id": "change-4",
@@ -2599,8 +2827,8 @@
         "count": 0,
         "feasible_fraction": 0.0
       },
-      "size_bytes": 2992592,
-      "manifest_bytes": 474680
+      "size_bytes": 2828833,
+      "manifest_bytes": 310921
     },
     {
       "site_id": "change-5",
@@ -2656,8 +2884,8 @@
         "count": 25,
         "feasible_fraction": 0.16538379099217207
       },
-      "size_bytes": 4916103,
-      "manifest_bytes": 2398191
+      "size_bytes": 3816980,
+      "manifest_bytes": 1299068
     },
     {
       "site_id": "change-6",
@@ -2713,65 +2941,8 @@
         "count": 0,
         "feasible_fraction": 0.0
       },
-      "size_bytes": 3051600,
-      "manifest_bytes": 533688
-    },
-    {
-      "site_id": "chandrayaan-3",
-      "name": "Chandrayaan-3 Vikram lander",
-      "category": "past_landing",
-      "programme": "Chandrayaan",
-      "label": "past landing",
-      "lat_deg": -69.374,
-      "lon_deg": 32.3187,
-      "package_id": "site-85f12504d6b4c936",
-      "status": "ok",
-      "warnings": [
-        "terrain: the site is served by LDEM_60S_60M with 60 m pixels (resolution class medium); relief narrower than about 120 m is not in the horizon, and nearby obstacles of that size cannot be shown"
-      ],
-      "observer_heights_m": [
-        0.0,
-        2.0,
-        10.0
-      ],
-      "terrain_at_site": {
-        "product_id": "LDEM_60S_60M",
-        "pixel_m": 60.0,
-        "projection": "polar stereographic on a sphere, true scale at the pole"
-      },
-      "resolution_class": "medium",
-      "horizon_products": [
-        {
-          "product_id": "LDEM_60S_60M",
-          "pixel_m": 60.0,
-          "projection": "polar stereographic on a sphere, true scale at the pole",
-          "azimuth_share": 1.0
-        }
-      ],
-      "near_field": false,
-      "uncertainty_band": null,
-      "landing_circle_survey": false,
-      "planned_landing_utc": null,
-      "requirements": [
-        "example-standard",
-        "example-strict",
-        "example-loose"
-      ],
-      "ground_stations": true,
-      "sun_visible_share": 0.4878681072113923,
-      "earth_visible_share": 1.0,
-      "sun_longest_outage_h": 382.26940104166664,
-      "sun_visible_h_per_lunar_day_least_median_most": [
-        325.73450520833336,
-        339.787890625,
-        357.422265625
-      ],
-      "landing_windows_example_standard": {
-        "count": 25,
-        "feasible_fraction": 0.1458708431895045
-      },
-      "size_bytes": 4801613,
-      "manifest_bytes": 2283701
+      "size_bytes": 2870548,
+      "manifest_bytes": 352636
     },
     {
       "site_id": "slim",
@@ -2827,69 +2998,8 @@
         "count": 25,
         "feasible_fraction": 0.14238959603948168
       },
-      "size_bytes": 4746236,
-      "manifest_bytes": 2228324
-    },
-    {
-      "site_id": "im-1-odysseus",
-      "name": "IM-1 Odysseus lander (CLPS)",
-      "category": "past_landing",
-      "programme": "CLPS",
-      "label": "past landing",
-      "lat_deg": -80.1276,
-      "lon_deg": 1.4367,
-      "package_id": "site-7c0f5b780fac37ab",
-      "status": "ok",
-      "warnings": [],
-      "observer_heights_m": [
-        0.0,
-        2.0,
-        10.0
-      ],
-      "terrain_at_site": {
-        "product_id": "LDEM_80S_20M",
-        "pixel_m": 20.0,
-        "projection": "polar stereographic on a sphere, true scale at the pole"
-      },
-      "resolution_class": "fine",
-      "horizon_products": [
-        {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
-          "projection": "polar stereographic on a sphere, true scale at the pole",
-          "azimuth_share": 0.9263888888888889
-        },
-        {
-          "product_id": "LDEM_60S_60M",
-          "pixel_m": 60.0,
-          "projection": "polar stereographic on a sphere, true scale at the pole",
-          "azimuth_share": 0.07361111111111111
-        }
-      ],
-      "near_field": false,
-      "uncertainty_band": null,
-      "landing_circle_survey": false,
-      "planned_landing_utc": null,
-      "requirements": [
-        "example-standard",
-        "example-strict",
-        "example-loose"
-      ],
-      "ground_stations": true,
-      "sun_visible_share": 0.4049845655922253,
-      "earth_visible_share": 1.0,
-      "sun_longest_outage_h": 450.19830729166665,
-      "sun_visible_h_per_lunar_day_least_median_most": [
-        258.143359375,
-        277.9796875,
-        309.041796875
-      ],
-      "landing_windows_example_standard": {
-        "count": 25,
-        "feasible_fraction": 0.06298730157033744
-      },
-      "size_bytes": 4814322,
-      "manifest_bytes": 2296410
+      "size_bytes": 3689981,
+      "manifest_bytes": 1172069
     },
     {
       "site_id": "blue-ghost-1",
@@ -2945,125 +3055,15 @@
         "count": 25,
         "feasible_fraction": 0.15974765307346292
       },
-      "size_bytes": 4795417,
-      "manifest_bytes": 2277505
-    },
-    {
-      "site_id": "im-2-athena",
-      "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
-      "category": "past_landing",
-      "programme": "CLPS",
-      "label": "past landing",
-      "lat_deg": -84.7906,
-      "lon_deg": 29.19567,
-      "package_id": "site-6ce63d6cbe2a89ea",
-      "status": "ok",
-      "warnings": [],
-      "observer_heights_m": [
-        0.0,
-        2.0,
-        10.0
-      ],
-      "terrain_at_site": {
-        "product_id": "LDEM_80S_20M",
-        "pixel_m": 20.0,
-        "projection": "polar stereographic on a sphere, true scale at the pole"
-      },
-      "resolution_class": "fine",
-      "horizon_products": [
-        {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
-          "projection": "polar stereographic on a sphere, true scale at the pole",
-          "azimuth_share": 1.0
-        }
-      ],
-      "near_field": false,
-      "uncertainty_band": null,
-      "landing_circle_survey": false,
-      "planned_landing_utc": null,
-      "requirements": [
-        "example-standard",
-        "example-strict",
-        "example-loose"
-      ],
-      "ground_stations": true,
-      "sun_visible_share": 0.47676795812196004,
-      "earth_visible_share": 0.8208646719498119,
-      "sun_longest_outage_h": 411.52552083333336,
-      "sun_visible_h_per_lunar_day_least_median_most": [
-        272.00182291666664,
-        328.37408854166665,
-        380.32005208333334
-      ],
-      "landing_windows_example_standard": {
-        "count": 23,
-        "feasible_fraction": 0.107312447750418
-      },
-      "size_bytes": 4912060,
-      "manifest_bytes": 2394148
-    },
-    {
-      "site_id": "artemis3-region-mons-mouton-representative",
-      "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
-      "category": "artemis_iii_candidate_region_representative",
-      "programme": "Artemis",
-      "label": "candidate",
-      "lat_deg": -84.6,
-      "lon_deg": 31.0,
-      "package_id": "site-3bb0ec10083e4b7d",
-      "status": "ok",
-      "warnings": [],
-      "observer_heights_m": [
-        0.0,
-        2.0,
-        10.0
-      ],
-      "terrain_at_site": {
-        "product_id": "LDEM_80S_20M",
-        "pixel_m": 20.0,
-        "projection": "polar stereographic on a sphere, true scale at the pole"
-      },
-      "resolution_class": "fine",
-      "horizon_products": [
-        {
-          "product_id": "LDEM_80S_20M",
-          "pixel_m": 20.0,
-          "projection": "polar stereographic on a sphere, true scale at the pole",
-          "azimuth_share": 1.0
-        }
-      ],
-      "near_field": false,
-      "uncertainty_band": null,
-      "landing_circle_survey": false,
-      "planned_landing_utc": null,
-      "requirements": [
-        "example-standard",
-        "example-strict",
-        "example-loose"
-      ],
-      "ground_stations": true,
-      "sun_visible_share": 0.34018893864474087,
-      "earth_visible_share": 0.5846092176575087,
-      "sun_longest_outage_h": 548.8098958333334,
-      "sun_visible_h_per_lunar_day_least_median_most": [
-        110.24283854166667,
-        257.32981770833334,
-        298.313671875
-      ],
-      "landing_windows_example_standard": {
-        "count": 12,
-        "feasible_fraction": 0.028628547924741603
-      },
-      "size_bytes": 4503780,
-      "manifest_bytes": 1985868
+      "size_bytes": 3728100,
+      "manifest_bytes": 1210188
     }
   ],
   "size": {
-    "total_bytes": 106779990,
-    "files": 479,
-    "direction_table_bytes": 1065989,
-    "site_bytes": 105623832,
-    "pairs_bytes": 81115
+    "total_bytes": 85136716,
+    "files": 490,
+    "direction_table_bytes": 1063733,
+    "site_bytes": 84024076,
+    "pairs_bytes": 39853
   }
 }

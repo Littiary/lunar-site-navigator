@@ -5,8 +5,8 @@
   },
   "kind": "scenario",
   "scenario_id": "curated-sites",
-  "title": "Curated list without the project sites: past landings and one representative Artemis III point, 24 months",
-  "description": "Site records of the data stream (data/sites/curated_sites.json): past landing sites at the lander positions measured on LROC images, and one representative point of an Artemis III candidate region. Real terrain from every installed elevation product, without the 5 m near field; SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission. No uncertainty is stated for these sites.",
+  "title": "Curated list, sites on the latitude-longitude product: past landings, 24 months",
+  "description": "Site records of the data stream (data/sites/curated_sites.json): past landing sites at the lander positions measured on LROC images. Real terrain from every approved elevation product, without the 5 m near field; SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission. No uncertainty is stated for these sites: no terrain height error has been measured for the product that serves them.",
   "synthetic": false,
   "sites": [
     {
@@ -109,30 +109,12 @@
       "category": "past landing"
     },
     {
-      "site_id": "chandrayaan-3",
-      "name": "Chandrayaan-3 Vikram lander",
-      "lat_deg": -69.374,
-      "lon_deg": 32.3187,
-      "notes": "past landing site (position of the lander as measured on LROC images)",
-      "programme": "Chandrayaan",
-      "category": "past landing"
-    },
-    {
       "site_id": "slim",
       "name": "SLIM lander",
       "lat_deg": -13.316,
       "lon_deg": 25.251,
       "notes": "past landing site (position of the lander as measured on LROC images)",
       "programme": "SLIM",
-      "category": "past landing"
-    },
-    {
-      "site_id": "im-1-odysseus",
-      "name": "IM-1 Odysseus lander (CLPS)",
-      "lat_deg": -80.1276,
-      "lon_deg": 1.4367,
-      "notes": "past landing site (position of the lander as measured on LROC images)",
-      "programme": "CLPS",
       "category": "past landing"
     },
     {
@@ -143,24 +125,6 @@
       "notes": "past landing site (position of the lander as measured on LROC images)",
       "programme": "CLPS",
       "category": "past landing"
-    },
-    {
-      "site_id": "im-2-athena",
-      "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
-      "lat_deg": -84.7906,
-      "lon_deg": 29.19567,
-      "notes": "past landing site (position of the lander as measured on LROC images)",
-      "programme": "CLPS",
-      "category": "past landing"
-    },
-    {
-      "site_id": "artemis3-region-mons-mouton-representative",
-      "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
-      "lat_deg": -84.6,
-      "lon_deg": 31.0,
-      "notes": "REPRESENTATIVE point of a NASA candidate region, not a selected or published landing site; NASA published no coordinates (release of 2024-10-28 and LPSC 2026 abstract); whether this point lies inside NASA's region outline is unverified",
-      "programme": "Artemis",
-      "category": "candidate"
     }
   ],
   "observer_heights_m": [

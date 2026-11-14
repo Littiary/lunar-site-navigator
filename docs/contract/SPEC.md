@@ -43,7 +43,7 @@ instead of showing a placeholder number.
 
 | Topic | Rule |
 |---|---|
-| Text | JSON, UTF-8, ASCII keys in lower case, decimal point. No NaN or Infinity in JSON: an unknown number is `null` |
+| Text | JSON, UTF-8, ASCII keys in lower case, decimal point. No NaN or Infinity in JSON: an unknown number is `null`. Whitespace carries no meaning: `manifest.json` is written without indentation (`python -m json.tool manifest.json` shows it indented), the index and scenario files with it |
 | Arrays | Raw binary, little-endian, C order (the last index varies fastest), no header. Unknown values are NaN |
 | Time axis | TDB seconds past J2000 (the SPICE "ET" axis), 64-bit float. Field names end in `_et_s` |
 | Display time | UTC as ISO 8601 with milliseconds and a `Z` suffix, `2026-11-14T09:00:00.000Z`, always written by the core. Readers never convert between TDB and UTC themselves |
@@ -747,6 +747,7 @@ Additive; nothing that existed in 0.10 changed its meaning, name, unit or layout
 
 - Optional descriptive labels `programme` and `category` in `sites[]` of a scenario, in `site` of a site package and in the site entries of the index (5.2, 7). They are not part of `request`: package ids do not depend on them.
 - No change to any number. A reader written for 0.10 reads 0.11 packages unchanged and finds two fields it does not know.
+- Manifests are written as compact JSON, without indentation: about a third smaller for a month, nearly half for two years. No value, id or digest changes (identity and digests are computed on the canonical form, 3.4); a reader that parses JSON reads them as before.
 - Clarification, no change to any file: terrain patches are selected by `id`; the order and the number of `terrain.patches[]` are not part of the contract (5.9). Section 5.9 said "finest first" since 0.7. The core still writes them that way, but a reader must not rely on it: a package may hold a patch finer than `near`. The validator no longer requires an order; it checks that the patches written are those the request states.
 
 ### 0.10 (14 November 2026)
