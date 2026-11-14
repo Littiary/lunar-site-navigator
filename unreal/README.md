@@ -46,7 +46,8 @@ with Git LFS: run `git lfs install` once per machine).
 | Obstacle view: highlighted ridge, "hidden by terrain ... away", "this ridge costs N h" | package (contract 0.2, SPEC 5.5): `series.<BODY>.blocker_azimuth_index` at the sample, `horizon.obstacle_id` there, the run of `horizon.obstacles[k]`, `lost_s` of the matching `timeline.blockers` record. Hidden for packages without these fields |
 | Dashed outline "Sun (behind terrain)" | package: direction and angular radius of the series, drawn over the terrain while the body is hidden |
 | Panorama (top right): horizon all round, Sun and Earth marks, the highlighted obstacle | package: `horizon.elevation_deg`, the series at the selected time, the obstacle run |
-| Summary numbers under the panorama | package: metrics `sun_visible_fraction_of_time`, `sun_longest_outage_s`, `earth_visible_fraction_of_time`, `earth_longest_outage_s`, `sun_lost_to_terrain_s`, `sun_gained_from_terrain_s`, with units converted |
+| Summary numbers under the panorama | package: metrics `sun_visible_fraction_of_time`, `sun_longest_outage_s`, `earth_visible_fraction_of_time`, `earth_longest_outage_s`, with units converted; `sun_lost_to_terrain_s` and `sun_gained_from_terrain_s` as one sentence, "Terrain here costs N h of Sun and gives M h that a smooth sphere would not have" |
+| "About N % of the ground within 20 m is drawn in shadow ..." | none (a statement about the drawing): where the elevation samples near the site rise towards the package's Sun direction by more than the Sun's height, the ground lies in its own shadow. Shown while the package gives the Sun as visible, so that the dark ground is not read as a contradiction: the package's horizon search starts 20 m out and its result is for the observer at the site |
 | "Sun 121 deg to the right" at the lower right | package: direction of the body at the selected time, when it is outside the view |
 | Calendar page | package (since 0.3, SPEC 5.6): `timeline.calendar`, `request.timeline.requirements`, `timeline.opportunities`. "Landing now meets the requirement; it can slip by ..." is the distance from the selected time to the end of the landing window it lies in; for the scenario's planned landing the package's own slip report is printed. The requirement is named and marked as an example chosen by the team |
 | Pale edges of the time strips, "for a stated horizon error of ..." under a countdown | package (since 0.4, SPEC 5.7): windows `<body>_visible_certain` / `_possible`, `earliest_et_s` / `latest_et_s` of the event |
@@ -125,6 +126,21 @@ countdowns, large; text; captions):
 - **What blocks the Sun or the Earth now**, under the main actions: distance, azimuth and
   cost of the obstacle as the package gives them.
 - **Bar along the bottom** in labelled groups: time, observer, site, plan, view, info.
+- **Site picker** (button **Sites ...**, key `S`): the sites of the package root in groups,
+  each with the resolution class of its terrain where the package states it (contract
+  0.9). Click a name to show the site; **Left** and **Right** pin any two for the
+  comparison. Groups come from the optional index field `programme`; without it there is
+  one group. The layout holds 20 sites in 7 groups at 1280 x 720 (tested).
+- **Custom coordinates**, at the foot of the picker: type a latitude and an east longitude
+  and press **Compute and show**. The view hands the two numbers, as typed, to the science
+  core (`python -m lsncore site --lat ... --lon ... --name ... --out Saved/LsnCustom`),
+  shows the seconds while it runs and loads the package it writes. The engine computes
+  nothing. The Python environment is looked for in `-LsnPython=`, `LSN_PYTHON`, `.venv`
+  next to the repository and `C:/Projects/lsn-venv`; if none is there, the view says that
+  custom coordinates cannot be computed on this machine. That command writes the terrain
+  horizon only, so a custom site shows no Sun, Earth or countdown, and says so.
+- **Resolution class** of the terrain behind the result (`horizon.terrain_source`, since
+  0.9): "terrain: fine, 20 m pixels" next to the site name; nothing for older packages.
 - **Details** on demand (button, key `I`): package id, frame, contract version, the raw
   values of the sample and the validation status of every method behind a number on screen.
 - **Planner pages** (calendar, uncertainty, mast and pairs) open as a sheet over the view.
@@ -172,7 +188,10 @@ Command line: `-LsnPackage=<site package dir>` or `-LsnPackageRoot=<root with in
 `-LsnCameraUp=<m> -LsnCameraBack=<m>`, `-LsnNoHud`, `-LsnLowQuality`,
 `-LsnDo=<action>,<action>` (named actions carried out at the start),
 `-LsnBench=<txt> -LsnBenchSeconds=<s>` (measure the frame time, write it and quit),
-`-LsnClickLog=<txt>` (write down every click and what it did).
+`-LsnClickLog=<txt>` (write down every click and what it did), `-LsnPage=sites`,
+`-LsnCustom=<lat>,<lon>` (as if typed into the picker and computed), `-LsnPython=<python.exe>`,
+`-LsnShotFrames=<n>` (frames to wait before `-LsnShot`), `-LsnViewingAidFill` (fill light on
+for an overview still, with a caption that says so).
 
 ### Frame time
 
@@ -229,6 +248,10 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
 | `Acceptance.SecondSceneAwayFromOrigin` | A scene 20 000 km from the world origin is the same scene: eye, Sun disc, light and silhouette as the package says; the two scenes are lit on separate lighting channels | 0.001 deg; 1e-6 cm |
 | `Planner.ButtonsOnScreen` | At four window sizes (1280 x 720 to 3840 x 2160), one view and side by side: every button in the window, at least 22 x 60 px, no overlap with another button or a time strip, strips between header and bar, every bar button in a labelled group, the three main actions at least twice as large as any other button, no button across the middle of a side-by-side window, the right view's control in the right half | exact |
+| `Planner.SitePicker` | 20 sites in 7 groups at 1280 x 720 and 1920 x 1080, one view and side by side: one header per group in list order, one row per site with show, pin-left and pin-right boxes, rows at least 18 px high, nothing across the middle of a side-by-side window, custom-coordinate boxes clear of the rows | exact |
+| `Planner.CustomCoordinatesGoToTheCore` | Latitude and longitude accepted only as plain numbers in range; the command is the core's own `python -m lsncore site` with the numbers as typed | exact |
+| `Package.TerrainSourceOfThePackage` | Resolution class and pixel of `horizon.terrain_source` unchanged; nothing shown for a package without it | exact |
+| `Terrain.NearGroundFacingAwayFromTheSun` | Share of near ground that rises towards the Sun more steeply than the Sun stands high, on hand-made planes | 1e-9 |
 | `Planner.ButtonsDoWhatKeysDo` | Named actions step by one sample and one day exactly, stop at the ends, go round the observer heights, switch play, the obstacle view and the details; "next sunset" lands on the package's next `set` event of the Sun; an unknown name is refused | exact; 1e-6 s |
 | `Props.ModelsHaveTheirSizes`, `Props.TerrainUntouched` | The scale objects load, stand on the ground, have the sizes they claim, the mast reaches the observer height; showing or hiding them leaves the terrain mesh unchanged | 0.15 m; 0.01 m; exact |
 | `Sky.StarsWhereTheyStand` | Hand-made orientation maps J2000 axes to east, north, up and interpolates by the shortest turn; Sirius is the brightest star at its catalogue position; on the published packages SPICE's Sun direction turned by the exported orientation equals the package's Sun series | 1e-9; 1e-6 deg; 0.01 deg |
@@ -277,13 +300,19 @@ without the LOLA files.
   prints what the program received. Keys and split screen were checked on real captures.
 - Side by side, the bar and the main buttons act on both halves; the right half has one
   control of its own (its next site).
-- Dark wedges on the near ground at a very low Sun (seen at de Gerlache at 2.5 deg): measured
-  cause, they appear in the single view too and vanish with shadows off. They are shadows the
-  elevation surface casts on itself: its 20 m pixels in 0.5 m steps tilt by multiples of
-  1.43 deg, and a patch tilted away from the Sun by more than the Sun's height lies in the
-  shadow of its own upper edge. The package says the site itself is lit (its horizon search
-  starts 20 m out). Positions are not smoothed, so the wedges stay; the fine shading detail
-  makes them less bare.
+- Dark ground near the site at a very low Sun (de Gerlache, Sun 2.5 deg high), measured on
+  2026-11-14. Two things were mixed. The wedges that fanned out from the observer were a
+  drawing fault: the mesh had no elevation sample between the site and its first ring at
+  5 m, so the first five metres were a cone to the site point. The rings now start at 1 m
+  and the wedges are gone. What remains is real for the elevation data: the site stands
+  on a crest, the ground falls away by up to 8 deg, and where it rises towards the Sun by
+  more than the Sun's height it lies in its own shadow (38 % of the ground within 20 m at
+  that instant; the same appears with unsmoothed normals, and the share is the same when
+  counted from the data alone). The view says so on screen at such a site and instant.
+- The site picker groups by the index field `programme`, which the contract does not
+  define yet: it is a request to the core stream; until it exists there is one group.
+- That a click of the real mouse or typed keys reach the picker and the coordinate fields
+  has not been checked by hand; the entry was run through `-LsnCustom=<lat>,<lon>`.
 - The dark horizontal stripes that the side-by-side view showed were a different thing and
   are gone: the two scenes stood 20 000 km apart in one world, which broke the shadows of
   both (measured: not in the single view, not with shadows off, pattern changed with the

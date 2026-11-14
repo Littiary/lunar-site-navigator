@@ -56,7 +56,7 @@ const TArray<FName>& ALsnObserverPawn::KnownActions()
 	static const TArray<FName> Actions = {
 		TEXT("play"), TEXT("slower"), TEXT("faster"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"),
 		TEXT("sun_event_back"), TEXT("sun_event_forward"), TEXT("next_sunset"), TEXT("earth_event_back"), TEXT("earth_event_forward"), TEXT("first_sample"), TEXT("last_sample"),
-		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("next_requirement"),
+		TEXT("next_site"), TEXT("next_right_site"), TEXT("compare"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("page_sites"), TEXT("next_requirement"),
 		TEXT("obstacle"), TEXT("horizon_line"), TEXT("fill_light"), TEXT("follow_sun"), TEXT("height_up"), TEXT("height_down"), TEXT("height_next"), TEXT("scale_objects"), TEXT("quality"), TEXT("details"), TEXT("help"), TEXT("quit"),
 	};
 	return Actions;
@@ -212,6 +212,7 @@ bool ALsnObserverPawn::DoAction(FName Action)
 	else if (Action == TEXT("page_calendar")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Calendar); } }
 	else if (Action == TEXT("page_uncertainty")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Uncertainty); } }
 	else if (Action == TEXT("page_trade")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Trade); } }
+	else if (Action == TEXT("page_sites")) { if (GameMode) { GameMode->TogglePage(ELsnPlannerPage::Sites); } }
 	else if (Action == TEXT("next_requirement")) { if (GameMode) { GameMode->NextRequirement(); } }
 	else if (Action == TEXT("obstacle")) { Scene->SetObstacleViewEnabled(!Scene->IsObstacleViewEnabled()); }
 	else if (Action == TEXT("horizon_line")) { Scene->SetHorizonLineVisible(!Scene->IsHorizonLineVisible()); }
@@ -367,7 +368,11 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 	double Turn = 0.0;
 
 	// Tab: hide the cursor and look with the mouse alone; Tab again brings the cursor back.
-	if (PC->WasInputKeyJustPressed(EKeys::Tab))
+	if (GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites && PC->WasInputKeyJustPressed(EKeys::Tab))
+	{
+		GameMode->SetCustomFocus(1 - GameMode->GetCustomEntry().Focus);
+	}
+	else if (PC->WasInputKeyJustPressed(EKeys::Tab))
 	{
 		PC->bShowMouseCursor = !PC->bShowMouseCursor;
 		if (PC->bShowMouseCursor)
@@ -406,6 +411,28 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 			if (!Clicked.IsNone())
 			{
 				DoAction(Clicked);
+			}
+			else if (GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites)
+			{
+				// The site picker: show a site, pin one for the left or the right view, or the custom coordinates.
+				TArray<FString> Groups;
+				for (const FLsnSiteInfo& Info : GameMode->GetSiteInfos())
+				{
+					Groups.Add(Info.Group);
+				}
+				int32 Site = -1;
+				switch (FLsnSitePicker::Make(WindowSizeX, SizeY, GameMode->IsComparing(), Groups).HitAt(FVector2D(CursorX, CursorY), Site))
+				{
+				case ELsnPickerHit::Show:
+					if (GameMode->SelectSite(0, Site)) { GameMode->TogglePage(ELsnPlannerPage::Sites); }
+					break;
+				case ELsnPickerHit::PinLeft: GameMode->SelectSite(0, Site); break;
+				case ELsnPickerHit::PinRight: GameMode->SelectSite(1, Site); bFollowSun = true; break;
+				case ELsnPickerHit::LatField: GameMode->SetCustomFocus(0); break;
+				case ELsnPickerHit::LonField: GameMode->SetCustomFocus(1); break;
+				case ELsnPickerHit::Compute: GameMode->StartCustom(); break;
+				default: break;
+				}
 			}
 			// -LsnClickLog=<file>: every click and what it did, for checking a build with real clicks.
 			FString ClickLog;
@@ -455,13 +482,19 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 		{ EKeys::N, TEXT("sun_event_forward"), TEXT("earth_event_forward") }, { EKeys::B, TEXT("sun_event_back"), TEXT("earth_event_back") },
 		{ EKeys::Home, TEXT("first_sample"), TEXT("first_sample") }, { EKeys::End, TEXT("last_sample"), TEXT("last_sample") },
 		{ EKeys::C, TEXT("compare"), TEXT("compare") }, { EKeys::K, TEXT("page_calendar"), TEXT("page_calendar") }, { EKeys::U, TEXT("page_uncertainty"), TEXT("page_uncertainty") },
-		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
+		{ EKeys::M, TEXT("page_trade"), TEXT("page_trade") }, { EKeys::S, TEXT("page_sites"), TEXT("page_sites") }, { EKeys::R, TEXT("next_requirement"), TEXT("next_requirement") },
 		{ EKeys::O, TEXT("obstacle"), TEXT("obstacle") }, { EKeys::H, TEXT("horizon_line"), TEXT("horizon_line") }, { EKeys::L, TEXT("fill_light"), TEXT("fill_light") },
 		{ EKeys::F, TEXT("follow_sun"), TEXT("follow_sun") }, { EKeys::PageUp, TEXT("height_up"), TEXT("height_up") }, { EKeys::PageDown, TEXT("height_down"), TEXT("height_down") },
 		{ EKeys::G, TEXT("quality"), TEXT("quality") }, { EKeys::I, TEXT("details"), TEXT("details") }, { EKeys::P, TEXT("scale_objects"), TEXT("scale_objects") }, { EKeys::F1, TEXT("help"), TEXT("help") }, { EKeys::Escape, TEXT("quit"), TEXT("quit") },
 	};
+	const bool bTyping = GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites;
+	if (bTyping && PC->WasInputKeyJustPressed(EKeys::Period)) { GameMode->TypeCustom(TEXT('.')); }
 	for (const FKeyAction& KeyAction : KeyActions)
 	{
+		if (bTyping && (KeyAction.Key == EKeys::Period || KeyAction.Key == EKeys::Comma))
+		{
+			continue;
+		}
 		if (PC->WasInputKeyJustPressed(KeyAction.Key))
 		{
 			DoAction(bShift ? KeyAction.Shifted : KeyAction.Plain);
@@ -469,7 +502,24 @@ void ALsnObserverPawn::HandleInput(APlayerController* PC, ALsnSiteScene* Scene, 
 	}
 	if (PC->WasInputKeyJustPressed(EKeys::E)) { StepSamples(Scene, bShift ? 24 : 1); }
 	if (PC->WasInputKeyJustPressed(EKeys::Q)) { StepSamples(Scene, bShift ? -24 : -1); }
-	if (GameMode)
+	if (GameMode && GameMode->GetPage() == ELsnPlannerPage::Sites)
+	{
+		// With the site picker open the number keys type into the field for custom coordinates.
+		static const FKey Row[] = { EKeys::Zero, EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four, EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight, EKeys::Nine };
+		static const FKey Pad[] = { EKeys::NumPadZero, EKeys::NumPadOne, EKeys::NumPadTwo, EKeys::NumPadThree, EKeys::NumPadFour, EKeys::NumPadFive, EKeys::NumPadSix, EKeys::NumPadSeven, EKeys::NumPadEight, EKeys::NumPadNine };
+		for (int32 I = 0; I < 10; ++I)
+		{
+			if (PC->WasInputKeyJustPressed(Row[I]) || PC->WasInputKeyJustPressed(Pad[I]))
+			{
+				GameMode->TypeCustom(static_cast<TCHAR>(TEXT('0') + I));
+			}
+		}
+		if (PC->WasInputKeyJustPressed(EKeys::Decimal)) { GameMode->TypeCustom(TEXT('.')); }
+		if (PC->WasInputKeyJustPressed(EKeys::Hyphen) || PC->WasInputKeyJustPressed(EKeys::Subtract)) { GameMode->TypeCustom(TEXT('-')); }
+		if (PC->WasInputKeyJustPressed(EKeys::BackSpace)) { GameMode->BackspaceCustom(); }
+		if (PC->WasInputKeyJustPressed(EKeys::Enter)) { GameMode->StartCustom(); }
+	}
+	else if (GameMode)
 	{
 		static const FKey Digits[] = { EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four, EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight, EKeys::Nine };
 		for (int32 I = 0; I < UE_ARRAY_COUNT(Digits); ++I)

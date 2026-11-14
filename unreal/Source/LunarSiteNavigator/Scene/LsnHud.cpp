@@ -209,7 +209,7 @@ FLsnToolbar FLsnToolbar::Make(float WindowSizeX, float SizeY, bool bComparing)
 		  { TEXT("sample_back"), TEXT("< Step"), TEXT("TIME") }, { TEXT("sample_forward"), TEXT("Step >"), TEXT("TIME") }, { TEXT("day_back"), TEXT("< Day"), TEXT("TIME") },
 		  { TEXT("day_forward"), TEXT("Day >"), TEXT("TIME") }, { TEXT("sun_event_back"), TEXT("< Sunrise / set"), TEXT("TIME") }, { TEXT("sun_event_forward"), TEXT("Sunrise / set >"), TEXT("TIME") },
 		  { TEXT("height_next"), TEXT("Observer height"), TEXT("OBSERVER") } },
-		{ { TEXT("next_site"), TEXT("Next site"), TEXT("SITE") }, { TEXT("page_calendar"), TEXT("Calendar"), TEXT("PLAN") }, { TEXT("page_uncertainty"), TEXT("Uncertainty"), TEXT("PLAN") },
+		{ { TEXT("page_sites"), TEXT("Sites ..."), TEXT("SITE") }, { TEXT("page_calendar"), TEXT("Calendar"), TEXT("PLAN") }, { TEXT("page_uncertainty"), TEXT("Uncertainty"), TEXT("PLAN") },
 		  { TEXT("page_trade"), TEXT("Mast / pairs"), TEXT("PLAN") }, { TEXT("follow_sun"), TEXT("Follow Sun"), TEXT("VIEW") }, { TEXT("scale_objects"), TEXT("Scale objects"), TEXT("VIEW") },
 		  { TEXT("fill_light"), TEXT("Night fill light"), TEXT("VIEW") }, { TEXT("quality"), TEXT("Low quality"), TEXT("VIEW") }, { TEXT("details"), TEXT("Details"), TEXT("INFO") },
 		  { TEXT("help"), TEXT("Help (F1)"), TEXT("INFO") } },
@@ -249,6 +249,112 @@ FName FLsnToolbar::ActionAt(const FVector2D& Point) const
 		}
 	}
 	return NAME_None;
+}
+
+FLsnSitePicker FLsnSitePicker::Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite)
+{
+	FLsnSitePicker Picker;
+	const float W = WindowSizeX, H = SizeY;
+	const FLsnToolbar Toolbar = FLsnToolbar::Make(W, H, bComparing);
+	// Below the main buttons, above the time strips; side by side across both halves.
+	const float StripsTop = FLsnToolbar::BarTop(H) - 0.126f * H;
+	Picker.Sheet = FBox2D(FVector2D(0.012f * W, Toolbar.HeaderBottom + 0.086f * H), FVector2D(bComparing ? 0.988f * W : 0.685f * W, StripsTop - 0.034f * H));
+	const float Pad = 0.008f * H, TitleHeight = 0.036f * H, FooterHeight = 0.090f * H;
+	Picker.TitlePosition = FVector2D(Picker.Sheet.Min.X + Pad, Picker.Sheet.Min.Y + Pad);
+
+	// The rows: a header where a group first appears, then its sites in the order of the list.
+	TArray<FString> Groups;
+	for (const FString& Group : GroupOfSite)
+	{
+		Groups.AddUnique(Group);
+	}
+	struct FItem { int32 Site; FString Group; };
+	TArray<FItem> Items;
+	for (const FString& Group : Groups)
+	{
+		Items.Add({ -1, Group });
+		for (int32 I = 0; I < GroupOfSite.Num(); ++I)
+		{
+			if (GroupOfSite[I] == Group)
+			{
+				Items.Add({ I, Group });
+			}
+		}
+	}
+	// Columns: two in one view; side by side two in each half, so that nothing lies across the middle.
+	TArray<TPair<float, float>> Columns;
+	const float Gap = 0.006f * W;
+	if (bComparing)
+	{
+		const float HalfLeft0 = Picker.Sheet.Min.X + Pad, HalfLeft1 = 0.5f * W - Gap, HalfRight0 = 0.5f * W + Gap, HalfRight1 = Picker.Sheet.Max.X - Pad;
+		Columns.Add({ HalfLeft0, 0.5f * (HalfLeft0 + HalfLeft1) - 0.5f * Gap });
+		Columns.Add({ 0.5f * (HalfLeft0 + HalfLeft1) + 0.5f * Gap, HalfLeft1 });
+		Columns.Add({ HalfRight0, 0.5f * (HalfRight0 + HalfRight1) - 0.5f * Gap });
+		Columns.Add({ 0.5f * (HalfRight0 + HalfRight1) + 0.5f * Gap, HalfRight1 });
+	}
+	else
+	{
+		const float X0 = Picker.Sheet.Min.X + Pad, X1 = Picker.Sheet.Max.X - Pad;
+		Columns.Add({ X0, 0.5f * (X0 + X1) - 0.5f * Gap });
+		Columns.Add({ 0.5f * (X0 + X1) + 0.5f * Gap, X1 });
+	}
+	const float RowsTop = Picker.Sheet.Min.Y + Pad + TitleHeight, RowsBottom = Picker.Sheet.Max.Y - Pad - FooterHeight;
+	// A short list fills the first column before the next one is begun.
+	const int32 FullColumn = FMath::Max(FMath::FloorToInt32((RowsBottom - RowsTop) / (0.032f * H)), 1);
+	const int32 PerColumn = FMath::Max(FMath::DivideAndRoundUp(Items.Num(), Columns.Num()), FMath::Min(Items.Num(), FullColumn));
+	const float RowHeight = FMath::Min(0.032f * H, (RowsBottom - RowsTop) / PerColumn);
+	for (int32 I = 0; I < Items.Num(); ++I)
+	{
+		const TPair<float, float>& Column = Columns[FMath::Min(I / PerColumn, Columns.Num() - 1)];
+		const float Y0 = RowsTop + RowHeight * (I % PerColumn);
+		FLsnPickerRow Row;
+		Row.SiteIndex = Items[I].Site;
+		Row.Group = Items[I].Group;
+		Row.Row = FBox2D(FVector2D(Column.Key, Y0), FVector2D(Column.Value, Y0 + RowHeight));
+		if (Row.SiteIndex >= 0)
+		{
+			// The name is the "show" box; at the right end two small boxes pin the site for a view.
+			const float PinWidth = FMath::Max(0.13f * (Column.Value - Column.Key), 44.0f);
+			Row.PinRight = FBox2D(FVector2D(Column.Value - PinWidth, Y0 + 1.0f), FVector2D(Column.Value, Y0 + RowHeight - 1.0f));
+			Row.PinLeft = FBox2D(FVector2D(Column.Value - 2.0f * PinWidth - 2.0f, Y0 + 1.0f), FVector2D(Column.Value - PinWidth - 2.0f, Y0 + RowHeight - 1.0f));
+			Row.Show = FBox2D(FVector2D(Column.Key, Y0 + 1.0f), FVector2D(Column.Value - 2.0f * PinWidth - 6.0f, Y0 + RowHeight - 1.0f));
+		}
+		Picker.Rows.Add(Row);
+	}
+
+	// Custom coordinates, in the left part of the sheet: a label, two fields and a button, and a line for the message.
+	const float EntryTop = Picker.Sheet.Max.Y - Pad - FooterHeight + 0.010f * H;
+	const float EntryWidth = (bComparing ? 0.5f * W - Gap : Picker.Sheet.Max.X - Pad) - (Picker.Sheet.Min.X + Pad);
+	const float FieldTop = EntryTop + 0.022f * H, FieldHeight = FMath::Max(0.034f * H, 22.0f);
+	const float X0 = Picker.Sheet.Min.X + Pad;
+	Picker.EntryLabelPosition = FVector2D(X0, EntryTop);
+	Picker.LatField = FBox2D(FVector2D(X0 + 0.10f * EntryWidth, FieldTop), FVector2D(X0 + 0.30f * EntryWidth, FieldTop + FieldHeight));
+	Picker.LonField = FBox2D(FVector2D(X0 + 0.48f * EntryWidth, FieldTop), FVector2D(X0 + 0.68f * EntryWidth, FieldTop + FieldHeight));
+	Picker.Compute = FBox2D(FVector2D(X0 + 0.72f * EntryWidth, FieldTop), FVector2D(X0 + 0.99f * EntryWidth, FieldTop + FieldHeight));
+	Picker.MessagePosition = FVector2D(X0, FieldTop + FieldHeight + 0.004f * H);
+	return Picker;
+}
+
+ELsnPickerHit FLsnSitePicker::HitAt(const FVector2D& Point, int32& OutSiteIndex) const
+{
+	OutSiteIndex = -1;
+	if (!Sheet.IsInside(Point))
+	{
+		return ELsnPickerHit::None;
+	}
+	if (LatField.IsInside(Point)) { return ELsnPickerHit::LatField; }
+	if (LonField.IsInside(Point)) { return ELsnPickerHit::LonField; }
+	if (Compute.IsInside(Point)) { return ELsnPickerHit::Compute; }
+	for (const FLsnPickerRow& Row : Rows)
+	{
+		if (Row.SiteIndex < 0 || !Row.Row.IsInside(Point))
+		{
+			continue;
+		}
+		OutSiteIndex = Row.SiteIndex;
+		return Row.PinLeft.IsInside(Point) ? ELsnPickerHit::PinLeft : Row.PinRight.IsInside(Point) ? ELsnPickerHit::PinRight : Row.Show.IsInside(Point) ? ELsnPickerHit::Show : ELsnPickerHit::None;
+	}
+	return ELsnPickerHit::None;
 }
 
 FLsnTimeStripLayout FLsnTimeStripLayout::Make(float SizeX, float SizeY, const FLsnSitePackage& Package)
@@ -497,10 +603,14 @@ void ALsnHud::DrawHUD()
 		NameY = 0.026f * SizeY;
 	}
 	const FString Utc = P.bHasTimeline ? LsnHudText::UtcLabelOfPosition(P, Position) : FString();
-	const FString TimeText = !P.bHasTimeline ? FString(TEXT("no timeline in this package")) : Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc;
+	const FString TimeText = !P.bHasTimeline ? FString(TEXT("terrain horizon only: no Sun or Earth timeline")) : Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc;
 	const int32 SiteCount = GameMode ? GameMode->GetSites().Num() : 0;
 	const int32 SiteIndex = GameMode ? GameMode->GetSelectedSite(View) : -1;
 	FString Sub = FString::Printf(TEXT("lat %.4f   lon %.4f (east +)   observer %.1f m above the surface"), P.LatDeg, P.LonDeg, P.ObserverHeightsM[H]);
+	if (bComparing && P.TerrainSource.bPresent)
+	{
+		Sub += TEXT("   ") + LsnPlanner::TerrainSourceLabel(P.TerrainSource);
+	}
 	if (SiteIndex >= 0 && SiteCount > 0)
 	{
 		Sub += FString::Printf(TEXT("   site %d of %d"), SiteIndex + 1, SiteCount);
@@ -535,7 +645,15 @@ void ALsnHud::DrawHUD()
 	}
 	else
 	{
-		DrawFit(P.SiteName, White, Margin, NameY, 0.37f * SizeX, TypeXL);
+		// Next to the name: what elevation data the result rests on (since contract 0.9).
+		const FString Terrain = LsnPlanner::TerrainSourceLabel(P.TerrainSource);
+		float TerrainWidth = 0.0f, TerrainHeight = 0.0f;
+		GetTextSize(Terrain, TerrainWidth, TerrainHeight, Font, TypeS);
+		const float NameWidth = DrawFit(P.SiteName, White, Margin, NameY, 0.37f * SizeX - (Terrain.IsEmpty() ? 0.0f : TerrainWidth + 14.0f * Scale), TypeXL);
+		if (!Terrain.IsEmpty())
+		{
+			DrawText(Terrain, P.TerrainSource.ResolutionClass == TEXT("fine") ? Good : P.TerrainSource.ResolutionClass == TEXT("medium") ? SunColor : Lost, Margin + NameWidth + 12.0f * Scale, NameY + 0.016f * SizeY, Font, TypeS);
+		}
 		DrawText(TimeText, White, Margin, NameY + 0.044f * SizeY, Font, TypeL);
 		DrawFit(Sub, Dim, Margin, NameY + 0.080f * SizeY, 0.37f * SizeX, TypeS);
 		ChipArea = FBox2D(FVector2D(0.40f * SizeX, 0.012f * SizeY), FVector2D(SizeX - Margin, Toolbar.HeaderBottom - 0.010f * SizeY));
@@ -670,6 +788,11 @@ void ALsnHud::DrawHUD()
 		Y = DrawWrapped(FString::Printf(TEXT("About %.0f %% of the ground within %.0f m is drawn in shadow: the elevation data rises towards the Sun there by more than the Sun's height of %.1f deg. The package's horizon search starts %.0f m out; its result is for the observer at the site, who is in sunlight."),
 			100.0 * Scene->GetNearGroundShadeShare(), FMath::Max(P.HorizonSearchStartM(), 5.0), SunNow.ElevationDeg, P.HorizonSearchStartM()), White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
 	}
+	if (GameMode && SiteIndex >= 0 && GameMode->GetSites()[SiteIndex].Programme.StartsWith(TEXT("Custom")) && !GameMode->GetCustomEntry().Message.IsEmpty() && Page == ELsnPlannerPage::Summary)
+	{
+		// A site computed for custom coordinates: say where it came from.
+		Y = DrawWrapped(GameMode->GetCustomEntry().Message, White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
+	}
 	const bool bDetails = LeftPawn && LeftPawn->AreDetailsShown();
 	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(SizeX, SizeY, P);
 	const float SheetBottom = Layout.Zoom.Min.Y - 0.030f * SizeY;
@@ -759,7 +882,11 @@ void ALsnHud::DrawHUD()
 	}
 
 	// --- planner pages: a sheet of their own over the view ---------------------------------
-	if (Page != ELsnPlannerPage::Summary && GameMode)
+	if (Page == ELsnPlannerPage::Sites && GameMode)
+	{
+		DrawSitePicker(WindowX, ViewX0, *GameMode, Scale);
+	}
+	else if (Page != ELsnPlannerPage::Summary && GameMode)
 	{
 		const float SheetTop = bComparing ? RightY + 4.0f * Scale : ContentTop;
 		const FBox2D Sheet(FVector2D(Margin, SheetTop), FVector2D(bComparing ? SizeX - Margin : 0.685f * SizeX, SheetBottom));
@@ -922,7 +1049,7 @@ void ALsnHud::DrawToolbar(const FLsnToolbar& Toolbar, float ViewX0, const ALsnSi
 		const FName A = Button.Action;
 		const bool bOn = (A == TEXT("play") && Pawn && Pawn->IsPlaying()) || (A == TEXT("compare") && bComparing)
 			|| (A == TEXT("page_calendar") && Page == ELsnPlannerPage::Calendar) || (A == TEXT("page_uncertainty") && Page == ELsnPlannerPage::Uncertainty)
-			|| (A == TEXT("page_trade") && Page == ELsnPlannerPage::Trade) || (A == TEXT("obstacle") && Scene.IsObstacleViewEnabled())
+			|| (A == TEXT("page_trade") && Page == ELsnPlannerPage::Trade) || (A == TEXT("page_sites") && Page == ELsnPlannerPage::Sites) || (A == TEXT("obstacle") && Scene.IsObstacleViewEnabled())
 			|| (A == TEXT("follow_sun") && Pawn && Pawn->IsFollowingSun()) || (A == TEXT("quality") && GameMode && GameMode->IsLowQuality())
 			|| (A == TEXT("scale_objects") && Scene.AreScaleObjectsVisible()) || (A == TEXT("fill_light") && Scene.IsFillLightVisible())
 			|| (A == TEXT("details") && Pawn && Pawn->AreDetailsShown()) || (A == TEXT("help") && Pawn && Pawn->IsHelpShown());
@@ -966,6 +1093,116 @@ void ALsnHud::DrawToolbar(const FLsnToolbar& Toolbar, float ViewX0, const ALsnSi
 	}
 }
 
+void ALsnHud::DrawSitePicker(float WindowSizeX, float ViewX0, const ALsnViewGameMode& GameMode, float Scale)
+{
+	UFont* Font = GEngine->GetMediumFont();
+	TArray<FString> Groups;
+	for (const FLsnSiteInfo& Info : GameMode.GetSiteInfos())
+	{
+		Groups.Add(Info.Group);
+	}
+	const bool bComparing = GameMode.IsComparing();
+	const FLsnSitePicker Picker = FLsnSitePicker::Make(WindowSizeX, Canvas->SizeY, bComparing, Groups);
+	const float ViewX1 = ViewX0 + Canvas->SizeX;
+	// Sized for the window, like the bar; a view draws what lies in it.
+	Scale = FLsnToolbar::TextScale(WindowSizeX, Canvas->SizeY);
+	auto Visible = [&](const FBox2D& Box) { return Box.Max.X > ViewX0 && Box.Min.X < ViewX1; };
+	auto Fill = [&](const FBox2D& Box, const FLinearColor& Color)
+	{
+		const float X0 = FMath::Max(static_cast<float>(Box.Min.X), ViewX0), X1 = FMath::Min(static_cast<float>(Box.Max.X), ViewX1);
+		if (X1 > X0)
+		{
+			DrawRect(Color, X0 - ViewX0, Box.Min.Y, X1 - X0, Box.Max.Y - Box.Min.Y);
+		}
+	};
+	FVector2D Mouse(-1.0, -1.0);
+	float MouseX = 0.0f, MouseY = 0.0f;
+	const APlayerController* First = GetWorld()->GetFirstPlayerController();
+	if (First && First->bShowMouseCursor && First->GetMousePosition(MouseX, MouseY))
+	{
+		Mouse = FVector2D(MouseX, MouseY);
+	}
+	Fill(Picker.Sheet, FLinearColor(0.015f, 0.015f, 0.02f, 0.95f));
+	if (Picker.TitlePosition.X >= ViewX0 && Picker.TitlePosition.X < ViewX1)
+	{
+		DrawText(TEXT("SITES   click a name to show it; Left and Right pin a site for the comparison"), White, Picker.TitlePosition.X - ViewX0, Picker.TitlePosition.Y, Font, 1.2f * Scale);
+	}
+	const int32 LeftSite = GameMode.GetSelectedSite(0), RightSite = bComparing ? GameMode.GetSelectedSite(1) : -1;
+	for (const FLsnPickerRow& Row : Picker.Rows)
+	{
+		if (!Visible(Row.Row))
+		{
+			continue;
+		}
+		const float X0 = Row.Row.Min.X - ViewX0, Height = Row.Row.Max.Y - Row.Row.Min.Y;
+		const float TextY = Row.Row.Min.Y + 0.5f * Height - 9.0f * Scale;
+		if (Row.SiteIndex < 0)
+		{
+			DrawFit(Row.Group.ToUpper(), SunColor, X0, TextY + 2.0f * Scale, Row.Row.Max.X - Row.Row.Min.X, 0.85f * Scale);
+			continue;
+		}
+		const bool bLeft = Row.SiteIndex == LeftSite, bRight = Row.SiteIndex == RightSite;
+		if (Row.Row.IsInside(Mouse) || bLeft || bRight)
+		{
+			Fill(Row.Show, Row.Row.IsInside(Mouse) ? FLinearColor(0.20f, 0.22f, 0.28f, 1.0f) : FLinearColor(0.10f, 0.16f, 0.24f, 1.0f));
+		}
+		// The name, and what the terrain behind the result is (since contract 0.9).
+		const FLsnSiteInfo& Info = GameMode.GetSiteInfos()[Row.SiteIndex];
+		const float ShowWidth = Row.Show.Max.X - Row.Show.Min.X;
+		FString Class = Info.TerrainSource.bPresent ? FString::Printf(TEXT("%s %.0f m"), *Info.TerrainSource.ResolutionClass, Info.TerrainSource.PixelM) : FString();
+		float ClassWidth = 0.0f, Unused = 0.0f;
+		GetTextSize(Class, ClassWidth, Unused, Font, 0.85f * Scale);
+		DrawFit(GameMode.GetSites()[Row.SiteIndex].Name, White, X0 + 6.0f * Scale, TextY, ShowWidth - ClassWidth - 18.0f * Scale, 1.05f * Scale);
+		if (!Class.IsEmpty())
+		{
+			const FLinearColor ClassColor = Info.TerrainSource.ResolutionClass == TEXT("fine") ? Good : Info.TerrainSource.ResolutionClass == TEXT("medium") ? SunColor : Lost;
+			DrawText(Class, ClassColor, Row.Show.Max.X - ViewX0 - ClassWidth - 4.0f * Scale, TextY + 2.0f * Scale, Font, 0.85f * Scale);
+		}
+		const TPair<const FBox2D*, const TCHAR*> Pins[] = { { &Row.PinLeft, TEXT("Left") }, { &Row.PinRight, TEXT("Right") } };
+		for (int32 I = 0; I < 2; ++I)
+		{
+			const FBox2D& Box = *Pins[I].Key;
+			const bool bOn = I == 0 ? bLeft : bRight;
+			Fill(Box, Box.IsInside(Mouse) ? FLinearColor(0.9f, 0.9f, 0.9f, 1.0f) : bOn ? FLinearColor(0.45f, 0.70f, 0.95f, 1.0f) : FLinearColor(0.34f, 0.34f, 0.38f, 1.0f));
+			Fill(Box.ExpandBy(-1.5), bOn ? FLinearColor(0.13f, 0.27f, 0.42f, 1.0f) : FLinearColor(0.07f, 0.07f, 0.09f, 1.0f));
+			float TextWidth = 0.0f;
+			GetTextSize(Pins[I].Value, TextWidth, Unused, Font, 0.85f * Scale);
+			DrawText(Pins[I].Value, White, 0.5f * (Box.Min.X + Box.Max.X) - ViewX0 - 0.5f * TextWidth, TextY + 2.0f * Scale, Font, 0.85f * Scale);
+		}
+	}
+	// Custom coordinates: handed to the science core, which must be on this machine.
+	if (Picker.EntryLabelPosition.X >= ViewX0 && Picker.EntryLabelPosition.X < ViewX1)
+	{
+		const FLsnCustomEntry& Entry = GameMode.GetCustomEntry();
+		DrawFit(TEXT("CUSTOM COORDINATES   computed by the science core on this machine; type the numbers, Tab changes the field, Enter computes"), Dim,
+			Picker.EntryLabelPosition.X - ViewX0, Picker.EntryLabelPosition.Y, Picker.Compute.Max.X - Picker.EntryLabelPosition.X, 0.85f * Scale);
+		const TPair<const FBox2D*, const TCHAR*> Fields[] = { { &Picker.LatField, TEXT("latitude") }, { &Picker.LonField, TEXT("longitude, east +") } };
+		for (int32 I = 0; I < 2; ++I)
+		{
+			const FBox2D& Box = *Fields[I].Key;
+			const bool bFocus = Entry.Focus == I;
+			float LabelWidth = 0.0f, Unused = 0.0f;
+			GetTextSize(Fields[I].Value, LabelWidth, Unused, Font, 0.9f * Scale);
+			DrawText(Fields[I].Value, White, Box.Min.X - ViewX0 - LabelWidth - 8.0f * Scale, Box.Min.Y + 0.5f * (Box.Max.Y - Box.Min.Y) - 8.0f * Scale, Font, 0.9f * Scale);
+			Fill(Box, bFocus ? FLinearColor(1.0f, 0.70f, 0.18f, 1.0f) : FLinearColor(0.34f, 0.34f, 0.38f, 1.0f));
+			Fill(Box.ExpandBy(-2.0), FLinearColor(0.03f, 0.03f, 0.04f, 1.0f));
+			const FString& Value = I == 0 ? Entry.Latitude : Entry.Longitude;
+			// A caret in the focused field, blinking.
+			const bool bCaret = bFocus && FMath::Fmod(GetWorld()->GetRealTimeSeconds(), 1.0) < 0.5;
+			DrawText(Value + (bCaret ? TEXT("_") : TEXT("")), White, Box.Min.X - ViewX0 + 8.0f * Scale, Box.Min.Y + 0.5f * (Box.Max.Y - Box.Min.Y) - 10.0f * Scale, Font, 1.2f * Scale);
+		}
+		const bool bHover = Picker.Compute.IsInside(Mouse);
+		Fill(Picker.Compute, FLinearColor(1.0f, 0.70f, 0.18f, 1.0f));
+		Fill(Picker.Compute.ExpandBy(-2.0), bHover ? FLinearColor(1.0f, 0.80f, 0.36f, 1.0f) : FLinearColor(0.92f, 0.64f, 0.17f, 1.0f));
+		const TCHAR* Label = Entry.bRunning ? TEXT("computing ...") : TEXT("Compute and show");
+		float LabelWidth = 0.0f, Unused = 0.0f;
+		GetTextSize(Label, LabelWidth, Unused, Font, 1.05f * Scale);
+		DrawText(Label, FLinearColor(0.03f, 0.02f, 0.0f), 0.5f * (Picker.Compute.Min.X + Picker.Compute.Max.X) - ViewX0 - 0.5f * LabelWidth, Picker.Compute.Min.Y + 0.5f * (Picker.Compute.Max.Y - Picker.Compute.Min.Y) - 9.0f * Scale, Font, 1.05f * Scale);
+		const float MessageWidth = (bComparing ? 0.5f * WindowSizeX : Picker.Sheet.Max.X) - Picker.MessagePosition.X - 8.0f * Scale;
+		DrawWrapped(Entry.Message, Entry.bFailed ? Alert : Entry.bRunning ? SunColor : Good, Picker.MessagePosition.X - ViewX0, Picker.MessagePosition.Y, MessageWidth, 0.9f * Scale);
+	}
+}
+
 void ALsnHud::DrawHelp(float SizeX, float SizeY, float Scale)
 {
 	static const TCHAR* Lines[] = {
@@ -983,6 +1220,7 @@ void ALsnHud::DrawHelp(float SizeX, float SizeY, float Scale)
 		TEXT("  O  obstacle view      F  keep the view on the Sun      PageUp / PageDown  observer height"),
 		TEXT("  H  horizon line of the package      L  fill light while the Sun is down (a display aid)      G  lower drawing quality"),
 		TEXT("  I  details: package, frame, contract, test status      P  scale objects (lander, boulders)"),
+		TEXT("  S  site list, pinning two sites, custom coordinates"),
 		TEXT("  F1  this list      Esc  quit"),
 	};
 	UFont* Font = GEngine->GetMediumFont();

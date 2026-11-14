@@ -264,6 +264,8 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	TArray<FLsnOpportunity> Opportunities;
 	FLsnUncertainty Uncertainty;
 	FLsnHeightTrade HeightTrade;
+	/** Since 0.9: what elevation data the result rests on; absent in older packages. */
+	FLsnTerrainSource TerrainSource;
 
 	/** Landing windows of a requirement for an observer height; null if the package has none. */
 	const FLsnOpportunity* FindOpportunity(const FString& RequirementId, int32 InHeightIndex) const;
@@ -344,6 +346,11 @@ struct FLsnIndexEntry
 	bool bHasTimeline = false;
 	/** Since 0.5, for kind "site_pairs": the sites the package compares. */
 	TArray<FString> SiteIds;
+	/**
+	 * The programme or list a site belongs to, for grouping the site picker. Read from the
+	 * optional index field "programme"; empty when the index has none.
+	 */
+	FString Programme;
 };
 
 namespace LsnPackageIO
@@ -358,6 +365,11 @@ namespace LsnPackageIO
 
 	/** Fills the optional planning fields of a site package from its manifest. Never fails: what is absent stays empty. */
 	void ReadPlanningFields(const TSharedPtr<FJsonObject>& Manifest, FLsnSitePackage& InOutPackage);
+
+	/** Reads horizon.terrain_source of a manifest (since 0.9); leaves bPresent false when it is absent. */
+	LUNARSITENAVIGATOR_API void ReadTerrainSource(const TSharedPtr<FJsonObject>& Manifest, FLsnTerrainSource& OutSource);
+	/** The same for a package directory, reading its manifest only (no arrays): for the site picker. */
+	LUNARSITENAVIGATOR_API bool ReadTerrainSourceOfDirectory(const FString& PackageDirectory, FLsnTerrainSource& OutSource);
 
 	/** Loads index.json of a package root. */
 	LUNARSITENAVIGATOR_API bool LoadIndex(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutEntries, FString& OutError);

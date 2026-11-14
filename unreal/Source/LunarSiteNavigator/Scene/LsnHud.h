@@ -108,6 +108,44 @@ struct LUNARSITENAVIGATOR_API FLsnToolbar
 	static float TextScale(float SizeX, float SizeY);
 };
 
+/** What a point of the site picker means. */
+enum class ELsnPickerHit : uint8
+{
+	None,
+	Show,       // show the site (left or only view) and close the picker
+	PinLeft,    // keep the picker open and show the site on the left
+	PinRight,   // show the site on the right, side by side
+	LatField,
+	LonField,
+	Compute,
+};
+
+/** A row of the site picker: the header of a group (SiteIndex -1) or a site with its three boxes. */
+struct FLsnPickerRow
+{
+	int32 SiteIndex = -1;
+	FString Group;
+	FBox2D Row, Show, PinLeft, PinRight;
+};
+
+/**
+ * The site picker, in pixels of the whole window: the sites in the groups of the list (in
+ * the order in which the groups first appear), two columns in one view and two per half
+ * side by side, and below them the entry for custom coordinates. Shared by the HUDs
+ * (drawing) and the pawn (clicking).
+ */
+struct LUNARSITENAVIGATOR_API FLsnSitePicker
+{
+	FBox2D Sheet;
+	TArray<FLsnPickerRow> Rows;
+	FBox2D LatField, LonField, Compute;
+	/** Where the title, the label of the entry and its message are drawn. */
+	FVector2D TitlePosition = FVector2D::ZeroVector, EntryLabelPosition = FVector2D::ZeroVector, MessagePosition = FVector2D::ZeroVector;
+
+	static FLsnSitePicker Make(float WindowSizeX, float SizeY, bool bComparing, const TArray<FString>& GroupOfSite);
+	ELsnPickerHit HitAt(const FVector2D& Point, int32& OutSiteIndex) const;
+};
+
 /** Where the two time strips are on screen, in pixels. Shared by the HUD (drawing) and the pawn (dragging). */
 struct LUNARSITENAVIGATOR_API FLsnTimeStripLayout
 {
@@ -145,5 +183,6 @@ private:
 	/** Draws text made smaller where it is wider than MaxWidth; returns the width drawn. */
 	float DrawFit(const FString& Text, const FLinearColor& Color, float X, float Y, float MaxWidth, float TextScale);
 	void DrawHelp(float SizeX, float SizeY, float Scale);
+	void DrawSitePicker(float WindowSizeX, float ViewX0, const class ALsnViewGameMode& GameMode, float Scale);
 	void DrawStrip(const FBox2D& Box, const FLsnSitePackage& Package, int32 HeightIndex, double FromPosition, double ToPosition, double CurrentPosition, float Scale);
 };

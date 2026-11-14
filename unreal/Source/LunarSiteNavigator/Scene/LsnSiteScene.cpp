@@ -173,6 +173,7 @@ void ALsnSiteScene::UpdateLook()
 	const double SunShare = GetSunVisibleFraction();
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
 	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
+	// Without a timeline there is no Sun to light the terrain: the fill keeps it readable.
 	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
 	// Ground close to the site that the drawing puts in its own shadow while the package gives the Sun as visible.
 	NearGroundShadeShare = 0.0;
@@ -611,6 +612,11 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 		SunLight->SetVisibility(false);
 		SunDisc->SetVisibility(false);
 		EarthDisc->SetVisibility(false);
+		// Nothing of a package shown before may stay: no highlight, no stars.
+		SunObstacle->SetVisibility(false);
+		EarthObstacle->SetVisibility(false);
+		Stars->SetVisibility(false);
+		UpdateLook();
 		return false;
 	}
 	if (FMath::IsNaN(NewTimePosition) || NewTimePosition < 0.0 || NewTimePosition > Package.Time.Count - 1)

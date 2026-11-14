@@ -64,6 +64,22 @@ namespace LsnPlanner
 	LUNARSITENAVIGATOR_API void BuildPairLines(const FLsnSitePair& Pair, TArray<FString>& OutLines);
 
 	/**
+	 * A latitude or longitude typed by the user: a plain decimal number (digits, at most one
+	 * point, an optional leading minus) inside the range. False for anything else.
+	 */
+	LUNARSITENAVIGATOR_API bool ParseCoordinate(const FString& Text, double Min, double Max, double& OutValue);
+
+	/**
+	 * Arguments of the science core's own command for one site given by coordinates
+	 * (python -m lsncore site ...). The numbers are passed as they were typed; the engine
+	 * computes nothing. OutName is the site name given to the core.
+	 */
+	LUNARSITENAVIGATOR_API FString CustomSiteArguments(const FString& LatitudeText, const FString& LongitudeText, const FString& OutputRoot, FString& OutName);
+
+	/** "terrain: fine, 20 m pixels" from the package's terrain source; empty when the package has none. */
+	LUNARSITENAVIGATOR_API FString TerrainSourceLabel(const FLsnTerrainSource& Source);
+
+	/**
 	 * Where the second scene of a comparison stands in the world, centimetres: at the same
 	 * place as the first. The views and the lighting channels keep the two apart.
 	 */

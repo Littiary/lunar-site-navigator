@@ -432,3 +432,36 @@ bool LsnPackageIO::LoadSitePairs(const FString& PackageDirectory, FLsnSitePairs&
 	}
 	return true;
 }
+
+void LsnPackageIO::ReadTerrainSource(const TSharedPtr<FJsonObject>& Manifest, FLsnTerrainSource& OutSource)
+{
+	OutSource = FLsnTerrainSource();
+	const FJsonPtr Source = Child(Child(Manifest, TEXT("horizon")), TEXT("terrain_source"));
+	if (!Source.IsValid())
+	{
+		return;
+	}
+	OutSource.ResolutionClass = Text(Source, TEXT("resolution_class"));
+	const FJsonPtr AtSite = Child(Source, TEXT("at_site"));
+	OutSource.PixelM = NumberOr(AtSite, TEXT("pixel_m"), 0.0);
+	OutSource.ProductId = Text(AtSite, TEXT("product_id"));
+	OutSource.bPresent = !OutSource.ResolutionClass.IsEmpty();
+}
+
+bool LsnPackageIO::ReadTerrainSourceOfDirectory(const FString& PackageDirectory, FLsnTerrainSource& OutSource)
+{
+	OutSource = FLsnTerrainSource();
+	FString JsonText;
+	TSharedPtr<FJsonObject> Manifest;
+	if (!FFileHelper::LoadFileToString(JsonText, *FPaths::Combine(PackageDirectory, TEXT("manifest.json"))))
+	{
+		return false;
+	}
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonText);
+	if (!FJsonSerializer::Deserialize(Reader, Manifest) || !Manifest.IsValid())
+	{
+		return false;
+	}
+	ReadTerrainSource(Manifest, OutSource);
+	return OutSource.bPresent;
+}

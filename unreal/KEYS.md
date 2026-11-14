@@ -18,7 +18,9 @@ labelled groups along the bottom.
 | Step in time | **< Step**, **Step >** (one sample of the package), **< Day**, **Day >** |
 | Jump to the next sunset | main button **Jump to next sunset** |
 | Next or previous rise or set of the Sun | **< Sunrise / set**, **Sunrise / set >** |
-| Another site | **Next site** |
+| Another site | **Sites ...** opens the list: click a name |
+| Any two sites for the comparison | in the list, **Left** and **Right** beside each site |
+| A site of your own | at the foot of the list: type latitude and east longitude, **Compute and show** (needs the science core's Python environment on the machine; the view says so if it is missing) |
 | Two sites side by side at the same instant | main button **Compare two sites**; **Next site >** in the header of the right view changes the right one |
 | Calendar, uncertainty, mast-height trade and site pairs | **Calendar**, **Uncertainty**, **Mast / pairs** (a page is shown only if the package has the field) |
 | Which terrain hides the Sun or the Earth, and what it costs | main button **What blocks the Sun?** (on at the start) |
@@ -59,6 +61,7 @@ A lit button is switched on.
 | L | fill light while the Sun is down (a display aid, not physics) |
 | G | lower drawing quality |
 | I | details: package, frame, contract version, test status |
+| S | site list, pinning two sites, custom coordinates |
 | P | scale objects (lander, boulders) |
 | F1 | list of keys on screen |
 | Tab | hide the pointer and look with the mouse alone (Tab again brings it back) |

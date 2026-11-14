@@ -52,6 +52,17 @@ struct LUNARSITENAVIGATOR_API FLsnCalendar
 	double Value(const FLsnCalendarQuantity& Quantity, int32 HeightIndex, int32 PeriodIndex) const;
 };
 
+/** Which elevation product served the site, and its resolution class (SPEC 5.3, since 0.9). */
+struct FLsnTerrainSource
+{
+	bool bPresent = false;
+	/** "fine", "medium" or "coarse", as the package writes it. */
+	FString ResolutionClass;
+	/** Pixel of the product the terrain height at the site was read from, metres. */
+	double PixelM = 0.0;
+	FString ProductId;
+};
+
 /** The slip report of the scenario's planned landing, as the package gives it (SPEC 5.6). */
 struct FLsnSlipReport
 {

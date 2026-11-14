@@ -784,6 +784,7 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 	if (!Ctx.Failed())
 	{
 		ReadPlanningFields(Root, P);
+		ReadTerrainSource(Root, P.TerrainSource);
 	}
 
 	if (Ctx.Failed())
@@ -862,6 +863,7 @@ bool LsnPackageIO::LoadIndex(const FString& PackageRoot, TArray<FLsnIndexEntry>&
 		(*Object)->TryGetBoolField(TEXT("synthetic"), Entry.bSynthetic);
 		(*Object)->TryGetBoolField(TEXT("has_timeline"), Entry.bHasTimeline);
 		(*Object)->TryGetStringArrayField(TEXT("site_ids"), Entry.SiteIds);
+		(*Object)->TryGetStringField(TEXT("programme"), Entry.Programme);
 		OutEntries.Add(Entry);
 	}
 	return true;

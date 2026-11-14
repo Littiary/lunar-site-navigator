@@ -286,3 +286,50 @@ bool LsnPlanner::PositionOfUtc(const FLsnSitePackage& Package, const FString& Ut
 	OutPosition = Position;
 	return true;
 }
+
+bool LsnPlanner::ParseCoordinate(const FString& Text, double Min, double Max, double& OutValue)
+{
+	int32 Digits = 0, Points = 0;
+	for (int32 I = 0; I < Text.Len(); ++I)
+	{
+		const TCHAR C = Text[I];
+		if (FChar::IsDigit(C))
+		{
+			++Digits;
+		}
+		else if (C == TEXT('.'))
+		{
+			++Points;
+		}
+		else if (!(C == TEXT('-') && I == 0))
+		{
+			return false;
+		}
+	}
+	if (Digits == 0 || Points > 1)
+	{
+		return false;
+	}
+	const double Value = FCString::Atod(*Text);
+	if (Value < Min || Value > Max)
+	{
+		return false;
+	}
+	OutValue = Value;
+	return true;
+}
+
+FString LsnPlanner::CustomSiteArguments(const FString& LatitudeText, const FString& LongitudeText, const FString& OutputRoot, FString& OutName)
+{
+	OutName = FString::Printf(TEXT("Custom %s, %s"), *LatitudeText, *LongitudeText);
+	return FString::Printf(TEXT("-m lsncore site --lat %s --lon %s --name \"%s\" --out \"%s\""), *LatitudeText, *LongitudeText, *OutName, *OutputRoot);
+}
+
+FString LsnPlanner::TerrainSourceLabel(const FLsnTerrainSource& Source)
+{
+	if (!Source.bPresent)
+	{
+		return FString();
+	}
+	return Source.PixelM > 0.0 ? FString::Printf(TEXT("terrain: %s, %.0f m pixels"), *Source.ResolutionClass, Source.PixelM) : FString::Printf(TEXT("terrain: %s"), *Source.ResolutionClass);
+}

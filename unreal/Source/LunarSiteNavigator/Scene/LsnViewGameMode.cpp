@@ -92,7 +92,7 @@ bool ALsnViewGameMode::SelectSite(int32 ViewIndex, int32 SiteIndex)
 	const int32 HeightBefore = Scenes[0]->GetHeightIndex();
 
 	FString Error;
-	if (!Scene->LoadPackageDirectory(FPaths::Combine(PackageRoot, Sites[SiteIndex].Path), Error))
+	if (!Scene->LoadPackageDirectory(SiteDirectory(SiteIndex), Error))
 	{
 		LoadError = Error;
 		return false;
@@ -129,7 +129,7 @@ void ALsnViewGameMode::SetComparing(bool bCompare)
 			// Default partner: the next site of the list.
 			const int32 Next = Sites.Num() > 1 ? (FMath::Max(SelectedSite[0], 0) + 1) % Sites.Num() : -1;
 			FString Error;
-			if (Next < 0 || !Scenes[1]->LoadPackageDirectory(FPaths::Combine(PackageRoot, Sites[Next].Path), Error))
+			if (Next < 0 || !Scenes[1]->LoadPackageDirectory(SiteDirectory(Next), Error))
 			{
 				UE_LOG(LogLsn, Warning, TEXT("No second site to compare with. %s"), *Error);
 				return;
@@ -225,6 +225,10 @@ void ALsnViewGameMode::StartPlay()
 					}
 				}
 			}
+			for (int32 I = 0; I < Sites.Num(); ++I)
+			{
+				AddSiteInfo(I);
+			}
 			FString Wanted, CompareWith;
 			FParse::Value(FCommandLine::Get(), TEXT("LsnSite="), Wanted);
 			FString Compare;
@@ -294,7 +298,7 @@ void ALsnViewGameMode::StartPlay()
 	if (FParse::Value(FCommandLine::Get(), TEXT("LsnPage="), PageName))
 	{
 		Page = PageName == TEXT("calendar") ? ELsnPlannerPage::Calendar : PageName == TEXT("uncertainty") ? ELsnPlannerPage::Uncertainty
-			: PageName == TEXT("trade") ? ELsnPlannerPage::Trade : ELsnPlannerPage::Summary;
+			: PageName == TEXT("trade") ? ELsnPlannerPage::Trade : PageName == TEXT("sites") ? ELsnPlannerPage::Sites : ELsnPlannerPage::Summary;
 	}
 	FParse::Value(FCommandLine::Get(), TEXT("LsnRequirement="), RequirementIndex);
 
@@ -324,6 +328,177 @@ void ALsnViewGameMode::StartPlay()
 		ShotPath = FPaths::ConvertRelativePathToFull(ShotPath);
 		// Leave time for shaders and shadow pages before the capture.
 		FramesUntilShot = 240;
+		FParse::Value(FCommandLine::Get(), TEXT("LsnShotFrames="), FramesUntilShot);
+	}
+	// -LsnCustom=<lat>,<lon>: as if typed into the site picker and "Compute and show" pressed.
+	FString CustomText;
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnCustom="), CustomText, false) && CustomText.Split(TEXT(","), &Custom.Latitude, &Custom.Longitude))
+	{
+		Page = ELsnPlannerPage::Sites;
+		StartCustom();
+	}
+}
+
+FString ALsnViewGameMode::SiteDirectory(int32 SiteIndex) const
+{
+	if (!Sites.IsValidIndex(SiteIndex))
+	{
+		return FString();
+	}
+	// Sites of the package root are listed by a relative path; a site computed for custom coordinates by its full path.
+	return FPaths::IsRelative(Sites[SiteIndex].Path) ? FPaths::Combine(PackageRoot, Sites[SiteIndex].Path) : Sites[SiteIndex].Path;
+}
+
+void ALsnViewGameMode::AddSiteInfo(int32 SiteIndex)
+{
+	FLsnSiteInfo Info;
+	Info.Group = Sites[SiteIndex].Programme.IsEmpty() ? FString(TEXT("Sites of the package root")) : Sites[SiteIndex].Programme;
+	LsnPackageIO::ReadTerrainSourceOfDirectory(SiteDirectory(SiteIndex), Info.TerrainSource);
+	SiteInfos.SetNum(FMath::Max(SiteInfos.Num(), SiteIndex + 1));
+	SiteInfos[SiteIndex] = Info;
+}
+
+void ALsnViewGameMode::TypeCustom(TCHAR Character)
+{
+	FString& Field = Custom.Focus == 0 ? Custom.Latitude : Custom.Longitude;
+	if ((FChar::IsDigit(Character) || Character == TEXT('.') || Character == TEXT('-')) && Field.Len() < 12 && !Custom.bRunning)
+	{
+		Field.AppendChar(Character);
+	}
+}
+
+void ALsnViewGameMode::BackspaceCustom()
+{
+	FString& Field = Custom.Focus == 0 ? Custom.Latitude : Custom.Longitude;
+	if (Field.Len() > 0 && !Custom.bRunning)
+	{
+		Field.LeftChopInline(1);
+	}
+}
+
+void ALsnViewGameMode::StartCustom()
+{
+	if (Custom.bRunning)
+	{
+		return;
+	}
+	Custom.bFailed = true;
+	double Latitude = 0.0, Longitude = 0.0;
+	if (!LsnPlanner::ParseCoordinate(Custom.Latitude, -90.0, 90.0, Latitude))
+	{
+		Custom.Message = TEXT("The latitude must be a number from -90 to 90, for example -89.45.");
+		return;
+	}
+	if (!LsnPlanner::ParseCoordinate(Custom.Longitude, -180.0, 360.0, Longitude))
+	{
+		Custom.Message = TEXT("The longitude (east positive) must be a number from -180 to 360, for example 222.8.");
+		return;
+	}
+	// A Python environment with the science core: named on the command line or in LSN_PYTHON, else the usual places.
+	TArray<FString> Candidates;
+	FString Named;
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnPython="), Named))
+	{
+		Candidates.Add(Named);
+	}
+	Named = FPlatformMisc::GetEnvironmentVariable(TEXT("LSN_PYTHON"));
+	if (!Named.IsEmpty())
+	{
+		Candidates.Add(Named);
+	}
+	Candidates.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../.venv/Scripts/python.exe"))));
+	Candidates.Add(TEXT("C:/Projects/lsn-venv/Scripts/python.exe"));
+	FString Python;
+	for (const FString& Candidate : Candidates)
+	{
+		if (FPaths::FileExists(Candidate))
+		{
+			Python = Candidate;
+			break;
+		}
+	}
+	if (Python.IsEmpty())
+	{
+		Custom.Message = TEXT("No Python environment with the science core was found on this machine, so custom coordinates cannot be computed here. The published sites work without it. (Looked for LSN_PYTHON, .venv next to the repository, C:/Projects/lsn-venv.)");
+		return;
+	}
+	CustomRoot = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LsnCustom")));
+	IFileManager::Get().MakeDirectory(*CustomRoot, true);
+	const FString Arguments = LsnPlanner::CustomSiteArguments(Custom.Latitude, Custom.Longitude, CustomRoot, CustomName);
+	if (!FPlatformProcess::CreatePipe(CustomReadPipe, CustomWritePipe))
+	{
+		Custom.Message = TEXT("The science core could not be started (no pipe).");
+		return;
+	}
+	CustomOutput.Reset();
+	CustomProcess = FPlatformProcess::CreateProc(*Python, *Arguments, false, true, true, nullptr, 0, nullptr, CustomWritePipe, nullptr);
+	if (!CustomProcess.IsValid())
+	{
+		FPlatformProcess::ClosePipe(CustomReadPipe, CustomWritePipe);
+		CustomReadPipe = CustomWritePipe = nullptr;
+		Custom.Message = FString::Printf(TEXT("The science core could not be started (%s)."), *Python);
+		return;
+	}
+	Custom.bRunning = true;
+	Custom.bFailed = false;
+	Custom.StartedS = FPlatformTime::Seconds();
+	UE_LOG(LogLsn, Display, TEXT("Custom coordinates: %s %s"), *Python, *Arguments);
+}
+
+void ALsnViewGameMode::TickCustom()
+{
+	if (!Custom.bRunning)
+	{
+		return;
+	}
+	CustomOutput += FPlatformProcess::ReadPipe(CustomReadPipe);
+	Custom.Message = FString::Printf(TEXT("The science core is computing the horizon of %s: %.0f s"), *CustomName, FPlatformTime::Seconds() - Custom.StartedS);
+	if (FPlatformProcess::IsProcRunning(CustomProcess))
+	{
+		return;
+	}
+	int32 ReturnCode = -1;
+	FPlatformProcess::GetProcReturnCode(CustomProcess, &ReturnCode);
+	CustomOutput += FPlatformProcess::ReadPipe(CustomReadPipe);
+	FPlatformProcess::ClosePipe(CustomReadPipe, CustomWritePipe);
+	FPlatformProcess::CloseProc(CustomProcess);
+	CustomReadPipe = CustomWritePipe = nullptr;
+	Custom.bRunning = false;
+	const double TookS = FPlatformTime::Seconds() - Custom.StartedS;
+	TArray<FLsnIndexEntry> Written;
+	FString Error;
+	const FLsnIndexEntry* Found = nullptr;
+	if (ReturnCode == 0 && LsnPlanner::ListSites(CustomRoot, Written, Error))
+	{
+		Found = Written.FindByPredicate([this](const FLsnIndexEntry& Entry) { return Entry.Name == CustomName; });
+	}
+	if (!Found)
+	{
+		// The last line the core printed says what went wrong.
+		TArray<FString> Lines;
+		CustomOutput.ParseIntoArrayLines(Lines);
+		Custom.bFailed = true;
+		Custom.Message = FString::Printf(TEXT("The science core did not write a package (exit code %d). %s"), ReturnCode, Lines.Num() > 0 ? *Lines.Last() : *Error);
+		return;
+	}
+	FLsnIndexEntry Entry = *Found;
+	Entry.Path = FPaths::Combine(CustomRoot, Entry.Path);
+	Entry.Programme = TEXT("Custom coordinates (computed on this machine)");
+	int32 Index = Sites.IndexOfByPredicate([&Entry](const FLsnIndexEntry& Known) { return Known.PackageId == Entry.PackageId; });
+	if (Index == INDEX_NONE)
+	{
+		Index = Sites.Add(Entry);
+		AddSiteInfo(Index);
+	}
+	if (SelectSite(0, Index))
+	{
+		Custom.Message = FString::Printf(TEXT("%s: package %s computed by the science core in %.0f s and loaded. It holds the terrain horizon; this command computes no Sun or Earth timeline."), *CustomName, *Entry.PackageId, TookS);
+		Page = ELsnPlannerPage::Summary;
+	}
+	else
+	{
+		Custom.bFailed = true;
+		Custom.Message = FString::Printf(TEXT("The package was written but could not be loaded: %s"), *LoadError);
 	}
 }
 
@@ -389,6 +564,7 @@ void ALsnViewGameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	SyncComparison();
+	TickCustom();
 
 #if WITH_EDITOR
 	// Run from the editor binaries, materials may still be compiling: do not capture a half-built frame.

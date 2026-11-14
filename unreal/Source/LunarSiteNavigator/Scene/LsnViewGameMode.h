@@ -14,6 +14,27 @@ enum class ELsnPlannerPage : uint8
 	Calendar,     // lunar-day calendar, landing windows and slip of a requirement
 	Uncertainty,  // stated horizon error and landing ellipse
 	Trade,        // mast-height trade and site pairs
+	Sites,        // site picker and custom coordinates
+};
+
+/** What the site picker shows for a site besides its name. */
+struct FLsnSiteInfo
+{
+	/** Group of the picker: the index field "programme", or one common group. */
+	FString Group;
+	FLsnTerrainSource TerrainSource;
+};
+
+/** The entry for custom coordinates: what was typed, and how the science core's run stands. */
+struct FLsnCustomEntry
+{
+	FString Latitude, Longitude;
+	/** 0: latitude field, 1: longitude field. */
+	int32 Focus = 0;
+	bool bRunning = false;
+	bool bFailed = false;
+	FString Message;
+	double StartedS = 0.0;
 };
 
 /**
@@ -94,6 +115,23 @@ public:
 	/** False while the right view shows a clamped time because the instant of the left view is outside its package. */
 	bool IsRightViewInRange() const { return bRightViewInRange; }
 
+	// --- site picker and custom coordinates -------------------------------
+
+	const TArray<FLsnSiteInfo>& GetSiteInfos() const { return SiteInfos; }
+	/** Directory of a site of the list. */
+	FString SiteDirectory(int32 SiteIndex) const;
+	const FLsnCustomEntry& GetCustomEntry() const { return Custom; }
+	void SetCustomFocus(int32 Field) { Custom.Focus = FMath::Clamp(Field, 0, 1); }
+	/** A character typed into the focused field (digits, point, minus); others are ignored. */
+	void TypeCustom(TCHAR Character);
+	void BackspaceCustom();
+	/**
+	 * Hands the typed coordinates to the science core (python -m lsncore site) if a Python
+	 * environment with it is on this machine, and loads the package it writes. The engine
+	 * computes nothing; without the environment it says so.
+	 */
+	void StartCustom();
+
 	// --- planner pages -----------------------------------------------------
 
 	ELsnPlannerPage GetPage() const { return Page; }
@@ -143,6 +181,15 @@ private:
 	double BenchSeconds = 20.0;
 	double BenchWarmUpS = 6.0;
 	TArray<float> BenchFrameMs;
+
+	TArray<FLsnSiteInfo> SiteInfos;
+	FLsnCustomEntry Custom;
+	FProcHandle CustomProcess;
+	void* CustomReadPipe = nullptr;
+	void* CustomWritePipe = nullptr;
+	FString CustomOutput, CustomName, CustomRoot;
+	void TickCustom();
+	void AddSiteInfo(int32 SiteIndex);
 
 	FString LoadError;
 	FString ShotPath;

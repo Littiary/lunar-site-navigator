@@ -21,8 +21,9 @@
 //       right view (its next site) lies wholly in the right half and exists only side by
 //       side; the main actions lie in the left half.
 //    The actions a planner needs first must have a button: play, a step and a day in both
-//    directions, the next and previous rise or set of the Sun, the next site, the three
-//    planner pages, the observer height, the details and help.
+//    directions, the next and previous rise or set of the Sun, the site list (it replaced
+//    "next site" on 2026-11-14, when the list of sites grew), the three planner pages, the
+//    observer height, the details and help.
 //
 // U. A button does what its key does.
 //    With the sample package in a scene, the named actions move the time by one sample and
@@ -130,7 +131,7 @@ bool FLsnToolbarLayoutTest::RunTest(const FString& Parameters)
 			}
 			TestTrue(Where + TEXT(": no action outside the buttons"), Toolbar.ActionAt(FVector2D(1.0, 0.5 * Size.Y)).IsNone() && Toolbar.ActionAt(Strips[0].GetCenter()).IsNone());
 			for (const TCHAR* Needed : { TEXT("play"), TEXT("sample_back"), TEXT("sample_forward"), TEXT("day_back"), TEXT("day_forward"), TEXT("sun_event_back"), TEXT("sun_event_forward"),
-				TEXT("next_site"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help") })
+				TEXT("page_sites"), TEXT("page_calendar"), TEXT("page_uncertainty"), TEXT("page_trade"), TEXT("height_next"), TEXT("details"), TEXT("help") })
 			{
 				TestTrue(Where + TEXT(": there is a button for ") + Needed, Seen.Contains(Needed));
 			}
