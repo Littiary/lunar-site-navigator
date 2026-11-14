@@ -29,11 +29,13 @@ SYNTHETIC_TERRAIN_NOTICE = (
 
 # Measured on the analytic cases of core/tests/test_horizon.py (see docs/method/horizon.md).
 _EVIDENCE = [
-    "core/tests/test_horizon.py::test_smooth_sphere_horizon_depression: largest error 9.2e-12 deg (threshold 0.0005 deg), 6 sites incl. both poles and the longitude seam",
-    "core/tests/test_horizon.py::test_crater_rim_at_known_distance_and_height: largest error 1.2e-5 deg (threshold 0.001 deg); rim distance within 0.05 m",
-    "core/tests/test_horizon.py::test_hill_appears_at_its_bearing_with_the_right_elevation: largest error 3.2e-8 deg against an independent 1-D solution (threshold 0.002 deg)",
-    "core/tests/test_horizon.py::test_gridded_synthetic_dem_of_the_data_stream: largest error 0.0052 deg through the gridded 100 m test raster (threshold 0.02 deg)",
-    "No comparison with an independent horizon product on real terrain has been made yet.",
+    "core/tests/test_horizon.py::test_smooth_sphere_horizon_depression: largest error 3.0e-12 deg (threshold 0.0005 deg), 6 sites incl. both poles and the longitude seam",
+    "core/tests/test_horizon.py::test_crater_rim_at_known_distance_and_height: largest error 2e-13 deg (threshold 0.001 deg)",
+    "core/tests/test_horizon.py::test_hill_appears_at_its_bearing_with_the_right_elevation: largest error 3.4e-8 deg against an independent 1-D solution (threshold 0.002 deg)",
+    "core/tests/test_horizon.py::test_nothing_is_missed_on_a_rough_gridded_surface: never below an exhaustive 1 m reference scan on a spiked synthetic raster (threshold 0.002 deg, 144 comparisons)",
+    "core/tests/test_horizon.py::test_nothing_is_missed_on_lola_data: never below an exhaustive 1 m reference scan on the LOLA 20 m and 60 m south-polar products (threshold 0.002 deg; 648 comparisons at 6 test points measured by script)",
+    "Self-convergence on LOLA data: a four times finer search changes no value by more than 0.0005 deg (51 840 values)",
+    "No comparison with an independent horizon product has been made yet.",
 ]
 
 
@@ -43,22 +45,26 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
     data = [dem["dem_set_id"]]
     body_frame = f"{BODY_FIXED_FRAME} (Moon body-fixed, mean Earth / polar axis); sphere of the DEM reference radius"
     local = "local East/North/Up at the site; up is the outward radial direction of the reference sphere"
+    px = terrain.finest_pixel_m
     params = {
         "azimuth_step_deg": azimuth_step_deg,
         "max_range_m": max_range_m,
-        "near_field_pixel_m": terrain.finest_pixel_m,
-        "first_sample_m": terrain.finest_pixel_m * settings.first_sample_px,
-        "near_range_step_m": terrain.finest_pixel_m * settings.near_step_px,
-        "range_step_growth": settings.range_growth,
-        "refined_maxima_per_azimuth": settings.refine_candidates,
-        "refinement": f"{settings.refine_rounds} rounds of {settings.refine_points} samples",
-        "interpolation": "bilinear between pixel centres",
-        "far_terrain": "read from overview levels with a pixel not larger than the range step",
+        "finest_pixel_m": px,
+        "first_point_m": px * settings.first_sample_px,
+        "lattice_step_m": px * settings.fine_step_px,
+        "inner_lattice_step_m": px * settings.inner_step_px,
+        "inner_zone_m": px * settings.inner_zone_px,
+        "cell_growth": settings.cell_growth,
+        "max_cell_m": px * settings.fine_step_px * settings.max_cell_points,
+        "creases": "every crossing of an evaluated stretch of ray with a line through pixel centres is evaluated",
+        "refinement": f"{settings.refine_rounds} rounds of {settings.refine_points} points around the leading points of each azimuth",
+        "interpolation": "bilinear between pixel centres, finest product that covers the point",
+        "skipping": "a cell of a ray is skipped only if the block maximum of the terrain over the cell proves that nothing in it reaches the horizon already found",
     }
     limits = [
         "The terrain is the bilinear surface through the DEM pixels: relief smaller than a pixel is absent, and a crest between pixels is cut. Within about 1 km of the site this, not the algorithm, limits the accuracy.",
         f"Azimuth sampling is {azimuth_step_deg} deg; an obstacle narrower than that between two rays is not seen.",
-        "Far terrain is read from block-averaged overview levels, which lowers narrow distant peaks slightly.",
+        "Single high pixels of the DEM are taken at face value, whether they are terrain or noise.",
         "Terrain beyond the search radius or beyond the data is not seen; error_bounds.far_field_max_deg states how much it could add.",
         "The observer is a point at the given height above the DEM surface on the radial through the site; the lander body, local rocks and regolith relief are not modelled.",
     ]
@@ -85,14 +91,14 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         pk.M_HORIZON: card(
             "Terrain horizon elevation",
             "For each azimuth and observer height: the largest elevation angle, above the plane perpendicular to the radial direction at the site, of the straight line from the observer to any terrain point along the great circle of that azimuth, out to the search radius. Negative when the terrain horizon lies below the horizontal.",
-            "Great-circle ray marching on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Range step half a near-field pixel, growing in proportion to distance; the best local maxima of each ray are refined by nested sampling. All observer heights are evaluated on the same terrain samples in one pass.",
+            "Great-circle rays on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Each ray is covered by a lattice of points half a pixel apart. Near the site every lattice point is evaluated on the finest data. Farther out the lattice is grouped into cells; a cell is skipped only if the block maximum of the terrain over the cell proves that nothing in it can reach the horizon already found, otherwise it is walked point by point on the finest data. Crossings of the ray with the lines through pixel centres (the creases of the bilinear surface) are evaluated as well, and the leading points are refined by nested sampling. All observer heights share the same terrain evaluations.",
             local,
             params,
         ),
         pk.M_OBSTACLE: card(
             "Terrain point that sets the horizon",
             "distance_m: arc length along the reference sphere from the site to the terrain point whose line of sight has the largest elevation angle. obstacle_height_m: DEM height of that point. obstacle_lat_deg, obstacle_lon_deg: its coordinates.",
-            "Location of the maximum found by the horizon ray marching, after refinement; coordinates from the great circle of the azimuth.",
+            "Location of the maximum found by the horizon search, after refinement; coordinates from the great circle of the azimuth.",
             body_frame,
             params,
             ["Where two obstacles reach nearly the same elevation the reported point can jump between them from one azimuth or observer height to the next."],

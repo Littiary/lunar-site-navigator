@@ -34,6 +34,8 @@ class HorizonResult:
     far_field_bound_deg: np.ndarray | None = None
     dem_pixel: dict | None = None
     warnings: list[str] = field(default_factory=list)
+    # how much of each ray was walked on the finest data and how much was proven irrelevant
+    search_stats: dict = field(default_factory=dict)
 
 
 @dataclass

@@ -191,13 +191,13 @@ class IntervalSet:
 
     def complement(self) -> "IntervalSet":
         out = []
-        cursor = self.domain[0]
+        position = self.domain[0]
         for a, b in self._iv:
-            if a > cursor:
-                out.append((cursor, a))
-            cursor = b
-        if cursor < self.domain[1]:
-            out.append((cursor, self.domain[1]))
+            if a > position:
+                out.append((position, a))
+            position = b
+        if position < self.domain[1]:
+            out.append((position, self.domain[1]))
         return IntervalSet(out, self.domain)
 
     def close_gaps(self, max_gap_s: float) -> "IntervalSet":

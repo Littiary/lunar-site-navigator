@@ -44,6 +44,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local assistant files
-.claude/
-CLAUDE.md
+# Local tool and editor folders
+.*/
+!.github/
