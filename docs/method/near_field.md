@@ -195,9 +195,14 @@ Malapert summit three of four events on interpolated pixels. Over the whole prof
    ([uncertainty.md](uncertainty.md), section 5).
 4. **Three records.** The 5 m rasters exist for these sites only; elsewhere the 5 m and
    7 m figures apply and the bands are as wide as shown for the 20 m product.
-5. **Patches.** The terrain patches for drawing are read at 20 m and coarser as before;
-   with the near field on, the drawn ground and the 5 m surface of the science differ by
-   about a metre near the site.
+5. **Patches.** With the near field on, the terrain patches for drawing are read from
+   the 5 m raster of the site where it has a level with the pixel of the patch (the near
+   patch everywhere; the mid and far patch at two of the three records). They are still
+   20 m, 80 m and 320 m grids of block averages: the drawn ground and the 5 m surface of
+   the science differ by 0.14 to 0.18 m in the median and by 0.7 to 0.9 m at 95 % of
+   the places, and at the de Gerlache record the ground under the observer is drawn
+   0.8 m low. A scenario can state a 5 m patch around the site that removes this
+   ([terrain_patch.md](terrain_patch.md), section 4); it is not written by default.
 6. **Offsets between the products.** The data stream measured a horizontal offset of
    6.6 m between the 5 m and the 20 m product at Malapert; where the search changes zone
    the surface changes product without blending.

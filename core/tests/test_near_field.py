@@ -35,6 +35,7 @@ TOL_SAME_SURFACE_M = 1e-9     # the adapter's surface against the data reader's
 MAX_RUNTIME_NEAR_FIELD_S = 15.0  # one site with the 5 m near field: three times the 5 s of the 20 m data (the lattice is four times finer).
 #                                  It is the time of one site on a machine that is doing nothing else, taken as the best of three runs.
 TOL_SLOPE_DEG = 0.1           # slope of a tilted plane from the terrain
+TOL_PATCH_NODE_M = 0.05       # a node of a terrain patch against the level of the 5 m raster it was read from (as for the 20 m product)
 # --------------------------------------------------------------------------------------
 
 REPO = Path(__file__).resolve().parents[2]
@@ -250,3 +251,51 @@ def test_site_records_on_the_5_m_near_field(near_field, name, tmp_path):
     (path,) = run_scenario(scenario, tmp_path, terrain)
     source = validate_package(path)["horizon"]["terrain_source"]
     assert source["at_site"]["product_id"].startswith("LOLA5MPP_SITE") and source["at_site"]["pixel_m"] == 5.0 and source["resolution_class"] == "fine"
+
+
+@pytest.mark.parametrize("name", SITES)
+def test_terrain_patches_are_read_from_the_5_m_raster_of_the_site(near_field, name, tmp_path):
+    """With the near field on, the ground drawn around the site comes from the raster the
+    science used: every node of the near patch that the 5 m raster covers is its 20 m
+    block average (the level whose pixel equals the spacing of the patch), and the package
+    names the raster and the level. A coarser patch uses the raster where the raster has
+    a level with the pixel of that patch; where it has none (the Malapert raster stops at
+    40 m), the patch shows the averaged ground of the 20 m product at its own spacing
+    rather than finer samples of the raster. (The first version of this test expected
+    the raster's 40 m level there; that was the test's mistake about the stated rule of
+    height_at_pixel_m, not a change of the tolerance.)"""
+    from lsn_data.georef import lonlat_to_xy
+    from test_terrain_patch import patch_grid, to_sphere
+
+    reader, adapter, sites = near_field
+    lat, lon = sites[name]["lat_deg"], (sites[name]["lon_deg_east"] + 180.0) % 360.0 - 180.0
+    terrain = adapter.for_site(lat, lon, 300_000.0)
+    scenario = single_site_scenario(name.replace("_", "-"), sites[name]["name"], lat, lon, dem_set_id="any", synthetic=False, heights_m=[2.0], azimuth_step_deg=5.0)
+    (path,) = run_scenario(scenario, tmp_path, terrain)
+    manifest = validate_package(path)
+    pkg = read_package(path)
+    own = manifest["horizon"]["terrain_source"]["at_site"]["product_id"]
+    assert own.startswith("LOLA5MPP_")
+    raster = next(p for p in reader.products if str(p.product_id) == own)
+
+    for patch in manifest["terrain"]["patches"]:
+        levels = [k for k in raster.levels if raster.pixel_m(k) == patch["spacing_m"]]
+        from_raster = [src for src in patch["sources"] if src["product_id"] == own]
+        if not levels:
+            assert not from_raster
+            continue
+        (level,) = levels  # the level whose pixel is the spacing of the patch
+        up = pkg.array(patch["up_m"])
+        east, north = patch_grid(patch)
+        node_lat, node_lon, height = to_sphere(manifest, east, north, up)
+        x, y = lonlat_to_xy(node_lon.ravel(), node_lat.ravel(), raster.grid0.radius_m, reader.pole)
+        covered = raster.grid(level).covers_xy(x, y)
+        expected = np.asarray(raster.height_xy(x[covered], y[covered], level, "mean"), dtype=np.float64)
+        on_data = np.isfinite(expected)  # the raster has pixels without a value; other products serve those nodes
+        assert np.abs(height.ravel()[covered][on_data] - expected[on_data]).max() <= TOL_PATCH_NODE_M, patch["id"]
+        (source,) = from_raster
+        assert (source["level"], source["pixel_m"]) == (level, raster.pixel_m(level))
+        assert source["node_share"] == pytest.approx(on_data.sum() / np.isfinite(up).sum(), abs=1e-9)
+        if patch["id"] == "near":
+            assert level == 2 and source["pixel_m"] == 20.0 and source["node_share"] > 0.5
+
