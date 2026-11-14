@@ -16,7 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 # Stream B (ephemeris and validation) lists its dependencies here.
-ephem = []
+ephem = ["spiceypy>=8.4"]
 
 [project.scripts]
 lsn = "lsncore.cli:main"

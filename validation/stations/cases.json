@@ -1,0 +1,42 @@
+{
+  "description": "Horizons queries for the ground-station geometry. Earth end: a point on the Moon as target, a Deep Space Network station as observer. Moon end: the station's geodetic coordinates on the Earth as target, a point on the Moon as observer. Station coordinates are those of the NAIF station kernel earthstns_itrf93_260814.bsp, converted to geodetic coordinates on the spheroid of the kernel's topocentric frames (6378.137 km, 6356.7523142 km).",
+  "api": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "common_parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "QUANTITIES": "4,20",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS",
+    "START_TIME": "2026-11-14 00:00",
+    "STOP_TIME": "2026-11-16 00:00",
+    "STEP_SIZE": "10 m"
+  },
+  "lunar_sites": {
+    "polar": {"lon_deg": 205.76891, "lat_deg": -89.80531, "height_km": 1.7011, "note": "Shackleton rim crest record of the data stream"},
+    "equator": {"lon_deg": 0.0, "lat_deg": 0.0, "height_km": 0.0, "note": "mean sub-Earth point"}
+  },
+  "stations": {
+    "DSS-14": {"complex": "Goldstone, California", "horizons_site": "-14@399", "lon_deg": 243.110457, "lat_deg": 35.4259, "height_km": 1.00138},
+    "DSS-43": {"complex": "Canberra, Australia", "horizons_site": "-43@399", "lon_deg": 148.981273, "lat_deg": -35.402414, "height_km": 0.68884},
+    "DSS-63": {"complex": "Madrid, Spain", "horizons_site": "-63@399", "lon_deg": 355.751998, "lat_deg": 40.431214, "height_km": 0.86485}
+  },
+  "queries": [
+    {"id": "earth_end__dss14__polar", "end": "earth", "station": "DSS-14", "lunar_site": "polar", "parameters": {"COMMAND": "g: 205.76891, -89.80531, 1.7011 @ 301", "CENTER": "-14@399"}},
+    {"id": "earth_end__dss43__polar", "end": "earth", "station": "DSS-43", "lunar_site": "polar", "parameters": {"COMMAND": "g: 205.76891, -89.80531, 1.7011 @ 301", "CENTER": "-43@399"}},
+    {"id": "earth_end__dss63__polar", "end": "earth", "station": "DSS-63", "lunar_site": "polar", "parameters": {"COMMAND": "g: 205.76891, -89.80531, 1.7011 @ 301", "CENTER": "-63@399"}},
+    {"id": "earth_end__dss14__equator", "end": "earth", "station": "DSS-14", "lunar_site": "equator", "parameters": {"COMMAND": "g: 0.0, 0.0, 0.0 @ 301", "CENTER": "-14@399"}},
+    {"id": "earth_end__dss43__equator", "end": "earth", "station": "DSS-43", "lunar_site": "equator", "parameters": {"COMMAND": "g: 0.0, 0.0, 0.0 @ 301", "CENTER": "-43@399"}},
+    {"id": "earth_end__dss63__equator", "end": "earth", "station": "DSS-63", "lunar_site": "equator", "parameters": {"COMMAND": "g: 0.0, 0.0, 0.0 @ 301", "CENTER": "-63@399"}},
+    {"id": "moon_end__dss14__polar", "end": "moon", "station": "DSS-14", "lunar_site": "polar", "parameters": {"COMMAND": "g: 243.110457, 35.4259, 1.00138 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "205.76891,-89.80531,1.7011"}},
+    {"id": "moon_end__dss43__polar", "end": "moon", "station": "DSS-43", "lunar_site": "polar", "parameters": {"COMMAND": "g: 148.981273, -35.402414, 0.68884 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "205.76891,-89.80531,1.7011"}},
+    {"id": "moon_end__dss63__polar", "end": "moon", "station": "DSS-63", "lunar_site": "polar", "parameters": {"COMMAND": "g: 355.751998, 40.431214, 0.86485 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "205.76891,-89.80531,1.7011"}},
+    {"id": "moon_end__dss14__equator", "end": "moon", "station": "DSS-14", "lunar_site": "equator", "parameters": {"COMMAND": "g: 243.110457, 35.4259, 1.00138 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "0.0,0.0,0.0"}},
+    {"id": "moon_end__dss43__equator", "end": "moon", "station": "DSS-43", "lunar_site": "equator", "parameters": {"COMMAND": "g: 148.981273, -35.402414, 0.68884 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "0.0,0.0,0.0"}},
+    {"id": "moon_end__dss63__equator", "end": "moon", "station": "DSS-63", "lunar_site": "equator", "parameters": {"COMMAND": "g: 355.751998, 40.431214, 0.86485 @ 399", "CENTER": "coord@301", "COORD_TYPE": "GEODETIC", "SITE_COORD": "0.0,0.0,0.0"}}
+  ],
+  "note_on_site_codes": "The Horizons site codes -14, -43 and -63 for the three 70 m antennas are taken from memory of the Horizons site list and are confirmed or corrected by the site name each response prints; a correction would be recorded here with its reason."
+}

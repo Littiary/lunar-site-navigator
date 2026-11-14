@@ -1,0 +1,233 @@
+"""End-to-end run for the south-polar site records of the data stream.
+
+Builds one scenario with every site record, runs the core pipeline (LOLA terrain horizon
+-> SPICE direction table -> events, windows, countdowns), validates every package against
+the contract and writes a summary. The scenario and the summary are kept in this folder;
+the packages are written to the output folder (default: build/packages/sites, not under
+version control).
+
+Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
+
+    python -m validation.sites.run <sites.json> [--out FOLDER] [--start UTC] [--end UTC]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import time
+from pathlib import Path
+
+from lsncore.contract import contract_header, read_package, validate_document, validate_package
+from lsncore.dem import open_lola
+from lsncore.ephem import kernels
+from lsncore.pipeline import run_scenario
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parent.parent
+DEFAULT_START = "2026-11-14T00:00:00.000Z"
+DEFAULT_END = "2027-11-14T00:00:00.000Z"
+NEAR_TERRAIN_M = 1000.0
+THRESHOLDS = {
+    "SUN": {"quantity": "visible_fraction", "op": ">", "value": 0.0},
+    "EARTH": {"quantity": "margin_deg", "op": ">", "value": 0.0},
+}
+
+
+def build_scenario(records: list, dem_set_id: str, start_utc: str, end_utc: str) -> dict:
+    scenario = {
+        "contract": contract_header(),
+        "kind": "scenario",
+        "scenario_id": "south-polar-sites",
+        "title": "Three south-polar candidate points, twelve months from the hackathon weekend",
+        "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris.",
+        "synthetic": False,
+        "sites": [
+            {
+                "site_id": record["site_id"].replace("_", "-"),
+                "name": record["name"],
+                "lat_deg": record["lat_deg"],
+                "lon_deg": record["lon_deg_east"],
+                "notes": record["status"],
+            }
+            for record in records
+        ],
+        "observer_heights_m": [0.0, 1.0, 2.0, 5.0, 10.0, 20.0],
+        "default_height_m": 2.0,
+        "horizon": {"azimuth_step_deg": 0.25, "max_range_m": 300000.0},
+        "time_window": {"start_utc": start_utc, "end_utc": end_utc, "step_s": 3600.0},
+        "bodies": ["SUN", "EARTH"],
+        "thresholds": THRESHOLDS,
+        "mission_profile": None,
+        "data": {"dem_set_id": dem_set_id, "kernel_set_id": kernels.kernel_set_id(), "direction_table_id": None},
+    }
+    validate_document(scenario)
+    return scenario
+
+
+def summarise(package_dir: Path) -> dict:
+    package = read_package(package_dir)
+    m = package.manifest
+    timeline = m["timeline"]
+    heights = m["horizon"]["observer_heights_m"]
+    elevation = package.array(m["horizon"]["elevation_deg"])
+    distance = package.array(m["horizon"]["distance_m"])
+    per_height = []
+    for h, height in enumerate(heights):
+        metrics = {x["id"]: x["value"] for x in timeline["metrics"] if x["height_index"] == h}
+        events = [e for e in timeline["events"] if e["height_index"] == h]
+        sun_sets = [e for e in events if e["body"] == "SUN" and e["type"] == "set"]
+        near = [e for e in events if e["body"] == "SUN" and e["obstacle_distance_m"] is not None and e["obstacle_distance_m"] < NEAR_TERRAIN_M]
+        per_height.append(
+            {
+                "observer_height_m": height,
+                "sun_visible_share": metrics["sun_visible_fraction_of_time"],
+                "sun_longest_outage_h": metrics["sun_longest_outage_s"] / 3600.0,
+                "sun_longest_visible_d": metrics["sun_longest_visible_s"] / 86400.0,
+                "sun_events": sum(e["body"] == "SUN" for e in events),
+                "sun_events_set_by_terrain_closer_than_1km": len(near),
+                "sun_time_to_set_d": metrics["sun_time_to_set_s"] / 86400.0,
+                "sun_time_to_set_is_lower_bound": bool(metrics["sun_time_to_set_is_lower_bound"]),
+                "first_sun_set_utc": sun_sets[0]["utc"] if sun_sets else None,
+                "earth_visible_share": metrics["earth_visible_fraction_of_time"],
+                "earth_longest_outage_h": metrics["earth_longest_outage_s"] / 3600.0,
+                "earth_events": sum(e["body"] == "EARTH" for e in events),
+                "earth_visible_at_start": bool(metrics["earth_visible_at_reference"]),
+                "earth_time_to_set_d": metrics["earth_time_to_set_s"] / 86400.0,
+                "earth_time_to_set_is_lower_bound": bool(metrics["earth_time_to_set_is_lower_bound"]),
+                "horizon_min_deg": float(elevation[h].min()),
+                "horizon_max_deg": float(elevation[h].max()),
+                "share_of_horizon_set_closer_than_1km": float((distance[h] < NEAR_TERRAIN_M).mean()),
+            }
+        )
+    site_metrics = {x["id"]: x["value"] for x in timeline["metrics"] if x["height_index"] is None}
+    eclipse_windows = {w["id"]: w for w in timeline["windows"] if w["height_index"] == 0 and w["id"] in ("sun_eclipsed_by_earth", "sun_totally_eclipsed_by_earth")}
+    sun = package.array(timeline["series"]["SUN"]["elevation_deg"])
+    earth = package.array(timeline["series"]["EARTH"]["elevation_deg"])
+    return {
+        "site_id": m["site"]["site_id"],
+        "name": m["site"]["name"],
+        "lat_deg": m["site"]["lat_deg"],
+        "lon_deg": m["site"]["lon_deg"],
+        "surface_height_m": m["site"]["surface_height_m"]["value"],
+        "package_id": m["package_id"],
+        "content_sha256": m["content_sha256"],
+        "status": m["status"],
+        "warnings": m["warnings"],
+        "direction_table_id": timeline["direction_table_id"],
+        "dem_set_id": m["inputs"]["dem"]["dem_set_id"],
+        "horizon_error_bounds": {k: v["value"] for k, v in m["horizon"].get("error_bounds", {}).items()},
+        "timings_s": m["provenance"].get("timings_s"),
+        "sun_centre_elevation_range_deg": [float(sun.min()), float(sun.max())],
+        "earth_centre_elevation_range_deg": [float(earth.min()), float(earth.max())],
+        "default_height_index": m["horizon"]["default_height_index"],
+        "eclipses_of_the_sun_by_the_earth": {
+            "count": int(site_metrics["sun_eclipse_count"]),
+            "total_at_the_site": int(site_metrics["sun_eclipse_total_count"]),
+            "longest_totality_h": site_metrics["sun_eclipse_longest_totality_s"] / 3600.0,
+            "max_covered_fraction": site_metrics["sun_eclipse_max_covered_fraction"],
+            "partial_intervals_utc": eclipse_windows["sun_eclipsed_by_earth"]["intervals_utc"],
+            "total_intervals_utc": eclipse_windows["sun_totally_eclipsed_by_earth"]["intervals_utc"],
+        },
+        "per_height": per_height,
+    }
+
+
+def to_markdown(summary: dict) -> str:
+    w = summary["window"]
+    lines = [
+        "# End-to-end results: three south-polar candidate points",
+        "",
+        f"Generated {summary['generated_utc']} by `validation/sites/run.py`. Do not edit by hand.",
+        "",
+        f"- Window: {w['start_utc']} to {w['end_utc']} (UTC). Countdowns count from the start of the window.",
+        f"- Terrain: `{summary['dem_set_id']}`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `{summary['kernel_set_id']}`, direction table `{summary['direction_table_id']}`.",
+        "- Sun visible = any part of the disc above the terrain horizon. Earth visible = centre of the disc above the terrain horizon.",
+        "- The points are project candidates derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.",
+        "- **Status: unverified against an independent illumination product or mission record.** The ephemeris part is validated (see the validation card); the terrain horizon has passed analytic tests only.",
+        "",
+    ]
+    for site in summary["sites"]:
+        sun_lo, sun_hi = site["sun_centre_elevation_range_deg"]
+        earth_lo, earth_hi = site["earth_centre_elevation_range_deg"]
+        lines += [
+            f"## {site['name']}",
+            "",
+            f"{abs(site['lat_deg']):.5f} deg S, {site['lon_deg']:.5f} deg E, terrain height {site['surface_height_m']:.1f} m above the 1737.4 km sphere. "
+            f"Package `{site['package_id']}`, status `{site['status']}`. Sun centre elevation {sun_lo:.2f} to {sun_hi:.2f} deg; "
+            f"Earth centre elevation {earth_lo:.2f} to {earth_hi:.2f} deg.",
+            "",
+            "| Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |",
+            "|---|---|---|---|---|---|---|---|---|---|",
+        ]
+        for row in site["per_height"]:
+            sun_to = ("at least " if row["sun_time_to_set_is_lower_bound"] else "") + f"{row['sun_time_to_set_d']:.2f} d"
+            earth_to = ("at least " if row["earth_time_to_set_is_lower_bound"] else "") + f"{row['earth_time_to_set_d']:.2f} d"
+            lines.append(
+                f"| {row['observer_height_m']:g} m | {100 * row['sun_visible_share']:.1f} % | {row['sun_longest_outage_h']:.1f} h | {row['sun_events']} | "
+                f"{row['sun_events_set_by_terrain_closer_than_1km']} | {sun_to} | {100 * row['earth_visible_share']:.1f} % | {row['earth_longest_outage_h']:.1f} h | {earth_to} | "
+                f"{100 * row['share_of_horizon_set_closer_than_1km']:.0f} % |"
+            )
+        e = site["eclipses_of_the_sun_by_the_earth"]
+        lines.append("")
+        if e["count"]:
+            spans = "; ".join(f"{a} to {b}" for a, b in e["partial_intervals_utc"])
+            lines.append(f"Eclipses of the Sun by the Earth in the window: {e['count']} ({e['total_at_the_site']} total at the site); largest covered fraction of the Sun {e['max_covered_fraction']:.3f}; {spans}.")
+        else:
+            lines.append("Eclipses of the Sun by the Earth in the window: none.")
+        lines.append("")
+    lines += [
+        "## Limits",
+        "",
+        "- Shares and longest outages describe this twelve-month window only; they are not multi-year averages.",
+        "- Where an event is set by terrain closer than about 1 km, the 20 m elevation grid, not the method, limits the accuracy, and the event time can be off by hours. The column on near terrain counts those events.",
+        "- Event times are numerically exact to 0.25 s for the given horizon profile; that is not their physical accuracy.",
+        "- A countdown marked 'at least' has no set inside the computed window.",
+        "- The shares of time above are cut by the terrain only. Eclipses of the Sun by the Earth are listed per site (opaque Earth, no atmosphere) and are in the package as the windows 'sun_eclipsed_by_earth', 'sun_totally_eclipsed_by_earth' and 'sun_lit'.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("sites_file")
+    parser.add_argument("--out", default=str(REPO / "build" / "packages" / "sites"))
+    parser.add_argument("--start", default=DEFAULT_START)
+    parser.add_argument("--end", default=DEFAULT_END)
+    args = parser.parse_args()
+    records = json.loads(Path(args.sites_file).read_text(encoding="utf-8"))["sites"]
+    terrain = open_lola()
+    scenario = build_scenario(records, terrain.describe()["dem_set_id"], args.start, args.end)
+    (HERE / "scenario.json").write_text(json.dumps(scenario, indent=2) + "\n", encoding="utf-8")
+    out = Path(args.out)
+    t0 = time.perf_counter()
+    written = run_scenario(scenario, out, terrain)
+    elapsed = time.perf_counter() - t0
+    for path in written:
+        validate_package(path)
+    sites = [summarise(path) for path in written if read_package(path).manifest["kind"] == "site"]
+    summary = {
+        "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "window": scenario["time_window"],
+        "thresholds": THRESHOLDS,
+        "dem_set_id": sites[0]["dem_set_id"],
+        "kernel_set_id": kernels.kernel_set_id(),
+        "direction_table_id": sites[0]["direction_table_id"],
+        "run_time_s": elapsed,
+        "status": "unverified against an independent illumination product or mission record",
+        "sites": sites,
+    }
+    (HERE / "results").mkdir(exist_ok=True)
+    (HERE / "results" / "site_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (HERE / "results" / "site_summary.md").write_text(to_markdown(summary), encoding="utf-8")
+    print(f"{len(written)} packages in {elapsed:.1f} s -> {out}")
+    for site in sites:
+        row = site["per_height"][site["default_height_index"]]
+        print(
+            f"{site['site_id']:26s} {site['status']:8s} sun {100 * row['sun_visible_share']:.1f} %  longest outage {row['sun_longest_outage_h']:.1f} h  "
+            f"earth {100 * row['earth_visible_share']:.1f} %  events sun {row['sun_events']} earth {row['earth_events']}  timings {site['timings_s']}"
+        )
+
+
+if __name__ == "__main__":
+    main()
