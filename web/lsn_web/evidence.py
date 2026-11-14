@@ -9,7 +9,7 @@ packages and the card; this module only formats them.
 
 Usage (from ``web/``)::
 
-    python -m lsn_web.evidence <site package dir> [...] [--card validation_card.json] --out index.html
+    python -m lsn_web.evidence <site package dir | index.json> [...] [--card validation_card.json] [--notice TEXT] --out index.html
 """
 
 from __future__ import annotations
@@ -24,10 +24,10 @@ from pathlib import Path
 if __package__ in (None, ""):  # allow `python web/lsn_web/evidence.py`
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from lsn_web import charts
-    from lsn_web.package import SitePackage, load_site_package
+    from lsn_web.package import SitePackage, load_packages
 else:
     from . import charts
-    from .package import SitePackage, load_site_package
+    from .package import SitePackage, load_packages
 
 REPOSITORY = "https://github.com/Littiary/lunar-site-navigator"
 
@@ -97,13 +97,18 @@ def status_badge(status: str) -> str:
     return f'<span class="status {e(status.lower())}">{e(status)}</span>'
 
 
-def table(headers: list[str], rows: list[list[str]], numeric: set[int] = frozenset()) -> str:
+def table(headers: list[str], rows: list[list[str]], numeric: set[int] = frozenset(),
+          row_attrs: list[dict] | None = None, table_id: str | None = None) -> str:
     head = "".join(f"<th>{e(h)}</th>" for h in headers)
+    attrs = row_attrs or [{} for _ in rows]
     body = "".join(
-        "<tr>" + "".join(f'<td class="num">{cell}</td>' if i in numeric else f"<td>{cell}</td>" for i, cell in enumerate(row)) + "</tr>"
-        for row in rows
+        "<tr" + "".join(f' {k}="{e(v)}"' for k, v in a.items()) + ">"
+        + "".join(f'<td class="num">{cell}</td>' if i in numeric else f"<td>{cell}</td>" for i, cell in enumerate(row))
+        + "</tr>"
+        for row, a in zip(rows, attrs)
     )
-    return f'<div class="table"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+    ident = f' id="{e(table_id)}"' if table_id else ""
+    return f'<div class="table"{ident}><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 
 
 def facts(pairs: list[tuple[str, str]]) -> str:
@@ -119,9 +124,14 @@ def metric_value(metric: dict) -> str:
     if value is None:
         return "—"
     if unit == "1":
-        return f"{charts.num(100 * value, 1)} %"
+        # Unit "1" covers fractions, 0/1 flags and counts. Only fractions become percentages;
+        # flags and counts are shown as the package states them (their labels say what 1 means).
+        metric_id = metric.get("id", "")
+        if "fraction" in metric_id or metric_id.endswith("_share"):
+            return f"{100 * value:.1f} %"
+        return charts.num(value, 6)
     if unit == "s":
-        return f"{charts.num(value / 3600, 1)} h ({charts.num(value, 0)} s)"
+        return f"{value / 3600:.1f} h ({charts.num(value, 0)} s)"
     return f"{sig(value, 4)} {e(unit)}"
 
 
@@ -131,7 +141,7 @@ def slug(text: str) -> str:
 
 # ---------------------------------------------------------------- sections
 
-def site_section(site: SitePackage) -> str:
+def site_section(site: SitePackage, notice: str | None = None) -> str:
     m = site.manifest
     s = m["site"]
     horizon = m["horizon"]
@@ -146,6 +156,13 @@ def site_section(site: SitePackage) -> str:
         )
     for warning in m.get("warnings", []):
         out.append(f'<div class="banner">Package warning<p>{e(warning)}</p></div>')
+    software = m.get("provenance", {}).get("software", {})
+    if software.get("git_dirty"):
+        out.append(
+            '<div class="banner">Written from uncommitted code'
+            f"<p>The core that wrote this package ran from commit {e(software.get('git_commit'))} with uncommitted "
+            "changes, so the package cannot be reproduced from the repository alone.</p></div>"
+        )
     pairs = [
         ("Package", f'<span class="mono">{e(site.package_id)}</span> (status {e(m["status"])}, contract {e(m["contract"]["version"])})'),
         ("Content SHA-256", f'<span class="mono">{e(m["content_sha256"])}</span>'),
@@ -163,7 +180,7 @@ def site_section(site: SitePackage) -> str:
                                      f"(grid {e(t['scale'])}, step {charts.num(t['step_s'])} s, {t['count']} samples)"))
     out.append(facts(pairs))
 
-    panorama = charts.horizon_panorama(site)
+    panorama = charts.horizon_panorama(site, notice)
     out.append(
         f'<figure><div class="chart"><img src="{svg_data_uri(panorama)}" alt="{e("Terrain horizon panorama of " + s["name"])}"></div>'
         "<figcaption>Terrain horizon at the observer height shown, with the paths of the Sun and Earth disc "
@@ -174,15 +191,18 @@ def site_section(site: SitePackage) -> str:
         out.append('<p class="muted">This package has no time window, so windows, events and metrics are not shown.</p>')
         return "\n".join(out)
 
-    strip = charts.window_strip([site])
+    strip = charts.window_strip([site], notice)
     out.append(
         f'<figure><div class="chart"><img src="{svg_data_uri(strip)}" alt="{e("Lighting and direct-to-Earth windows of " + s["name"])}"></div>'
         "<figcaption>Visibility windows from the package (<code>timeline.windows</code>).</figcaption></figure>"
     )
 
     metrics = [mt for mt in timeline.get("metrics", []) if mt.get("height_index") == index]
+    metrics += [mt for mt in timeline.get("metrics", []) if mt.get("height_index") is None]
     if metrics:
         out.append(f"<h3>Summary at {charts.num(height)} m</h3>")
+        out.append('<p class="muted">Metrics without an observer height (for example eclipses of the Sun by the '
+                   "Earth) apply to every height.</p>")
         out.append(table(
             ["Quantity", "Value", "Method", "Status"],
             [[e(mt["label"]), metric_value(mt), f'<code>{e(mt["method"])}</code>', status_badge(site.method_status(mt["method"]))]
@@ -204,7 +224,61 @@ def site_section(site: SitePackage) -> str:
         ))
     else:
         out.append('<p class="muted">No rise or set event in the time window at this height.</p>')
+    out.append(blockers_block(site, index, height))
+    out.append(windows_block(site, index, height))
+    return "\n".join(part for part in out if part)
+
+
+def blockers_block(site: SitePackage, index: int, height: float) -> str:
+    """Obstacles that cost visible time (contract 0.2, SPEC 5.5). Hidden for older packages."""
+    timeline = site.timeline
+    if "blockers" not in timeline:
+        return ""
+    blockers = [b for b in timeline["blockers"] if b.get("height_index") == index]
+    out = [f"<h3>What blocks the view at {charts.num(height)} m</h3>",
+           "<p>Obstacles of the terrain horizon that hide the Sun or the Earth for time in which they would be "
+           "visible over a smooth sphere through the site, largest cost first (<code>timeline.blockers</code>).</p>"]
+    if not blockers:
+        out.append('<p class="muted">No obstacle costs visible time at this height.</p>')
+        return "\n".join(out)
+    rows, attrs = [], []
+    for b in blockers:
+        first = b["intervals_utc"][0][0] if b.get("intervals_utc") else "\u2014"
+        rows.append([
+            e(b["body"].title()),
+            f"{b['lost_s'] / 3600:.1f} h",
+            f"{100 * b['share_of_lost']:.1f} %",
+            f"{charts.num(b['azimuth_start_deg'], 2)}\u00b0 to {charts.num(b['azimuth_end_deg'], 2)}\u00b0",
+            f"{charts.num(b['peak_azimuth_deg'], 2)}\u00b0, {charts.num(b['peak_elevation_deg'], 3)}\u00b0",
+            e(charts.km(b["peak_distance_m"])) if b.get("peak_distance_m") is not None else "\u2014",
+            "yes, within 1 km: depends on single pixels of the elevation model" if b.get("near_field") else "no",
+            f'<span class="mono">{e(first)}</span> ({len(b.get("intervals_utc", []))} intervals)',
+            status_badge(site.method_status(b["method"])),
+        ])
+        attrs.append({"data-body": b["body"], "data-obstacle": str(b["obstacle_id"])})
+    out.append(table(["Body", "Time lost", "Share of lost time", "Azimuth run", "Peak (azimuth, elevation)",
+                      "Peak distance", "Near field", "First lost interval (UTC)", "Status"],
+                     rows, numeric={1, 2}, row_attrs=attrs, table_id=f"blockers-{slug(site.manifest['site']['site_id'])}"))
     return "\n".join(out)
+
+
+def windows_block(site: SitePackage, index: int, height: float) -> str:
+    """Every window of the package at the default observer height, as defined by the core."""
+    windows = [w for w in site.timeline.get("windows", []) if w.get("height_index") == index]
+    if not windows:
+        return ""
+    rows, attrs = [], []
+    for w in windows:
+        clipped = ", ".join(x for x, flag in (("start", w.get("clipped_start")), ("end", w.get("clipped_end"))) if flag) or "no"
+        rows.append([f'<code>{e(w["id"])}</code>', e(w.get("definition")), str(len(w.get("intervals_et_s", []))),
+                     e(clipped), status_badge(site.method_status(w["method"]))])
+        attrs.append({"data-window": w["id"]})
+    return "\n".join([
+        f"<h3>All windows at {charts.num(height)} m</h3>",
+        "<p>Each window is a set of time intervals in which its condition holds. \"Clipped\" means an interval "
+        "touches the start or end of the computed range, so its true start or end is not known.</p>",
+        table(["Window", "Condition", "Intervals", "Clipped", "Status"], rows, numeric={2}, row_attrs=attrs),
+    ])
 
 
 def methods_section(sites: list[SitePackage]) -> str:
@@ -308,7 +382,7 @@ def validation_section(card: dict) -> str:
 
 # ---------------------------------------------------------------- page
 
-def build_page(sites: list[SitePackage], card_path: str | Path | None = None) -> str:
+def build_page(sites: list[SitePackage], card_path: str | Path | None = None, notice: str | None = None) -> str:
     card = json.loads(Path(card_path).read_text(encoding="utf-8")) if card_path else None
     nav = [(f"#site-{slug(s.manifest['site']['site_id'])}", s.manifest["site"]["name"]) for s in sites]
     nav += [("#methods", "Methods"), ("#data", "Data")]
@@ -318,6 +392,8 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None) ->
     if any(site.synthetic for site in sites):
         banner = ('<div class="banner">SYNTHETIC SAMPLE DATA — this page shows invented interface-test values, '
                   "not results.</div>")
+    if notice:
+        banner += f'<div class="banner">{e(notice)}</div>'
     ids = ", ".join(site.package_id for site in sites)
     parts = [
         "<!doctype html>",
@@ -341,7 +417,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None) ->
         banner,
         "</header>",
     ]
-    parts += [site_section(site) for site in sites]
+    parts += [site_section(site, notice) for site in sites]
     parts.append(methods_section(sites))
     parts.append(data_section(sites))
     if card:
@@ -358,14 +434,15 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None) ->
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Build the static evidence page from site packages.")
-    parser.add_argument("packages", nargs="+", help="site package directories (each holds manifest.json)")
+    parser.add_argument("packages", nargs="+", help="site package directories and/or index.json files")
     parser.add_argument("--card", help="validation_card.json of the ephemeris stream (optional)")
+    parser.add_argument("--notice", help="warning shown at the top of the page and on every chart")
     parser.add_argument("--out", required=True, help="output HTML file")
     args = parser.parse_args(argv)
-    sites = [load_site_package(path) for path in args.packages]
+    sites = load_packages(args.packages)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(build_page(sites, args.card), encoding="utf-8", newline="\n")
+    out.write_text(build_page(sites, args.card, args.notice), encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

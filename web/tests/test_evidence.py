@@ -127,6 +127,31 @@ class EvidencePageTests(unittest.TestCase):
             self.assertNotIn(phrase, lowered)
 
 
+class RealPackageLayoutTests(unittest.TestCase):
+    def test_lists_site_level_metrics(self):
+        from tests.test_charts import real_layout_copy
+
+        with tempfile.TemporaryDirectory() as tmp:
+            site = package.load_site_package(real_layout_copy(tmp))
+            text = " ".join(" ".join(parse(evidence.build_page([site])).text).split())
+            self.assertIn("Number of eclipses of the Sun by the Earth in the window", text)
+
+    def test_dimensionless_counts_and_flags_are_not_percentages(self):
+        from tests.test_charts import real_layout_copy
+
+        with tempfile.TemporaryDirectory() as tmp:
+            site = package.load_site_package(real_layout_copy(tmp))
+            rows = {}
+            parser = parse(evidence.build_page([site]))
+            # Rebuild the summary rows: label cell followed by value cell.
+            texts = [t.strip() for t in parser.text if t.strip()]
+            label = "Number of eclipses of the Sun by the Earth in the window"
+            rows[label] = texts[texts.index(label) + 1]
+            self.assertEqual(rows[label], "1")
+            share = "Share of the window with SUN visible"
+            self.assertTrue(texts[texts.index(share) + 1].endswith(" %"))
+
+
 class CommandLineTests(unittest.TestCase):
     def test_writes_one_html_file(self):
         with tempfile.TemporaryDirectory() as tmp:

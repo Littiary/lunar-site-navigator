@@ -11,7 +11,7 @@ only on the package bytes, so a rebuild from the same frozen package is byte-ide
 
 Usage (from the repository root)::
 
-    python -m lsn_web.charts <site package dir> [<site package dir> ...] --out <folder>
+    python -m lsn_web.charts <site package dir | index.json> [...] --out <folder> [--notice TEXT]
 """
 
 from __future__ import annotations
@@ -20,20 +20,29 @@ import argparse
 import datetime as dt
 import math
 import sys
+import textwrap
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
 if __package__ in (None, ""):  # allow `python web/lsn_web/charts.py`
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from lsn_web.package import SitePackage, load_site_package
+    from lsn_web.package import SitePackage, load_packages
 else:
-    from .package import SitePackage, load_site_package
+    from .package import SitePackage, load_packages
 
 WIDTH = 1200
 FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-SUBJECT_LABELS = {"SUN": "Sun visible", "EARTH": "Earth visible", "COMBINED": "Sun and Earth visible"}
-SUBJECT_ORDER = ("SUN", "EARTH", "COMBINED")
-SHARE_METRIC = {"SUN": "sun_visible_fraction_of_time", "EARTH": "earth_visible_fraction_of_time"}
+# Rows of the window strip, selected by window id. A package holds several windows per
+# subject (for the Sun: visible, any part, full disc, lit, eclipsed), so the subject alone
+# does not identify a row. Rows whose window is absent from a package are not drawn.
+MIN_VISIBLE_PX = 1.5  # intervals narrower than this get a marker line in the window strip
+STRIP_ROWS = (
+    ("sun_visible", "Sun visible", "sun", "sun_visible_fraction_of_time"),
+    ("earth_visible", "Earth visible", "earth", "earth_visible_fraction_of_time"),
+    ("earth_network_dsn", "Two-way link with a DSN complex", "earth", None),
+    ("sun_and_earth_visible", "Sun and Earth visible", "combined", None),
+    ("sun_eclipsed_by_earth", "Sun eclipsed by the Earth", "eclipse", None),
+)
 
 STYLE = """
 <style>
@@ -59,6 +68,12 @@ STYLE = """
   .bar.sun { fill: var(--sun); }
   .bar.earth { fill: var(--earth); }
   .bar.combined { fill: var(--combined); }
+  .bar.eclipse { fill: var(--muted); }
+  .mark { stroke-width: 2; }
+  .mark.sun { stroke: var(--sun); }
+  .mark.earth { stroke: var(--earth); }
+  .mark.combined { stroke: var(--combined); }
+  .mark.eclipse { stroke: var(--ink); }
   .lane { fill: var(--grid); opacity: 0.35; }
 </style>
 """.replace("FONT", FONT)
@@ -125,15 +140,20 @@ def site_lines(site: SitePackage) -> list[str]:
     return lines
 
 
-def synthetic_banner(sites: list[SitePackage]) -> list[str]:
+def banner_lines(sites: list[SitePackage], notice: str | None) -> list[str]:
+    """Warning lines at the top of a chart: synthetic data, and the caller's notice
+    (for example that the packages are provisional)."""
+    lines = []
     if any(site.synthetic for site in sites):
-        return ["SYNTHETIC SAMPLE DATA — invented values for interface testing, not a result"]
-    return []
+        lines.append("SYNTHETIC SAMPLE DATA — invented values for interface testing, not a result")
+    if notice:
+        lines += textwrap.wrap(notice, 125)
+    return lines
 
 
 # ---------------------------------------------------------------- horizon panorama
 
-def horizon_panorama(site: SitePackage) -> str:
+def horizon_panorama(site: SitePackage, notice: str | None = None) -> str:
     m = site.manifest
     horizon = m["horizon"]
     h_index = horizon["default_height_index"]
@@ -156,7 +176,7 @@ def horizon_panorama(site: SitePackage) -> str:
     ymin, ymax = math.floor(min(finite)) - 1.0, math.ceil(max(finite)) + 1.0
     xmin, xmax = 0.0, 360.0
 
-    banner = synthetic_banner([site])
+    banner = banner_lines([site], notice)
     top = 64 + 22 * len(banner)
     x0, x1, y0, y1 = 70.0, 1170.0, float(top), float(top + 290)
 
@@ -240,7 +260,7 @@ def horizon_panorama(site: SitePackage) -> str:
 
 # ---------------------------------------------------------------- window strip
 
-def window_strip(sites: list[SitePackage]) -> str:
+def window_strip(sites: list[SitePackage], notice: str | None = None) -> str:
     sites = [site for site in sites if site.timeline]
     if not sites:
         raise ValueError("no package has a time window; the window strip is hidden")
@@ -248,7 +268,7 @@ def window_strip(sites: list[SitePackage]) -> str:
     xmin = min(g["start_et_s"] for g in grids)
     xmax = max(g["start_et_s"] + (g["count"] - 1) * g["step_s"] for g in grids)
 
-    banner = synthetic_banner(sites)
+    banner = banner_lines(sites, notice)
     top = 64 + 22 * len(banner)
     x0, x1 = 300.0, 1170.0
     lane, gap, site_gap = 18.0, 6.0, 26.0
@@ -260,14 +280,14 @@ def window_strip(sites: list[SitePackage]) -> str:
     y = float(top + 8)
     for site in sites:
         index = site.manifest["horizon"]["default_height_index"]
-        windows = {w["subject"]: w for w in site.timeline["windows"] if w["height_index"] == index}
+        windows = {w["id"]: w for w in site.timeline["windows"] if w["height_index"] == index}
         metrics = {m["id"]: m for m in site.timeline.get("metrics", []) if m.get("height_index") == index}
         y += 16
         rows.append(("site", y, site, None, None))
         y += 6
-        for subject in SUBJECT_ORDER:
-            if subject in windows:
-                rows.append(("lane", y, site, windows[subject], metrics.get(SHARE_METRIC.get(subject, ""))))
+        for window_id, label, cls, metric_id in STRIP_ROWS:
+            if window_id in windows:
+                rows.append(("lane", y, site, (windows[window_id], label, cls), metrics.get(metric_id or "")))
                 y += lane + gap
         y += site_gap - gap
     y0, y1 = float(top), y
@@ -289,19 +309,28 @@ def window_strip(sites: list[SitePackage]) -> str:
             body.append(f'<rect class="bg" x="16" y="{num(row_y - 14)}" width="{num(x1 - 16)}" height="18"/>')
             body.append(text(24, row_y, f"{site.manifest['site']['name']} (observer {num(height)} m)", "row"))
             continue
-        label = SUBJECT_LABELS[window["subject"]]
+        window, label, bar_class = window
         tooltip = escape(label)
         if metric and metric.get("unit") == "1" and metric.get("value") is not None:
-            label += f" · {num(100 * metric['value'], 1)} % of window"
+            label += f" · {100 * metric['value']:.1f} % of window"
         body.append(text(36, row_y + lane - 5, label, "sub"))
         body.append(f'<rect class="lane" x="{num(x0)}" y="{num(row_y)}" width="{num(x1 - x0)}" height="{num(lane)}"/>')
-        cls = "bar " + window["subject"].lower()
+        cls = "bar " + bar_class
         for (start, end), (start_utc, end_utc) in zip(window["intervals_et_s"], window["intervals_utc"]):
             body.append(
                 f'<rect class="{cls}" data-window={quoteattr(window["id"])} data-site={quoteattr(site.manifest["site"]["site_id"])} '
                 f'x="{num(px(start), 3)}" y="{num(row_y)}" width="{num(px(end) - px(start), 3)}" height="{num(lane)}">'
                 f"<title>{tooltip}: {escape(start_utc)} to {escape(end_utc)}</title></rect>"
             )
+            if px(end) - px(start) < MIN_VISIBLE_PX:
+                # Too short to see at this scale: a marker line shows where it is; the bar
+                # above keeps its exact width.
+                mid = (px(start) + px(end)) / 2
+                body.append(
+                    f'<line class="mark {bar_class}" x1="{num(mid, 3)}" x2="{num(mid, 3)}" '
+                    f'y1="{num(row_y)}" y2="{num(row_y + lane)}"><title>{tooltip}: {escape(start_utc)} to '
+                    f"{escape(end_utc)}</title></line>"
+                )
         if window.get("clipped_start"):
             body.append(text(x0 + 3, row_y + lane - 5, "◂", "tick"))
         if window.get("clipped_end"):
@@ -368,17 +397,18 @@ def time_ticks(sites, xmin, xmax, px, y0, y1) -> list[str]:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Draw static SVG charts from site packages.")
-    parser.add_argument("packages", nargs="+", help="site package directories (each holds manifest.json)")
+    parser.add_argument("packages", nargs="+", help="site package directories and/or index.json files")
     parser.add_argument("--out", required=True, help="output folder")
+    parser.add_argument("--notice", help="warning printed on every chart, e.g. that the packages are provisional")
     args = parser.parse_args(argv)
-    sites = [load_site_package(path) for path in args.packages]
+    sites = load_packages(args.packages)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for site in sites:
         name = f"horizon_panorama__{site.manifest['site']['site_id']}.svg"
-        (out / name).write_text(horizon_panorama(site), encoding="utf-8", newline="\n")
+        (out / name).write_text(horizon_panorama(site, args.notice), encoding="utf-8", newline="\n")
     if any(site.timeline for site in sites):
-        (out / "window_strip.svg").write_text(window_strip(sites), encoding="utf-8", newline="\n")
+        (out / "window_strip.svg").write_text(window_strip(sites, args.notice), encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

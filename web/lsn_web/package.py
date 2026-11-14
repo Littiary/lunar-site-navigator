@@ -2,6 +2,9 @@
 
 Every array is checked against its manifest entry (file size and SHA-256) before it is
 used, so a chart is drawn only from the exact bytes the core wrote.
+
+Any 0.x package is accepted (SPEC section 8: minor versions are additive). Fields added in
+later minor versions are optional to this reader: whatever is absent is not shown.
 """
 
 from __future__ import annotations
@@ -45,6 +48,10 @@ class SitePackage:
         return self.manifest["package_id"]
 
     @property
+    def contract_version(self) -> str:
+        return str(self.manifest["contract"]["version"])
+
+    @property
     def synthetic(self) -> bool:
         return bool(self.manifest.get("synthetic"))
 
@@ -72,6 +79,52 @@ class SitePackage:
         return Array(list(struct.unpack(f"<{count}{code}", data)), shape)
 
 
+def array_refs(document) -> list[dict]:
+    """Every array reference in a manifest (objects with file, dtype, shape and sha256)."""
+    found = []
+    if isinstance(document, dict):
+        if {"file", "dtype", "shape", "sha256"} <= document.keys():
+            found.append(document)
+        for value in document.values():
+            found += array_refs(value)
+    elif isinstance(document, list):
+        for value in document:
+            found += array_refs(value)
+    return found
+
+
+def load_index(path: str | Path) -> list[SitePackage]:
+    """The site packages listed in an ``index.json``, in the order of the index."""
+    path = Path(path)
+    try:
+        index = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise PackageError(f"{path}: cannot read the index ({error})") from error
+    if index.get("kind") != "index":
+        raise PackageError(f"{path}: kind is {index.get('kind')!r}, expected 'index'")
+    _check_contract(path, index.get("contract", {}))
+    return [load_site_package(path.parent / entry["path"]) for entry in index["packages"] if entry["kind"] == "site"]
+
+
+def load_packages(paths: list[str]) -> list[SitePackage]:
+    """Site package directories and/or index.json files, in the order given."""
+    sites = []
+    for item in paths:
+        target = Path(item)
+        sites += load_index(target) if target.is_file() else [load_site_package(target)]
+    return sites
+
+
+def _check_contract(path: Path, contract: dict) -> None:
+    if contract.get("name") != CONTRACT_NAME:
+        raise PackageError(f"{path}: not an {CONTRACT_NAME} document")
+    major = str(contract.get("version", "")).split(".")[0]
+    if major != SUPPORTED_MAJOR:
+        raise PackageError(
+            f"{path}: contract version {contract.get('version')}; this reader supports {SUPPORTED_MAJOR}.x only"
+        )
+
+
 def load_site_package(path: str | Path) -> SitePackage:
     """Open the site package in directory ``path``."""
     path = Path(path)
@@ -79,14 +132,7 @@ def load_site_package(path: str | Path) -> SitePackage:
         manifest = json.loads((path / "manifest.json").read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise PackageError(f"{path}: cannot read manifest.json ({error})") from error
-    contract = manifest.get("contract", {})
-    if contract.get("name") != CONTRACT_NAME:
-        raise PackageError(f"{path}: not an {CONTRACT_NAME} package")
-    major = str(contract.get("version", "")).split(".")[0]
-    if major != SUPPORTED_MAJOR:
-        raise PackageError(
-            f"{path}: contract version {contract.get('version')}; this reader supports {SUPPORTED_MAJOR}.x only"
-        )
+    _check_contract(path, manifest.get("contract", {}))
     if manifest.get("kind") != "site":
         raise PackageError(f"{path}: kind is {manifest.get('kind')!r}, expected 'site'")
     if path.name != manifest.get("package_id"):

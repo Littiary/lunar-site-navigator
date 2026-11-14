@@ -148,8 +148,9 @@ class WindowStripTests(unittest.TestCase):
         document = manifest()
         index = document["horizon"]["default_height_index"]
         box = plot_box(self.root)
-        windows = [w for w in document["timeline"]["windows"] if w["height_index"] == index]
-        self.assertEqual({w["subject"] for w in windows}, {"SUN", "EARTH", "COMBINED"})
+        drawn = {row[0] for row in charts.STRIP_ROWS}
+        windows = [w for w in document["timeline"]["windows"] if w["height_index"] == index and w["id"] in drawn]
+        self.assertEqual({w["id"] for w in windows}, {"sun_visible", "earth_visible", "sun_and_earth_visible"})
         span = box["xmax"] - box["xmin"]
         for window in windows:
             bars = self.root.findall(f".//{SVG}rect[@data-window='{window['id']}']")
@@ -164,6 +165,47 @@ class WindowStripTests(unittest.TestCase):
         self.assertTrue(labels)
         for label in labels:
             self.assertRegex(label, re.compile(r"^\d{4}-\d{2}-\d{2}$"))
+
+
+def real_layout_copy(tmp: str) -> Path:
+    """The sample package with the extra windows and site-level metrics that the real
+    pipeline writes (core/lsncore/events/timeline.py on the ephem branch): several windows
+    per subject, so a reader must select windows by id, not by subject. The added
+    intervals are test values only."""
+    copy = Path(tmp) / SITE_DIR.name
+    shutil.copytree(SITE_DIR, copy)
+    document = manifest()
+    timeline = document["timeline"]
+    start = timeline["time"]["start_et_s"]
+    extra = []
+    for window in timeline["windows"]:
+        if window["id"] != "sun_visible":
+            continue
+        for wid in ("sun_any_part_visible", "sun_full_disc_visible", "sun_lit", "sun_eclipsed_by_earth", "sun_totally_eclipsed_by_earth"):
+            clone = dict(window, id=wid)
+            if wid in ("sun_lit", "sun_eclipsed_by_earth", "sun_totally_eclipsed_by_earth"):
+                clone["intervals_et_s"] = [[start + 3600.0, start + 7200.0]]
+                clone["intervals_utc"] = [["2026-11-14T01:00:00.000Z", "2026-11-14T02:00:00.000Z"]]
+            extra.append(clone)
+    timeline["windows"] += extra
+    timeline["metrics"].append({"id": "sun_eclipse_count", "label": "Number of eclipses of the Sun by the Earth in the window",
+                                "value": 1.0, "unit": "1", "height_index": None, "method": "timeline.metrics"})
+    (copy / "manifest.json").write_text(json.dumps(document), encoding="utf-8")
+    return copy
+
+
+class RealPackageLayoutTests(unittest.TestCase):
+    def test_rows_are_selected_by_window_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            site = package.load_site_package(real_layout_copy(tmp))
+            root = ET.fromstring(charts.window_strip([site]))
+            index = site.manifest["horizon"]["default_height_index"]
+            by_id = {w["id"]: w for w in site.timeline["windows"] if w["height_index"] == index}
+            for wid in ("sun_visible", "earth_visible", "sun_and_earth_visible", "sun_eclipsed_by_earth"):
+                bars = root.findall(f".//{SVG}rect[@data-window='{wid}']")
+                self.assertEqual(len(bars), len(by_id[wid]["intervals_et_s"]), wid)
+            for wid in ("sun_lit", "sun_any_part_visible", "sun_full_disc_visible", "sun_totally_eclipsed_by_earth"):
+                self.assertEqual(root.findall(f".//{SVG}rect[@data-window='{wid}']"), [], wid)
 
 
 class CommandLineTests(unittest.TestCase):
