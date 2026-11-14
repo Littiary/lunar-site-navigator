@@ -43,6 +43,15 @@ class Terrain(Protocol):
     def describe(self) -> dict:
         """The ``inputs.dem`` object of the package contract."""
 
+    def height_at_pixel_m(self, lon_deg, lat_deg, pixel_m: float) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+        """Height on the coarsest stored level whose pixel is not larger than pixel_m (the
+        finest data where there is no such level). Used for drawing, never for the horizon.
+
+        Returns the heights, for every point the index of the source it was read from
+        (-1 without data), and the sources: product_id, level, pixel_m, statistic, sha256
+        and, for a derived level, derived_from_sha256.
+        """
+
 
 class AnalyticTerrain:
     """Terrain given by a function ``height(lon_deg, lat_deg)``: exact, no grid.
@@ -82,6 +91,11 @@ class AnalyticTerrain:
     def describe(self) -> dict:
         return {"dem_set_id": self.dem_set_id, "layers": []}
 
+    def height_at_pixel_m(self, lon_deg, lat_deg, pixel_m: float) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+        height = self.height_m(lon_deg, lat_deg)
+        source = {"product_id": self.dem_set_id, "level": 0, "pixel_m": self.finest_pixel_m, "statistic": "function", "sha256": None}
+        return height, np.where(np.isfinite(height), 0, -1), [source]
+
 
 def open_lola(label_paths=None) -> "LolaTerrain":
     """Open LOLA terrain through the data stream's reader.
@@ -118,6 +132,7 @@ class LolaTerrain:
         )
         self.ceiling_height_m = self._ceiling()
         self._described: dict | None = None  # asked for often; the reader may hash files to answer
+        self._sources: list | None = None
 
     # -- overview levels --------------------------------------------------------------------
 
@@ -272,6 +287,55 @@ class LolaTerrain:
                     out[:, axis] = np.where(crossed, (line - a) / (b - a), out[:, axis])
             todo &= ~sel
         return out
+
+    def _level_sources(self) -> list[tuple[object, int, dict]]:
+        """Every block-average level of every product, coarsest pixel first, with the
+        checksum of the file it is stored in as the data reader reports it."""
+        if self._sources is None:
+            files = {item["product_id"]: item.get("files", []) for item in self._terrain.provenance()}
+            stored = {(rec["product_id"], rec["level"]) for rec in self._terrain.levels() if rec["statistic"] == "mean"}
+            found = []
+            for p in self._terrain.products:
+                base = next((f.get("sha256") for f in files.get(p.product_id, []) if f.get("role") == "data"), None)
+                for k in p.levels:
+                    if (p.product_id, k) not in stored:
+                        continue
+                    record = {"product_id": str(p.product_id), "level": int(k), "pixel_m": float(p.pixel_m(k)), "statistic": "mean", "sha256": base}
+                    if k:
+                        record["sha256"] = next((f.get("sha256") for f in files.get(p.product_id, []) if f.get("name") == f"mean_L{k}.npy"), None)
+                        record["derived_from_sha256"] = base
+                    found.append((p, int(k), record))
+            self._sources = sorted(found, key=lambda item: -item[2]["pixel_m"])
+        return self._sources
+
+    def height_at_pixel_m(self, lon_deg, lat_deg, pixel_m: float) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+        """Bilinear height on the block-average level with the coarsest pixel that is not
+        larger than pixel_m and covers the point; the finest product at its own pixel where
+        nothing that fine covers it. This is the rule of ``lsn_data``'s ``Terrain.height_m``
+        with a pixel-size request, written out here to know which level each point came from.
+        """
+        from lsn_data.georef import lonlat_to_xy
+
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        shape = np.broadcast(lon, lat).shape
+        products = self._terrain.products  # finest first
+        x, y = lonlat_to_xy(np.broadcast_to(lon, shape).ravel(), np.broadcast_to(lat, shape).ravel(), products[0].grid0.radius_m, self._terrain.pole)
+        out = np.full(x.shape, np.nan)
+        index = np.full(x.shape, -1, dtype=np.int64)
+        todo = np.ones(x.shape, dtype=bool)
+        sources = self._level_sources()
+        order = [n for n, (_, _, rec) in enumerate(sources) if rec["pixel_m"] <= float(pixel_m)]
+        order += sorted((n for n, (_, k, _) in enumerate(sources) if k == 0), key=lambda n: sources[n][2]["pixel_m"])
+        for n in order:
+            p, k, _ = sources[n]
+            sel = todo & p.grid(k).covers_xy(x, y)
+            if sel.any():
+                out[sel] = p.height_xy(x[sel], y[sel], k, "mean")
+                index[sel] = n
+                todo &= ~sel
+        index = np.where(np.isfinite(out), index, -1)
+        return out.reshape(shape), index.reshape(shape), [rec for _, _, rec in sources]
 
     @property
     def is_synthetic(self) -> bool:

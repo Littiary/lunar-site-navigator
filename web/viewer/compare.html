@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Lunar Site Navigator comparison</title>
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<main class="wide">
+  <header>
+    <h1>Compare two sites</h1>
+    <p class="muted">Both sites are shown at the same moment. Every number is read from the published result packages of the science core; the browser computes none of them.
+      <a href="index.html">Single-site viewer</a> · <a href="../index.html">Evidence page</a></p>
+    <div id="notice" class="banner" hidden></div>
+    <div id="error" class="banner" hidden></div>
+  </header>
+
+  <section class="timebar" aria-label="Shared time">
+    <div class="time-row">
+      <button type="button" id="play" aria-pressed="false">Play</button>
+      <label>Speed
+        <select id="speed">
+          <option value="1">1 hour per step</option>
+          <option value="6" selected>6 hours per step</option>
+          <option value="24">1 day per step</option>
+          <option value="168">1 week per step</option>
+        </select>
+      </label>
+      <label>Date (UTC) <input id="date" type="datetime-local" step="3600"></label>
+      <output id="utc" class="mono"></output>
+    </div>
+    <div class="time-row">
+      <button type="button" data-step="-24" title="One day earlier">−1 d</button>
+      <button type="button" data-step="-1" title="One sample earlier">−1 h</button>
+      <input id="slider" type="range" min="0" value="0" step="1" aria-label="Time sample">
+      <button type="button" data-step="1" title="One sample later">+1 h</button>
+      <button type="button" data-step="24" title="One day later">+1 d</button>
+    </div>
+  </section>
+
+  <div class="split">
+    <section class="pane" id="pane-a" aria-label="Site A"></section>
+    <section class="pane" id="pane-b" aria-label="Site B"></section>
+  </div>
+</main>
+<template id="pane-template">
+  <div class="pane-head">
+    <label>Site <select data-role="site"></select></label>
+    <label>Observer height <select data-role="height"></select></label>
+  </div>
+  <p class="pane-time mono" data-role="time"></p>
+  <p class="note small" data-role="note" hidden></p>
+  <div class="chips" data-role="chips"></div>
+  <div class="chart"><svg data-role="horizon" role="img" aria-label="Terrain horizon with the Sun and the Earth"></svg></div>
+  <h2>At this time</h2>
+  <div class="table"><table data-role="readout"></table></div>
+  <h2>Over the whole time window</h2>
+  <div class="table"><table data-role="summary"></table></div>
+  <h2>Next events</h2>
+  <div class="table"><table data-role="events"></table></div>
+  <p class="muted small" data-role="footer"></p>
+</template>
+<script type="module" src="js/compare.js"></script>
+</body>
+</html>

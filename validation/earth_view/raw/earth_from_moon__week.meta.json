@@ -1,0 +1,29 @@
+{
+  "case_id": "earth_from_moon__week",
+  "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&ANG_FORMAT=%27DEG%27&TIME_DIGITS=%27SECONDS%27&CSV_FORMAT=%27YES%27&APPARENT=%27AIRLESS%27&COMMAND=%27399%27&CENTER=%27500%40301%27&QUANTITIES=%2714%2C17%27&START_TIME=%272026-11-14%2000%3A00%27&STOP_TIME=%272026-11-21%2000%3A00%27&STEP_SIZE=%271%20h%27",
+  "parameters": {
+    "format": "json",
+    "OBJ_DATA": "NO",
+    "MAKE_EPHEM": "YES",
+    "EPHEM_TYPE": "OBSERVER",
+    "ANG_FORMAT": "DEG",
+    "TIME_DIGITS": "SECONDS",
+    "CSV_FORMAT": "YES",
+    "APPARENT": "AIRLESS",
+    "COMMAND": "399",
+    "CENTER": "500@301",
+    "QUANTITIES": "14,17",
+    "START_TIME": "2026-11-14 00:00",
+    "STOP_TIME": "2026-11-21 00:00",
+    "STEP_SIZE": "1 h"
+  },
+  "retrieved_utc": "2026-11-14T14:01:21Z",
+  "http_status": 200,
+  "bytes": 18479,
+  "sha256": "cc4c69970fb4bd878db7f1a7f2343d4c2b81a153e11e997a1db7a936bb3e3e84",
+  "api_signature": {
+    "source": "NASA/JPL Horizons API",
+    "version": "1.2"
+  },
+  "user_agent": "lunar-ephemeris-validation/0.1 (python-urllib; sequential, cached)"
+}

@@ -11,6 +11,8 @@ from .contract import PackageWriter
 from .geometry import site_frame
 from .results import HorizonResult, TimelineResult
 from .scenario import canonical_heights, canonical_site
+from .terrain_patch import FRAME as PATCH_FRAME
+from .terrain_patch import NOTICE as PATCH_NOTICE
 
 # Method card ids used by the package builder. The computing modules supply the cards.
 M_SITE_GEOMETRY = "site.geometry"
@@ -33,9 +35,11 @@ M_OPPORTUNITY = "timeline.opportunity"
 M_OBSTACLES = "horizon.obstacles"
 M_SMOOTH_SPHERE = "timeline.smooth_sphere"
 M_BLOCKING = "timeline.blocking"
+M_TERRAIN_PATCH = "terrain.patch"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
+M_DIRTAB_EARTH_VIEW = "dirtab.earth_view"
 
 
 def method_card(
@@ -101,9 +105,9 @@ def _used_methods(node, found: set[str]) -> set[str]:
     return found
 
 
-def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | None) -> dict:
+def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | None, terrain_patches: list | None = None) -> dict:
     """Canonical request of a site package (the part of the input that defines its id)."""
-    return {
+    request = {
         "site": canonical_site(site),
         "observer_heights_m": canonical_heights(horizon.observer_heights_m),
         "horizon": {
@@ -112,6 +116,9 @@ def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | No
         },
         "timeline": timeline_request,
     }
+    if terrain_patches:
+        request["terrain_patches"] = [{"id": p.id, "half_width_m": float(p.half_width_m), "spacing_m": float(p.spacing_m)} for p in terrain_patches]
+    return request
 
 
 def build_site_package(
@@ -131,9 +138,10 @@ def build_site_package(
     timings_s: dict | None = None,
     status: str = "ok",
     warnings: list[str] | None = None,
+    terrain_patches: list | None = None,
 ) -> Path:
     """Write one site package and return its directory."""
-    request = site_request(site, horizon, timeline_request)
+    request = site_request(site, horizon, timeline_request, terrain_patches)
     csite = request["site"]
     heights = request["observer_heights_m"]
     if heights != [float(h) for h in horizon.observer_heights_m]:
@@ -262,6 +270,27 @@ def build_site_package(
         if timeline.opportunities is not None:
             sections["timeline"]["opportunities"] = timeline.opportunities
 
+    if terrain_patches:
+        records = []
+        for patch in terrain_patches:
+            finite = patch.up_m[np.isfinite(patch.up_m)]
+            records.append(
+                {
+                    "id": patch.id,
+                    "spacing_m": float(patch.spacing_m),
+                    "half_width_m": float(patch.half_width_m),
+                    "count_east": patch.count,
+                    "count_north": patch.count,
+                    "east_min_m": -float(patch.half_width_m),
+                    "north_min_m": -float(patch.half_width_m),
+                    "up_m": writer.array(f"terrain_{patch.id}_up_m", patch.up_m, "<f4", "m", M_TERRAIN_PATCH),
+                    "up_min_m": float(finite.min()) if finite.size else None,
+                    "up_max_m": float(finite.max()) if finite.size else None,
+                    "sources": list(patch.sources),
+                }
+            )
+        sections["terrain"] = {"use": "drawing", "notice": PATCH_NOTICE, "frame": PATCH_FRAME, "method": M_TERRAIN_PATCH, "patches": records}
+
     used = _used_methods(sections, set())
     missing = used - methods.keys()
     if missing:
@@ -303,8 +332,12 @@ def build_direction_table_package(
     scenario_id: str | None = None,
     timings_s: dict | None = None,
     warnings: list[str] | None = None,
+    earth_view: dict | None = None,
 ) -> Path:
-    """Write one direction-table package (site independent) and return its directory."""
+    """Write one direction-table package (site independent) and return its directory.
+
+    earth_view: the orientation of the Earth per record (lsncore.earth_view), or None.
+    """
     positions_km = np.asarray(positions_km, dtype=np.float64)
     if positions_km.shape != (time["count"], len(bodies), 3):
         raise ValueError("positions_km must have shape [time.count, len(bodies), 3]")
@@ -337,6 +370,20 @@ def build_direction_table_package(
             "max_error_arcsec": _quantity(interpolation_max_error_arcsec, "arcsec", M_DIRTAB_INTERP),
         },
     }
+    if earth_view is not None:
+        request["earth_view"] = True
+        if earth_view.get("kernels"):  # what the Earth's orientation was read from is part of the identity
+            inputs["earth_orientation_kernels"] = list(earth_view["kernels"])
+        block = {}
+        for name in ("sub_lunar_lat_deg", "sub_lunar_lon_deg", "north_pole_angle_deg"):
+            values = np.asarray(earth_view[name], dtype=np.float64)
+            if values.shape != (time["count"],):
+                raise ValueError(f"earth_view.{name} must have one value per record")
+            block[name] = writer.array(f"earth_{name}", values, "<f4", "deg", M_DIRTAB_EARTH_VIEW)
+        block["earth_frame"] = str(earth_view["earth_frame"])
+        block["flattening"] = float(earth_view["flattening"])
+        block["method"] = M_DIRTAB_EARTH_VIEW
+        sections["earth_view"] = block
     used = _used_methods(sections, set())
     missing = used - methods.keys()
     if missing:

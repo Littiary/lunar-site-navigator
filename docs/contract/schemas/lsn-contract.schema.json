@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Littiary/lunar-site-navigator/docs/contract/schemas/lsn-contract.schema.json",
-  "title": "Lunar Site Navigator package contract, version 0.6",
+  "title": "Lunar Site Navigator package contract, version 0.8",
   "description": "One schema for the four JSON documents of the contract. The document type is selected by the 'kind' field. See docs/contract/SPEC.md for the meaning of every field.",
   "type": "object",
   "required": [
@@ -713,6 +713,14 @@
               }
             }
           ]
+        },
+        "terrain_patches": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/terrain_patch_request"
+          },
+          "minItems": 1
         }
       }
     },
@@ -1550,6 +1558,9 @@
         },
         "timeline": {
           "$ref": "#/$defs/timeline_block"
+        },
+        "terrain": {
+          "$ref": "#/$defs/terrain_block"
         }
       },
       "unevaluatedProperties": false
@@ -1651,6 +1662,10 @@
             "aberration_correction": {
               "type": "string",
               "minLength": 1
+            },
+            "earth_view": {
+              "description": "Since 0.8. Present and true if the table holds the orientation of the Earth.",
+              "const": true
             }
           }
         },
@@ -1673,6 +1688,14 @@
             },
             "kernels": {
               "type": "array",
+              "items": {
+                "$ref": "#/$defs/kernel"
+              }
+            },
+            "earth_orientation_kernels": {
+              "description": "Since 0.8. Kernels the orientation of the Earth was read from.",
+              "type": "array",
+              "minItems": 1,
               "items": {
                 "$ref": "#/$defs/kernel"
               }
@@ -1739,6 +1762,42 @@
         },
         "earth_rotation": {
           "$ref": "#/$defs/array_ref"
+        },
+        "earth_view": {
+          "description": "Since 0.8. The orientation of the Earth as seen from the centre of the Moon, one value per record.",
+          "type": "object",
+          "required": [
+            "sub_lunar_lat_deg",
+            "sub_lunar_lon_deg",
+            "north_pole_angle_deg",
+            "earth_frame",
+            "flattening",
+            "method"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "sub_lunar_lat_deg": {
+              "$ref": "#/$defs/array_ref"
+            },
+            "sub_lunar_lon_deg": {
+              "$ref": "#/$defs/array_ref"
+            },
+            "north_pole_angle_deg": {
+              "$ref": "#/$defs/array_ref"
+            },
+            "earth_frame": {
+              "type": "string",
+              "minLength": 1
+            },
+            "flattening": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "method": {
+              "$ref": "#/$defs/method_id"
+            }
+          }
         }
       },
       "unevaluatedProperties": false
@@ -1932,6 +1991,14 @@
         },
         "uncertainty": {
           "$ref": "#/$defs/uncertainty_request"
+        },
+        "terrain_patches": {
+          "description": "Since 0.7. Terrain patches to write for every site; if absent, the default patches; an empty list writes none.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/terrain_patch_request"
+          }
         }
       }
     },
@@ -2827,6 +2894,183 @@
         }
       },
       "unevaluatedProperties": false
+    },
+    "terrain_patch_request": {
+      "description": "One terrain patch for drawing: a square grid centred on the site.",
+      "type": "object",
+      "required": [
+        "id",
+        "half_width_m",
+        "spacing_m"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,15}$"
+        },
+        "half_width_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spacing_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "terrain_block": {
+      "description": "Since 0.7. The ground around the site on regular grids, for drawing only.",
+      "type": "object",
+      "required": [
+        "use",
+        "notice",
+        "frame",
+        "method",
+        "patches"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "use": {
+          "const": "drawing"
+        },
+        "notice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frame": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "$ref": "#/$defs/method_id"
+        },
+        "patches": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "spacing_m",
+              "half_width_m",
+              "count_east",
+              "count_north",
+              "east_min_m",
+              "north_min_m",
+              "up_m",
+              "up_min_m",
+              "up_max_m",
+              "sources"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,15}$"
+              },
+              "spacing_m": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "half_width_m": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "count_east": {
+                "type": "integer",
+                "minimum": 3,
+                "maximum": 1025
+              },
+              "count_north": {
+                "type": "integer",
+                "minimum": 3,
+                "maximum": 1025
+              },
+              "east_min_m": {
+                "type": "number"
+              },
+              "north_min_m": {
+                "type": "number"
+              },
+              "up_m": {
+                "$ref": "#/$defs/array_ref"
+              },
+              "up_min_m": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "up_max_m": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "product_id",
+                    "level",
+                    "pixel_m",
+                    "statistic",
+                    "sha256",
+                    "node_share"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "product_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "level": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "pixel_m": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "statistic": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "sha256": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "$ref": "#/$defs/sha256"
+                        }
+                      ]
+                    },
+                    "derived_from_sha256": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "$ref": "#/$defs/sha256"
+                        }
+                      ]
+                    },
+                    "node_share": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
