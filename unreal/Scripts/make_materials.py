@@ -113,7 +113,9 @@ slope += CS * small * L.Craters(p + 11.3, 2.9, 0.10);
 slope += CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 11.0, 0.08));
 slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 43.0, 0.07));
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
-float mottle = 1.0 + S * 0.10 * medium * (L.Noise(p * 0.11 + 19.0).z - 0.5);
+// Grey variation on two large scales (about 9 m and 60 m), each on its own turned grid: the
+// ground is not one flat grey, and nothing repeats (no texture is tiled).
+float mottle = 1.0 + S * (0.09 * medium * (L.Noise(q * 0.11 + 19.0).z - 0.5) + 0.08 * (L.Noise(w * 0.017 + 5.0).z - 0.5));
 return float4(n, mottle);
 """
 
