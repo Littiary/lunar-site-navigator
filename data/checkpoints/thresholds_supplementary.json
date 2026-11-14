@@ -1,0 +1,29 @@
+{
+  "note": "Supplementary check to checkpoint 2, requested by the control session. Criterion written and committed BEFORE measuring. It does not replace or alter checkpoint 2 in thresholds.json, whose result (2 of 6 craters) stays as measured.",
+  "question": "Is the checkpoint 2 miss caused by a georeferencing error common to all craters (would affect every horizon), or by the poor match between a gazetteer outline and an old, irregular rim?",
+  "fit": {
+    "outline": "same outline per crater as checkpoint 2 (the IAU determination with the most vertices), densified to one point every 250 m along the polygon",
+    "objective": "crest-ness: mean over outline points of h(p) - 0.5 * (h(p + d n) + h(p - d n)), where n is the outward unit vector from the outline centroid, d = 0.02 * outline diameter, h from the 20 m product (bilinear); a ridge crest at the outline maximises it and a regional slope cancels",
+    "translation_search_m": "dx, dy in [-4000, +4000] in 100 m steps (polar stereographic plane, x = rho sin(lon), y = rho cos(lon)); best = maximum of the objective",
+    "uncertainty": "200 bootstrap resamples of the outline points (with replacement); report the standard deviation of the best dx and dy per crater"
+  },
+  "common_shift_rule": {
+    "statistic": "m = mean of the six translation vectors; S = root-mean-square distance of the six vectors from m; SE = S / sqrt(6)",
+    "flagged_if_all": [
+      "|m| >= 500 m",
+      "|m| >= 2 * SE",
+      "at least 5 of the 6 vectors have a positive component along the direction of m"
+    ],
+    "why_500_m": "A translation common to all craters of this size would move Shackleton and de Gerlache by the same amount; the checkpoint 2 limit for their median crest offset is 500 m, so a common shift of that size is already the smallest one that matters. Independently, the 16 ppd comparison in diagnostics.json shows the polar grid agrees with the cylindrical product to better than 250 m.",
+    "why_2_SE_and_5_of_6": "a shift is 'common' only if it is distinguishable from the scatter of crater-to-crater irregularity and has a consistent direction; with six random directions the chance that 5 or more lie in the same half-plane as their mean is high only when the vectors are really aligned, so the first two conditions carry the decision and this one guards against one outlier dominating m"
+  },
+  "rotation_and_scale_rule": {
+    "model": "t_i = T + delta * (z x r_i) + eps * r_i, with r_i the outline centroid from the pole, fitted by least squares to the six vectors (12 equations, 4 parameters); standard errors from the residual scatter",
+    "flagged_if": [
+      "|delta| * r_max >= 500 m and |delta| >= 2 SE(delta)  (rotation about the pole)",
+      "|eps| * r_max >= 500 m and |eps| >= 2 SE(eps)  (radial scale error)"
+    ]
+  },
+  "reported_also": "the six vectors, their mean, S, SE, the resultant length ratio |sum t_i| / sum |t_i| (1 = all vectors identical, about 0.4 for random directions), and the objective at zero shift against its best value per crater",
+  "if_flagged": "stop and report at once; the data would be affected for every horizon"
+}
