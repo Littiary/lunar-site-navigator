@@ -4,3 +4,7 @@
 *.i4 binary
 *.u1 binary
 CREDITS.md merge=union
+
+# Published packages are what the pipeline wrote, byte for byte, on every checkout: the
+# manifests, the index and the README must not get other line ends on Windows.
+packages/** -text

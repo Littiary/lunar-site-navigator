@@ -36,6 +36,14 @@ def _tiles(product_id: str) -> list:
     return [record for record in files.values() if str(record.get("product_id", "")).startswith(product_id + "_") and record.get("role") == "data"]
 
 
+def _size(path: Path) -> int:
+    """Size of a published file as the pipeline wrote it: a JSON file is counted with LF line ends,
+    whatever a checkout did to them (the arrays are binary and never converted)."""
+    if path.suffix == ".json":
+        return len(path.read_bytes().replace(b"\r\n", b"\n"))
+    return path.stat().st_size
+
+
 def _package_dirs() -> list:
     return sorted(path.parent for path in ROOT.rglob("manifest.json"))
 
@@ -304,9 +312,9 @@ def test_readme_says_for_every_site_what_served_it_and_what_it_carries():
         assert row[6] == ", ".join(f"{h:g}" for h in manifest["horizon"]["observer_heights_m"]) + " m", site_id
         assert (row[7] == "none") == ("uncertainty" not in manifest["timeline"]), site_id
         assert row[8] == ("yes" if "landing_ellipse" in manifest["timeline"].get("uncertainty", {}) else "no"), site_id
-        size = sum(f.stat().st_size for f in (ROOT / "site" / site_id / manifest["package_id"]).iterdir())
+        size = sum(_size(f) for f in (ROOT / "site" / site_id / manifest["package_id"]).iterdir())
         assert row[10] == f"{size / 1e6:.1f} MB", site_id
-    total = sum(f.stat().st_size for f in ROOT.rglob("*") if f.is_file() and f.name != "README.md")
+    total = sum(_size(f) for f in ROOT.rglob("*") if f.is_file() and f.name != "README.md")
     assert f"| Size | {total / 1e6:.1f} MB" in readme
 
 

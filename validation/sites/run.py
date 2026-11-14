@@ -612,8 +612,8 @@ def describe_site(package_dir: Path, category: str) -> dict:
         "sun_longest_outage_h": metrics["sun_longest_outage_s"] / 3600.0,
         "sun_visible_h_per_lunar_day_least_median_most": _spread(per_day["sun_visible_s"], complete),
         "landing_windows_example_standard": None if not standard else {"count": standard[0]["window_count"], "feasible_fraction": standard[0]["feasible_fraction"]},
-        "size_bytes": sum(f.stat().st_size for f in files),
-        "manifest_bytes": (Path(package_dir) / "manifest.json").stat().st_size,
+        "size_bytes": sum(_file_bytes(f) for f in files),
+        "manifest_bytes": _file_bytes(Path(package_dir) / "manifest.json"),
     }
 
 
@@ -883,8 +883,19 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
     (root / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
+def _file_bytes(path: Path) -> int:
+    """Size of a published file as the pipeline wrote it.
+
+    A JSON file is counted with LF line ends, so that the number does not depend on what a
+    checkout did to its line ends (the arrays are binary and never converted).
+    """
+    if path.suffix == ".json":
+        return len(path.read_bytes().replace(b"\r\n", b"\n"))
+    return path.stat().st_size
+
+
 def _folder_bytes(folder: Path) -> int:
-    return sum(f.stat().st_size for f in folder.rglob("*") if f.is_file()) if folder.exists() else 0
+    return sum(_file_bytes(f) for f in folder.rglob("*") if f.is_file()) if folder.exists() else 0
 
 
 def main() -> None:
@@ -1001,7 +1012,7 @@ def main() -> None:
         "near_field_before_after": comparison,
         "all_sites": all_sites,
         "size": {
-            "total_bytes": sum(_folder_bytes(out / name) for name in PACKAGE_FOLDERS) + (out / "index.json").stat().st_size,
+            "total_bytes": sum(_folder_bytes(out / name) for name in PACKAGE_FOLDERS) + _file_bytes(out / "index.json"),
             "files": sum(1 for name in PACKAGE_FOLDERS for f in (out / name).rglob("*") if f.is_file()) + 1,
             "direction_table_bytes": _folder_bytes(out / "direction_table"),
             "site_bytes": _folder_bytes(out / "site"),
