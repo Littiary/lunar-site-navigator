@@ -35,6 +35,12 @@ namespace LsnHudText
 	 */
 	LUNARSITENAVIGATOR_API FString CountdownSentence(const TCHAR* BodyLabel, const FLsnCountdown& Countdown);
 
+	/**
+	 * What hides a body and what that obstacle costs (SPEC 5.5), as up to three sentences;
+	 * none while the body is clear. Every number is a field of the package.
+	 */
+	LUNARSITENAVIGATOR_API void BlockerSentences(const TCHAR* BodyLabel, const FLsnSitePackage& Package, const FLsnBlocking& Blocking, TArray<FString>& OutLines);
+
 	/** The text read-out, top to bottom. The first line is the synthetic marker if and only if the package is synthetic. */
 	LUNARSITENAVIGATOR_API void BuildStatusLines(const FLsnSitePackage& Package, int32 HeightIndex, double TimePosition, TArray<FLsnHudLine>& OutLines,
 		const FString& GroundNote = FString());

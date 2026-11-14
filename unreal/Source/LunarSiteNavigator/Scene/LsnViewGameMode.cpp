@@ -107,6 +107,7 @@ void ALsnViewGameMode::StartPlay()
 		}
 		Scene->SetHorizonLineVisible(FParse::Param(FCommandLine::Get(), TEXT("LsnHorizonLine")));
 		Scene->SetFillLightVisible(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoFillLight")));
+		Scene->SetObstacleViewEnabled(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoObstacle")));
 	}
 
 	if (FParse::Value(FCommandLine::Get(), TEXT("LsnMovieDir="), MovieDir))

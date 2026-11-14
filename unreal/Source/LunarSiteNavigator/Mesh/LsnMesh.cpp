@@ -387,6 +387,40 @@ void LsnMesh::BuildUnitSphere(int32 NumLatitudeBands, int32 NumLongitudeBands, c
 	}
 }
 
+void LsnMesh::BuildObstacleBand(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
+	const TArray<int32>& AzimuthIndices, double BandWidthDeg, const FColor& Color, FLsnMeshData& OutMesh)
+{
+	OutMesh = FLsnMeshData();
+	const double EyeHeightM = Package.ObserverHeightsM[HeightIndex];
+	const FVector Eye(0.0, 0.0, EyeHeightM * FLsnSiteFrame::CmPerM);
+	for (const int32 A : AzimuthIndices)
+	{
+		const double Az = Package.AzimuthDegAt(A);
+		const double El = Package.HorizonElevationAt(HeightIndex, A);
+		FVector HorizonPoint;
+		double SlantCm = 100000.0;
+		if (HorizonPointUnreal(Frame, EyeHeightM, Az, El, Package.HorizonDistanceAt(HeightIndex, A), HorizonPoint))
+		{
+			SlantCm = (HorizonPoint - Eye).Size();
+		}
+		const double ElSafe = FMath::IsNaN(El) ? 0.0 : El;
+		// Slightly nearer than the horizon point, so the band is drawn in front of the terrain.
+		const double BandCm = 0.97 * SlantCm;
+		OutMesh.Positions.Add(Eye + FLsnSiteFrame::AzElToUnrealDir(Az, ElSafe) * BandCm);
+		OutMesh.Positions.Add(Eye + FLsnSiteFrame::AzElToUnrealDir(Az, ElSafe + BandWidthDeg) * BandCm);
+	}
+	OutMesh.Colors.Init(Color, OutMesh.Positions.Num());
+	OutMesh.UV0.Init(FVector2D::ZeroVector, OutMesh.Positions.Num());
+	for (int32 I = 0; I + 1 < AzimuthIndices.Num(); ++I)
+	{
+		const int32 L0 = 2 * I, U0 = 2 * I + 1, L1 = 2 * I + 2, U1 = 2 * I + 3;
+		const FVector Towards = Eye - (OutMesh.Positions[L0] + OutMesh.Positions[U1]) * 0.5;
+		OutMesh.AddTriangleFacing(L0, L1, U1, Towards);
+		OutMesh.AddTriangleFacing(L0, U1, U0, Towards);
+	}
+	OutMesh.ComputeNormals();
+}
+
 void LsnMesh::BuildHorizonLine(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex, double BandWidthDeg,
 	const FColor& Color, FLsnMeshData& OutMesh)
 {

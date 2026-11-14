@@ -166,6 +166,7 @@ void ALsnObserverPawn::Tick(float DeltaSeconds)
 		if (PC->WasInputKeyJustPressed(EKeys::RightBracket)) { PlayRate = FMath::Min(PlayRate * 2.0, 768.0); }
 		if (PC->WasInputKeyJustPressed(EKeys::H)) { Scene->SetHorizonLineVisible(!Scene->IsHorizonLineVisible()); }
 		if (PC->WasInputKeyJustPressed(EKeys::Escape)) { PC->ConsoleCommand(TEXT("quit")); }
+		if (PC->WasInputKeyJustPressed(EKeys::O)) { Scene->SetObstacleViewEnabled(!Scene->IsObstacleViewEnabled()); }
 		if (PC->WasInputKeyJustPressed(EKeys::L)) { Scene->SetFillLightVisible(!Scene->IsFillLightVisible()); }
 		if (PC->WasInputKeyJustPressed(EKeys::PageUp)) { Scene->SetHeightIndex(Scene->GetHeightIndex() + 1); }
 		if (PC->WasInputKeyJustPressed(EKeys::PageDown)) { Scene->SetHeightIndex(Scene->GetHeightIndex() - 1); }

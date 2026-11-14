@@ -63,6 +63,31 @@ FString LsnHudText::CountdownSentence(const TCHAR* BodyLabel, const FLsnCountdow
 		: FString::Printf(TEXT("%s not visible - rises in %s"), BodyLabel, *Duration);
 }
 
+void LsnHudText::BlockerSentences(const TCHAR* BodyLabel, const FLsnSitePackage& Package, const FLsnBlocking& Blocking, TArray<FString>& OutLines)
+{
+	OutLines.Reset();
+	if (!Blocking.bHiddenOrPartly || Blocking.AzimuthIndex < 0)
+	{
+		return;
+	}
+	const FString Distance = Blocking.DistanceM < 1000.0 ? FString::Printf(TEXT("%.0f m"), Blocking.DistanceM) : FString::Printf(TEXT("%.1f km"), Blocking.DistanceM / 1000.0);
+	const FString State = Blocking.VisibleFraction > 0.0 ? FString::Printf(TEXT("partly hidden (%.0f %% visible)"), 100.0 * Blocking.VisibleFraction) : FString(TEXT("hidden"));
+	OutLines.Add(FString::Printf(TEXT("%s %s by terrain %s away, azimuth %.1f deg"), BodyLabel, *State, *Distance, Blocking.AzimuthDeg));
+	if (Blocking.Blocker)
+	{
+		OutLines.Add(FString::Printf(TEXT("this obstacle costs %.1f h of %s in the computed window (%.0f %% of the time lost to terrain, against a smooth sphere)"),
+			Blocking.Blocker->LostS / 3600.0, BodyLabel, 100.0 * Blocking.Blocker->ShareOfLost));
+	}
+	else
+	{
+		OutLines.Add(FString::Printf(TEXT("this obstacle costs no %s time against a smooth sphere in the computed window"), BodyLabel));
+	}
+	if (Blocking.Obstacle && Blocking.Obstacle->bNearField)
+	{
+		OutLines.Add(TEXT("within 1 km: depends on single pixels of the elevation model"));
+	}
+}
+
 void LsnHudText::BuildStatusLines(const FLsnSitePackage& P, int32 H, double TimePosition, TArray<FLsnHudLine>& OutLines, const FString& GroundNote)
 {
 	OutLines.Reset();
@@ -244,30 +269,99 @@ void ALsnHud::DrawHUD()
 	const double EtS = P.EtOfPosition(Position);
 	const FLsnCountdown Sun = P.CountdownAt(TEXT("SUN"), H, EtS);
 	const FLsnCountdown Earth = P.CountdownAt(TEXT("EARTH"), H, EtS);
-	float PanelY = Layout.Zoom.Min.Y - 118.0f * Scale;
-	const float PanelX = Layout.Zoom.Min.X;
+	// The panel is laid out bottom-up from the time strips, so that it grows upwards.
+	struct FPanelLine { FString Text; FLinearColor Color; float Size; };
+	TArray<FPanelLine> Panel;
 	const FString Utc = LsnHudText::UtcLabelOfPosition(P, Position);
-	DrawText(Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc, White, PanelX, PanelY, Font, Scale * 2.0f);
-	if (Pawn && Pawn->IsPlaying())
+	Panel.Add({ Utc.IsEmpty() ? FString(TEXT("UTC label not available")) : Utc, White, 2.0f });
+	const int32 Sample = Scene->GetTimeIndex();
+	auto AddBody = [&](const TCHAR* Body, const FLsnCountdown& Countdown, const FLinearColor& Color, const FLinearColor& BlockedColor)
 	{
-		DrawText(FString::Printf(TEXT("playing, %.1f h of site time per second"), Pawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0), Dim,
-			PanelX + 330.0f * Scale, PanelY + 12.0f * Scale, Font, Scale);
-	}
-	PanelY += 38.0f * Scale;
-	if (Sun.bAvailable)
-	{
-		DrawText(LsnHudText::CountdownSentence(TEXT("SUN"), Sun), Sun.bVisibleNow ? SunColor : Lost, PanelX, PanelY, Font, Scale * 1.6f);
-		PanelY += 29.0f * Scale;
-	}
-	if (Earth.bAvailable)
-	{
-		DrawText(LsnHudText::CountdownSentence(TEXT("EARTH"), Earth), Earth.bVisibleNow ? EarthColor : Lost, PanelX, PanelY, Font, Scale * 1.6f);
-		PanelY += 29.0f * Scale;
-	}
+		if (Countdown.bAvailable)
+		{
+			Panel.Add({ LsnHudText::CountdownSentence(Body, Countdown), Countdown.bVisibleNow ? Color : Lost, 1.6f });
+		}
+		FLsnBlocking Blocking;
+		TArray<FString> Sentences;
+		if (Scene->IsObstacleViewEnabled() && P.BlockingAt(Body, H, Sample, Blocking))
+		{
+			LsnHudText::BlockerSentences(Body, P, Blocking, Sentences);
+			for (int32 I = 0; I < Sentences.Num(); ++I)
+			{
+				Panel.Add({ TEXT("    ") + Sentences[I], I == 2 ? Alert : BlockedColor, I == 0 ? 1.3f : 1.1f });
+			}
+			if (Sentences.Num() > 0)
+			{
+				Panel.Add({ FString::Printf(TEXT("    obstacle %d of the package, sample %d   [%s: %s]"), Blocking.ObstacleId, Sample, *P.BlockingMethod, *P.ValidationStatusOf(P.BlockingMethod)), Dim, 0.9f });
+			}
+		}
+	};
+	AddBody(TEXT("SUN"), Sun, SunColor, FLinearColor(1.0f, 0.45f, 0.2f));
+	AddBody(TEXT("EARTH"), Earth, EarthColor, FLinearColor(0.3f, 0.85f, 1.0f));
 	if (Sun.bAvailable || Earth.bAvailable)
 	{
 		const FString Method = Sun.bAvailable ? Sun.Method : Earth.Method;
-		DrawText(FString::Printf(TEXT("from the package windows sun_visible / earth_visible, TDB   [%s: %s]"), *Method, *P.ValidationStatusOf(Method)), Dim, PanelX, PanelY, Font, Scale * 0.9f);
+		Panel.Add({ FString::Printf(TEXT("countdowns from the package windows sun_visible / earth_visible, TDB   [%s: %s]"), *Method, *P.ValidationStatusOf(Method)), Dim, 0.9f });
+	}
+	float PanelHeight = 0.0f;
+	for (const FPanelLine& L : Panel)
+	{
+		PanelHeight += 19.0f * Scale * L.Size;
+	}
+	const float PanelX = Layout.Zoom.Min.X;
+	float PanelY = Layout.Zoom.Min.Y - PanelHeight - 10.0f * Scale;
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.55f), PanelX - 8.0f * Scale, PanelY - 6.0f * Scale, 0.62f * Canvas->SizeX, PanelHeight + 10.0f * Scale);
+	for (int32 I = 0; I < Panel.Num(); ++I)
+	{
+		DrawText(Panel[I].Text, Panel[I].Color, PanelX, PanelY, Font, Scale * Panel[I].Size);
+		if (I == 0 && Pawn && Pawn->IsPlaying())
+		{
+			DrawText(FString::Printf(TEXT("playing, %.1f h of site time per second"), Pawn->GetPlayRateSamplesPerSecond() * P.Time.StepS / 3600.0), Dim,
+				PanelX + 330.0f * Scale, PanelY + 12.0f * Scale, Font, Scale);
+		}
+		PanelY += 19.0f * Scale * Panel[I].Size;
+	}
+
+	// A marker at the peak of each highlighted obstacle, with its distance.
+	for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
+	{
+		FLsnBlocking Blocking;
+		if (!Scene->IsObstacleViewEnabled() || !P.BlockingAt(Body, H, Sample, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
+		{
+			continue;
+		}
+		const FLinearColor Outline = FCString::Stricmp(Body, TEXT("SUN")) == 0 ? SunColor : EarthColor;
+		// Where the hidden body is: an outline at the direction and angular radius the package gives.
+		FLsnBodyAtTime At;
+		if (Scene->SampleBody(Body, Position, At) && At.bHasAngularRadius)
+		{
+			const FVector Centre = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(At.AzimuthDeg, At.ElevationDeg) * 1.0e6, false);
+			const FVector Rim = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(At.AzimuthDeg, At.ElevationDeg + At.AngularRadiusDeg) * 1.0e6, false);
+			if (Centre.Z > 0.0 && Rim.Z > 0.0)
+			{
+				const float Radius = FMath::Max(static_cast<float>(FVector2D::Distance(FVector2D(Centre.X, Centre.Y), FVector2D(Rim.X, Rim.Y))), 3.0f * Scale);
+				const int32 Segments = 48;
+				for (int32 I = 0; I < Segments; I += 2)  // dashed
+				{
+					const float A0 = 2.0f * UE_PI * I / Segments, A1 = 2.0f * UE_PI * (I + 1) / Segments;
+					DrawLine(Centre.X + Radius * FMath::Cos(A0), Centre.Y + Radius * FMath::Sin(A0), Centre.X + Radius * FMath::Cos(A1), Centre.Y + Radius * FMath::Sin(A1), Outline, 1.5f * Scale);
+				}
+				DrawText(FString::Printf(TEXT("%s (behind terrain)"), FCString::Stricmp(Body, TEXT("SUN")) == 0 ? TEXT("Sun") : TEXT("Earth")), Outline,
+					Centre.X + Radius + 6.0f * Scale, Centre.Y - 8.0f * Scale, Font, Scale);
+			}
+		}
+		const FVector Peak = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(Blocking.Obstacle->PeakAzimuthDeg, Blocking.Obstacle->PeakElevationDeg) * 1.0e6, false);
+		if (Peak.Z <= 0.0 || Peak.X < 0.0 || Peak.X > Canvas->SizeX || Peak.Y < 0.0 || Peak.Y > Canvas->SizeY)
+		{
+			continue;
+		}
+		const FLinearColor Color = FCString::Stricmp(Body, TEXT("SUN")) == 0 ? FLinearColor(1.0f, 0.45f, 0.2f) : FLinearColor(0.3f, 0.85f, 1.0f);
+		const FString Distance = Blocking.Obstacle->PeakDistanceM < 1000.0 ? FString::Printf(TEXT("%.0f m"), Blocking.Obstacle->PeakDistanceM) : FString::Printf(TEXT("%.1f km"), Blocking.Obstacle->PeakDistanceM / 1000.0);
+		const FString Cost = Blocking.Blocker ? FString::Printf(TEXT("costs %.0f h of %s"), Blocking.Blocker->LostS / 3600.0, Body) : FString::Printf(TEXT("hides the %s now"), FCString::Stricmp(Body, TEXT("SUN")) == 0 ? TEXT("Sun") : TEXT("Earth"));
+		const float Top = Peak.Y - 70.0f * Scale;
+		DrawLine(Peak.X, Peak.Y - 6.0f * Scale, Peak.X, Top + 34.0f * Scale, Color, 2.0f * Scale);
+		DrawText(FString::Printf(TEXT("this ridge %s"), *Cost), Color, Peak.X + 8.0f * Scale, Top, Font, Scale * 1.4f);
+		DrawText(FString::Printf(TEXT("peak %s away, azimuth %.1f deg"), *Distance, Blocking.Obstacle->PeakAzimuthDeg), Color, Peak.X + 8.0f * Scale, Top + 24.0f * Scale, Font, Scale);
 	}
 
 	DrawStrip(Layout.Zoom, P, H, Position - Layout.ZoomHalfWidthSamples, Position + Layout.ZoomHalfWidthSamples, Position, Scale);

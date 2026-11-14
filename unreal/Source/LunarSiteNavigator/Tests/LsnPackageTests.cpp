@@ -27,7 +27,7 @@ bool FLsnPackageLoadTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	TestEqual(TEXT("contract version"), P.ContractVersion, FString(TEXT("0.1")));
+	TestEqual(TEXT("contract version"), P.ContractVersion, FString(TEXT("0.2")));
 	TestTrue(TEXT("the sample is marked synthetic"), P.bSynthetic);
 	TestFalse(TEXT("a synthetic package carries its notice"), P.SyntheticNotice.IsEmpty());
 	TestEqual(TEXT("status"), P.Status, FString(TEXT("ok")));
@@ -168,7 +168,7 @@ bool FLsnPackageRefusalTest::RunTest(const FString& Parameters)
 		const FString Dir = LsnTest::CopyPackageToScratch(Source, TEXT("major"));
 		FString Manifest;
 		FFileHelper::LoadFileToString(Manifest, *FPaths::Combine(Dir, TEXT("manifest.json")));
-		const int32 Replaced = Manifest.ReplaceInline(TEXT("\"version\": \"0.1\""), TEXT("\"version\": \"1.0\""));
+		const int32 Replaced = Manifest.ReplaceInline(TEXT("\"version\": \"0.2\""), TEXT("\"version\": \"1.0\""));
 		TestEqual(TEXT("test set-up: version string replaced once"), Replaced, 1);
 		FFileHelper::SaveStringToFile(Manifest, *FPaths::Combine(Dir, TEXT("manifest.json")), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 		TestFalse(TEXT("a package with another major version is refused"), LsnPackageIO::LoadSitePackage(Dir, P, Error));

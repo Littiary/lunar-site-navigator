@@ -123,6 +123,15 @@ namespace LsnMesh
 	LUNARSITENAVIGATOR_API void BuildUnitSphere(int32 NumLatitudeBands, int32 NumLongitudeBands, const FColor& Color, FLsnMeshData& OutMesh);
 
 	/**
+	 * A band along the azimuth samples of one obstacle (their indices in order), for
+	 * highlighting it: vertex 2 i is on the package horizon at azimuth index
+	 * AzimuthIndices[i], vertex 2 i + 1 lies BandWidthDeg above it; both just in front of
+	 * the horizon point.
+	 */
+	LUNARSITENAVIGATOR_API void BuildObstacleBand(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
+		const TArray<int32>& AzimuthIndices, double BandWidthDeg, const FColor& Color, FLsnMeshData& OutMesh);
+
+	/**
 	 * A thin band whose lower edge is the package horizon, drawn just in front
 	 * of the horizon points, for checking the silhouette by eye.
 	 */

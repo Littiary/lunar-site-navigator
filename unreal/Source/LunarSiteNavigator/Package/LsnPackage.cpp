@@ -118,6 +118,11 @@ namespace
 	template <typename T> const TCHAR* DTypeOf();
 	template <> const TCHAR* DTypeOf<float>() { return TEXT("<f4"); }
 	template <> const TCHAR* DTypeOf<double>() { return TEXT("<f8"); }
+	template <> const TCHAR* DTypeOf<int32>() { return TEXT("<i4"); }
+
+	inline bool IsUnknown(float Value) { return FMath::IsNaN(Value); }
+	inline bool IsUnknown(double Value) { return FMath::IsNaN(Value); }
+	inline bool IsUnknown(int32) { return false; }
 
 	/**
 	 * Reads the array an array reference points to (SPEC 3.1) and checks dtype,
@@ -191,7 +196,7 @@ namespace
 		int64 FoundNans = 0;
 		for (const T Value : OutValues)
 		{
-			if (FMath::IsNaN(Value))
+			if (IsUnknown(Value))
 			{
 				++FoundNans;
 			}
@@ -315,6 +320,50 @@ FString FLsnSitePackage::UtcLabelOfSample(int32 SampleIndex) const
 	const FDateTime Sample = Start + FTimespan::FromSeconds(Time.StepS * SampleIndex);
 	return FString::Printf(TEXT("%04d-%02d-%02dT%02d:%02d:%02d.%03dZ"), Sample.GetYear(), Sample.GetMonth(), Sample.GetDay(),
 		Sample.GetHour(), Sample.GetMinute(), Sample.GetSecond(), Sample.GetMillisecond());
+}
+
+void FLsnSitePackage::ObstacleRun(const FLsnObstacle& Obstacle, TArray<int32>& OutAzimuthIndices) const
+{
+	OutAzimuthIndices.Reset();
+	for (int32 K = 0; AzimuthCount > 0 && K < Obstacle.AzimuthCount && K < AzimuthCount; ++K)
+	{
+		OutAzimuthIndices.Add((Obstacle.AzimuthStartIndex + K) % AzimuthCount);
+	}
+}
+
+bool FLsnSitePackage::BlockingAt(const FString& Body, int32 InHeightIndex, int32 TimeIndex, FLsnBlocking& Out) const
+{
+	Out = FLsnBlocking();
+	const FLsnBodySeries* S = bHasTimeline ? FindSeries(Body) : nullptr;
+	if (!S || !ObserverHeightsM.IsValidIndex(InHeightIndex) || TimeIndex < 0 || TimeIndex >= Time.Count
+		|| S->BlockerAzimuthIndex.Num() != NumHeights() * Time.Count || !HasObstacles())
+	{
+		return false;
+	}
+	const int32 Flat = InHeightIndex * Time.Count + TimeIndex;
+	// SPEC 5.5, steps 1 to 4.
+	Out.VisibleFraction = S->VisibleFraction.IsValidIndex(Flat) ? S->VisibleFraction[Flat] : 0.0;
+	const int32 J = S->BlockerAzimuthIndex[Flat];
+	if (J < 0 || J >= AzimuthCount)
+	{
+		return false;
+	}
+	Out.AzimuthIndex = J;
+	Out.AzimuthDeg = AzimuthDegAt(J);
+	Out.HorizonElevationDeg = HorizonElevationAt(InHeightIndex, J);
+	Out.DistanceM = HorizonDistanceAt(InHeightIndex, J);
+	Out.ObstacleId = ObstacleId[InHeightIndex * AzimuthCount + J];
+	Out.Obstacle = Obstacles.IsValidIndex(Out.ObstacleId) ? &Obstacles[Out.ObstacleId] : nullptr;
+	Out.Blocker = Blockers.FindByPredicate([&](const FLsnBlocker& B) { return B.ObstacleId == Out.ObstacleId && B.HeightIndex == InHeightIndex && B.Body == Body; });
+	if (Body == TEXT("EARTH"))
+	{
+		Out.bHiddenOrPartly = S->MarginDeg.IsValidIndex(Flat) && S->MarginDeg[Flat] <= 0.0f;
+	}
+	else
+	{
+		Out.bHiddenOrPartly = Out.VisibleFraction < 1.0;
+	}
+	return true;
 }
 
 const FLsnWindow* FLsnSitePackage::FindWindow(const FString& Id, int32 InHeightIndex) const
@@ -517,6 +566,42 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 		{
 			ReadArray<float>(Ctx, Horizon, TEXT("obstacle_height_m"), HorizonShape, TEXT("m"), P.ObstacleHeightM);
 		}
+		// Since 0.2: the profile grouped into obstacles. Absent in older packages.
+		const TArray<TSharedPtr<FJsonValue>>* Obstacles = nullptr;
+		if (!Ctx.Failed() && Horizon->HasField(TEXT("obstacle_id")) && Horizon->TryGetArrayField(TEXT("obstacles"), Obstacles) && Obstacles)
+		{
+			ReadArray<int32>(Ctx, Horizon, TEXT("obstacle_id"), HorizonShape, TEXT("1"), P.ObstacleId, &P.ObstacleMethod);
+			for (const TSharedPtr<FJsonValue>& Value : *Obstacles)
+			{
+				const FJsonObjectPtr* Object = nullptr;
+				if (Ctx.Failed() || !Value.IsValid() || !Value->TryGetObject(Object) || !Object)
+				{
+					continue;
+				}
+				FLsnObstacle O;
+				O.Id = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("id"), TEXT("obstacle")));
+				O.HeightIndex = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("height_index"), TEXT("obstacle")));
+				O.AzimuthStartIndex = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("azimuth_start_index"), TEXT("obstacle")));
+				O.AzimuthCount = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("azimuth_count"), TEXT("obstacle")));
+				O.AzimuthStartDeg = GetNumber(Ctx, *Object, TEXT("azimuth_start_deg"), TEXT("obstacle"));
+				O.AzimuthEndDeg = GetNumber(Ctx, *Object, TEXT("azimuth_end_deg"), TEXT("obstacle"));
+				O.PeakAzimuthDeg = GetNumber(Ctx, *Object, TEXT("peak_azimuth_deg"), TEXT("obstacle"));
+				O.PeakElevationDeg = GetNumber(Ctx, *Object, TEXT("peak_elevation_deg"), TEXT("obstacle"));
+				O.PeakDistanceM = GetNumber(Ctx, *Object, TEXT("peak_distance_m"), TEXT("obstacle"));
+				O.PeakLatDeg = GetNumberOrNaN(*Object, TEXT("peak_lat_deg"));
+				O.PeakLonDeg = GetNumberOrNaN(*Object, TEXT("peak_lon_deg"));
+				O.PeakHeightM = GetNumberOrNaN(*Object, TEXT("peak_height_m"));
+				O.DistanceMinM = GetNumberOrNaN(*Object, TEXT("distance_min_m"));
+				O.DistanceMaxM = GetNumberOrNaN(*Object, TEXT("distance_max_m"));
+				(*Object)->TryGetBoolField(TEXT("near_field"), O.bNearField);
+				(*Object)->TryGetStringField(TEXT("method"), O.Method);
+				if (!Ctx.Failed() && (O.Id != P.Obstacles.Num() || O.AzimuthCount < 1 || O.AzimuthStartIndex < 0 || O.AzimuthStartIndex >= P.AzimuthCount))
+				{
+					Ctx.Fail(FString::Printf(TEXT("obstacle %d is out of order or has an impossible run"), O.Id));
+				}
+				P.Obstacles.Add(MoveTemp(O));
+			}
+		}
 	}
 
 	// Timeline: optional. A feature that was not computed is absent, and the view is hidden.
@@ -554,6 +639,14 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 			}
 			ReadArray<float>(Ctx, BodyObject, TEXT("margin_deg"), PerHeightAndSample, TEXT("deg"), S.MarginDeg);
 			ReadArray<float>(Ctx, BodyObject, TEXT("visible_fraction"), PerHeightAndSample, TEXT("1"), S.VisibleFraction);
+			if (!Ctx.Failed() && BodyObject->HasField(TEXT("blocker_azimuth_index")))
+			{
+				ReadArray<int32>(Ctx, BodyObject, TEXT("blocker_azimuth_index"), PerHeightAndSample, TEXT("1"), S.BlockerAzimuthIndex, &P.BlockingMethod);
+			}
+			if (!Ctx.Failed() && BodyObject->HasField(TEXT("lit_fraction")))
+			{
+				ReadArray<float>(Ctx, BodyObject, TEXT("lit_fraction"), PerHeightAndSample, TEXT("1"), S.LitFraction);
+			}
 		}
 		const TArray<TSharedPtr<FJsonValue>>* Events = nullptr;
 		if (!Ctx.Failed() && Timeline->TryGetArrayField(TEXT("events"), Events) && Events)
@@ -620,6 +713,43 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 					Window.EndsUtc.Add(Utc[1]->AsString());
 				}
 				P.Windows.Add(MoveTemp(Window));
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Blockers = nullptr;
+		if (!Ctx.Failed() && Timeline->TryGetArrayField(TEXT("blockers"), Blockers) && Blockers)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Blockers)
+			{
+				const FJsonObjectPtr* Object = nullptr;
+				if (Ctx.Failed() || !Value.IsValid() || !Value->TryGetObject(Object) || !Object)
+				{
+					continue;
+				}
+				FLsnBlocker B;
+				B.Body = GetString(Ctx, *Object, TEXT("body"), TEXT("blocker"));
+				B.HeightIndex = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("height_index"), TEXT("blocker")));
+				B.ObstacleId = static_cast<int32>(GetNumber(Ctx, *Object, TEXT("obstacle_id"), TEXT("blocker")));
+				B.LostS = GetNumber(Ctx, *Object, TEXT("lost_s"), TEXT("blocker"));
+				B.ShareOfLost = GetNumber(Ctx, *Object, TEXT("share_of_lost"), TEXT("blocker"));
+				B.PeakAzimuthDeg = GetNumberOrNaN(*Object, TEXT("peak_azimuth_deg"));
+				B.PeakElevationDeg = GetNumberOrNaN(*Object, TEXT("peak_elevation_deg"));
+				B.PeakDistanceM = GetNumberOrNaN(*Object, TEXT("peak_distance_m"));
+				(*Object)->TryGetBoolField(TEXT("near_field"), B.bNearField);
+				B.Method = GetString(Ctx, *Object, TEXT("method"), TEXT("blocker"));
+				const TArray<TSharedPtr<FJsonValue>>* Intervals = nullptr;
+				if ((*Object)->TryGetArrayField(TEXT("intervals_et_s"), Intervals) && Intervals)
+				{
+					for (const TSharedPtr<FJsonValue>& Interval : *Intervals)
+					{
+						const TArray<TSharedPtr<FJsonValue>>& Pair = Interval->AsArray();
+						if (Pair.Num() == 2)
+						{
+							B.StartsEtS.Add(Pair[0]->AsNumber());
+							B.EndsEtS.Add(Pair[1]->AsNumber());
+						}
+					}
+				}
+				P.Blockers.Add(MoveTemp(B));
 			}
 		}
 		const TArray<TSharedPtr<FJsonValue>>* Metrics = nullptr;

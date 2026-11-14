@@ -72,6 +72,15 @@ public:
 
 	void SetHorizonLineVisible(bool bVisible);
 	void SetFillLightVisible(bool bVisible);
+
+	/**
+	 * "Show the obstacle": while a body is hidden or partly hidden at the selected sample,
+	 * the run of the obstacle the package names for it is highlighted (SPEC 5.5).
+	 */
+	void SetObstacleViewEnabled(bool bEnabled);
+	bool IsObstacleViewEnabled() const { return bObstacleViewEnabled; }
+	/** The highlight of "SUN" or "EARTH". */
+	UProceduralMeshComponent* GetObstacleHighlight(const TCHAR* Body) const;
 	bool IsFillLightVisible() const;
 	bool IsHorizonLineVisible() const;
 
@@ -109,6 +118,7 @@ public:
 private:
 	void RebuildGeometry();
 	void PlaceDisc(UProceduralMeshComponent* Disc, const FLsnBodyAtTime& Body, double ProxyDistanceM);
+	void UpdateObstacleHighlight(const TCHAR* Body, UProceduralMeshComponent* Highlight, int32& InOutShownObstacleId, const FColor& Color);
 	void ApplyMesh(UProceduralMeshComponent* Component, const FLsnMeshData& Mesh, UMaterialInterface* Material);
 	void EnsureUnitSphere(UProceduralMeshComponent* Component, const FColor& Color, UMaterialInterface* Material);
 
@@ -120,6 +130,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> HorizonLine;
+
+	UPROPERTY()
+	TObjectPtr<UProceduralMeshComponent> SunObstacle;
+
+	UPROPERTY()
+	TObjectPtr<UProceduralMeshComponent> EarthObstacle;
 
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> SunDisc;
@@ -155,5 +171,9 @@ private:
 	int32 SkippedHorizonSamples = 0;
 	FLsnTerrainGrid TerrainGrid;
 	bool bHasRealTerrain = false;
+	bool bObstacleViewEnabled = true;
+	/** Obstacle whose band each highlight currently holds; -1 for none. */
+	int32 ShownSunObstacleId = -1;
+	int32 ShownEarthObstacleId = -1;
 	int32 UnknownTerrainSamples = 0;
 };

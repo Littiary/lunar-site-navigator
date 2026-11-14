@@ -1,10 +1,11 @@
-﻿# Runs the view scene without a window and saves one real capture of it.
+# Runs the view scene without a window and saves one real capture of it.
 # Example:
 #   unreal\Scripts\capture.ps1 -Out docs\unreal\site_view.png -Time 456 -HorizonLine
 param(
     [Parameter(Mandatory = $true)][string]$Out,
     [string]$EngineRoot = "C:\Program Files\Epic Games\UE_5.8",
     [string]$Package = "",
+    [string]$Site = "",
     [int]$Time = 0,
     [int]$Height = -1,
     [double]$Yaw = [double]::NaN,
@@ -28,6 +29,7 @@ $args = @(
     "-abslog=`"$log`"", "-unattended", "-nopause", "-nosplash", "-nosound"
 )
 if ($Package -ne "") { $args += "-LsnPackage=`"$([System.IO.Path]::GetFullPath($Package))`"" }
+if ($Site -ne "") { $args += "-LsnSite=$Site" }
 if ($Height -ge 0) { $args += "-LsnHeight=$Height" }
 if (-not [double]::IsNaN($Yaw)) { $args += "-LsnYaw=$($Yaw.ToString($inv))" }
 if (-not [double]::IsNaN($Pitch)) { $args += "-LsnPitch=$($Pitch.ToString($inv))" }

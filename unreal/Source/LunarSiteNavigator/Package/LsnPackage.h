@@ -37,6 +37,10 @@ struct FLsnBodySeries
 	TArray<float> MarginDeg;
 	/** [H, N] fraction of the disc above the terrain horizon, 0 to 1. */
 	TArray<float> VisibleFraction;
+	/** [H, N] since 0.2; empty when absent. Azimuth index of the horizon sample that limits the view of the disc (SPEC 5.5). */
+	TArray<int32> BlockerAzimuthIndex;
+	/** [H, N] since 0.2, optional; empty when absent. Fraction of the disc above the horizon and not hidden by another body. */
+	TArray<float> LitFraction;
 };
 
 /** A rise or set event (SPEC 5.4). */
@@ -62,6 +66,72 @@ struct FLsnMethodCard
 	FString ValidationStatus;
 	/** The numeric entries of the card's "parameters" object. */
 	TMap<FString, double> NumericParameters;
+};
+
+/** A run of neighbouring azimuths whose horizon is set by the same piece of terrain (SPEC 5.3, since 0.2). */
+struct FLsnObstacle
+{
+	int32 Id = -1;
+	int32 HeightIndex = 0;
+	int32 AzimuthStartIndex = 0;
+	int32 AzimuthCount = 0;
+	double AzimuthStartDeg = 0.0;
+	double AzimuthEndDeg = 0.0;
+	double PeakAzimuthDeg = 0.0;
+	double PeakElevationDeg = 0.0;
+	double PeakDistanceM = 0.0;
+	double PeakLatDeg = 0.0;
+	double PeakLonDeg = 0.0;
+	double PeakHeightM = 0.0;
+	double DistanceMinM = 0.0;
+	double DistanceMaxM = 0.0;
+	/** The peak is closer than 1 km: the obstacle depends on single pixels of the elevation model. */
+	bool bNearField = false;
+	FString Method;
+};
+
+/** An obstacle that costs visible time compared with a smooth sphere (SPEC 5.5, since 0.2). */
+struct FLsnBlocker
+{
+	FString Body;
+	int32 HeightIndex = 0;
+	int32 ObstacleId = -1;
+	double LostS = 0.0;
+	double ShareOfLost = 0.0;
+	TArray<double> StartsEtS;
+	TArray<double> EndsEtS;
+	double PeakAzimuthDeg = 0.0;
+	double PeakElevationDeg = 0.0;
+	double PeakDistanceM = 0.0;
+	bool bNearField = false;
+	FString Method;
+};
+
+/**
+ * What stands in the way of a body at a time sample, read from the package by the
+ * recipe of SPEC 5.5. Nothing here is decided by the viewer.
+ */
+struct FLsnBlocking
+{
+	/** series.<BODY>.blocker_azimuth_index at the sample. */
+	int32 AzimuthIndex = -1;
+	double AzimuthDeg = 0.0;
+	/** horizon.elevation_deg and horizon.distance_m at that azimuth sample (read there, not interpolated). */
+	double HorizonElevationDeg = 0.0;
+	double DistanceM = 0.0;
+	/** horizon.obstacle_id at that azimuth sample, and its record. */
+	int32 ObstacleId = -1;
+	const FLsnObstacle* Obstacle = nullptr;
+	/** The blocker record of that body, height and obstacle; null if the obstacle costs no time. */
+	const FLsnBlocker* Blocker = nullptr;
+	/** series.<BODY>.visible_fraction at the sample. */
+	double VisibleFraction = 0.0;
+	/**
+	 * The Sun: any part of the disc is behind terrain (visible_fraction < 1).
+	 * The Earth: the centre of the disc is not above the terrain (margin_deg <= 0),
+	 * the condition a radio link is judged by.
+	 */
+	bool bHiddenOrPartly = false;
 };
 
 /** An interval set of a site timeline (SPEC 5.4, "Window"). Interval i is [StartsEtS[i], EndsEtS[i]). */
@@ -157,6 +227,10 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	TArray<float> ObstacleHeightM;
 	FString HorizonElevationMethod;
 	FString HorizonDistanceMethod;
+	/** [H, A] since 0.2; empty when absent. Index into Obstacles, -1 where the horizon has no data. */
+	TArray<int32> ObstacleId;
+	TArray<FLsnObstacle> Obstacles;
+	FString ObstacleMethod;
 
 	// --- timeline (SPEC 5.4); absent when no time window was computed ---
 	bool bHasTimeline = false;
@@ -167,6 +241,18 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	TArray<FLsnEvent> Events;
 	TArray<FLsnWindow> Windows;
 	TArray<FLsnMetric> Metrics;
+	/** Since 0.2; empty when absent. */
+	TArray<FLsnBlocker> Blockers;
+	FString BlockingMethod;
+
+	/** True if the package carries the obstacle fields of contract 0.2. */
+	bool HasObstacles() const { return Obstacles.Num() > 0 && ObstacleId.Num() == NumHeights() * AzimuthCount; }
+
+	/** The azimuth indices of an obstacle's run, in order; a run may pass through azimuth 0. */
+	void ObstacleRun(const FLsnObstacle& Obstacle, TArray<int32>& OutAzimuthIndices) const;
+
+	/** The recipe of SPEC 5.5 for "SUN" or "EARTH" at a time sample. False if the package does not carry the fields. */
+	bool BlockingAt(const FString& Body, int32 InHeightIndex, int32 TimeIndex, FLsnBlocking& Out) const;
 	FString DirectionMethod;
 
 	/** TDB seconds past J2000 of a (possibly fractional) sample position on the time axis. */

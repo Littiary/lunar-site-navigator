@@ -13,6 +13,11 @@ namespace
 	constexpr float FillLightLux = 0.25f;
 	constexpr float SunDiscEmissive = 30.0f;
 	constexpr float HorizonLineEmissive = 3.0f;
+	constexpr float ObstacleEmissive = 6.0f;
+	/** Angular height of the highlight band above the horizon. A drawing choice. */
+	constexpr double ObstacleBandDeg = 0.10;
+	const FColor SunObstacleColor(255, 70, 10, 255);
+	const FColor EarthObstacleColor(20, 200, 255, 255);
 	constexpr float RegolithAlbedo = 0.13f;
 
 	/** How far below the lowest horizon elevation the reference sphere is kept, and how far below the site. */
@@ -44,13 +49,17 @@ ALsnSiteScene::ALsnSiteScene()
 	Terrain = MakeMeshComponent(this, TEXT("Terrain"), true);
 	MoonSphere = MakeMeshComponent(this, TEXT("MoonSphere"), false);
 	HorizonLine = MakeMeshComponent(this, TEXT("HorizonLine"), false);
+	SunObstacle = MakeMeshComponent(this, TEXT("SunObstacle"), false);
+	EarthObstacle = MakeMeshComponent(this, TEXT("EarthObstacle"), false);
 	SunDisc = MakeMeshComponent(this, TEXT("SunDisc"), false);
 	EarthDisc = MakeMeshComponent(this, TEXT("EarthDisc"), false);
-	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunDisc.Get(), EarthDisc.Get() })
+	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get() })
 	{
 		Component->SetupAttachment(Root);
 	}
 	HorizonLine->SetVisibility(false);
+	SunObstacle->SetVisibility(false);
+	EarthObstacle->SetVisibility(false);
 
 	SunLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("SunLight"));
 	SunLight->SetupAttachment(Root);
@@ -72,6 +81,47 @@ ALsnSiteScene::ALsnSiteScene()
 	// The Sun is the light the engine treats as the main directional light.
 	SunLight->ForwardShadingPriority = 1;
 	FillLight->ForwardShadingPriority = 0;
+}
+
+void ALsnSiteScene::SetObstacleViewEnabled(bool bEnabled)
+{
+	bObstacleViewEnabled = bEnabled;
+	SetTimePosition(TimePosition);
+	if (!bEnabled)
+	{
+		SunObstacle->SetVisibility(false);
+		EarthObstacle->SetVisibility(false);
+	}
+}
+
+UProceduralMeshComponent* ALsnSiteScene::GetObstacleHighlight(const TCHAR* Body) const
+{
+	return FCString::Stricmp(Body, TEXT("EARTH")) == 0 ? EarthObstacle : SunObstacle;
+}
+
+void ALsnSiteScene::UpdateObstacleHighlight(const TCHAR* Body, UProceduralMeshComponent* Highlight, int32& InOutShownObstacleId, const FColor& Color)
+{
+	// Which obstacle, and whether the body is hidden behind it, is read from the package
+	// at the sample the time position belongs to. The scene only draws the run it is given.
+	FLsnBlocking Blocking;
+	if (!bObstacleViewEnabled || !bHasPackage || !Package.BlockingAt(Body, HeightIndex, TimeIndex, Blocking) || !Blocking.bHiddenOrPartly || !Blocking.Obstacle)
+	{
+		Highlight->SetVisibility(false);
+		return;
+	}
+	if (InOutShownObstacleId != Blocking.ObstacleId)
+	{
+		TArray<int32> Run;
+		Package.ObstacleRun(*Blocking.Obstacle, Run);
+		FLsnMeshData Band;
+		LsnMesh::BuildObstacleBand(Frame, Package, HeightIndex, Run, ObstacleBandDeg, Color, Band);
+		UMaterialInstanceDynamic* Material = UMaterialInstanceDynamic::Create(EmissiveMaterial, this);
+		Material->SetScalarParameterValue(TEXT("Intensity"), ObstacleEmissive);
+		Highlight->SetWorldLocation(FVector::ZeroVector);
+		ApplyMesh(Highlight, Band, Material);
+		InOutShownObstacleId = Blocking.ObstacleId;
+	}
+	Highlight->SetVisibility(true);
 }
 
 void ALsnSiteScene::SetFillLightVisible(bool bVisible)
@@ -182,6 +232,10 @@ void ALsnSiteScene::ApplyMesh(UProceduralMeshComponent* Component, const FLsnMes
 
 void ALsnSiteScene::RebuildGeometry()
 {
+	// The highlights belong to an observer height and a package: build them anew when needed.
+	ShownSunObstacleId = -1;
+	ShownEarthObstacleId = -1;
+
 	const double EyeHeightM = Package.ObserverHeightsM[HeightIndex];
 
 	// Terrain: its outer edge is the package horizon.
@@ -351,6 +405,8 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	}
 	PlaceDisc(SunDisc, Sun, SunProxyDistanceM);
 	PlaceDisc(EarthDisc, Earth, EarthProxyDistanceM);
+	UpdateObstacleHighlight(TEXT("SUN"), SunObstacle, ShownSunObstacleId, SunObstacleColor);
+	UpdateObstacleHighlight(TEXT("EARTH"), EarthObstacle, ShownEarthObstacleId, EarthObstacleColor);
 	return true;
 }
 

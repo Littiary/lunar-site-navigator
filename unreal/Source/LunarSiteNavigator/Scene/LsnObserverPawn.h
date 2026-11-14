@@ -15,6 +15,7 @@ class UCameraComponent;
  * forward (hold Shift for 24 samples); Space plays and pauses the timeline,
  * [ and ] halve and double the playing speed; Tab shows the mouse cursor, with
  * which the time strips can be dragged; H toggles the package horizon line;
+ * O toggles the obstacle view (what hides the Sun or the Earth, and what it costs);
  * L toggles the weak fill light (a display aid); Z / X zoom; PageUp / PageDown change the observer height;
  * Esc quits.
  *

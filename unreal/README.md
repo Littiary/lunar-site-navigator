@@ -42,6 +42,8 @@ with Git LFS: run `git lfs install` once per machine).
 | Sun light direction and source angle, Sun and Earth discs | package: `timeline.series` at the selected time |
 | Countdowns "sets in" / "rises in" | package: interval boundaries of the windows `sun_visible`, `earth_visible`. "at least" means the package has no such event in its computed range |
 | Time strips (yellow Sun, blue Earth) | package: the same windows |
+| Obstacle view: highlighted ridge, "hidden by terrain ... away", "this ridge costs N h" | package (contract 0.2, SPEC 5.5): `series.<BODY>.blocker_azimuth_index` at the sample, `horizon.obstacle_id` there, the run of `horizon.obstacles[k]`, `lost_s` of the matching `timeline.blockers` record. Hidden for packages without these fields |
+| Dashed outline "Sun (behind terrain)" | package: direction and angular radius of the series, drawn over the terrain while the body is hidden |
 | Reference sphere | package: `reference_radius_m`; sunk near the site so that it stays out of sight |
 | Weak fill light from the zenith, no shadows | none: a display aid so that unlit terrain is told apart from the sky (key `L`, `-LsnNoFillLight`) |
 
@@ -76,8 +78,8 @@ a window.
 
 Keys: mouse or arrow keys look; `Q`/`E` step one sample (Shift: 24); `Space` plays and
 pauses; `[` `]` change the playing speed; `Tab` shows the cursor to drag the time strips;
-`PageUp`/`PageDown` observer height; `Z`/`X` zoom; `H` package horizon line; `L` fill
-light; `Esc` quits. Command line: `-LsnPackage=<site package dir>` or
+`PageUp`/`PageDown` observer height; `Z`/`X` zoom; `O` obstacle view; `H` package
+horizon line; `L` fill light; `Esc` quits. Command line: `-LsnPackage=<site package dir>` or
 `-LsnPackageRoot=<root with index.json>`, `-LsnSite=`, `-LsnTime=`, `-LsnHeight=`,
 `-LsnYaw=`, `-LsnPitch=`, `-LsnFov=`, `-LsnHorizonLine`, `-LsnShot=<png>`,
 `-LsnPlayFrom= -LsnPlayTo= -LsnPlaySeconds= -LsnMovieDir=`.
@@ -101,6 +103,8 @@ Thresholds are constants next to the tests, written before the first measurement
 | `Acceptance.SunAndEarthFromPackage`, `SunFollowsThePackage` | Light direction, source angle, disc positions and sizes of the spawned scene equal the package at every sample | 0.001 deg |
 | `Acceptance.SliderFollowsThePackage` | Whole positions equal the samples; between samples light and discs show the interpolated package series | 0.001 deg |
 | `Acceptance.HorizonSilhouette` (+ `HorizonExportForPython`, `compare_horizon.py`) | Silhouette of the scene's terrain and sphere, seen from the observer, equals `horizon.elevation_deg` for every height and azimuth; repeated with the package read by Python | 0.001 deg |
+| `Package.BlockerRecipe`, `ObstaclesOfTheSample` | The viewer recipe of SPEC 5.5 on a hand-made package and on the sample: limiting azimuth, obstacle, cost; runs carry their obstacle id; blockers are sorted and name existing obstacles; wording of the sentences | exact; shares <= 1 + 1e-6 |
+| `Acceptance.ObstacleHighlight` | While a body is hidden the highlight lies on the azimuths of the obstacle's run and its lower edge is the package horizon; no highlight while the body is clear | 0.001 deg |
 | `Hud.TextAndSyntheticMarker` | Synthetic marker for synthetic packages only; countdown wording, "at least" for lower bounds; UTC labels | exact |
 | `Real.ImportedPackages` | On every imported real package: not synthetic, countdown at the start equals the package's own metric, obstacle points, scene silhouette, direction table against series | 1e-3 s; 0.05; 0.001; 0.0002 deg |
 | `Real.TerrainAgainstHorizon` | No LOLA sample (from the start of the package's horizon search outwards) stands above the package horizon of its azimuth; mesh silhouette with real ground | 0.001 deg |
@@ -122,4 +126,15 @@ imported, as on a machine without the data.
 - The ground is sampled on rings 2.8 % apart and at the 0.25 deg azimuth step: relief
   between samples is not drawn. Shadows on the ground are those of this sampled mesh, so
   a shadow edge is not a computed quantity; the package's `visible_fraction` is.
+- "This ridge costs N h" is the package's `lost_s`: time the body would be visible over a
+  smooth sphere through the site but is not over the terrain, in the computed window
+  (here twelve months), split between obstacles to the step of the series. At a site on a
+  crest the terrain mostly lies below the smooth horizon and gives time instead: the
+  de Gerlache and Malapert packages have almost no blockers, the Shackleton rim has 38.
+- An obstacle within 1 km is marked "depends on single pixels of the elevation model", as
+  the contract asks. Four of the five costliest Sun obstacles of the Shackleton rim site
+  at 2 m are of that kind (191 h, 120 h, 107 h, 61 h); the far ridge shown in
+  `docs/unreal/obstacle_shackleton_ridge_2027-07-28.mp4` (52 h, 10.4 km away) is not.
+- The obstacle view uses the values of the sample the time position belongs to; it does
+  not interpolate which obstacle is the limiting one.
 - Display values (light intensity, exposure, albedo, fill light) are not photometry.
