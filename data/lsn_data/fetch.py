@@ -31,7 +31,10 @@ def log(msg: str) -> None:
 
 def _urls(spec: catalog.FileSpec, prefer: str) -> list[str]:
     pds = spec.pds_path if spec.pds_path.startswith("http") else f"{catalog.PDS_ROOT}/{spec.pds_path}"
-    mit = f"{catalog.MIT_ROOT}/{spec.mit_path}" if spec.mit_path else None
+    if spec.mit_path and spec.mit_path.startswith("http"):
+        mit = spec.mit_path
+    else:
+        mit = f"{catalog.MIT_ROOT}/{spec.mit_path}" if spec.mit_path else None
     if prefer == "mit" and mit:
         return [mit, pds]
     return [pds] + ([mit] if mit else [])
@@ -51,10 +54,82 @@ def head(url: str) -> dict:
         }
 
 
-def download(url: str, dest: Path, expected_size: int, retries: int = 12) -> None:
-    """Download ``url`` to ``dest`` with resume and retries."""
+SEGMENT_MIN_BYTES = 64 << 20
+
+
+def _download_range(url: str, seg: Path, start: int, stop: int, retries: int = 12) -> None:
+    """Bytes [start, stop) of ``url`` into ``seg``, resuming from what ``seg`` already holds."""
+    attempt = 0
+    while True:
+        have = seg.stat().st_size if seg.exists() else 0
+        if have == stop - start:
+            return
+        if have > stop - start:
+            seg.unlink()
+            continue
+        try:
+            with _open(url, {"Range": f"bytes={start + have}-{stop - 1}"}) as r:
+                if r.status != 206:
+                    raise OSError(f"server ignored the range request (status {r.status})")
+                with open(seg, "ab") as f:
+                    while block := r.read(CHUNK):
+                        f.write(block)
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+            attempt += 1
+            if attempt > retries:
+                raise
+            log(f"  {seg.name}: {type(e).__name__}: {e}; retry {attempt}/{retries}")
+            time.sleep(min(5 * attempt, 30))
+
+
+def _download_segments(url: str, part: Path, expected_size: int, segments: int) -> None:
+    """Fetch the rest of ``part`` in ``segments`` parallel ranges, then append them in order.
+
+    The mirror limits the rate per connection, so parallel ranges are much faster. Each range resumes on its own.
+    """
+    have = part.stat().st_size if part.exists() else 0
+    edges = [have + (expected_size - have) * i // segments for i in range(segments + 1)]
+    segs = [part.with_name(f"{part.name}.seg{i}") for i in range(segments)]
+    # a set of segments from an earlier run with another split cannot be reused
+    old = sorted(part.parent.glob(part.name + ".seg*"))
+    meta = part.with_name(part.name + ".segments")
+    plan = f"{have} {expected_size} {segments}"
+    if old and (not meta.exists() or meta.read_text() != plan):
+        for f in old:
+            f.unlink()
+    meta.write_text(plan)
+    t0 = time.time()
+
+    def progress():
+        while not done.is_set():
+            done.wait(30)
+            got = sum(s.stat().st_size for s in segs if s.exists())
+            log(f"  {part.name[:-5]}: {(have + got)/1e6:,.0f}/{expected_size/1e6:,.0f} MB, {got/1e6/max(time.time()-t0,1):.2f} MB/s")
+
+    done = threading.Event()
+    threading.Thread(target=progress, daemon=True).start()
+    try:
+        with ThreadPoolExecutor(max_workers=segments) as ex:
+            list(ex.map(lambda i: _download_range(url, segs[i], edges[i], edges[i + 1]), range(segments)))
+    finally:
+        done.set()
+    with open(part, "ab") as out:
+        for sgm in segs:
+            with open(sgm, "rb") as f:
+                while block := f.read(CHUNK * 8):
+                    out.write(block)
+    for sgm in segs:
+        sgm.unlink()
+    meta.unlink()
+
+
+def download(url: str, dest: Path, expected_size: int, retries: int = 12, segments: int = 1) -> None:
+    """Download ``url`` to ``dest`` with resume and retries (``segments`` parallel ranges for large files)."""
     part = dest.with_name(dest.name + ".part")
     dest.parent.mkdir(parents=True, exist_ok=True)
+    have0 = part.stat().st_size if part.exists() else 0
+    if segments > 1 and expected_size - have0 >= SEGMENT_MIN_BYTES:
+        _download_segments(url, part, expected_size, segments)
     attempt = 0
     t0 = time.time()
     last_report = 0.0
@@ -104,7 +179,7 @@ def _label_info(label_path: Path) -> dict:
     }
 
 
-def fetch_file(prod: catalog.Product, spec: catalog.FileSpec, root: Path, prefer: str, force: bool, mpath: Path) -> dict:
+def fetch_file(prod: catalog.Product, spec: catalog.FileSpec, root: Path, prefer: str, force: bool, mpath: Path, segments: int = 1) -> dict:
     dest = root / prod.base / prod.product_id / spec.local_name
     urls = _urls(spec, prefer)
     meta = None
@@ -127,7 +202,7 @@ def fetch_file(prod: catalog.Product, spec: catalog.FileSpec, root: Path, prefer
     fetched_now = False
     if force or not dest.exists() or dest.stat().st_size != meta["size"]:
         log(f"fetch {rel} from {used} ({meta['size']/1e6:,.1f} MB)")
-        download(used, dest, meta["size"])
+        download(used, dest, meta["size"], segments=segments)
         fetched_now = True
     digest = mf.sha256_file(dest)
     if prev and prev["sha256"] == digest and not fetched_now:
@@ -175,7 +250,7 @@ def _fill_docs(m: dict, root: Path, prod: catalog.Product) -> None:
             rec["data_set_id"] = None
 
 
-def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool = False, workers: int = 3) -> dict:
+def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool = False, workers: int = 3, segments: int = 1) -> dict:
     mpath = manifest_path()
     jobs = []
     for pid in products:
@@ -188,7 +263,7 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
 
     def work(job):
         prod, spec = job
-        rec = fetch_file(prod, spec, root, prefer, force, mpath)
+        rec = fetch_file(prod, spec, root, prefer, force, mpath, segments)
         with _manifest_lock:
             m = mf.load(mpath)
             m["files"][rec["path"]] = rec
@@ -209,9 +284,10 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
                 if pid == "_docs":
                     _fill_docs(m, root, prod)
                 continue
-            info = _label_info(raw_dir(root) / pid / lbl.local_name)
+            pdir = root / prod.base / pid
+            info = _label_info(pdir / lbl.local_name)
             for spec in prod.files:
-                rec = m["files"][(raw_dir(root) / pid / spec.local_name).relative_to(root).as_posix()]
+                rec = m["files"][(pdir / spec.local_name).relative_to(root).as_posix()]
                 rec["product_id"] = info["product_id"] or pid
                 rec["product_version"] = info["product_version"]
                 rec["data_set_id"] = info["data_set_id"]

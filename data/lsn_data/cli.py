@@ -18,6 +18,7 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--prefer", choices=["pds", "mit"], default="mit", help="source tried first (default: mit, faster)")
     f.add_argument("--force", action="store_true", help="download again even if the size matches")
     f.add_argument("--workers", type=int, default=3)
+    f.add_argument("--segments", type=int, default=1, help="parallel byte ranges per large file (the mirror limits each connection)")
 
     sub.add_parser("verify", help="checkpoint 1: compare every file with the manifest")
 
@@ -42,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "fetch":
         from .fetch import run_fetch
 
-        run_fetch(root, a.products, a.prefer, a.force, a.workers)
+        run_fetch(root, a.products, a.prefer, a.force, a.workers, a.segments)
         return 0
     if a.cmd == "verify":
         m = mf.load(manifest_path())

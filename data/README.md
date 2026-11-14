@@ -21,7 +21,7 @@ python -m lsn_data where                 # data root and manifest path
 python -m lsn_data fetch                 # download, hash, write data/manifest/manifest.json
 python -m lsn_data verify                # checkpoint 1: every file equals its manifest record
 python -m lsn_data cross-check           # re-hash each file from its other source
-python -m lsn_data pyramid               # build overview levels
+python -m lsn_data pyramid               # build overview levels (polar and cylindrical)
 python -m pytest data/tests              # tests; those that need the real data skip if it is absent
 ```
 
@@ -32,6 +32,10 @@ python -m pytest data/tests              # tests; those that need the real data 
 | `LDEM_80S_20M` | primary terrain, 80S to the pole | 30400 x 30400, 20 m, polar stereographic |
 | `LDEM_60S_60M` | far terrain, 60S to the pole | 31040 x 31040, 60 m, polar stereographic |
 | `LDEM_16` | global, 16 px/deg; independent check only | 5760 x 2880, simple cylindrical |
+| `LDEM_80N_20M`, `LDEM_60N_60M` | north-polar mirror of the two south products (whole-Moon terrain) | as the south products |
+| `LDEM_128` | global fallback of the whole-Moon terrain, independent check | 46080 x 23040, 128 px/deg (237 m), simple cylindrical |
+| `SLDEM2015_256_*` / `SLDEM2015_512_*` | 60S-60N, LOLA + Kaguya TC (only if downloaded) | 6 tiles of 118 m / 32 tiles of 59 m, float km |
+| `LOLARDR_*` (13 files of LRO_SM_06) | individual laser returns: independent check of mapping and products | binary table, LOLARDR.FMT |
 
 Version, reference radius, scaling and projection parameters are read from the PDS labels; the manifest
 records the product version and SHA-256 of each file.
@@ -88,6 +92,34 @@ dem.height_xy(x_m, y_m, level=3, statistic="max")  # vectorised sampling of one 
 `rows`/`cols` are `(start, stop)` or slices in the level's own pixel indices; `None` is the whole level (level 0 of the 20 m product is 3.7 GB as float32).
 Level `k` has `2**k` times larger pixels and the same upper-left corner, so `grid.x_ul_m`/`y_ul_m` are shared by all levels.
 
+### Whole-Moon terrain (opt-in)
+
+```python
+t = open_terrain(products="moon")                # MoonTerrain over everything downloaded (see t.coverage())
+h = t.height_m(lon, lat, max_pixel_m=None)       # any latitude and longitude
+ids, levels = t.source(lon, lat, max_pixel_m=None)   # which product and level each point is read from
+```
+
+Rule: a south or north polar product that covers the point decides exactly as `Terrain` does (so every point of the
+default terrain gets the same value); elsewhere the finest cylindrical mosaic (`SLDEM2015_512`, `SLDEM2015_256`,
+`LDEM_128`, whichever is complete). Cylindrical tiles are read on the global grid of their resolution, so bilinear
+interpolation is continuous across tile edges and the 0/360 meridian. `open_terrain()` without arguments still
+returns the south-polar `Terrain`, because the core adapter (`lsncore.dem.LolaTerrain`) reads polar-grid internals.
+`Terrain.source()` (same signature) reports the product and level for the polar terrain.
+
+Downloads: `python -m lsn_data fetch LDEM_128 LDEM_80N_20M LDEM_60N_60M --segments 4` (parallel byte ranges per file;
+the mirror limits each connection). Pyramids: `python -m lsn_data pyramid <product ids>` works for cylindrical files too.
+
+## Independent checks of the mapping (item 1 and 2 of the data stream's review)
+
+* `data/tests/test_mapping_by_hand.py`: 18 line/sample values derived by hand from `DSMAP_POLAR.CAT` and the labels.
+* `python -m lsn_data.independent` -> `data/checkpoints/independent_report.json` (criterion `thresholds_independent.json`):
+  our polar products against LOLA RDR laser returns and against the cylindrical LDEM_128 / LDEM_16 grids
+  (displacement fit: translation, rotation, radial scale; east-west mirror test).
+* Published spot heights (Smith et al. 2010): criterion `thresholds_spot_heights.json`, results in the reports.
+* The catalogue's radial scale: `data/checkpoints/radial_scale_explanation.md` (`python -m lsn_data.catalogue_diag`).
+* Whole-Moon checkpoints and seams: `python -m lsn_data.moon_check` -> `moon_report.json` (criterion `thresholds_moon.json`).
+
 ## Checkpoints (status is in `data/checkpoints/report.json`, produced by `python -m lsn_data checkpoints`)
 
 Thresholds are in `data/checkpoints/thresholds.json`, committed before the first measurement and not edited since.
@@ -108,5 +140,7 @@ Best-fit translation of each IAU outline onto its rim crest: no common translati
 ### Crater-catalogue georeferencing check
 
 Criterion `data/checkpoints/thresholds_catalogue.json` (committed before measuring), result `data/checkpoints/catalogue_report.json`. 192 rim fits against the Robbins
-catalogue: translation (-21, +24) m, rotation -0.013 deg, radial scale -3.6e-4, all below the levels that matter for horizons (100 m). The catalogue
+catalogue: translation (-21, +24) m, rotation -0.013 deg, radial scale -3.6e-4, all below the levels that matter for horizons (100 m).
+The radial scale is not in our reading (laser returns: -2.7e-5 +- 0.6e-5); about a quarter of it is the check's rim
+detector moving uphill, the rest is in the catalogue positions, cause not determined (`radial_scale_explanation.md`). The catalogue
 was measured on LROC, LOLA and Kaguya TC products in a LOLA control net, so this tests our reading of the files against LOLA-controlled products, not the absolute frame.
