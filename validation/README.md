@@ -4,7 +4,9 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 ## `card/` — the validation card
 
-`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code; `tests/test_card.py` fails if the committed card and a fresh build disagree.
+`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree.
+
+The card has 32 checks; 31 pass and one fails: the comparison with an LROC image strip (`lro_images/`, below). The failed check stays on the card as `FAIL` with its cause; a viewer that shows the card must show it too.
 
 ## `sites/` — end-to-end results for the south-polar site records, and the published packages
 

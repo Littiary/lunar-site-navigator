@@ -45,6 +45,13 @@ def test_stored_result_follows_the_criteria():
     assert sum(1 for row in judged if row["image_state"] == row["state"]) == detail["agree"]
 
 
+@pytest.mark.xfail(strict=True, reason="Registered check fails: 89.3 % of the judged points agree, the criterion fixed beforehand is 90 %. "
+                   "One brightness threshold for the whole image reads dimly lit ground at grazing incidence as shadow. Rule and criterion are unchanged.")
+def test_nadir_strip_meets_the_registered_criterion():
+    strip = {check["id"]: check for check in _stored()["checks"]}["nadir_2010_agreement"]
+    assert strip["status"] == "PASS"
+
+
 def test_failed_agreement_is_reported_with_its_cause_and_not_turned_into_a_pass():
     stored = _stored()
     strip = {check["id"]: check for check in stored["checks"]}["nadir_2010_agreement"]
