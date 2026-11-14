@@ -1,6 +1,6 @@
 # Validation table: event finder versus JPL Horizons rise and set times
 
-Generated 2026-11-14T10:34:27Z by `validation/horizons_rts/compare.py` from the stored raw responses. Do not edit by hand.
+Generated 2026-11-14T10:40:19Z by `validation/horizons_rts/compare.py` from the stored raw responses. Do not edit by hand.
 
 - Event: Sun, upper limb on the true visual horizon of the 1737.4 km sphere (dip included for a site above the sphere), no refraction.
 - Reference: NASA/JPL Horizons, rise/transit/set search, 1-minute step, TVH mode; a row is the first search step at which the condition holds, so it lies 0 to 60 s after the true instant; stated accuracy: twice the search step.

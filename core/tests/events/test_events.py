@@ -268,3 +268,42 @@ def test_smooth_sphere_events_match_direct_spice_crossings(loaded):
             signal = exact.el_deg + sign * exact.angular_radius_deg - dip
             crossing = et[np.argmin(np.abs(signal))]
             assert abs(crossing - event.et_s) <= TOL_EVENT_S, (threshold, event.type, crossing - event.et_s)
+
+
+def test_scan_step_does_not_lose_events_on_a_rough_polar_horizon(loaded):
+    # Polar geometry: the Sun travels almost parallel to a rough horizon, so every ridge and
+    # notch makes its own set and rise. The stated guarantee of the finder is checked against
+    # a 5 s scan: the default 60 s scan finds every event at the same time, except pairs of
+    # opposite crossings that lie closer together than 60 s. The profile is invented
+    # (band-limited noise, 0.25 deg samples), not terrain.
+    rng = np.random.default_rng(2026)
+    count = 1440
+    k = np.fft.rfftfreq(count, d=1.0 / count)
+    spectrum = (rng.normal(size=k.size) + 1j * rng.normal(size=k.size)) / np.maximum(k, 1.0) ** 0.9
+    spectrum[0] = 0.0
+    profile = np.fft.irfft(spectrum, count)
+    profile = 1.2 + 1.5 * profile / np.abs(profile).max()
+    horizon = ev.Horizon(0.0, 0.25, profile)
+    site = d.Site(lon_deg=-135.0, lat_deg=-89.5, height_km=0.0)
+    start = d.utc_to_et("2026-11-14T00:00:00")
+    stop = start + 30 * 86400.0
+    table = d.direction_table(start - 3600.0 + 3600.0 * np.arange(30 * 24 + 4))
+    direction = ev.site_direction(site, table, "SUN")
+    coarse = ev.find_events(direction, horizon, start, stop, scan_step_s=60.0)
+    fine = ev.find_events(direction, horizon, start, stop, scan_step_s=5.0)
+    short_pairs = 0
+    for threshold in ev.THRESHOLDS:
+        a, b = by_threshold(coarse, threshold), by_threshold(fine, threshold)
+        assert len(a) >= 4, threshold  # the case is only meaningful if the horizon is actually crossed
+        times_a = np.array([event.et_s for event in a])
+        times_b = np.array([event.et_s for event in b])
+        # Nothing reported by the default scan is absent from the fine scan.
+        assert all(np.abs(times_b - event.et_s).min() < TOL_EVENT_S for event in a), threshold
+        # What the default scan did not report comes in pairs of opposite crossings closer than 60 s.
+        missed = [event for event in b if np.abs(times_a - event.et_s).min() >= TOL_EVENT_S]
+        assert len(missed) % 2 == 0, threshold
+        for first, second in zip(missed[::2], missed[1::2]):
+            assert first.type != second.type and 0.0 < second.et_s - first.et_s < 60.0, threshold
+        short_pairs += len(missed) // 2
+    # Measured on this profile: one pair (the whole disc clears the horizon for 12 s by 0.2 arcsec).
+    assert short_pairs <= 1

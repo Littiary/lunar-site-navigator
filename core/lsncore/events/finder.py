@@ -10,13 +10,14 @@ Inputs
 
 The disc is not a point
 -----------------------
-The disc is cut into vertical strips. For each strip the part above the local
-horizon is computed exactly, which gives four continuous signals:
+Four continuous signals describe the disc against the horizon. The two limb
+margins are exact for the piecewise-linear profile; the visible fraction is
+integrated over vertical strips of the disc:
 
-* ``upper_margin``  largest height of any strip top above the horizon (deg);
+* ``upper_margin``  largest height of any point of the disc above the horizon (deg);
   positive when **any part** of the disc is visible;
 * ``center_margin`` height of the disc centre above the horizon (deg);
-* ``lower_margin``  smallest height of any strip bottom above the horizon (deg);
+* ``lower_margin``  smallest height of the lower edge of the disc above the horizon (deg);
   positive when the **whole** disc is visible;
 * ``visible_fraction`` fraction of the disc area above the horizon, 0 to 1.
 
@@ -137,39 +138,108 @@ class DiscSignals:
         raise ValueError(f"unknown threshold {threshold!r}")
 
 
+_MAX_STRETCH = 1.0 / math.cos(math.radians(80.0))
+
+
+def _limb_margins(az, el, radius, stretch, horizon: Horizon):
+    """Exact upper and lower limb margins of a disc over a piecewise-linear horizon.
+
+    With x the horizontal offset from the disc centre (degrees on the sky), the upper edge
+    of the disc is el + sqrt(r^2 - x^2) and the horizon is H(az + x * stretch). On each
+    linear piece of the horizon the difference is concave, so its maximum over the disc is
+    reached at a vertex of the profile, at the one stationary point of a piece, or at the
+    two ends of the disc. The lower edge is the mirror case (convex, minimum). Evaluating
+    these candidates gives margins that are continuous in time, with no dependence on a
+    strip count.
+    """
+    step = horizon.step_deg
+    count = horizon.elevation_deg.shape[0]
+    half_width = radius * stretch
+    n_vertices = int(math.ceil(2.0 * float(half_width.max()) / step)) + 2
+    first = np.floor((az - half_width - horizon.start_deg) / step).astype(np.int64)
+    index = first[:, None] + np.arange(n_vertices)[None, :]
+    height = horizon.elevation_deg[index % count]
+    x = (horizon.start_deg + index * step - az[:, None]) / stretch[:, None]
+    r = radius[:, None]
+    centre = el[:, None]
+
+    inside = np.abs(x) <= r
+    cap = np.sqrt(np.maximum(r * r - x * x, 0.0))
+    upper_vertex = np.where(inside, centre + cap - height, -np.inf)
+    lower_vertex = np.where(inside, centre - cap - height, np.inf)
+
+    slope = (height[:, 1:] - height[:, :-1]) / (x[:, 1:] - x[:, :-1])
+    root = np.sqrt(1.0 + slope * slope)
+    x_left, x_right, h_left = x[:, :-1], x[:, 1:], height[:, :-1]
+    x_up = -r * slope / root
+    upper_piece = np.where((x_up >= x_left) & (x_up <= x_right), centre + r / root - (h_left + slope * (x_up - x_left)), -np.inf)
+    x_low = r * slope / root
+    lower_piece = np.where((x_low >= x_left) & (x_low <= x_right), centre - r / root - (h_left + slope * (x_low - x_left)), np.inf)
+
+    end_x = np.stack([-radius, radius], axis=1)
+    end_value = centre - horizon.elevation_at(az[:, None] + end_x * stretch[:, None])
+
+    rows = np.arange(az.shape[0])
+    upper_all = np.concatenate([upper_vertex, upper_piece, end_value], axis=1)
+    lower_all = np.concatenate([lower_vertex, lower_piece, end_value], axis=1)
+    offsets_up = np.concatenate([x, x_up, end_x], axis=1)
+    offsets_low = np.concatenate([x, x_low, end_x], axis=1)
+    i_up, i_low = np.argmax(upper_all, axis=1), np.argmin(lower_all, axis=1)
+    return (
+        upper_all[rows, i_up],
+        lower_all[rows, i_low],
+        (az + offsets_up[rows, i_up] * stretch) % 360.0,
+        (az + offsets_low[rows, i_low] * stretch) % 360.0,
+    )
+
+
+def _strip_fraction(az, el, radius, stretch, horizon: Horizon, n_strips: int) -> np.ndarray:
+    """Visible area fraction by vertical strips (Gauss-Chebyshev nodes of the second kind)."""
+    theta = np.arange(1, n_strips + 1) * np.pi / (n_strips + 1)
+    weights = 2.0 / (n_strips + 1) * np.sin(theta) ** 2
+    strip_az = az[:, None] + (radius * stretch)[:, None] * np.cos(theta)[None, :]
+    half_height = radius[:, None] * np.sin(theta)[None, :]
+    top = el[:, None] + half_height - horizon.elevation_at(strip_az)
+    return np.clip(top / (2.0 * half_height), 0.0, 1.0) @ weights
+
+
 def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = DEFAULT_STRIPS) -> DiscSignals:
     """Margins and visible fraction of a disc for every epoch (arrays of equal length).
 
-    Strip k has horizontal offset radius*cos(theta_k) from the centre and
-    half-height radius*sin(theta_k), theta_k = k*pi/(K+1). The area weights
-    2/(K+1)*sin(theta_k)^2 are those of Gauss-Chebyshev quadrature of the
-    second kind, so a fully visible disc gives exactly 1.
+    Epochs at which the disc is entirely above the highest point of the profile, or
+    entirely below its lowest point, are settled at once: the fraction is 1 or 0 and the
+    limb margins are given relative to those extremes (correct in sign, conservative in
+    size). All other epochs get exact limb margins (``_limb_margins``) and the strip
+    quadrature for the fraction. Azimuth offsets are stretched by 1/cos(elevation),
+    because a fixed angle on the sky spans more azimuth away from the horizontal plane.
     """
     if n_strips % 2 == 0:
         raise ValueError("n_strips must be odd")
     az = np.atleast_1d(np.asarray(az_deg, dtype=np.float64))
     el = np.atleast_1d(np.asarray(el_deg, dtype=np.float64))
     radius = np.atleast_1d(np.asarray(radius_deg, dtype=np.float64))
-    theta = np.arange(1, n_strips + 1) * np.pi / (n_strips + 1)
-    weights = 2.0 / (n_strips + 1) * np.sin(theta) ** 2
-    # Azimuth offsets are stretched by 1/cos(elevation): a fixed angle on the sky
-    # spans more azimuth away from the horizontal plane.
-    stretch = 1.0 / np.maximum(np.cos(np.radians(el)), 1e-6)
-    strip_az = az[:, None] + (radius * stretch)[:, None] * np.cos(theta)[None, :]
-    half_height = radius[:, None] * np.sin(theta)[None, :]
-    strip_horizon = horizon.elevation_at(strip_az)
-    top = el[:, None] + half_height - strip_horizon
-    bottom = el[:, None] - half_height - strip_horizon
-    visible_part = np.clip(top / (2.0 * half_height), 0.0, 1.0)
-    rows = np.arange(az.shape[0])
-    i_top, i_bottom = np.argmax(top, axis=1), np.argmin(bottom, axis=1)
+    highest, lowest = float(horizon.elevation_deg.max()), float(horizon.elevation_deg.min())
+
+    upper = el + radius - lowest
+    lower = el - radius - highest
+    fraction = np.where(lower > 0.0, 1.0, 0.0)
+    upper_az, lower_az = az % 360.0, az % 360.0
+    contact = ~((lower > 0.0) | (upper < 0.0))
+    if np.any(contact):
+        a, e, r = az[contact], el[contact], radius[contact]
+        stretch = np.minimum(1.0 / np.maximum(np.cos(np.radians(e)), 1e-12), _MAX_STRETCH)
+        upper[contact], lower[contact], up_az, low_az = _limb_margins(a, e, r, stretch, horizon)
+        upper_az = upper_az.copy()
+        lower_az = lower_az.copy()
+        upper_az[contact], lower_az[contact] = up_az, low_az
+        fraction[contact] = _strip_fraction(a, e, r, stretch, horizon, n_strips)
     return DiscSignals(
         center_margin_deg=el - horizon.elevation_at(az),
-        upper_margin_deg=top[rows, i_top],
-        lower_margin_deg=bottom[rows, i_bottom],
-        visible_fraction=visible_part @ weights,
-        upper_azimuth_deg=strip_az[rows, i_top] % 360.0,
-        lower_azimuth_deg=strip_az[rows, i_bottom] % 360.0,
+        upper_margin_deg=upper,
+        lower_margin_deg=lower,
+        visible_fraction=fraction,
+        upper_azimuth_deg=upper_az,
+        lower_azimuth_deg=lower_az,
     )
 
 
