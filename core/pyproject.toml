@@ -17,6 +17,10 @@ dependencies = [
 dev = ["pytest>=8"]
 # Stream B (ephemeris and validation) lists its dependencies here.
 ephem = ["spiceypy>=8.4"]
+# Everything the tests under core/tests need: the ephemeris and event tests use SPICE.
+test = ["pytest>=8", "spiceypy>=8.4"]
+# The scripts and tests under validation/ (run from the repository root); Pillow reads one LROC browse image.
+validation = ["pytest>=8", "spiceypy>=8.4", "pillow>=10"]
 
 [project.scripts]
 lsn = "lsncore.cli:main"

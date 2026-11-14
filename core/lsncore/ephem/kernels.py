@@ -1,10 +1,12 @@
 """SPICE kernel set: definition, download, integrity check and loading.
 
 The kernels are NAIF generic kernels. They are never committed; this module
-downloads them unmodified and records what was downloaded in
+downloads them unmodified into a folder outside any checkout of the repository
+(``kernels`` under the data root, see ``data_root``) and compares each file with
 ``core/lsncore/ephem/kernel_manifest.json`` (file name, URL, size, SHA-256, retrieval
-time). Loading checks every file against that manifest, so a result can always
-be traced to an exact kernel set.
+time). The committed manifest is the record of the kernel set: a download that does
+not match it is refused, and loading checks every file against it, so a result can
+always be traced to an exact kernel set.
 """
 
 from __future__ import annotations
@@ -13,6 +15,7 @@ import datetime as _dt
 import hashlib
 import json
 import os
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +29,15 @@ USER_AGENT = "lunar-ephemeris-tool/0.1 (python-urllib; kernel download)"
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = Path(__file__).resolve().parent / "kernel_manifest.json"
+
+DATA_ROOT_ENV = "LSN_DATA_ROOT"
+KERNEL_DIR_ENV = "LSN_KERNEL_DIR"
+FETCH_COMMAND = "python -m lsncore.ephem.fetch_kernels"
+MANIFEST_DESCRIPTION = "NAIF generic kernels used by the ephemeris stream, in load order. Written by lsncore.ephem.fetch_kernels; do not edit by hand."
+
+
+class KernelsMissing(FileNotFoundError):
+    """A kernel of the set has not been downloaded. The tests turn this into a skip."""
 
 
 @dataclass(frozen=True)
@@ -71,10 +83,35 @@ STATION_KERNEL_SET: tuple[Kernel, ...] = (
 )
 
 
+def data_root() -> Path:
+    """Root of all downloaded inputs, outside any checkout of the repository.
+
+    ``LSN_DATA_ROOT`` if set, otherwise ``C:\\lsn-data`` on Windows and ``~/lsn-data``
+    elsewhere. This is the rule of the data stream (``lsn_data.paths.data_root``); it is
+    repeated here because the core does not depend on that package, and a test checks
+    that the two agree.
+    """
+    override = os.environ.get(DATA_ROOT_ENV)
+    if override:
+        return Path(override)
+    return Path("C:/lsn-data") if os.name == "nt" else Path.home() / "lsn-data"
+
+
 def kernel_dir() -> Path:
-    """Directory holding the downloaded kernels (not under version control)."""
-    override = os.environ.get("LSN_KERNEL_DIR")
-    return Path(override) if override else REPO_ROOT / "data" / "kernels"
+    """Directory holding the downloaded kernels: ``LSN_KERNEL_DIR`` if set, otherwise ``kernels`` under the data root."""
+    override = os.environ.get(KERNEL_DIR_ENV)
+    return Path(override) if override else data_root() / "kernels"
+
+
+def missing(stations: bool = False) -> list:
+    """Names of the kernels of the base set (and of the station group) that are not in ``kernel_dir()``."""
+    directory = kernel_dir()
+    group = KERNEL_SET + (STATION_KERNEL_SET if stations else ())
+    return [kernel.name for kernel in group if not (directory / kernel.name).exists()]
+
+
+def _missing_message(name: str, directory: Path) -> str:
+    return f"SPICE kernel {name} not found in {directory}. Download the kernel set with: {FETCH_COMMAND} (see docs/setup.md)"
 
 
 def _sha256(path: Path) -> str:
@@ -85,7 +122,8 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _fetch_group(group: tuple, known: dict, force: bool) -> list:
+def _fetch_group(group: tuple, known: dict, force: bool, update_manifest: bool, unavailable: list | None = None) -> list:
+    """Fetch one group. With ``unavailable`` given, a file the server no longer offers is noted there instead of stopping the run."""
     target = kernel_dir()
     target.mkdir(parents=True, exist_ok=True)
     entries = []
@@ -94,36 +132,63 @@ def _fetch_group(group: tuple, known: dict, force: bool) -> list:
         entry = known.get(kernel.name)
         if force or not path.exists() or entry is None or _sha256(path) != entry["sha256"]:
             request = urllib.request.Request(kernel.url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(request, timeout=300) as response:
-                payload = response.read()
-                last_modified = response.headers.get("Last-Modified")
+            try:
+                with urllib.request.urlopen(request, timeout=300) as response:
+                    payload = response.read()
+                    last_modified = response.headers.get("Last-Modified")
+            except (urllib.error.URLError, OSError) as error:
+                if unavailable is None:
+                    raise RuntimeError(f"{kernel.name} could not be downloaded from {kernel.url}: {error}") from error
+                unavailable.append({"name": kernel.name, "url": kernel.url, "error": str(error)})
+                if entry is not None:
+                    entries.append(entry)  # the record of the kernel set stays as it is
+                continue
+            digest = hashlib.sha256(payload).hexdigest()
+            if entry is not None and digest != entry["sha256"] and not update_manifest:
+                raise RuntimeError(
+                    f"{kernel.name}: the file at {kernel.url} (sha256 {digest}) is not the recorded one (sha256 {entry['sha256']}, "
+                    f"retrieved {entry['retrieved_utc']}). Nothing was written. Results computed with a different file are not those "
+                    "of the recorded kernel set; pass --update-manifest only to record a new kernel set on purpose."
+                )
             path.write_bytes(payload)  # binary write: text kernels stay byte-identical
-            entry = {
-                "name": kernel.name,
-                "kind": kernel.kind,
-                "role": kernel.role,
-                "url": kernel.url,
-                "bytes": len(payload),
-                "sha256": hashlib.sha256(payload).hexdigest(),
-                "server_last_modified": last_modified,
-                "retrieved_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
+            if entry is None or digest != entry["sha256"]:
+                entry = {
+                    "name": kernel.name,
+                    "kind": kernel.kind,
+                    "role": kernel.role,
+                    "url": kernel.url,
+                    "bytes": len(payload),
+                    "sha256": digest,
+                    "server_last_modified": last_modified,
+                    "retrieved_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                }
+            # Otherwise the download is byte-identical to the recorded file: the record stays as it is.
         entries.append(entry)
     return entries
 
 
-def fetch(force: bool = False, stations: bool = True) -> dict:
-    """Download the kernel sets and write the manifest. Returns the manifest."""
+def fetch(force: bool = False, stations: bool = True, update_manifest: bool = False, unavailable: list | None = None) -> dict:
+    """Download the kernels that are absent into ``kernel_dir()`` and check them against the manifest.
+
+    The committed manifest is not changed when every file matches its record, so a fresh
+    clone stays clean. A file that differs from its record is refused unless
+    ``update_manifest`` is set; a kernel without a record is recorded. Returns the manifest.
+
+    A kernel of the base set that cannot be downloaded is an error. A kernel of the
+    optional station group that the server no longer offers is appended to ``unavailable``
+    (if given) and the run goes on: NAIF replaces the high-precision Earth orientation
+    file at least twice per week and keeps only the current one.
+    """
     previous = read_manifest() if MANIFEST_PATH.exists() else {}
     known = {entry["name"]: entry for entry in previous.get("kernels", []) + previous.get("station_kernels", [])}
     manifest = {
-        "description": "NAIF generic kernels used by the ephemeris stream, in load order. "
-        "Written by lsncore.ephem.fetch_kernels; do not edit by hand.",
+        "description": MANIFEST_DESCRIPTION,
         "source_root": NAIF_ROOT,
-        "kernels": _fetch_group(KERNEL_SET, known, force),
-        "station_kernels": _fetch_group(STATION_KERNEL_SET, known, force) if stations else previous.get("station_kernels", []),
+        "kernels": _fetch_group(KERNEL_SET, known, force, update_manifest),
+        "station_kernels": _fetch_group(STATION_KERNEL_SET, known, force, update_manifest, unavailable) if stations else previous.get("station_kernels", []),
     }
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    if manifest != previous:
+        MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
 
 
@@ -147,11 +212,9 @@ def load(verify: bool = True) -> None:
     for kernel in KERNEL_SET:
         path = directory / kernel.name
         if not path.exists():
-            raise FileNotFoundError(
-                f"Kernel {kernel.name} not found in {directory}. Run: python -m lsncore.ephem.fetch_kernels"
-            )
+            raise KernelsMissing(_missing_message(kernel.name, directory))
         if verify and _sha256(path) != manifest[kernel.name]["sha256"]:
-            raise RuntimeError(f"Kernel {kernel.name} does not match the manifest checksum")
+            raise RuntimeError(f"Kernel {kernel.name} in {directory} does not match the manifest checksum")
         spice.furnsh(str(path))
     _LOADED = True
 
@@ -177,9 +240,9 @@ def load_stations(verify: bool = True) -> None:
     for kernel in STATION_KERNEL_SET:
         path = directory / kernel.name
         if not path.exists() or kernel.name not in manifest:
-            raise FileNotFoundError(f"Station kernel {kernel.name} not found in {directory}. Run: python -m lsncore.ephem.fetch_kernels")
+            raise KernelsMissing(_missing_message(kernel.name, directory))
         if verify and _sha256(path) != manifest[kernel.name]["sha256"]:
-            raise RuntimeError(f"Kernel {kernel.name} does not match the manifest checksum")
+            raise RuntimeError(f"Kernel {kernel.name} in {directory} does not match the manifest checksum")
         spice.furnsh(str(path))
     _STATIONS_LOADED = True
 

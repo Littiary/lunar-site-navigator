@@ -1,12 +1,12 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.1"
+    "version": "0.6"
   },
   "kind": "scenario",
   "scenario_id": "south-polar-sites",
-  "title": "Three south-polar candidate points, twelve months from the hackathon weekend",
-  "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris.",
+  "title": "Three south-polar candidate points, 24 months from the hackathon weekend",
+  "description": "Site records of the data stream (derived from LOLA and IAU crater outlines; not official landing sites). Real LOLA terrain, SPICE ephemeris. The requirements are the team's examples, not requirements of NASA or of any mission; the horizon error, the terrain height error, the landing ellipse and the planned landing time are stated assumptions chosen by the team to show what follows from them.",
   "synthetic": false,
   "sites": [
     {
@@ -14,6 +14,7 @@
       "name": "Shackleton crater rim crest",
       "lat_deg": -89.80531,
       "lon_deg": 205.76891,
+      "landing_utc": "2027-01-10T00:00:00.000Z",
       "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
     },
     {
@@ -21,6 +22,7 @@
       "name": "de Gerlache crater rim crest",
       "lat_deg": -88.6641,
       "lon_deg": 291.58956,
+      "landing_utc": "2027-01-10T00:00:00.000Z",
       "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
     },
     {
@@ -28,6 +30,7 @@
       "name": "Mons Malapert (Malapert massif) summit",
       "lat_deg": -85.98795,
       "lon_deg": 2.05767,
+      "landing_utc": "2027-01-10T00:00:00.000Z",
       "notes": "project candidate site derived from LOLA and the IAU outline; not an official landing site"
     }
   ],
@@ -46,7 +49,7 @@
   },
   "time_window": {
     "start_utc": "2026-11-14T00:00:00.000Z",
-    "end_utc": "2027-11-14T00:00:00.000Z",
+    "end_utc": "2028-11-14T00:00:00.000Z",
     "step_s": 3600.0
   },
   "bodies": [
@@ -70,5 +73,70 @@
     "dem_set_id": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
     "kernel_set_id": "bfe870fccfa5",
     "direction_table_id": null
+  },
+  "requirements": [
+    {
+      "id": "example-standard",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 864000.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 864000.0
+        }
+      ]
+    },
+    {
+      "id": "example-strict",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (stricter): Earth in view at landing, 14 Earth days of unbroken sunlight from landing, Earth in view for at least half of those 14 days",
+      "mission_duration_s": 1209600.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 1209600.0
+        },
+        {
+          "window": "earth_visible",
+          "kind": "total_in_mission",
+          "min_s": 604800.0
+        }
+      ]
+    },
+    {
+      "id": "example-loose",
+      "label": "EXAMPLE chosen by the team, not a NASA requirement (looser): Earth in view at landing and 5 Earth days of unbroken sunlight from landing",
+      "mission_duration_s": 432000.0,
+      "conditions": [
+        {
+          "window": "earth_visible",
+          "kind": "visible_at_landing"
+        },
+        {
+          "window": "sun_visible",
+          "kind": "continuous_from_landing",
+          "min_s": 432000.0
+        }
+      ]
+    }
+  ],
+  "uncertainty": {
+    "horizon_error_deg": 0.05,
+    "dem_height_error_m": 1.0,
+    "landing_ellipse": {
+      "semi_major_m": 100.0,
+      "semi_minor_m": 100.0,
+      "azimuth_deg": 0.0,
+      "points": 13
+    }
   }
 }
