@@ -39,6 +39,7 @@ M_TERRAIN_PATCH = "terrain.patch"
 M_DIRTAB_POSITIONS = "dirtab.positions"
 M_DIRTAB_RADII = "dirtab.body_radii"
 M_DIRTAB_INTERP = "dirtab.interpolation"
+M_DIRTAB_EARTH_VIEW = "dirtab.earth_view"
 
 
 def method_card(
@@ -331,8 +332,12 @@ def build_direction_table_package(
     scenario_id: str | None = None,
     timings_s: dict | None = None,
     warnings: list[str] | None = None,
+    earth_view: dict | None = None,
 ) -> Path:
-    """Write one direction-table package (site independent) and return its directory."""
+    """Write one direction-table package (site independent) and return its directory.
+
+    earth_view: the orientation of the Earth per record (lsncore.earth_view), or None.
+    """
     positions_km = np.asarray(positions_km, dtype=np.float64)
     if positions_km.shape != (time["count"], len(bodies), 3):
         raise ValueError("positions_km must have shape [time.count, len(bodies), 3]")
@@ -365,6 +370,20 @@ def build_direction_table_package(
             "max_error_arcsec": _quantity(interpolation_max_error_arcsec, "arcsec", M_DIRTAB_INTERP),
         },
     }
+    if earth_view is not None:
+        request["earth_view"] = True
+        if earth_view.get("kernels"):  # what the Earth's orientation was read from is part of the identity
+            inputs["earth_orientation_kernels"] = list(earth_view["kernels"])
+        block = {}
+        for name in ("sub_lunar_lat_deg", "sub_lunar_lon_deg", "north_pole_angle_deg"):
+            values = np.asarray(earth_view[name], dtype=np.float64)
+            if values.shape != (time["count"],):
+                raise ValueError(f"earth_view.{name} must have one value per record")
+            block[name] = writer.array(f"earth_{name}", values, "<f4", "deg", M_DIRTAB_EARTH_VIEW)
+        block["earth_frame"] = str(earth_view["earth_frame"])
+        block["flattening"] = float(earth_view["flattening"])
+        block["method"] = M_DIRTAB_EARTH_VIEW
+        sections["earth_view"] = block
     used = _used_methods(sections, set())
     missing = used - methods.keys()
     if missing:

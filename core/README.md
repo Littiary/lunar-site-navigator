@@ -7,7 +7,8 @@ report in [docs/method/obstacles.md](../docs/method/obstacles.md); the calendar 
 [docs/method/calendar.md](../docs/method/calendar.md); the uncertainty band and the landing ellipse in
 [docs/method/uncertainty.md](../docs/method/uncertainty.md); the mast-height trade and site pairs in
 [docs/method/trade_pairs.md](../docs/method/trade_pairs.md); the terrain patches for drawing in
-[docs/method/terrain_patch.md](../docs/method/terrain_patch.md).
+[docs/method/terrain_patch.md](../docs/method/terrain_patch.md); the orientation of the Earth for drawing it in
+[docs/method/earth_view.md](../docs/method/earth_view.md).
 
 ## Setup
 
@@ -67,6 +68,7 @@ computation and writes invented numbers (the walking skeleton behind the contrac
 | `lsncore/obstacles.py`, `lsncore/blocking.py` | Obstacles of the horizon; which one limits a body; time lost to terrain against a smooth sphere | A |
 | `lsncore/calendar.py` | Visible time per lunar day; landing windows of a stated requirement; slip tolerance | A |
 | `lsncore/uncertainty.py` | Band for a stated horizon error; survey of a stated landing ellipse | A |
+| `lsncore/earth_view.py` | Orientation of the Earth as seen from the Moon (sub-lunar point, position angle of the north pole), written into the direction table | A |
 | `lsncore/terrain_patch.py` | Terrain patches for drawing: the surface on regular grids in the site frame | A |
 | `lsncore/trade.py`, `lsncore/pairs.py` | Mast-height trade table; what two sites achieve together (site-pairs package) | A |
 | `lsncore/timeline.py` | `TimeGrid`, `IntervalSet` (window algebra) | A |

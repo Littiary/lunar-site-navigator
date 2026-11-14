@@ -1,4 +1,4 @@
-# Package contract, version 0.7
+# Package contract, version 0.8
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -29,7 +29,7 @@ refers to. Nothing else may be in the directory. The directory name is the packa
 ```
 <package root>/
   index.json
-  direction_table/<package_id>/manifest.json, positions_km.f8
+  direction_table/<package_id>/manifest.json, positions_km.f8, earth_*.f4
   site/<site_id>/<package_id>/manifest.json, horizon_*.f4|f8, series_*.f4, terrain_*_up_m.f4
   site_pairs/<package_id>/manifest.json
 ```
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.7"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.8"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -559,7 +559,9 @@ One table serves every site. It stores positions relative to the **centre of the
 | `positions_km` | `[N, B, 3]` `<f8`: time, body, x-y-z |
 | `body_radii_km` | Radius of each body used for its disc (quantity with method card) |
 | `interpolation` | `recommended` method between records, and the measured `max_error_km` and `max_error_arcsec` of that method (`null` if not measured) |
+| `earth_view` | Since 0.8, optional. The orientation of the Earth per record, for drawing it; see 6.1 |
 | `inputs.kernels[]` | `name`, `bytes`, `sha256`, `source_url`, `load_order` |
+| `inputs.earth_orientation_kernels[]` | Since 0.8, when `earth_view` is present: the kernels the Earth's orientation was read from, same fields |
 
 Reserved: `earth_rotation` (for ground-station windows).
 
@@ -572,6 +574,44 @@ az = atan2(d · east, d · north)      el = asin((d · up) / |d|)
 
 Viewers use this only to place the Sun and the Earth in a scene. Rise and set times,
 margins and visible fractions are read from the site package, never recomputed.
+
+### 6.1 Orientation of the Earth (since 0.8)
+
+`earth_view` lets a viewer turn a textured Earth the right way. It is present when the
+Earth-orientation kernels were installed (`request.earth_view` is then `true`);
+otherwise the table carries a warning and a viewer draws the Earth without detail. It is
+for drawing only.
+
+| Field | Content |
+|---|---|
+| `sub_lunar_lat_deg` | `[N]` `<f4`: latitude of the point of the Earth's surface at the centre of the disc seen from the centre of the Moon, as on a map (perpendicular to the reference ellipsoid) |
+| `sub_lunar_lon_deg` | `[N]` `<f4`: its east longitude, in (-180, 180] |
+| `north_pole_angle_deg` | `[N]` `<f4`: position angle of the Earth's north pole in the sky of that observer, counted from the Moon's north pole (+Z of `frame`, projected on the plane of the sky) counter-clockwise, towards east = +Z x (direction to the Earth) |
+| `earth_frame` | Earth-fixed frame of latitude and longitude (`ITRF93`) |
+| `flattening` | Flattening of the reference ellipsoid of the latitude |
+| `method` | Method card id |
+
+Between records: latitude and position angle linearly; longitude linearly **the short
+way round** (it wraps at 180 degrees and moves west by about 14.5 degrees per hour).
+
+From the three angles to the Earth's axes in the frame of the table (`g` is the unit
+vector from the centre of the Moon to the Earth, `positions_km[t, EARTH]` normalised):
+
+```
+east     = normalise(Z x g)              Z = (0, 0, 1)
+north    = g x east
+phi      = atan(tan(sub_lunar_lat) * (1 - flattening)^2)      (0.19 deg at most from sub_lunar_lat)
+pole     = sin(phi) * (-g) + cos(phi) * (cos(angle) * north + sin(angle) * east)
+meridian = normalise(-g - sin(phi) * pole)
+x_axis   = cos(lon) * meridian - sin(lon) * (pole x meridian)
+y_axis   = pole x x_axis
+```
+
+`pole` is the Earth's north pole and `x_axis` the direction of latitude 0, longitude 0;
+a texture in the usual latitude-longitude layout is mapped with these axes. In a site's
+local frame the same vectors are obtained by projecting on `site.enu`. Measured against
+JPL Horizons: latitude and longitude within 0.007 degrees, pole angle within 0.0002
+degrees ([method note](../method/earth_view.md)).
 
 ## 6a. Site-pairs package (since 0.5)
 
@@ -633,6 +673,14 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.8 (14 November 2026)
+
+Additive; nothing that existed in 0.7 changed its meaning, name, unit or layout.
+
+- Direction table: `earth_view` with three arrays `earth_*.f4`, `request.earth_view`, method card `dirtab.earth_view`; section 6.1.
+- `inputs.earth_orientation_kernels[]` of a table with `earth_view` lists the kernels the Earth's orientation was read from. Such a table has a new package id, and so have the site packages computed from it.
+- The sample table holds an invented `earth_view`; the sample was regenerated (new ids).
 
 ### 0.7 (14 November 2026)
 

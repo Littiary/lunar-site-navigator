@@ -1,19 +1,19 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.7"
+    "version": "0.8"
   },
   "kind": "site_pairs",
-  "package_id": "pairs-56ede0364278835a",
-  "content_sha256": "85acfd966741c92a3aa8d96bc2a5dbdcdf90de57eeed6e2d370ee5c2096088db",
+  "package_id": "pairs-bdc9d06cedfc9b48",
+  "content_sha256": "f2a5e494e53c4045ef30b8b2c47a600c4569ff81070adb5477c867d149f00d44",
   "status": "ok",
   "synthetic": true,
   "synthetic_notice": "SYNTHETIC SAMPLE DATA. This comparison was computed from site packages that hold invented numbers. It describes no real places. Do not use it, quote it or present it as a result.",
   "warnings": [],
   "request": {
     "site_package_ids": [
-      "site-87537edb40cf0c59",
-      "site-92daced58d771ec0"
+      "site-8d22eba205e8000a",
+      "site-7f4511d333228d48"
     ],
     "windows": [
       "sun_visible",
@@ -26,13 +26,13 @@
     "site_packages": [
       {
         "site_id": "synthetic-sample-site",
-        "package_id": "site-87537edb40cf0c59",
-        "content_sha256": "a71cae503aaf5001c0fc6c785482e14bac72731dfea40d51d5240b3de4936d58"
+        "package_id": "site-8d22eba205e8000a",
+        "content_sha256": "6ce980f0554a2e2e6461fe5430a5266177b81e05b5e343f17f6ac05ce7dc5a8c"
       },
       {
         "site_id": "synthetic-sample-site-b",
-        "package_id": "site-92daced58d771ec0",
-        "content_sha256": "b5d5e2824f68a9cd1aaeed47d01a915d2195d6310ea8cf747917f410898c1fad"
+        "package_id": "site-7f4511d333228d48",
+        "content_sha256": "60d58f0499da4d923784d61c66f85be143a30dd1771d635ee9224843bba78ab0"
       }
     ]
   },
@@ -70,7 +70,7 @@
       "name": "SYNTHETIC SAMPLE SITE (not a real place)",
       "lat_deg": -88.0,
       "lon_deg": 45.0,
-      "package_id": "site-87537edb40cf0c59",
+      "package_id": "site-8d22eba205e8000a",
       "observer_height_m": 2.0
     },
     {
@@ -78,7 +78,7 @@
       "name": "SYNTHETIC SAMPLE SITE B (not a real place)",
       "lat_deg": -87.5,
       "lon_deg": 60.0,
-      "package_id": "site-92daced58d771ec0",
+      "package_id": "site-7f4511d333228d48",
       "observer_height_m": 2.0
     }
   ],
@@ -191,13 +191,13 @@
     }
   ],
   "provenance": {
-    "created_utc": "2026-11-14T13:34:30.528Z",
+    "created_utc": "2026-11-14T14:04:08.040Z",
     "scenario_id": "synthetic-sample",
     "timings_s": {},
     "software": {
       "core_version": "0.1.0",
       "science_version": "1",
-      "git_commit": "cf41e76eed2dd618a3771225d58c9aa201844810",
+      "git_commit": "e1b97b667acfde158ebdcb67eec1b89d581eed95",
       "git_dirty": true,
       "python": "3.14.7",
       "numpy": "2.5.4",

@@ -1,0 +1,96 @@
+{
+  "title": "Orientation of the Earth as seen from the Moon: science core against JPL Horizons",
+  "thresholds": {
+    "sub_lunar_latitude_deg_max": 0.05,
+    "sub_lunar_longitude_deg_max": 0.05,
+    "north_pole_angle_deg_max": 0.1
+  },
+  "rows": 550,
+  "cases": [
+    {
+      "case_id": "earth_from_moon__week",
+      "rows": 169,
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-21T00:00:00",
+      "sub_lunar_latitude_deg_max_abs": 0.0019254893804543372,
+      "sub_lunar_longitude_deg_max_abs": 0.0038071751906727513,
+      "north_pole_angle_deg_max_abs_reported_only": 0.0001448593357054051,
+      "status": "PASS",
+      "response_sha256": "cc4c69970fb4bd878db7f1a7f2343d4c2b81a153e11e997a1db7a936bb3e3e84"
+    },
+    {
+      "case_id": "earth_from_moon__two_years",
+      "rows": 106,
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2028-11-13T15:00:00",
+      "sub_lunar_latitude_deg_max_abs": 0.002449859095536411,
+      "sub_lunar_longitude_deg_max_abs": 0.006919936619965483,
+      "north_pole_angle_deg_max_abs_reported_only": 0.00015934205731582551,
+      "status": "PASS",
+      "response_sha256": "0a830dbbc768cfa89b59ea416f232fb68b751985f00b4506d0e04741e8c1f790"
+    },
+    {
+      "case_id": "moon_from_earth__week",
+      "rows": 169,
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-21T00:00:00",
+      "north_pole_angle_deg_max_abs": 0.0001448593357054051,
+      "status": "PASS",
+      "response_sha256": "25be06d88ab499f935015c0b35d197346fa7a7f6a1b3fc2d5641e0361a2985db"
+    },
+    {
+      "case_id": "moon_from_earth__two_years",
+      "rows": 106,
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2028-11-13T15:00:00",
+      "north_pole_angle_deg_max_abs": 0.00015934205731582551,
+      "status": "PASS",
+      "response_sha256": "52dd590de44051f2ebb08a5a01c752ccd5d58903ce0872f4f76dc135936faa83"
+    }
+  ],
+  "worst": {
+    "sub_lunar_latitude_deg": 0.002449859095536411,
+    "sub_lunar_longitude_deg": 0.006919936619965483,
+    "north_pole_angle_deg": 0.00015934205731582551
+  },
+  "status": "PASS",
+  "north_pole_definition_in_the_responses": [
+    "'NP.ang, NP.dist,' = Targets' apparent north-pole position angle (counter-clockwise with respect to the direction of the true-of-date reference-frame north-pole) and its angular distance from the sub-observer point (center of disk) at observation time. A negative distance indicates the planets' north-pole is on the hidden hemisphere."
+  ],
+  "response_headers": {
+    "earth_from_moon__week": [
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Target radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}",
+      "EOP file        : eop.261113.p270209",
+      "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-13. PREDICTS-> 2027-FEB-08"
+    ],
+    "earth_from_moon__two_years": [
+      "Target pole/equ : ITRF93 (high precision)         {East-longitude positive}",
+      "Target radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+      "Center pole/equ : MEAN_ME (high precision)        {East-longitude positive}",
+      "Center radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}",
+      "EOP file        : eop.261113.p270209",
+      "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-13. PREDICTS-> 2027-FEB-08"
+    ],
+    "moon_from_earth__week": [
+      "Target pole/equ : MOON_ME                         {East-longitude positive}",
+      "Target radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}",
+      "Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+      "EOP file        : eop.261113.p270209",
+      "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-13. PREDICTS-> 2027-FEB-08"
+    ],
+    "moon_from_earth__two_years": [
+      "Target pole/equ : MOON_ME                         {East-longitude positive}",
+      "Target radii    : 1737.4, 1737.4, 1737.4 km       {Equator_a, b, pole_c}",
+      "Center pole/equ : ITRF93                          {East-longitude positive}",
+      "Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}",
+      "EOP file        : eop.261113.p270209",
+      "EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-NOV-13. PREDICTS-> 2027-FEB-08"
+    ]
+  },
+  "kernel_set_id": "bfe870fccfa5",
+  "station_kernel_set_id": "bacdf4d6169a"
+}

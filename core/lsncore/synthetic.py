@@ -114,6 +114,7 @@ def synthetic_methods() -> dict:
         pk.M_TERRAIN_PATCH: _card("terrain patch for drawing", "Up coordinate of an invented surface on regular grids in the site frame.", local, "none"),
         pk.M_DIRTAB_POSITIONS: _card("body positions", "Position of each body relative to the centre of the Moon.", SYNTHETIC_FRAME, "TDB"),
         pk.M_DIRTAB_RADII: _card("body radii", "Radius used for the disc of each body.", "none", "none"),
+        pk.M_DIRTAB_EARTH_VIEW: _card("orientation of the Earth", "Invented sub-lunar point on the Earth and invented position angle of its north pole.", SYNTHETIC_FRAME, "TDB"),
         pk.M_DIRTAB_INTERP: _card("table interpolation error", "Largest error of the recommended interpolation between table records.", SYNTHETIC_FRAME, "TDB"),
     }
 
@@ -194,8 +195,17 @@ def synthetic_positions_km(et_s: np.ndarray) -> np.ndarray:
 
 def write_synthetic_direction_table(out_root: Path, grid: TimeGrid, scenario_id: str | None = None) -> Path:
     clock = SyntheticClock()
+    t = grid.times() - grid.start_et_s
+    invented_view = {  # an Earth that turns once in 24.8 hours under a Moon that swings north and south
+        "sub_lunar_lat_deg": 20.0 * np.sin(2.0 * np.pi * t / _EARTH_WOBBLE_PERIOD_S),
+        "sub_lunar_lon_deg": 180.0 - np.mod(360.0 * t / (24.8 * 3600.0), 360.0),
+        "north_pole_angle_deg": 15.0 * np.cos(2.0 * np.pi * t / _EARTH_WOBBLE_PERIOD_S),
+        "earth_frame": "SYNTHETIC_EARTH_FIXED",
+        "flattening": 0.0,
+    }
     return pk.build_direction_table_package(
         out_root,
+        earth_view=invented_view,
         time=grid.to_contract(clock.et_to_utc(grid.start_et_s), clock.et_to_utc(grid.end_et_s)),
         frame_name=SYNTHETIC_FRAME,
         aberration_correction="NONE",
