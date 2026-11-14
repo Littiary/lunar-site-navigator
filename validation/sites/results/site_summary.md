@@ -1,17 +1,17 @@
 # End-to-end results: three south-polar candidate points
 
-Generated 2026-11-14T14:16:13Z by `validation/sites/run.py`. Do not edit by hand.
+Generated 2026-11-14T15:36:34Z by `validation/sites/run.py`. Do not edit by hand.
 
 - Window: 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z (UTC). Countdowns count from the planned landing time of the scenario, 2027-01-10T00:00:00.000Z.
 - **Inputs chosen by the team, not properties of the data or of a mission**: the three example requirements on the landing time (`docs/contract/presets/requirements.json`; they are not requirements of NASA or of any mission), a horizon error of 0.05 deg, a terrain height error of 1 m, a landing circle of 100 m radius sampled at 13 points, and the planned landing time. The numbers that follow from them say what would hold if they were true.
-- Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-296ce1d712205623`.
+- Terrain: `lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0`, search radius 300 km, azimuth step 0.25 deg. Ephemeris: kernel set `bfe870fccfa5`, direction table `dirtab-fbc51d64e42ab803`.
 - Sun visible = any part of the disc above the terrain horizon. Earth visible = centre of the disc above the terrain horizon.
 - The points are project candidates derived from LOLA and IAU crater outlines by the data stream; **they are not official landing sites**.
 - **Status.** The method behind these numbers reproduces the published LOLA illumination maps of NASA Goddard at 100 points on terrain of the same resolution (`validation/pgda`), and the ephemeris is validated (see the validation card). Of two dated LROC images, the shadowed state of the south pole agrees; the comparison along an image strip fails its registered criterion (89.3 % agreement against 90 %; the image rule reads dimly lit ground as shadow), see `validation/lro_images`. The numbers of these three sites themselves have no independent counterpart: they use the finer 20 m terrain, a 24-month window and several observer heights, and no source gives rise and set times for these points.
 
 ## Shackleton crater rim crest
 
-89.80531 deg S, -154.23109 deg E, terrain height 1701.1 m above the 1737.4 km sphere. Package `site-a4f5f765a5d43bbf`, status `ok`. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.44 deg.
+89.80531 deg S, -154.23109 deg E, terrain height 1701.1 m above the 1737.4 km sphere. Package `site-a4d3f54375701349`, status `ok`. Terrain: the height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths. Sun centre elevation -1.72 to 1.71 deg; Earth centre elevation -7.28 to 6.44 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -66,7 +66,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## de Gerlache crater rim crest
 
-88.66410 deg S, -68.41044 deg E, terrain height 1815.2 m above the 1737.4 km sphere. Package `site-6ded733f4be837e5`, status `ok`. Sun centre elevation -2.85 to 2.88 deg; Earth centre elevation -6.77 to 7.23 deg.
+88.66410 deg S, -68.41044 deg E, terrain height 1815.2 m above the 1737.4 km sphere. Package `site-f5debe0fd2f3cdf7`, status `ok`. Terrain: the height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths. Sun centre elevation -2.85 to 2.88 deg; Earth centre elevation -6.77 to 7.23 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -115,7 +115,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## Mons Malapert (Malapert massif) summit
 
-85.98795 deg S, 2.05767 deg E, terrain height 5173.5 m above the 1737.4 km sphere. Package `site-1275539289e03655`, status `ok`. Sun centre elevation -5.56 to 5.59 deg; Earth centre elevation -3.10 to 10.59 deg.
+85.98795 deg S, 2.05767 deg E, terrain height 5173.5 m above the 1737.4 km sphere. Package `site-29ad241e86f8307d`, status `ok`. Terrain: the height at the site is read from LDEM_80S_20M (20 m pixels, resolution class fine); the horizon at the default observer height is set by LDEM_80S_20M (20 m) in 100.0 % of the azimuths. Sun centre elevation -5.56 to 5.59 deg; Earth centre elevation -3.10 to 10.59 deg.
 
 | Observer height | Sun visible | Longest time without Sun | Sun rise/set events | of which set by terrain < 1 km away | Time to next Sun set | Earth visible | Longest time without Earth | Time to next Earth set | Horizon set by terrain < 1 km |
 |---|---|---|---|---|---|---|---|---|---|
@@ -164,7 +164,7 @@ Eclipses of the Sun by the Earth in the window: 3 (1 total at the site); largest
 
 ## Two sites together
 
-Package `pairs-e039b2b260dd7d83`. Each site at its default observer height. 'Either' is the share of the window in which at least one of the two sites sees the body.
+Package `pairs-fa4b9bc4663c9738`. Each site at its default observer height. 'Either' is the share of the window in which at least one of the two sites sees the body.
 
 | Sites | Distance | Sun: each alone | Sun: either | Longest time with the Sun at neither | What the second site adds | Earth: either | Longest time with the Earth at neither |
 |---|---|---|---|---|---|---|---|

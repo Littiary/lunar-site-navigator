@@ -1,11 +1,11 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.6"
+    "version": "0.9"
   },
   "kind": "direction_table",
-  "package_id": "dirtab-296ce1d712205623",
-  "content_sha256": "c69069af5b369ad554e955c42c0b782c178b2f4e08fdba2a55a764fafe3ee806",
+  "package_id": "dirtab-fbc51d64e42ab803",
+  "content_sha256": "b96ba0cbc22bc2be59ec868260ed570898f97ed8962935c4a8031b2d012d4b52",
   "status": "ok",
   "synthetic": false,
   "warnings": [],
@@ -19,7 +19,8 @@
     ],
     "frame": "MOON_ME_DE440_ME421",
     "center": "MOON",
-    "aberration_correction": "LT+S"
+    "aberration_correction": "LT+S",
+    "earth_view": true
   },
   "inputs": {
     "science_version": 1,
@@ -60,6 +61,22 @@
         "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf",
         "load_order": 4
       }
+    ],
+    "earth_orientation_kernels": [
+      {
+        "name": "earth_1962_260806_2126_combined.bpc",
+        "bytes": 31318016,
+        "sha256": "cc87ad1a495cf598800ba403763d350f087ac0b97da9fec603278a3864c6a53e",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_1962_260806_2126_combined.bpc",
+        "load_order": 5
+      },
+      {
+        "name": "earth_000101_270208_261113.bpc",
+        "bytes": 5163008,
+        "sha256": "6e77690ba455a644e509b0b9cb308b0dec1a7154ceecf3355659b917b21ca45e",
+        "source_url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_000101_270208_261113.bpc",
+        "load_order": 6
+      }
     ]
   },
   "methods": {
@@ -84,6 +101,34 @@
       "limits": [
         "The flattening of the Earth's disc (0.3 %) is not modelled.",
         "No limb darkening, no atmosphere of the Earth."
+      ]
+    },
+    "dirtab.earth_view": {
+      "title": "Orientation of the Earth as seen from the Moon",
+      "definition": "sub_lunar_lat_deg, sub_lunar_lon_deg: latitude (perpendicular to the reference ellipsoid, as on a map) and east longitude of the point of the Earth's surface at the centre of the disc seen from the centre of the Moon. north_pole_angle_deg: position angle of the Earth's north pole in the sky of that observer, counted from the Moon's north pole (+Z of the body-fixed frame of the table, projected on the plane of the sky) counter-clockwise, towards east = +Z x (direction to the Earth). All three for the Earth as it appears at the record time: its direction corrected for light time and stellar aberration, its orientation taken one light time earlier.",
+      "algorithm": "SPICE spkpos for the apparent direction of the Earth and pxfrm2('ITRF93', table frame, record time - light time, record time) for the Earth's axes; the sub-lunar point is where the line from the Moon's centre to the Earth's centre meets the reference ellipsoid. Between records: latitude and position angle linearly, longitude linearly the short way round (it wraps at 180 degrees).",
+      "frame": "Earth: ITRF93 (east longitude, latitude perpendicular to the ellipsoid of the planetary constants kernel). Position angle: body-fixed frame of the table.",
+      "time_scale": "TDB",
+      "data": [
+        "earth_1962_260806_2126_combined.bpc (sha256 cc87ad1a495c)",
+        "earth_000101_270208_261113.bpc (sha256 6e77690ba455)"
+      ],
+      "parameters": {
+        "earth_frame": "ITRF93",
+        "observer": "centre of the Moon"
+      },
+      "validation": {
+        "status": "externally-validated",
+        "evidence": [
+          "Test validation/tests/test_earth_view.py (comparison with JPL Horizons, thresholds fixed beforehand in validation/earth_view/thresholds.json).",
+          "550 Horizons rows in 4 queries: sub-lunar latitude within 0.0024 deg, longitude within 0.0069 deg (threshold 0.05 deg each), position angle of the north pole within 0.0002 deg (threshold 0.1 deg). Report: validation/earth_view/results/validation_table.md.",
+          "core/tests/test_earth_view.py: closed forms of the geometry (1e-9 deg), SPICE's own sub-observer routine (0.001 deg), the Earth's axes rebuilt from the three stored angles (0.01 deg), interpolation between hourly records (0.05 deg)."
+        ]
+      },
+      "limits": [
+        "For drawing the Earth. The observer is the centre of the Moon: from a site on the surface the sub-observer point differs by up to 0.28 deg; that is not modelled.",
+        "After the last measured Earth-orientation data the kernels hold a prediction, as Horizons does; the error of the prediction is not quantified here.",
+        "No clouds, no day and night on the Earth: the lit part follows from the Sun's direction in the same table and is not computed here."
       ]
     },
     "dirtab.interpolation": {
@@ -202,16 +247,54 @@
       "method": "dirtab.interpolation"
     }
   },
+  "earth_view": {
+    "sub_lunar_lat_deg": {
+      "file": "earth_sub_lunar_lat_deg.f4",
+      "dtype": "<f4",
+      "shape": [
+        17548
+      ],
+      "unit": "deg",
+      "method": "dirtab.earth_view",
+      "sha256": "d6df167625ab2ec887da0d775477bb6061fb0a1c313ca316d366c936311e23e3",
+      "nan_count": 0
+    },
+    "sub_lunar_lon_deg": {
+      "file": "earth_sub_lunar_lon_deg.f4",
+      "dtype": "<f4",
+      "shape": [
+        17548
+      ],
+      "unit": "deg",
+      "method": "dirtab.earth_view",
+      "sha256": "18eb64310fd7bd999ecb185851c1b687a23ebca43c3683cb4335d8692e026a84",
+      "nan_count": 0
+    },
+    "north_pole_angle_deg": {
+      "file": "earth_north_pole_angle_deg.f4",
+      "dtype": "<f4",
+      "shape": [
+        17548
+      ],
+      "unit": "deg",
+      "method": "dirtab.earth_view",
+      "sha256": "e8ac6de928740d0246b4a75c3e805f7975fc165a3806fe1160ffd33ce2a07835",
+      "nan_count": 0
+    },
+    "earth_frame": "ITRF93",
+    "flattening": 0.0033528131084554717,
+    "method": "dirtab.earth_view"
+  },
   "provenance": {
-    "created_utc": "2026-11-14T13:57:41.989Z",
+    "created_utc": "2026-11-14T15:24:48.826Z",
     "scenario_id": "south-polar-sites",
     "timings_s": {
-      "direction_table": 0.39749
+      "direction_table": 0.950282
     },
     "software": {
       "core_version": "0.1.0",
       "science_version": "1",
-      "git_commit": "c9b2aab10c19782bff1cb7345db2bc08b8e16e19",
+      "git_commit": "31d1a5ca97506b22af0c35cfcd1ce5d79c32406a",
       "git_dirty": false,
       "python": "3.14.7",
       "numpy": "2.5.4",
