@@ -326,6 +326,174 @@
    },
    "pyramid_json_sha256": "929f2721ce1d48a79169f2d0b286e35f601cd778d471c9f17154e08ea82b8c21"
   },
+  "LOLA5MPP_SITE04": {
+   "base_file": "Site04_final_adj_5mpp_surf.tif",
+   "base_sha256": "38ff70dbdf2f066c2cfa94a646c3a59d653ce7f6b4528b15fc1b43ee397ce758",
+   "levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "dtype": "<f4",
+   "built_utc": "2026-11-14T15:31:06Z",
+   "files": {
+    "mean_L1.npy": {
+     "size_bytes": 10240128,
+     "sha256": "6272fdb5a2cb652ad3d93207647fc5a6cbfac41f8ce5da538c39e3274748da72"
+    },
+    "mean_L2.npy": {
+     "size_bytes": 2560128,
+     "sha256": "32b1e8f93e4bb1441e9b9a03d0f7d80514ac1496117cdfdffe9d9f2ffa3251fb"
+    },
+    "mean_L3.npy": {
+     "size_bytes": 640128,
+     "sha256": "e55a8a0e1dbc6828c45ec1232c71f47a28788ffd4ac3a295476d137218457088"
+    },
+    "mean_L4.npy": {
+     "size_bytes": 160128,
+     "sha256": "c0fb20fa1c398640e44c0164a2027be2cb22d63a58f4573cdd34475e3872ded8"
+    },
+    "mean_L5.npy": {
+     "size_bytes": 40128,
+     "sha256": "98cfdc339f5b2a38f36adbc1671f877c5db334f784f67eb6cb9648497015b299"
+    },
+    "mean_L6.npy": {
+     "size_bytes": 10128,
+     "sha256": "acaea3d9b1831fc21de053341e285aefb223b3ca57c972eda305288b7af5cced"
+    },
+    "max_L1.npy": {
+     "size_bytes": 10240128,
+     "sha256": "4ba8cd91fbeb6ec819137169b008ce2a8a2c9a4fc75eff7fabd295f9e308a06d"
+    },
+    "max_L2.npy": {
+     "size_bytes": 2560128,
+     "sha256": "230a5f8042546e0eb39fb9266d60ab5aabbe34b44114c44eac09fe1d0461f212"
+    },
+    "max_L3.npy": {
+     "size_bytes": 640128,
+     "sha256": "77b473e7b0ac1ac683b08f77454d370072bfac52e30acb38131bda985fdbbdc7"
+    },
+    "max_L4.npy": {
+     "size_bytes": 160128,
+     "sha256": "222831aba8fa8848e890d2c149f385c3119aa0ad38ae4e98497fde22e0ffe631"
+    },
+    "max_L5.npy": {
+     "size_bytes": 40128,
+     "sha256": "b442fb56ef39ca13a9a418e7d71c7d3c38f32c8302eacf14718d519dc10368d4"
+    },
+    "max_L6.npy": {
+     "size_bytes": 10128,
+     "sha256": "3d6fd82580fab863c099305a28637f7464efce0802a78a9eee37833360b1e023"
+    }
+   },
+   "pyramid_json_sha256": "4e758fbbcf60f270787ebb01f2abec2f66cffa1373a97ec7373647ed21277a0a"
+  },
+  "LOLA5MPP_SITE11": {
+   "base_file": "Site11_final_adj_5mpp_surf.tif",
+   "base_sha256": "58f3372c35bbd6baf38ffd5633c1c96b59bd89dbd252150581d12893a43136e5",
+   "levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "dtype": "<f4",
+   "built_utc": "2026-11-14T15:31:06Z",
+   "files": {
+    "mean_L1.npy": {
+     "size_bytes": 10240128,
+     "sha256": "5146343dcebf0b8b9e3f73513728783cf8d7d5ac26c5bd3b238483208659b6ef"
+    },
+    "mean_L2.npy": {
+     "size_bytes": 2560128,
+     "sha256": "d077565467fae773f2a7b0805527c0dca1ac2eda834b1aaa12b2a78c0028a337"
+    },
+    "mean_L3.npy": {
+     "size_bytes": 640128,
+     "sha256": "c090153088657a331df2243e7cddbf366804170e30410598fdb52e738d81e81b"
+    },
+    "mean_L4.npy": {
+     "size_bytes": 160128,
+     "sha256": "b23b52acd461fa0ffe65ad60ecbdf857604a32c36b0bc0d7e1bfa7eed04867cc"
+    },
+    "mean_L5.npy": {
+     "size_bytes": 40128,
+     "sha256": "1caab02875d8193911c0f03f09e2e79dbe62b60297ca21ffb72c10b45ed164bd"
+    },
+    "mean_L6.npy": {
+     "size_bytes": 10128,
+     "sha256": "d960c4b6b3b439b1b155e1e8dafc29c4d9a5be5f832ae1dd3991452a217bc8b6"
+    },
+    "max_L1.npy": {
+     "size_bytes": 10240128,
+     "sha256": "5423c70ef1b9d22bbd7e7468da80a492f95e550f337a7e23694af9a9e3afc941"
+    },
+    "max_L2.npy": {
+     "size_bytes": 2560128,
+     "sha256": "2926f6de950d94dce799234306158030ed716527a0151b01046660ed8553f324"
+    },
+    "max_L3.npy": {
+     "size_bytes": 640128,
+     "sha256": "9e648eba6a0290818c98e3877ac7e331e9463709c78dad78bc85aa2d78aa8b82"
+    },
+    "max_L4.npy": {
+     "size_bytes": 160128,
+     "sha256": "451e543993bca7fc561ccfb9619d5b6bfc7d81d923c6dd8f9f2b14a7e82a3fbd"
+    },
+    "max_L5.npy": {
+     "size_bytes": 40128,
+     "sha256": "90a992483f48c7773b2e5cfad12273ca420144b68518106553413f07ded586ce"
+    },
+    "max_L6.npy": {
+     "size_bytes": 10128,
+     "sha256": "610684cd77e20ffeaff4f7e69c29b5c586dd1ecdeeee04dcf7388e9a991a1166"
+    }
+   },
+   "pyramid_json_sha256": "d55590193c3fcc0e254421b8d1a8338de9969e6eadd1ee48f570b83372e8c196"
+  },
+  "LOLA5MPP_SITE23": {
+   "base_file": "Site23_final_adj_5mpp_surf.tif",
+   "base_sha256": "12d280a59cd7580415f6bada638d0abe025ce6727541fddf68d5dc371a6c94cf",
+   "levels": [
+    1,
+    2,
+    3
+   ],
+   "dtype": "<f4",
+   "built_utc": "2026-11-14T15:31:07Z",
+   "files": {
+    "mean_L1.npy": {
+     "size_bytes": 17640128,
+     "sha256": "915c44ace67c0f9005c0f60fab6918d8fc4f4d7fc1256070007e39109ff72698"
+    },
+    "mean_L2.npy": {
+     "size_bytes": 4410128,
+     "sha256": "a881efe091068528350dc951faac5990463ab99f179ee115a0e0979ed2d806e3"
+    },
+    "mean_L3.npy": {
+     "size_bytes": 1102628,
+     "sha256": "94037b7ebd99dbef6174a4512b033333268ccd3a29f8481b99ed2ee27adc8401"
+    },
+    "max_L1.npy": {
+     "size_bytes": 17640128,
+     "sha256": "00021bf61284ff221490351f29118d90e88307dd18eb539b73faece905af1e0c"
+    },
+    "max_L2.npy": {
+     "size_bytes": 4410128,
+     "sha256": "a90b0f1780e4700a8b2a9f82b5f758e3032f494b90ea60ebe68d97e9327209d3"
+    },
+    "max_L3.npy": {
+     "size_bytes": 1102628,
+     "sha256": "9bd4955dd6d4cda47cd866db4b1f9fb09aae7e9cbb2a0a1aab3fe9857b1edbf4"
+    }
+   },
+   "pyramid_json_sha256": "a087e9975ebe9c1e82fd94a6a197331d02cf049ea855e5fd9ed005cbbcd190fa"
+  },
   "SLDEM2015_256_0N_60N_000_120_FLOAT": {
    "base_file": "sldem2015_256_0n_60n_000_120_float.img",
    "base_sha256": "67ffee1963358a91815cfd0575291b9a8588b8e794b8a38b998dd694174e677b",
