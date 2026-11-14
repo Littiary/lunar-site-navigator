@@ -223,8 +223,14 @@ def limb_margins(az_deg, el_deg, radius_deg, horizon: Horizon):
     return upper, lower
 
 
-def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = DEFAULT_STRIPS) -> DiscSignals:
+def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = DEFAULT_STRIPS, with_fraction: bool = True) -> DiscSignals:
     """Margins and visible fraction of a disc for every epoch (arrays of equal length).
+
+    With ``with_fraction`` false the strip quadrature is left out and ``visible_fraction``
+    is NaN everywhere; the margins and azimuths are the same numbers either way. The
+    event search uses this where no condition depends on the fraction: the quadrature is
+    most of the cost of a search at a site where the disc touches the terrain most of the
+    time.
 
     Epochs at which the disc is entirely above the highest point of the profile, or
     entirely below its lowest point, are settled at once: the fraction is 1 or 0 and the
@@ -242,7 +248,7 @@ def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = D
 
     upper = el + radius - lowest
     lower = el - radius - highest
-    fraction = np.where(lower > 0.0, 1.0, 0.0)
+    fraction = np.where(lower > 0.0, 1.0, 0.0) if with_fraction else np.full(az.shape, np.nan)
     upper_az, lower_az = az % 360.0, az % 360.0
     contact = ~((lower > 0.0) | (upper < 0.0))
     if np.any(contact):
@@ -252,7 +258,8 @@ def disc_signals(az_deg, el_deg, radius_deg, horizon: Horizon, n_strips: int = D
         upper_az = upper_az.copy()
         lower_az = lower_az.copy()
         upper_az[contact], lower_az[contact] = up_az, low_az
-        fraction[contact] = _strip_fraction(a, e, r, stretch, horizon, n_strips)
+        if with_fraction:
+            fraction[contact] = _strip_fraction(a, e, r, stretch, horizon, n_strips)
     return DiscSignals(
         center_margin_deg=el - horizon.elevation_at(az),
         upper_margin_deg=upper,
@@ -338,9 +345,14 @@ class EventResult:
     n_strips: int
 
 
-def _signals(direction: DirectionSource, horizon: Horizon, et: np.ndarray, n_strips: int) -> DiscSignals:
+def _signals(direction: DirectionSource, horizon: Horizon, et: np.ndarray, n_strips: int, with_fraction: bool = True) -> DiscSignals:
     az, el, radius = direction(et)
-    return disc_signals(az, el, radius, horizon, n_strips)
+    return disc_signals(az, el, radius, horizon, n_strips, with_fraction)
+
+
+def needs_fraction(thresholds: dict) -> bool:
+    """True if one of the conditions is decided by the visible fraction (and not by a limb or the centre)."""
+    return any(rule.fraction is not None or rule.limb == "half_disc" for rule in thresholds.values())
 
 
 def find_events(
@@ -353,8 +365,15 @@ def find_events(
     thresholds: tuple = THRESHOLDS,
     n_strips: int = DEFAULT_STRIPS,
     chunk: int = 20000,
+    always_compute_fraction: bool = False,
 ) -> EventResult:
-    """Find every rise and set of the disc between two epochs. See the module text for the accuracy."""
+    """Find every rise and set of the disc between two epochs. See the module text for the accuracy.
+
+    While scanning and bisecting, the visible fraction is computed only if one of the
+    conditions is decided by it; conditions on a limb or on the centre do not use it, and
+    the events are the same with or without it (``always_compute_fraction`` exists so that
+    a test can show that). The fraction reported with each event is always computed.
+    """
     if stop_et_s <= start_et_s:
         raise ValueError("stop must be after start")
     count = int(math.floor((stop_et_s - start_et_s) / scan_step_s)) + 1
@@ -366,9 +385,10 @@ def find_events(
     if not isinstance(thresholds, dict):
         thresholds = {name: ThresholdSignal(name, name) for name in thresholds}
 
+    with_fraction = always_compute_fraction or needs_fraction(thresholds)
     sampled = {name: [] for name in thresholds}
     for begin in range(0, grid.size, chunk):
-        signals = _signals(direction, horizon, grid[begin : begin + chunk], n_strips)
+        signals = _signals(direction, horizon, grid[begin : begin + chunk], n_strips, with_fraction)
         for name, rule in thresholds.items():
             sampled[name].append(rule.value(signals) > 0.0)
     visible = {name: np.concatenate(parts) for name, parts in sampled.items()}
@@ -383,7 +403,7 @@ def find_events(
         rising = state[index + 1]  # visible after the crossing
         while np.max(high - low) > tol_s:
             middle = 0.5 * (low + high)
-            mid_visible = rule.value(_signals(direction, horizon, middle, n_strips)) > 0.0
+            mid_visible = rule.value(_signals(direction, horizon, middle, n_strips, with_fraction)) > 0.0
             same_as_high = mid_visible == rising
             high = np.where(same_as_high, middle, high)
             low = np.where(same_as_high, low, middle)
