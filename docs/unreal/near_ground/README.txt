@@ -1,0 +1,6 @@
+de Gerlache crater rim crest, 2026-11-26 12:00 UTC, Sun 2.5 deg high, observer 2 m, looking down 10 deg (published package, contract 0.6).
+Each image: top left as drawn; top right with unsmoothed normals and no fine detail; bottom left with a larger shadow bias; bottom right with shadows off.
+before_four_ways.png: the mesh had no elevation sample inside 5 m of the site; the wedges fanning out from the observer are that fault (they vanish with the larger bias).
+after_four_ways.png: rings from 1 m. The dark ground that remains is in every variant but the one with shadows off, and the unsmoothed normals show the same ground facing away from the Sun: it is the elevation data itself.
+notice_on_screen.png: what the view now says at such a site and instant.
+wide_20m_data.png, wide_5m_data_preview.png: Shackleton crater rim crest, 2027-09-19 13:00 UTC, the wide camera. The same package (contract 0.9, horizon from the 20 m product) drawn once from the 20 m data and once, as a preview only, from the 5 m site model within its coverage. The 5 m ground shows relief the 20 m data does not have (the edge of the shadow, the broken shadow of the lander); the view uses it by itself only for a package whose horizon rests on it.

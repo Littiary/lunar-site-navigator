@@ -1,0 +1,8 @@
+# Unreal binary assets are stored with Git LFS (run `git lfs install` once per machine).
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+
+# Fixture packages are small and stay in plain git, byte for byte.
+TestData/** -text
+*.f4 binary
+*.f8 binary
