@@ -14,7 +14,8 @@ What it does, in this order (each command is printed before it runs):
 5. downloads the inputs of the validation scripts (published illumination maps, 154 MB,
    and one LROC browse image, 8 MB) and checks them against the committed checksums;
 6. downloads the LOLA elevation products (3.7 GB), checks them against the committed
-   manifest and builds their overview levels (2.4 GB, computed locally);
+   manifest and builds their overview levels (2.4 GB, computed locally) unless levels
+   built from the same files are already there;
 7. says whether the setup left the working tree unchanged, and how to run the tests.
 
 Nothing is downloaded into the checkout. Everything goes to the data root: ``--data-root``
@@ -30,6 +31,7 @@ The same steps as single commands are in ``docs/setup.md``.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -39,6 +41,7 @@ ROOT = Path(__file__).resolve().parent.parent
 VENV = ROOT / ".venv"
 PYTHON = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 MINIMUM = (3, 11)
+POLAR_PRODUCTS = ("LDEM_80S_20M", "LDEM_60S_60M")
 
 
 def run(command: list, env: dict, check: bool = True) -> int:
@@ -51,6 +54,24 @@ def run(command: list, env: dict, check: bool = True) -> int:
 
 def output(command: list, env: dict) -> str:
     return subprocess.run([str(part) for part in command], cwd=ROOT, env=env, capture_output=True, text=True).stdout.strip()
+
+
+def overview_levels_present(data_root: Path, product: str) -> bool:
+    """True if the overview levels of ``product`` exist and were built from the file the committed manifest records.
+
+    The level files are compared with their own record by size, not hashed again. Levels
+    that are present are left alone: a data root can be shared by several checkouts, and
+    rebuilding would rewrite files that another one may be reading.
+    """
+    record_path = data_root / "derived" / product / "pyramid.json"
+    if not record_path.exists():
+        return False
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    manifest = json.loads((ROOT / "data" / "manifest" / "manifest.json").read_text(encoding="utf-8"))
+    base = manifest["files"].get(f"raw/lola/{product}/{product.lower()}.img", {})
+    if not base or record.get("base_sha256") != base.get("sha256") or not record.get("files"):
+        return False
+    return all((record_path.parent / name).exists() and (record_path.parent / name).stat().st_size == entry["size_bytes"] for name, entry in record["files"].items())
 
 
 def main() -> None:
@@ -80,8 +101,7 @@ def main() -> None:
     for name in ("lsncore", "lsn_data"):
         found = output([PYTHON, "-c", f"import {name}, pathlib; print(pathlib.Path({name}.__file__).resolve().parent)"], env)
         if not found:
-            sys.exit(f"
-Setup stopped: {name} cannot be imported in {VENV}.")
+            sys.exit(f"\nSetup stopped: {name} cannot be imported in {VENV}.")
         location = Path(found)
         if ROOT not in location.parents:
             sys.exit(f"\nSetup stopped: {name} is imported from {location}, not from this checkout ({ROOT}).")
@@ -99,7 +119,12 @@ Setup stopped: {name} cannot be imported in {VENV}.")
     if not args.no_terrain:
         run([PYTHON, "-m", "lsn_data", "fetch"], env)
         run([PYTHON, "-m", "lsn_data", "verify"], env)
-        run([PYTHON, "-m", "lsn_data", "pyramid"], env)
+        root = Path(output([PYTHON, "-c", "from lsn_data.paths import data_root; print(data_root())"], env))
+        for product in POLAR_PRODUCTS:
+            if overview_levels_present(root, product):
+                print(f"\nOverview levels of {product} are present and were built from the recorded file: not rebuilt ({root / 'derived' / product}).")
+            else:
+                run([PYTHON, "-m", "lsn_data", "pyramid", product], env)
 
     # 7. summary
     data_root = output([PYTHON, "-c", "from lsncore.ephem import kernels; print(kernels.data_root())"], env)

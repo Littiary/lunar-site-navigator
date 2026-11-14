@@ -26,7 +26,7 @@ python scripts/bootstrap.py --test
 | `--no-validation-inputs` | Leave out the published illumination maps and the LROC browse image (162 MB). The two tests that read them are skipped. |
 | `--test` | Run the whole test suite at the end. |
 
-The script can be repeated: files that are present and match their record are not downloaded again.
+The script can be repeated: files that are present and match their record are not downloaded again, and overview levels that were built from the recorded elevation files are not rebuilt.
 
 ## The same steps by hand
 
@@ -40,7 +40,7 @@ python -m venv .venv
 .venv/Scripts/python -m validation.lro_images.fetch
 .venv/Scripts/python -m lsn_data fetch
 .venv/Scripts/python -m lsn_data verify
-.venv/Scripts/python -m lsn_data pyramid
+.venv/Scripts/python -m lsn_data pyramid            # rebuilds the levels each time; the script skips this when they are present
 .venv/Scripts/python -m pytest core validation data
 ```
 
