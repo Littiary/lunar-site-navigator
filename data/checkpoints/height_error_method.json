@@ -1,0 +1,9 @@
+{
+ "note": "Method for the terrain height error supplied to the core stream's uncertainty band. Written and committed BEFORE the independent returns were downloaded or compared; not to be edited afterwards.",
+ "question": "How far is the height of LDEM_80S_20M (and LDEM_60S_60M) from the true surface at a random point, as used by the horizon code (bilinear between pixel centres)?",
+ "why_not_the_SM_06_returns": "the 13 LRO_SM_06 files (2011) were used to make the products, so DEM minus return there is a fit residual and a lower bound of the error, not the error",
+ "independent_sample": "LOLA RDR returns of 14 files of mission phase LRO_ES_100 (Jan-Feb 2021); the products use data through LRO_ES_54 (Feb 2017), so these returns were not used to make them. SHOT_FLAG = 0; the same bands as thresholds_independent.json part B",
+ "statistic": "d = DEM - return height; reported: median, 68.27 % and 95.45 % half-widths of |d - median|, 99th percentile of |d|; by slope class of the DEM at the point (0-5, 5-10, 10-20, 20-30, >30 degrees, from +-1 pixel central differences); and by whether the point's pixel was constrained by data or filled by interpolation, from the companion count product LDEC_80S_20M (count 0 = no LOLA return in the pixel), if it can be downloaded",
+ "recommendation_rule": "the uncertainty band uses the 95.45 % half-width of the independent sample (all slopes) as the two-sigma terrain height error, and the slope-class value where the core stream knows the slope; the fit residuals of the SM_06 sample are reported only as a lower bound",
+ "caveat": "returns sample along tracks; a time-separated track still lies between and across the older tracks, so it samples interpolated as well as constrained pixels in proportion to their area only approximately"
+}

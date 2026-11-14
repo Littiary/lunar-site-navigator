@@ -120,6 +120,16 @@ RDR_SAMPLE = tuple(
     )
 )
 
+# 14 orbits spread over mission phase LRO_ES_100 (Jan-Feb 2021, every 27th file). The 20 m and 60 m polar products
+# use data through LRO_ES_54 (Feb 2017), so these returns are NOT in them: an independent sample of the DEM error.
+RDR_INDEPENDENT = tuple(
+    f"LOLARDR_{t}"
+    for t in (
+        "210261356", "210281841", "210302326", "210330411", "210350855", "210371339", "210391823",
+        "210412308", "210440353", "210460837", "210481322", "210501806", "210522250", "210550335",
+    )
+)
+
 RDR_FORMAT = Product(
     "_rdr_docs",
     "LOLA RDR record structure (LOLARDR.FMT)",
@@ -158,6 +168,7 @@ PRODUCTS: dict[str, Product] = {
         ROBBINS,
         RDR_FORMAT,
         *(_rdr("LRO_SM_06", n) for n in RDR_SAMPLE),
+        *(_rdr("LRO_ES_100", n) for n in RDR_INDEPENDENT),
     )
 }
 
