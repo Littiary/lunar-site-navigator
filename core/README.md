@@ -152,17 +152,27 @@ names the products that are not installed:
 Both lines appear together when both are missing.
 
 **Time**, the whole process from its start to validated packages, 30 days, defaults, on
-the laptop of the run times below (14 November 2026):
+the laptop of the run times below, best of three with the three runs in brackets
+(14 November 2026, no other computation running; the processors read 0 to 42 % before
+the runs, from the desktop applications that were open):
 
-| Site | Processors at 3 % load | At about 30 % load from other work |
+| Site | Default | With `--near-field` |
 |---|---|---|
-| 26.1 N, 3.6 E (global product, 118 m) | 12.3 s | 20.1 to 21.2 s |
-| Shackleton rim record (20 m product) | 12.9 s (13.8 s with `--jobs 1`) | 25.3 to 26.9 s |
+| 26.1 N, 3.6 E (global product, 118 m; on no 5 m raster) | 9.3 s (10.3, 9.3, 10.0) | 13.5 s (13.5, 14.1, 13.9) |
+| Shackleton rim record | 10.3 s (10.3, 10.4, 10.7) | 12.5 s (12.5, 12.7, 13.6) |
+| de Gerlache rim record | 8.6 s (9.1, 8.6, 9.3) | 11.2 s (11.5, 11.2, 12.1) |
+| Mons Malapert record | 9.4 s (9.4, 9.8, 10.3) | 12.4 s (13.2, 12.4, 13.5) |
 
-With `--near-field` on a 5 m raster one run each was measured, while other work was
-running: 23.7 s at the Shackleton record and 32.6 s near Mons Malapert (11 s of it the
-horizon). These two are not idle-machine figures. The test limit is 30 s without the
-near field, best of three on a machine that is doing nothing else.
+Where the time goes at the Malapert record by default: 1.2 s to start, check the kernels
+and open the terrain, 0.4 s for the direction table, 1.6 s for the horizon, 3.6 s for the
+timeline, 1.7 s for the band, 0.9 s for the patches and the files. `--near-field` adds
+2 to 4 s at every site, also at one that lies on no 5 m raster: 1.4 to 1.8 s of it is
+opening the rasters, the rest was not looked into.
+
+The same command takes longer on a loaded machine: earlier the same day, while another
+job held the processors at about 30 %, the default command took 20 to 27 s (that was
+before the horizon search was made faster). The test limit is 30 s without the near
+field, best of three on a machine that is doing nothing else.
 
 ## Run times
 
@@ -174,7 +184,7 @@ LOLA products, hourly series, six observer heights, default `--jobs` (8 here).
 |---|---|
 | One custom site, horizon and terrain patches, no dates (`lsncore site`) | 3.5 to 4.4 s |
 | One site, 30 days, calendar and mast trade | 11 s |
-| One custom coordinate, 30 days, three presets and uncertainty band, no ellipse (`lsncore custom`) | 12.3 to 12.9 s |
+| One custom coordinate, 30 days, three presets and uncertainty band, no ellipse (`lsncore custom`; measured later that day, after the search was made faster) | 8.6 to 10.3 s; 11.2 to 13.5 s with `--near-field` |
 | One site, 30 days, three presets, uncertainty band and landing ellipse of 13 points | 31 s (35 s in one process) |
 | One site, 24 months, the same | 3.7 min (223 s) |
 | Three sites, 24 months, calendar and mast trade | 2.7 min (159 s) |

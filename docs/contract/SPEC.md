@@ -747,7 +747,7 @@ Additive; nothing that existed in 0.10 changed its meaning, name, unit or layout
 
 - Optional descriptive labels `programme` and `category` in `sites[]` of a scenario, in `site` of a site package and in the site entries of the index (5.2, 7). They are not part of `request`: package ids do not depend on them.
 - No change to any number. A reader written for 0.10 reads 0.11 packages unchanged and finds two fields it does not know.
-- Clarification, no change to any file: terrain patches are selected by `id`; the order and the number of `terrain.patches[]` are not part of the contract (5.9). Section 5.9 said "finest first" since 0.7. The core still writes them that way, but a reader must not rely on it: a package may hold a patch finer than `near`.
+- Clarification, no change to any file: terrain patches are selected by `id`; the order and the number of `terrain.patches[]` are not part of the contract (5.9). Section 5.9 said "finest first" since 0.7. The core still writes them that way, but a reader must not rely on it: a package may hold a patch finer than `near`. The validator no longer requires an order; it checks that the patches written are those the request states.
 
 ### 0.10 (14 November 2026)
 
