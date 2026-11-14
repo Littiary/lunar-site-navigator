@@ -1,0 +1,910 @@
+{
+ "schema": "lunar-site-navigator site records v0 (curated list)",
+ "generated_utc": "2026-11-14T16:07:36Z",
+ "sites": [
+  {
+   "site_id": "shackleton_rim_crest",
+   "name": "Shackleton crater rim crest",
+   "lon_deg_east": 205.76891,
+   "lat_deg": -89.80531,
+   "polar_stereographic_x_m": -2566.6,
+   "polar_stereographic_y_m": -5316.7,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest DEM point on radial lines +-1500 m (20 m step, bilinear) through the vertices of the IAU outline",
+    "outline_vertices": 17,
+    "outline_determination_diameter_km": 20.92
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "Shackleton",
+    "feature_id": 5450,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/5450",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ],
+   "category": "project_candidate",
+   "coordinate_source": {
+    "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
+    "url": "https://planetarynames.wr.usgs.gov/Feature/5450",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
+   },
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 0,
+     "height_rms_error_m": null
+    },
+    "near_field": {
+     "product_id": "LOLA5MPP_SITE04",
+     "pixel_m": 5.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 0,
+     "height_rms_error_m": 0.511877179145813
+    },
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 1701.02,
+   "ground_radius_m": 1739101.02,
+   "ground_height_from": "LOLA5MPP_SITE04"
+  },
+  {
+   "site_id": "de_gerlache_rim_crest",
+   "name": "de Gerlache crater rim crest",
+   "lon_deg_east": 291.58956,
+   "lat_deg": -88.6641,
+   "polar_stereographic_x_m": -37668.7,
+   "polar_stereographic_y_m": 14906.1,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest DEM point on radial lines +-1500 m (20 m step, bilinear) through the vertices of the IAU outline",
+    "outline_vertices": 590,
+    "outline_determination_diameter_km": 32.71
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "de Gerlache",
+    "feature_id": 1439,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/1439",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ],
+   "category": "project_candidate",
+   "coordinate_source": {
+    "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
+    "url": "https://planetarynames.wr.usgs.gov/Feature/1439",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
+   },
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 1,
+     "height_rms_error_m": null
+    },
+    "near_field": {
+     "product_id": "LOLA5MPP_SITE11",
+     "pixel_m": 5.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 1,
+     "height_rms_error_m": 0.11957231909036636
+    },
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 1815.33,
+   "ground_radius_m": 1739215.33,
+   "ground_height_from": "LOLA5MPP_SITE11"
+  },
+  {
+   "site_id": "malapert_massif_summit",
+   "name": "Mons Malapert (Malapert massif) summit",
+   "lon_deg_east": 2.05767,
+   "lat_deg": -85.98795,
+   "polar_stereographic_x_m": 4370.0,
+   "polar_stereographic_y_m": 121630.0,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis (label COORDINATE_SYSTEM_NAME 'MEAN EARTH/POLAR AXIS OF DE421'); planetocentric latitude, longitude positive east; sphere of radius 1737.4 km (LOLA GDR reference radius)",
+   "location_method": {
+    "rule": "highest 20 m DEM pixel whose centre lies inside the IAU outline polygon",
+    "outline_vertices": 25,
+    "pixels_inside_outline": 4516827
+   },
+   "anchor": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS)",
+    "feature": "Mons Malapert",
+    "feature_id": 16338,
+    "url": "https://planetarynames.wr.usgs.gov/Feature/16338",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "gazetteer_coordinate_system": "Planetographic, +East, -180 - 180",
+    "iau_status": "Adopted by IAU"
+   },
+   "terrain_product": {
+    "product_id": "LDEM_80S_20M",
+    "product_version": "V2.0",
+    "file": "raw/lola/LDEM_80S_20M/ldem_80s_20m.img",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG"
+   },
+   "status": "project candidate site derived from LOLA and the IAU outline; not an official landing site",
+   "nasa_candidate_regions_in_the_neighbourhood": {
+    "note": "named in NASA's release; NASA published no coordinates for them, so the match is by name only and is unverified",
+    "url": "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/"
+   },
+   "unverified": [
+    "relation to the NASA candidate regions"
+   ],
+   "category": "project_candidate",
+   "coordinate_source": {
+    "source": "data/sites/sites.json: located on LDEM_80S_20M by the stated rule from the IAU Gazetteer feature",
+    "url": "https://planetarynames.wr.usgs.gov/Feature/16338",
+    "retrieved_utc": "2026-11-14T10:40:12Z",
+    "stated_precision": "one 20 m DEM pixel (location rule in location_method)"
+   },
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 1,
+     "height_rms_error_m": null
+    },
+    "near_field": {
+     "product_id": "LOLA5MPP_SITE23",
+     "pixel_m": 5.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 0,
+     "height_rms_error_m": 0.7993996143341064
+    },
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 5172.89,
+   "ground_radius_m": 1742572.89,
+   "ground_height_from": "LOLA5MPP_SITE23"
+  },
+  {
+   "site_id": "apollo_11",
+   "name": "Apollo 11 (Lunar Module Eagle descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 11",
+   "lon_deg_east": 23.47314,
+   "lat_deg": 0.67416,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A11_LM",
+    "object": "Descent stage of Lunar Module \"Eagle\"",
+    "method": "Averaged Mapping Orbit NACs + Laser Ranging",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 0.3,
+    "arrival_date_utc": "19690720"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -1928.89,
+   "ground_radius_m": 1735471.11,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "apollo_12",
+   "name": "Apollo 12 (Lunar Module Intrepid descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 12",
+   "lon_deg_east": 336.5781,
+   "lat_deg": -3.0128,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A12_LM",
+    "object": "Descent stage of Lunar Module \"Intrepid\"",
+    "method": "Averaged Mapping Orbit NACs",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 2.2,
+    "arrival_date_utc": "19691119"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -1424.75,
+   "ground_radius_m": 1735975.25,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "apollo_14",
+   "name": "Apollo 14 (Lunar Module Antares descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 14",
+   "lon_deg_east": 342.52806,
+   "lat_deg": -3.64589,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A14_LM",
+    "object": "Descent stage of Lunar Module \"Antares\"",
+    "method": "Averaged Mapping Orbit NACs + Laser Ranging",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 0.4,
+    "arrival_date_utc": "19710205"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -1063.27,
+   "ground_radius_m": 1736336.73,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "apollo_15",
+   "name": "Apollo 15 (Lunar Module Falcon descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 15",
+   "lon_deg_east": 3.6333,
+   "lat_deg": 26.13239,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A15_LM",
+    "object": "Descent stage of Lunar Module \"Falcon\"",
+    "method": "Averaged Mapping Orbit NACs + Laser Ranging",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 1.0,
+    "arrival_date_utc": "19710730"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -1926.38,
+   "ground_radius_m": 1735473.62,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "apollo_16",
+   "name": "Apollo 16 (Lunar Module Orion descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 16",
+   "lon_deg_east": 15.5011,
+   "lat_deg": -8.9734,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A16_LM",
+    "object": "Descent stage of Lunar Module \"Orion\"",
+    "method": "Averaged Mapping Orbit NACs",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 3.0,
+    "arrival_date_utc": "19720421"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 12.35,
+   "ground_radius_m": 1737412.35,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "apollo_17",
+   "name": "Apollo 17 (Lunar Module Challenger descent stage)",
+   "category": "past_landing",
+   "mission": "Apollo 17",
+   "lon_deg_east": 30.7723,
+   "lat_deg": 20.1911,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "A17_LM",
+    "object": "Descent stage of Lunar Module \"Challenger\"",
+    "method": "Averaged Mapping Orbit NACs",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 3.5,
+    "arrival_date_utc": "19721211"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -2627.49,
+   "ground_radius_m": 1734772.51,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "surveyor_1",
+   "name": "Surveyor 1 lander",
+   "category": "past_landing",
+   "mission": "Surveyor 1",
+   "lon_deg_east": 316.6602,
+   "lat_deg": -2.4745,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "Surveyor1",
+    "object": "Lander",
+    "method": "Averaged NACs",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 5.4,
+    "arrival_date_utc": "19660530"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -1888.06,
+   "ground_radius_m": 1735511.94,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "change_3",
+   "name": "Chang'e 3 lander",
+   "category": "past_landing",
+   "mission": "Chang'e 3",
+   "lon_deg_east": 340.4883,
+   "lat_deg": 44.1214,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "ChangE3",
+    "object": "Lander",
+    "method": "Averaged NACs",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 9.1,
+    "arrival_date_utc": "20131214"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -2629.5,
+   "ground_radius_m": 1734770.5,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "change_4",
+   "name": "Chang'e 4 lander",
+   "category": "past_landing",
+   "mission": "Chang'e 4",
+   "lon_deg_east": 177.5886,
+   "lat_deg": -45.4562,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "ChangE4",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20190103"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -5926.78,
+   "ground_radius_m": 1731473.22,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "change_5",
+   "name": "Chang'e 5 lander",
+   "category": "past_landing",
+   "mission": "Chang'e 5",
+   "lon_deg_east": 308.0839,
+   "lat_deg": 43.0576,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "ChangE5",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20201201"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -2544.43,
+   "ground_radius_m": 1734855.57,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "change_6",
+   "name": "Chang'e 6 lander",
+   "category": "past_landing",
+   "mission": "Chang'e 6",
+   "lon_deg_east": 206.0143,
+   "lat_deg": -41.6383,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "ChangE6",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20240601"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -5256.17,
+   "ground_radius_m": 1732143.83,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "chandrayaan_3",
+   "name": "Chandrayaan-3 Vikram lander",
+   "category": "past_landing",
+   "mission": "Chandrayaan-3",
+   "lon_deg_east": 32.3187,
+   "lat_deg": -69.374,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "Vikram2",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20230823"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_60S_60M",
+     "pixel_m": 60.0,
+     "resolution_class": "medium",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 529.46,
+   "ground_radius_m": 1737929.46,
+   "ground_height_from": "LDEM_60S_60M"
+  },
+  {
+   "site_id": "slim",
+   "name": "SLIM lander",
+   "category": "past_landing",
+   "mission": "SLIM",
+   "lon_deg_east": 25.251,
+   "lat_deg": -13.316,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "SLIM",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20240119"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -912.78,
+   "ground_radius_m": 1736487.22,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "im_1_odysseus",
+   "name": "IM-1 Odysseus lander (CLPS)",
+   "category": "past_landing",
+   "mission": "IM-1",
+   "lon_deg_east": 1.4367,
+   "lat_deg": -80.1276,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "IM1",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20240222"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 0,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 2583.42,
+   "ground_radius_m": 1739983.42,
+   "ground_height_from": "LDEM_80S_20M"
+  },
+  {
+   "site_id": "blue_ghost_1",
+   "name": "Blue Ghost Mission 1 lander (CLPS; LROC object: retroreflector on the lander)",
+   "category": "past_landing",
+   "mission": "Blue Ghost Mission 1",
+   "lon_deg_east": 61.8102,
+   "lat_deg": 18.5622,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "BlueGhost1",
+    "object": "Retroreflector: Blue Ghost lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 10.0,
+    "arrival_date_utc": "20250302"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "SLDEM2015_256",
+     "pixel_m": 118.45058759433391,
+     "resolution_class": "coarse",
+     "returns_in_pixel": -1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": -3652.42,
+   "ground_radius_m": 1733747.58,
+   "ground_height_from": "SLDEM2015_256"
+  },
+  {
+   "site_id": "im_2_athena",
+   "name": "IM-2 Athena lander (CLPS; south-polar, Mons Mouton)",
+   "category": "past_landing",
+   "mission": "IM-2",
+   "lon_deg_east": 29.19567,
+   "lat_deg": -84.7906,
+   "reference_frame": "Moon body-fixed, mean Earth/polar axis; planetocentric latitude, east longitude, sphere 1737.4 km (table .PRJ 'GCS_Moon_2000', sphere 1737400 m). The LROC README does not name the body-fixed frame; its retroreflector entries equal the DE421/DE430 mean-Earth coordinates within 0.3 m and differ from the principal-axis ones by about 850 m, so the table is in the mean-Earth frame, the frame of our LOLA products",
+   "coordinate_source": {
+    "source": "LROC Anthropogenic Features on the Moon (PDS LRO-L-LROC-5-RDR-V1.0 extras)",
+    "citation": "R. V. Wagner, D. M. Nelson, J. B. Plescia, M. S. Robinson, E. J. Speyerer, E. Mazarico (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103, doi:10.1016/j.icarus.2016.05.011; table updated 2026-08-14",
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/EXTRAS/SHAPEFILE/ANTHROPOGENIC_OBJECTS/ANTHROPOGENIC_OBJECTS_360.ZIP",
+    "retrieved_utc": "2026-11-14T16:02:24Z",
+    "file_sha256": "071f3560f8d5d3473de2d868cdf04de0b2ca6b7863be2a5c98b801aa1a017953",
+    "object_id": "IM2",
+    "object": "Lander",
+    "method": "NAC DTM",
+    "measured_on_LRO_imagery": true,
+    "stated_uncertainty_m": 5.0,
+    "arrival_date_utc": "20250306"
+   },
+   "other_values": "none compared: the LROC table is the only source used; mission-team values were not fetched",
+   "status": "past landing site (position of the lander as measured on LROC images)",
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 1,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 5321.88,
+   "ground_radius_m": 1742721.88,
+   "ground_height_from": "LDEM_80S_20M"
+  },
+  {
+   "site_id": "artemis3_region_mons_mouton_representative",
+   "name": "Artemis III candidate region 'Mons Mouton': representative point (IAU centre of Mons Mouton)",
+   "category": "artemis_iii_candidate_region_representative",
+   "lon_deg_east": 31.0,
+   "lat_deg": -84.6,
+   "reference_frame": "IAU Gazetteer: planetographic, +East (equal to planetocentric on the 1737.4 km sphere); frame of the Gazetteer's LOLA-based determination, taken as mean Earth/polar axis",
+   "coordinate_source": {
+    "source": "IAU Gazetteer of Planetary Nomenclature (USGS), feature 16070 Mons Mouton",
+    "url": "https://planetarynames.wr.usgs.gov/Feature/16070",
+    "retrieved_utc": "2026-11-14T16:06:13Z",
+    "stated_precision": "centre given to 0.1 deg (about 3 km); the feature is 130 km across",
+    "iau_status": "Adopted by IAU"
+   },
+   "status": "REPRESENTATIVE point of a NASA candidate region, not a selected or published landing site; NASA published no coordinates (release of 2024-10-28 and LPSC 2026 abstract); whether this point lies inside NASA's region outline is unverified",
+   "nasa_sources": [
+    "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "https://ntrs.nasa.gov/citations/20250011660"
+   ],
+   "terrain": {
+    "default": {
+     "product_id": "LDEM_80S_20M",
+     "pixel_m": 20.0,
+     "resolution_class": "fine",
+     "returns_in_pixel": 2,
+     "height_rms_error_m": null
+    },
+    "near_field": null,
+    "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
+    "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
+   },
+   "ground_height_m_above_1737.4km_sphere": 5041.83,
+   "ground_radius_m": 1742441.83,
+   "ground_height_from": "LDEM_80S_20M"
+  }
+ ],
+ "omitted": [
+  {
+   "name": "Luna 9",
+   "reason": "not in the LROC table (LROC has not located the lander in NAC images); no measured coordinate from a primary source, so no point is guessed"
+  },
+  {
+   "name": "Artemis III region 'Peak near Cabeus B'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Artemis III region 'Haworth'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Artemis III region 'Malapert Massif'",
+   "reason": "no separate record: NASA published no coordinates; the project site malapert_massif_summit (IAU Mons Malapert) lies on the same massif and serves as its representative; match by name only, unverified"
+  },
+  {
+   "name": "Artemis III region 'Mons Mouton Plateau'",
+   "reason": "NASA published no coordinates; the plateau is on Mons Mouton (see artemis3_region_mons_mouton_representative; IM-2 Athena landed on Mons Mouton), but no source places a point on NASA's plateau region"
+  },
+  {
+   "name": "Artemis III region 'Nobile Rim 1'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Artemis III region 'Nobile Rim 2'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Artemis III region 'de Gerlache Rim 2'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Artemis III region 'Slater Plain'",
+   "reason": "NASA published no coordinates (release 2024-10-28, LPSC 2026 abstract); the region is named after a crater or an unofficial name whose IAU centre is not inside the region (a rim, a peak or a plain), so a representative point would be a guess"
+  },
+  {
+   "name": "Planned CLPS south-polar targets",
+   "reason": "no published landing coordinates were found from a primary source during this work; the flown south-polar CLPS landers (IM-1, IM-2) are listed as past landings"
+  }
+ ],
+ "counts": {
+  "artemis_iii_candidate_region_representative": 1,
+  "past_landing": 16,
+  "project_candidate": 3
+ }
+}
