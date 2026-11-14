@@ -26,6 +26,7 @@ from lsncore.ephem import directions as d
 from lsncore.ephem import kernels
 from validation.horizons import compare as horizons
 from validation.horizons_rts import compare as horizons_rts
+from validation.landers import compare as landers
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
@@ -229,6 +230,21 @@ def build() -> dict:
     rts_cases_text = f"{len(rts_pairs)} sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31"
     rts_source = f"JPL Horizons rise/transit/set search, 1-minute step ({HORIZONS_URL}), retrieved 2026-11-14"
 
+    lander = landers.run()
+    lander_rows = {row["id"]: row for case in lander["cases"] for row in case["rows"]}
+    lander_rules = landers.load()[1]
+    r1 = lander_rules["R1_angle_same_inputs"]["threshold_deg"]
+    alsj = [row for row in lander_rows.values() if row["kind"] == "pass_fail" and row["unit"] == "deg" and row["threshold"] == r1]
+    bounds = [lander_rows[k] for k in ("blue_ghost_sunset_day", "blue_ghost_daylight_not_after_last_light", "chandrayaan3_sun_up_by_expected_awakening")]
+    lander_where = "validation/landers/thresholds.json and cases.json (commit eaf5634)"
+    lander_how = (
+        "committed on its own before the core was run on these cases; not blind (earlier research had compared some of the published "
+        "values with Horizons), so the thresholds follow fixed rules from the printed precision of each source"
+    )
+    lander_evidence = "validation/landers/results/validation_table.md; test validation/tests/test_landers.py"
+    recomputed = all(case.get("recomputed", True) for case in lander["cases"])
+    stored_note = "" if recomputed else " (stored result: terrain data not present on this machine)"
+
     internal = _measure_internal_directions(t_dir)
     interpolation = _measure_interpolation()
     analytic = _measure_analytic_events(t_ev)
@@ -261,6 +277,28 @@ def build() -> dict:
         _check("sun_rise_set_unmatched", "Independent source", "Sunrise and sunset events without a counterpart on the other side", rts_source,
                rts["thresholds"]["unmatched_events_max"], "events", SEPARATE_COMMIT, rts_where,
                sum(case["unmatched"] for case in rts["cases"]), "validation/horizons_rts/results/validation_table.md", rts_cases_text, [], comparison="<="),
+        _check("apollo_landing_angles", "Published mission record",
+               "Sun and Earth altitude, azimuth and sub-points at the Apollo 11 and Apollo 16 landings, at the published landing times",
+               "Apollo Lunar Surface Journal table computed from the Nautical Almanac (https://www.nasa.gov/wp-content/uploads/static/history/alsj/Scotti_AltAz.txt), retrieved 2026-11-14",
+               r1, "deg", lander_how, lander_where,
+               max(abs(row["difference"]) for row in alsj), lander_evidence, f"{len(alsj)} published angles, 2 landings",
+               ["The published angles are themselves computed (1960s almanac), not measured; the landing times and places are the mission record.",
+                "Smooth sphere; the site coordinates and the no-parallax definition of the source are used."]),
+        _check("apollo16_targeted_sun_angle", "Published mission record",
+               "Sun elevation at the planned Apollo 16 landing time against the targeted angle of the launch window (the landing then slipped by 5 h 45 min, which raised the Sun by 2.88 deg)",
+               "NASA SP-2000-4029, Apollo by the Numbers, tables 'Launch Windows' and 'LM Lunar Landing', retrieved 2026-11-14",
+               lander_rules["R2_targeted_sun_angle"]["threshold_deg"], "deg", lander_how, lander_where,
+               abs(lander_rows["apollo16_targeted_sun_at_planned_time"]["difference"]), lander_evidence, "1 published angle and 2 published times",
+               ["The planned landing time is derived from two published values."]),
+        _check("lander_operational_bounds", "Published mission record",
+               "Physical bounds from operational records that are violated: Blue Ghost Mission 1 (sunset day; recorded daylight must end before geometric last light) and Chandrayaan-3 (sunrise over the terrain horizon must precede the expected wake-up day)",
+               "Firefly Aerospace press release of 17 March 2025; ISRO Chandrayaan-3 mission updates; LROC landing coordinates; retrieved 2026-11-14",
+               0, "bounds violated", lander_how, lander_where,
+               sum(row["status"] != "PASS" for row in bounds), lander_evidence,
+               f"3 bounds; Blue Ghost on a smooth sphere, Chandrayaan-3 with the LOLA terrain horizon{stored_note}",
+               ["One-sided checks: they can show the core wrong, they do not confirm an event time.",
+                "Blue Ghost recorded 346 h of daylight, ending 2.3 h before smooth-sphere last light; local terrain is not in the project data for that site.",
+                "ISRO expected the wake-up about 1.8 days after the computed sunrise; ISRO published no sunrise time."], comparison="<="),
         _check("projection_vs_azlcpo", "Independent implementation", "East-North-Up projection of the core against the SPICE routine azlcpo (same kernels, separate code)", "NAIF SPICE Toolkit N0067, routine azlcpo",
                t_dir.TOL_AZLCPO_DEG, "deg", WITH_TEST, "core/tests/ephem/test_directions.py (commit aa86a5a)",
                internal["azlcpo_deg"], "test core/tests/ephem/test_directions.py::test_exact_path_matches_azlcpo", f"{internal['rows']} rows: 7 points, Sun and Earth, 60 days", ["Checks the projection only; ephemeris and frame are shared."]),
@@ -295,12 +333,12 @@ def build() -> dict:
         "checks": checks,
         "not_validated": [
             {"item": "Event times and visibility shares on real terrain", "state": "unverified", "reason": "No independent illumination product or mission record has been compared yet. The terrain horizon has passed analytic tests of the core stream only (docs/method/horizon.md)."},
-            {"item": "Published event times of real landers", "state": "not done yet", "reason": "Planned as the next validation step."},
+            {"item": "Exact rise and set times at a real lander", "state": "not available", "reason": "No operator of the four missions examined published a sunrise or sunset clock time for its landing site. Operational records (hours of daylight, expected wake-up date) only bound the computed events from one side."},
             {"item": "Earth rise and set against an independent source", "state": "not done", "reason": "Horizons does not state which point of the Earth's disc its rise and set refer to; only the Earth's direction and size are validated."},
             {"item": "Eclipses of the Sun by the Earth", "state": "not modelled", "reason": "The visible fraction of the Sun does not include occultation by the Earth."},
         ],
         "limits": [
-            "Every check on this card is terrain-free. Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes.",
+            "Every check on this card except the Chandrayaan-3 bound is terrain-free. Near the lunar poles the terrain horizon, not the ephemeris, sets the accuracy of an event time: a horizon error of 0.01 deg can move an event by many minutes.",
             "The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.",
             "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; only the Horizons thresholds have a commit of their own that predates the data.",
         ],

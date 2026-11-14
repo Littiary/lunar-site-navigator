@@ -10,6 +10,27 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 `python -m validation.sites.run <sites.json>` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, countdowns) for the site records of the data stream and validates the packages against the contract. `sites/scenario.json` is the input, `sites/results/site_summary.md` and `.json` the summary. The packages go to `build/packages/sites` (not under version control). These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
+## `landers/` — published records of real lunar landers
+
+**What is compared.** Four missions, each with the published time and place of a real event and what the source says about the Sun or the Earth at that moment. Every published value is in `landers/cases.json` as printed, with its source URL, retrieval time, page checksum, printed precision and whether the source calls it approximate. `cases.json` and `thresholds.json` were committed before the core was run on these cases (commit eaf5634). The test is **not blind**: research before the hackathon had compared some of these values with Horizons, so the thresholds follow fixed rules derived from each source's printed precision and wording.
+
+**Result** (`landers/results/validation_table.md`): 20 of 20 pass/fail checks pass; 5 further comparisons are reported without a verdict.
+
+| Case | What the source published | Result |
+|---|---|---|
+| Apollo 11 landing, 20 July 1969 20:17:39 UT | Sun and Earth altitude, azimuth and sub-points (Apollo Lunar Surface Journal, computed from the Nautical Almanac, printed to 0.01°) | 8 angles agree within 0.035° (threshold 0.05°) |
+| Apollo 16 landing, 21 April 1972 02:23:35 UT | The same eight angles; and the Sun angle the launch window was targeted for (NASA SP-4029: 11.9°) | 8 angles within 0.015°. At the planned landing time the core gives 11.88° (threshold 0.1°); the landing slipped by 5 h 45 min and the Sun was then at 14.76°: a change of 2.88°, while the NASA table still lists 11.9° |
+| Blue Ghost Mission 1, end of the lunar day, 16 March 2025 | "lunar sunset on March 16"; 346 hours of daylight operations after the landing at 08:34 UTC on 2 March | Computed last light (smooth local sphere) 16 March 20:54:55 UTC: on the published day, and after the end of recorded daylight (18:34 UTC), as it must be. The 2.3 h between them is not explained: local terrain is not in the project's data for this site |
+| Chandrayaan-3, lunar night, September 2023 | In sleep mode on 4 September; awakening awaited "around September 22" (ISRO) | With the LOLA terrain horizon: last light 4 September 07:14:41 UTC, first light 20 September 00:05:04 UTC, 66 h before the end of the expected wake-up day, as it must be. ISRO published no sunrise time; its wake-up date is 1.8 days after the computed sunrise |
+
+**Limits.**
+
+* The Apollo angles are another computation (a 1960s almanac), not a measurement; what the missions contribute is the real time and place. The comparison uses the source's own site coordinates and its definition without parallax; with parallax the Earth stands 0.21° lower at the Apollo 11 site, which is reported, not judged.
+* No operator published a sunrise or sunset clock time for its site. Operational records only bound the computed events from one side: they can show the core wrong, they cannot confirm an event time.
+* Only the Chandrayaan-3 case uses terrain (60 m grid). Its sunrise is set by terrain 0.5 km from the lander, where the grid limits the accuracy.
+* The reference frame of the LROC coordinates is not stated on the two LROC pages (unverified; assumed mean-Earth/polar-axis).
+* UTC before 1972 is handled by the leap-second kernel with a constant offset; the error is about one second, far below the thresholds.
+
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 
 **What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`core/lsncore/ephem/`) and by the JPL Horizons system (observer table, user-defined site on body 301).
