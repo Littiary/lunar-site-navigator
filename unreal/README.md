@@ -133,12 +133,20 @@ countdowns, large; text; captions):
   one group. The layout holds 20 sites in 7 groups at 1280 x 720 (tested).
 - **Custom coordinates**, at the foot of the picker: type a latitude and an east longitude
   and press **Compute and show**. The view hands the two numbers, as typed, to the science
-  core (`python -m lsncore site --lat ... --lon ... --name ... --out Saved/LsnCustom`),
-  shows the seconds while it runs and loads the package it writes. The engine computes
-  nothing. The Python environment is looked for in `-LsnPython=`, `LSN_PYTHON`, `.venv`
+  core in two steps and computes nothing itself. Step 1 is `python -m lsncore site --lat
+  ... --lon ... --name ... --out Saved/LsnCustom`: the terrain horizon, about three
+  seconds; its package is shown at once, with the terrain product, resolution class and
+  pixel size it states. Step 2 is the core's command for a complete package with a
+  timeline (about half a minute); while it runs the view shows the seconds and a bar
+  (time run over the time the core states, never full before it ends), then the package
+  with Sun, Earth and countdowns takes the place of the first. If step 2 fails, the view
+  says why and the horizon stays. The command of step 2 is given as a template with
+  `{lat}`, `{lon}`, `{name}`, `{out}` (`-LsnCustomTimeline=` or `CustomTimelineCommand` in
+  `[LunarSiteNavigator]` of DefaultGame.ini); until the core stream has published it there
+  is none, and the view says that only the horizon is shown. Run from a checkout, the
+  core and data reader of this repository are used (PYTHONPATH). The Python environment is looked for in `-LsnPython=`, `LSN_PYTHON`, `.venv`
   next to the repository and `C:/Projects/lsn-venv`; if none is there, the view says that
-  custom coordinates cannot be computed on this machine. That command writes the terrain
-  horizon only, so a custom site shows no Sun, Earth or countdown, and says so.
+  custom coordinates cannot be computed on this machine.
 - **Resolution class** of the terrain behind the result (`horizon.terrain_source`, since
   0.9): "terrain: fine, 20 m pixels" next to the site name; nothing for older packages.
 - **Details** on demand (button, key `I`): package id, frame, contract version, the raw

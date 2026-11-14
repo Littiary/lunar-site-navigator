@@ -76,6 +76,16 @@ namespace LsnPlanner
 	 */
 	LUNARSITENAVIGATOR_API FString CustomSiteArguments(const FString& LatitudeText, const FString& LongitudeText, const FString& OutputRoot, FString& OutName);
 
+	/**
+	 * Arguments of the core's command for the second step of custom coordinates (a complete
+	 * site package with a timeline), from a template with the places {lat}, {lon}, {name}
+	 * and {out}. Empty when there is no template: then there is no second step.
+	 */
+	LUNARSITENAVIGATOR_API FString CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot);
+
+	/** Share of a running step to show as done: time run over the time stated for it, at most 0.95. */
+	LUNARSITENAVIGATOR_API double StepShare(double RunS, double StatedS);
+
 	/** "terrain: fine, 20 m pixels" from the package's terrain source; empty when the package has none. */
 	LUNARSITENAVIGATOR_API FString TerrainSourceLabel(const FLsnTerrainSource& Source);
 

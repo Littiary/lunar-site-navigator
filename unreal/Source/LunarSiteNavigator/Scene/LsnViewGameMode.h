@@ -35,6 +35,15 @@ struct FLsnCustomEntry
 	bool bFailed = false;
 	FString Message;
 	double StartedS = 0.0;
+	/**
+	 * The two steps: 1 the terrain horizon (a few seconds), 2 the Sun and Earth timeline
+	 * (about half a minute). 0 when nothing has been started.
+	 */
+	int32 Step = 0;
+	/** What the finished steps said, shown above the running one. */
+	FString HorizonLine, TimelineLine;
+	/** Seconds the core's documentation states for the running step; 0 if unknown. */
+	double StatedS = 0.0;
 };
 
 /**
@@ -126,9 +135,13 @@ public:
 	void TypeCustom(TCHAR Character);
 	void BackspaceCustom();
 	/**
-	 * Hands the typed coordinates to the science core (python -m lsncore site) if a Python
-	 * environment with it is on this machine, and loads the package it writes. The engine
-	 * computes nothing; without the environment it says so.
+	 * Hands the typed coordinates to the science core if a Python environment with it is on
+	 * this machine, in two steps: first python -m lsncore site (the terrain horizon, a few
+	 * seconds), whose package is loaded at once; then the core's command for a complete
+	 * package with a timeline (about half a minute), whose package replaces the first. The
+	 * engine computes nothing; without the environment it says so. The second command is
+	 * given as a template (-LsnCustomTimeline="..." with {lat} {lon} {name} {out}, or
+	 * CustomTimelineCommand in DefaultGame.ini); without one only the first step runs.
 	 */
 	void StartCustom();
 
@@ -189,6 +202,9 @@ private:
 	void* CustomWritePipe = nullptr;
 	FString CustomOutput, CustomName, CustomRoot;
 	void TickCustom();
+	bool LaunchCustom(const FString& Arguments, int32 Step, double StatedS);
+	bool LoadCustomResult(bool bNeedTimeline, FString& OutPackageId, FString& OutError);
+	FString CustomPython, CustomTimelineTemplate;
 	void AddSiteInfo(int32 SiteIndex);
 
 	FString LoadError;

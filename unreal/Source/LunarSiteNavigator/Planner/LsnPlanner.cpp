@@ -333,3 +333,17 @@ FString LsnPlanner::TerrainSourceLabel(const FLsnTerrainSource& Source)
 	}
 	return Source.PixelM > 0.0 ? FString::Printf(TEXT("terrain: %s, %.0f m pixels"), *Source.ResolutionClass, Source.PixelM) : FString::Printf(TEXT("terrain: %s"), *Source.ResolutionClass);
 }
+
+FString LsnPlanner::CustomTimelineArguments(const FString& Template, const FString& LatitudeText, const FString& LongitudeText, const FString& Name, const FString& OutputRoot)
+{
+	if (Template.IsEmpty())
+	{
+		return FString();
+	}
+	return Template.Replace(TEXT("{lat}"), *LatitudeText).Replace(TEXT("{lon}"), *LongitudeText).Replace(TEXT("{name}"), *Name).Replace(TEXT("{out}"), *OutputRoot);
+}
+
+double LsnPlanner::StepShare(double RunS, double StatedS)
+{
+	return StatedS > 0.0 ? FMath::Clamp(RunS / StatedS, 0.0, 0.95) : 0.0;
+}

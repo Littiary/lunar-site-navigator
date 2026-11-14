@@ -24,6 +24,12 @@
 //    2. The command is the core's own: the arguments are exactly
 //       -m lsncore site --lat <lat> --lon <lon> --name "<name>" --out "<root>"
 //       with the numbers as they were typed, and the name says the coordinates.
+//    3. (Added on 2026-11-14 for the two-step flow, before its first run.) The second step,
+//       the timeline, is another command of the core, given to the view as a template with
+//       the places {lat}, {lon}, {name} and {out}. The view fills in the same four values
+//       and nothing else; without a template there is no second step (empty arguments).
+//       The share of a step that is shown as done is the time it has run over the time
+//       the core's documentation states for it, never more than 0.95 while it still runs.
 //
 // X. The resolution class of the terrain is the package's.
 //    A manifest with horizon.terrain_source (contract 0.9) gives its resolution_class and
@@ -154,6 +160,12 @@ bool FLsnCustomCoordinatesTest::RunTest(const FString& Parameters)
 	FString Name;
 	const FString Arguments = LsnPlanner::CustomSiteArguments(TEXT("-89.45"), TEXT("222.8"), TEXT("C:/Out/Custom"), Name);
 	TestEqual(TEXT("W: the name says the coordinates"), Name, FString(TEXT("Custom -89.45, 222.8")));
+	TestEqual(TEXT("W3: the template is filled with the same values"), LsnPlanner::CustomTimelineArguments(TEXT("-m lsncore point --lat {lat} --lon {lon} --name \"{name}\" --out \"{out}\" --days 30"), TEXT("-89.45"), TEXT("222.8"), Name, TEXT("C:/Out/Custom")),
+		FString(TEXT("-m lsncore point --lat -89.45 --lon 222.8 --name \"Custom -89.45, 222.8\" --out \"C:/Out/Custom\" --days 30")));
+	TestTrue(TEXT("W3: no template, no second step"), LsnPlanner::CustomTimelineArguments(TEXT(""), TEXT("-89.45"), TEXT("222.8"), Name, TEXT("C:/Out/Custom")).IsEmpty());
+	TestEqual(TEXT("W3: a third of the stated time has run"), LsnPlanner::StepShare(10.0, 30.0), 1.0 / 3.0, 1e-12);
+	TestEqual(TEXT("W3: never shown as done while it runs"), LsnPlanner::StepShare(45.0, 30.0), 0.95, 1e-12);
+	TestEqual(TEXT("W3: no stated time, no share"), LsnPlanner::StepShare(10.0, 0.0), 0.0, 1e-12);
 	TestEqual(TEXT("W: the core's own command"), Arguments, FString(TEXT("-m lsncore site --lat -89.45 --lon 222.8 --name \"Custom -89.45, 222.8\" --out \"C:/Out/Custom\"")));
 	return true;
 }

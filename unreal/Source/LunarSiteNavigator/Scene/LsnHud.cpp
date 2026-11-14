@@ -794,10 +794,27 @@ void ALsnHud::DrawHUD()
 		Y = DrawWrapped(FString::Printf(TEXT("About %.0f %% of the ground within %.0f m is drawn in shadow: the elevation data rises towards the Sun there by more than the Sun's height of %.1f deg. The package's horizon search starts %.0f m out; its result is for the observer at the site, who is in sunlight."),
 			100.0 * Scene->GetNearGroundShadeShare(), FMath::Max(P.HorizonSearchStartM(), 5.0), SunNow.ElevationDeg, P.HorizonSearchStartM()), White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
 	}
-	if (GameMode && SiteIndex >= 0 && GameMode->GetSites()[SiteIndex].Programme.StartsWith(TEXT("Custom")) && !GameMode->GetCustomEntry().Message.IsEmpty() && Page == ELsnPlannerPage::Summary)
+	if (GameMode && View == 0 && SiteIndex >= 0 && GameMode->GetSites()[SiteIndex].Programme.StartsWith(TEXT("Custom")) && Page == ELsnPlannerPage::Summary)
 	{
-		// A site computed for custom coordinates: say where it came from.
-		Y = DrawWrapped(GameMode->GetCustomEntry().Message, White, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
+		// A site computed for custom coordinates: the two steps, what each said, and how far the running one is.
+		const FLsnCustomEntry& Entry = GameMode->GetCustomEntry();
+		if (!Entry.HorizonLine.IsEmpty())
+		{
+			Y = DrawWrapped(Entry.HorizonLine, Good, Margin, Y, ColumnWidth, TypeS) + 4.0f * Scale;
+		}
+		if (Entry.bRunning && Entry.Step == 2)
+		{
+			const float RunS = static_cast<float>(FPlatformTime::Seconds() - Entry.StartedS);
+			Y = DrawWrapped(Entry.Message, SunColor, Margin, Y, ColumnWidth, TypeM) + 4.0f * Scale;
+			const float BarWidth = 0.5f * ColumnWidth, BarHeight = 10.0f * Scale;
+			DrawRect(FLinearColor(0.20f, 0.20f, 0.22f, 1.0f), Margin, Y, BarWidth, BarHeight);
+			DrawRect(SunColor, Margin, Y, BarWidth * static_cast<float>(LsnPlanner::StepShare(RunS, Entry.StatedS)), BarHeight);
+			Y += BarHeight + 8.0f * Scale;
+		}
+		else if (!Entry.TimelineLine.IsEmpty())
+		{
+			Y = DrawWrapped(Entry.TimelineLine, Entry.bFailed ? Alert : P.bHasTimeline ? Good : Dim, Margin, Y, ColumnWidth, TypeS) + 6.0f * Scale;
+		}
 	}
 	const bool bDetails = LeftPawn && LeftPawn->AreDetailsShown();
 	const FLsnTimeStripLayout Layout = FLsnTimeStripLayout::Make(SizeX, SizeY, P);

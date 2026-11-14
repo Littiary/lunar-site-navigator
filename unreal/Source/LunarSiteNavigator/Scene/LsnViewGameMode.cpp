@@ -383,6 +383,9 @@ void ALsnViewGameMode::StartCustom()
 		return;
 	}
 	Custom.bFailed = true;
+	Custom.Step = 0;
+	Custom.HorizonLine.Reset();
+	Custom.TimelineLine.Reset();
 	double Latitude = 0.0, Longitude = 0.0;
 	if (!LsnPlanner::ParseCoordinate(Custom.Latitude, -90.0, 90.0, Latitude))
 	{
@@ -408,41 +411,102 @@ void ALsnViewGameMode::StartCustom()
 	}
 	Candidates.Add(FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../.venv/Scripts/python.exe"))));
 	Candidates.Add(TEXT("C:/Projects/lsn-venv/Scripts/python.exe"));
-	FString Python;
+	CustomPython.Reset();
 	for (const FString& Candidate : Candidates)
 	{
 		if (FPaths::FileExists(Candidate))
 		{
-			Python = Candidate;
+			CustomPython = Candidate;
 			break;
 		}
 	}
-	if (Python.IsEmpty())
+	if (CustomPython.IsEmpty())
 	{
 		Custom.Message = TEXT("No Python environment with the science core was found on this machine, so custom coordinates cannot be computed here. The published sites work without it. (Looked for LSN_PYTHON, .venv next to the repository, C:/Projects/lsn-venv.)");
 		return;
 	}
+	// The command of the second step, if one has been given.
+	CustomTimelineTemplate.Reset();
+	if (!FParse::Value(FCommandLine::Get(), TEXT("LsnCustomTimeline="), CustomTimelineTemplate, false) && GConfig)
+	{
+		GConfig->GetString(TEXT("LunarSiteNavigator"), TEXT("CustomTimelineCommand"), CustomTimelineTemplate, GGameIni);
+	}
+	// Run from a checkout, the core and the data reader of this very repository are used, so that
+	// the package is of the same contract version as the published ones.
+	const FString RepoCore = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../core")));
+	const FString RepoData = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../data")));
+	if (FPaths::DirectoryExists(FPaths::Combine(RepoCore, TEXT("lsncore"))) && FPaths::DirectoryExists(FPaths::Combine(RepoData, TEXT("lsn_data"))))
+	{
+		FPlatformMisc::SetEnvironmentVar(TEXT("PYTHONPATH"), *(RepoCore + TEXT(";") + RepoData));
+	}
 	CustomRoot = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("LsnCustom")));
 	IFileManager::Get().MakeDirectory(*CustomRoot, true);
 	const FString Arguments = LsnPlanner::CustomSiteArguments(Custom.Latitude, Custom.Longitude, CustomRoot, CustomName);
+	// The core states a few seconds for the horizon of one site.
+	LaunchCustom(Arguments, 1, 4.0);
+}
+
+bool ALsnViewGameMode::LaunchCustom(const FString& Arguments, int32 Step, double StatedS)
+{
 	if (!FPlatformProcess::CreatePipe(CustomReadPipe, CustomWritePipe))
 	{
+		Custom.bFailed = true;
 		Custom.Message = TEXT("The science core could not be started (no pipe).");
-		return;
+		return false;
 	}
 	CustomOutput.Reset();
-	CustomProcess = FPlatformProcess::CreateProc(*Python, *Arguments, false, true, true, nullptr, 0, nullptr, CustomWritePipe, nullptr);
+	CustomProcess = FPlatformProcess::CreateProc(*CustomPython, *Arguments, false, true, true, nullptr, 0, nullptr, CustomWritePipe, nullptr);
 	if (!CustomProcess.IsValid())
 	{
 		FPlatformProcess::ClosePipe(CustomReadPipe, CustomWritePipe);
 		CustomReadPipe = CustomWritePipe = nullptr;
-		Custom.Message = FString::Printf(TEXT("The science core could not be started (%s)."), *Python);
-		return;
+		Custom.bFailed = true;
+		Custom.Message = FString::Printf(TEXT("The science core could not be started (%s)."), *CustomPython);
+		return false;
 	}
 	Custom.bRunning = true;
 	Custom.bFailed = false;
+	Custom.Step = Step;
+	Custom.StatedS = StatedS;
 	Custom.StartedS = FPlatformTime::Seconds();
-	UE_LOG(LogLsn, Display, TEXT("Custom coordinates: %s %s"), *Python, *Arguments);
+	UE_LOG(LogLsn, Display, TEXT("Custom coordinates, step %d: %s %s"), Step, *CustomPython, *Arguments);
+	return true;
+}
+
+bool ALsnViewGameMode::LoadCustomResult(bool bNeedTimeline, FString& OutPackageId, FString& OutError)
+{
+	TArray<FLsnIndexEntry> Written;
+	if (!LsnPlanner::ListSites(CustomRoot, Written, OutError))
+	{
+		return false;
+	}
+	const FLsnIndexEntry* Found = Written.FindByPredicate([this, bNeedTimeline](const FLsnIndexEntry& Entry) { return Entry.Name == CustomName && (!bNeedTimeline || Entry.bHasTimeline); });
+	if (!Found)
+	{
+		OutError = bNeedTimeline ? TEXT("the core wrote no package with a timeline for this name") : TEXT("the core wrote no package for this name");
+		return false;
+	}
+	FLsnIndexEntry Entry = *Found;
+	Entry.Path = FPaths::Combine(CustomRoot, Entry.Path);
+	Entry.Programme = TEXT("Custom coordinates (computed on this machine)");
+	// One row per custom site: the package with the timeline takes the place of the horizon-only one.
+	int32 Index = Sites.IndexOfByPredicate([&Entry](const FLsnIndexEntry& Known) { return Known.Name == Entry.Name && Known.Programme == Entry.Programme; });
+	if (Index == INDEX_NONE)
+	{
+		Index = Sites.Add(Entry);
+	}
+	else
+	{
+		Sites[Index] = Entry;
+	}
+	AddSiteInfo(Index);
+	OutPackageId = Entry.PackageId;
+	if (!SelectSite(0, Index))
+	{
+		OutError = LoadError;
+		return false;
+	}
+	return true;
 }
 
 void ALsnViewGameMode::TickCustom()
@@ -452,7 +516,10 @@ void ALsnViewGameMode::TickCustom()
 		return;
 	}
 	CustomOutput += FPlatformProcess::ReadPipe(CustomReadPipe);
-	Custom.Message = FString::Printf(TEXT("The science core is computing the horizon of %s: %.0f s"), *CustomName, FPlatformTime::Seconds() - Custom.StartedS);
+	const double RunS = FPlatformTime::Seconds() - Custom.StartedS;
+	Custom.Message = Custom.Step == 1
+		? FString::Printf(TEXT("Step 1 of 2, terrain horizon of %s: the science core has run %.0f s (a few seconds)"), *CustomName, RunS)
+		: FString::Printf(TEXT("Step 2 of 2, Sun and Earth timeline: the science core has run %.0f s of about %.0f s"), RunS, Custom.StatedS);
 	if (FPlatformProcess::IsProcRunning(CustomProcess))
 	{
 		return;
@@ -464,41 +531,52 @@ void ALsnViewGameMode::TickCustom()
 	FPlatformProcess::CloseProc(CustomProcess);
 	CustomReadPipe = CustomWritePipe = nullptr;
 	Custom.bRunning = false;
-	const double TookS = FPlatformTime::Seconds() - Custom.StartedS;
-	TArray<FLsnIndexEntry> Written;
-	FString Error;
-	const FLsnIndexEntry* Found = nullptr;
-	if (ReturnCode == 0 && LsnPlanner::ListSites(CustomRoot, Written, Error))
-	{
-		Found = Written.FindByPredicate([this](const FLsnIndexEntry& Entry) { return Entry.Name == CustomName; });
-	}
-	if (!Found)
+	const int32 Step = Custom.Step;
+	FString PackageId, Error;
+	if (ReturnCode != 0 || !LoadCustomResult(Step == 2, PackageId, Error))
 	{
 		// The last line the core printed says what went wrong.
 		TArray<FString> Lines;
 		CustomOutput.ParseIntoArrayLines(Lines);
+		const FString Why = FString::Printf(TEXT("the science core did not write a package (exit code %d). %s"), ReturnCode, Lines.Num() > 0 ? *Lines.Last() : *Error);
+		if (Step == 2)
+		{
+			// The horizon of the first step stays on screen.
+			Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2, Sun and Earth timeline: %s The terrain horizon stays shown."), *Why);
+			Custom.Message = Custom.TimelineLine;
+		}
+		else
+		{
+			Custom.Message = TEXT("Step 1 of 2, terrain horizon: ") + Why;
+		}
 		Custom.bFailed = true;
-		Custom.Message = FString::Printf(TEXT("The science core did not write a package (exit code %d). %s"), ReturnCode, Lines.Num() > 0 ? *Lines.Last() : *Error);
 		return;
 	}
-	FLsnIndexEntry Entry = *Found;
-	Entry.Path = FPaths::Combine(CustomRoot, Entry.Path);
-	Entry.Programme = TEXT("Custom coordinates (computed on this machine)");
-	int32 Index = Sites.IndexOfByPredicate([&Entry](const FLsnIndexEntry& Known) { return Known.PackageId == Entry.PackageId; });
-	if (Index == INDEX_NONE)
+	// What the result rests on: the package's own terrain source (since contract 0.9).
+	const FLsnSitePackage& Loaded = Scenes[0]->GetPackage();
+	const FString Terrain = Loaded.TerrainSource.bPresent
+		? FString::Printf(TEXT("terrain %s, %s class, %.0f m pixels"), *Loaded.TerrainSource.ProductId, *Loaded.TerrainSource.ResolutionClass, Loaded.TerrainSource.PixelM)
+		: FString::Printf(TEXT("the package (contract %s) does not say which terrain product served the site"), *Loaded.ContractVersion);
+	if (Step == 1)
 	{
-		Index = Sites.Add(Entry);
-		AddSiteInfo(Index);
-	}
-	if (SelectSite(0, Index))
-	{
-		Custom.Message = FString::Printf(TEXT("%s: package %s computed by the science core in %.0f s and loaded. It holds the terrain horizon; this command computes no Sun or Earth timeline."), *CustomName, *Entry.PackageId, TookS);
 		Page = ELsnPlannerPage::Summary;
+		Custom.HorizonLine = FString::Printf(TEXT("Step 1 of 2 done in %.0f s: terrain horizon of %s, package %s; %s."), RunS, *CustomName, *PackageId, *Terrain);
+		const FString Arguments = LsnPlanner::CustomTimelineArguments(CustomTimelineTemplate, Custom.Latitude, Custom.Longitude, CustomName, CustomRoot);
+		if (Arguments.IsEmpty())
+		{
+			Custom.TimelineLine = TEXT("Step 2 of 2, Sun and Earth timeline: not available in this build (no command of the science core has been set for it); the horizon only is shown.");
+			Custom.Message = Custom.TimelineLine;
+		}
+		else
+		{
+			// The core states about half a minute for a complete package with a short timeline.
+			LaunchCustom(Arguments, 2, 30.0);
+		}
 	}
 	else
 	{
-		Custom.bFailed = true;
-		Custom.Message = FString::Printf(TEXT("The package was written but could not be loaded: %s"), *LoadError);
+		Custom.TimelineLine = FString::Printf(TEXT("Step 2 of 2 done in %.0f s: Sun and Earth timeline, package %s; %s."), RunS, *PackageId, *Terrain);
+		Custom.Message = Custom.TimelineLine;
 	}
 }
 
