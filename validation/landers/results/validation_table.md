@@ -1,9 +1,9 @@
 # Validation table: core versus published records of real lunar landers
 
-Generated 2026-11-14T11:31:35Z by `validation/landers/compare.py`. Do not edit by hand.
+Generated 2026-11-14T12:30:06Z by `validation/landers/compare.py`. Do not edit by hand.
 
-**20 of 20 pass/fail checks pass; 0 fail; 5 comparisons are reported without a verdict.**
-Published values, sources, precision and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit eaf5634). The test is not blind: see the disclosure in `thresholds.json`.
+**52 of 52 pass/fail checks pass; 0 fail; 13 comparisons are reported without a verdict.**
+Published values, sources, precision and thresholds are in `cases.json` and `thresholds.json`, committed before the first run (commit eaf5634); the second batch of four Apollo landings is in `cases_second_batch.json` (commit af10faa), under the same rules. The test is not blind: see the disclosure in `thresholds.json`.
 
 ## Apollo 11 lunar module landing, 20 July 1969
 
@@ -101,6 +101,94 @@ Terrain: LOLA elevation model of the project (60 m grid at this latitude), terra
   - lroc elevation m: 532.000
   - dem set: lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0
   - horizon coverage complete: True
+
+## Apollo 12 lunar module landing, 19 November 1969
+
+Terrain: none (smooth sphere).
+
+| Quantity | Published | Computed | Difference | Threshold | Result |
+|---|---|---|---|---|---|
+| Sun altitude at landing (source's site coordinates) | 5.190 | 5.189 | -0.001 | < 0.05 deg | **PASS** |
+| Sun azimuth at landing (difference on the sky) | 91.160 | 91.163 | +0.003 | < 0.05 deg | **PASS** |
+| East longitude of the sub-solar point | 61.500 | 61.497 | -0.003 | < 0.05 deg | **PASS** |
+| Latitude of the sub-solar point | -1.440 | -1.446 | -0.006 | < 0.05 deg | **PASS** |
+| Earth altitude at landing (source's site coordinates) | 61.560 | 61.548 | -0.012 | < 0.05 deg | **PASS** |
+| Earth azimuth at landing (difference on the sky) | 86.950 | 86.960 | +0.005 | < 0.05 deg | **PASS** |
+| East longitude of the sub-earth point | 5.020 | 5.032 | +0.012 | < 0.05 deg | **PASS** |
+| Latitude of the sub-earth point | -1.360 | -1.365 | -0.005 | < 0.05 deg | **PASS** |
+| Sun elevation at the actual landing site and time, against the launch-window target | 5.100 | 5.149 | +0.049 |  | reported |
+| Earth elevation seen from the actual site (with parallax) against the source's value (without parallax) | 61.560 | 61.396 | -0.164 |  | reported |
+
+- *Sun azimuth at landing (difference on the sky)*: azimuth difference +0.003 deg at altitude 5.2 deg.
+- *Earth azimuth at landing (difference on the sky)*: azimuth difference +0.010 deg at altitude 61.5 deg.
+- *Sun elevation at the actual landing site and time, against the launch-window target*: The published value is a planned angle; it is not judged..
+- *Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)*: Shows the size of the parallax the source leaves out..
+
+## Apollo 14 lunar module landing, 5 February 1971
+
+Terrain: none (smooth sphere).
+
+| Quantity | Published | Computed | Difference | Threshold | Result |
+|---|---|---|---|---|---|
+| Sun altitude at landing (source's site coordinates) | 10.360 | 10.356 | -0.004 | < 0.05 deg | **PASS** |
+| Sun azimuth at landing (difference on the sky) | 89.540 | 89.550 | +0.010 | < 0.05 deg | **PASS** |
+| East longitude of the sub-solar point | 62.170 | 62.171 | +0.001 | < 0.05 deg | **PASS** |
+| Latitude of the sub-solar point | -0.210 | -0.218 | -0.008 | < 0.05 deg | **PASS** |
+| Earth altitude at landing (source's site coordinates) | 66.100 | 66.065 | -0.035 | < 0.05 deg | **PASS** |
+| Earth azimuth at landing (difference on the sky) | 96.700 | 96.809 | +0.044 | < 0.05 deg | **PASS** |
+| East longitude of the sub-earth point | 6.400 | 6.435 | +0.035 | < 0.05 deg | **PASS** |
+| Latitude of the sub-earth point | -6.070 | -6.117 | -0.047 | < 0.05 deg | **PASS** |
+| Sun elevation at the actual landing site and time, against the launch-window target | 10.300 | 10.349 | +0.049 |  | reported |
+| Earth elevation seen from the actual site (with parallax) against the source's value (without parallax) | 66.100 | 65.952 | -0.148 |  | reported |
+
+- *Sun azimuth at landing (difference on the sky)*: azimuth difference +0.010 deg at altitude 10.4 deg.
+- *Earth azimuth at landing (difference on the sky)*: azimuth difference +0.109 deg at altitude 66.1 deg.
+- *Sun elevation at the actual landing site and time, against the launch-window target*: The published value is a planned angle; it is not judged..
+- *Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)*: Shows the size of the parallax the source leaves out..
+
+## Apollo 15 lunar module landing, 30 July 1971
+
+Terrain: none (smooth sphere).
+
+| Quantity | Published | Computed | Difference | Threshold | Result |
+|---|---|---|---|---|---|
+| Sun altitude at landing (source's site coordinates) | 12.050 | 12.045 | -0.005 | < 0.05 deg | **PASS** |
+| Sun azimuth at landing (difference on the sky) | 95.730 | 95.722 | -0.008 | < 0.05 deg | **PASS** |
+| East longitude of the sub-solar point | 80.330 | 80.338 | +0.008 | < 0.05 deg | **PASS** |
+| Latitude of the sub-solar point | 0.240 | 0.244 | +0.004 | < 0.05 deg | **PASS** |
+| Earth altitude at landing (source's site coordinates) | 69.280 | 69.290 | +0.010 | < 0.05 deg | **PASS** |
+| Earth azimuth at landing (difference on the sky) | 203.000 | 203.001 | +0.000 | < 0.05 deg | **PASS** |
+| East longitude of the sub-earth point | -4.350 | -4.347 | +0.003 | < 0.05 deg | **PASS** |
+| Latitude of the sub-earth point | 6.840 | 6.846 | +0.006 | < 0.05 deg | **PASS** |
+| Sun elevation at the actual landing site and time, against the launch-window target | 12.200 | 12.025 | -0.175 |  | reported |
+| Earth elevation seen from the actual site (with parallax) against the source's value (without parallax) | 69.280 | 69.180 | -0.100 |  | reported |
+
+- *Sun azimuth at landing (difference on the sky)*: azimuth difference -0.008 deg at altitude 12.0 deg.
+- *Earth azimuth at landing (difference on the sky)*: azimuth difference +0.001 deg at altitude 69.3 deg.
+- *Sun elevation at the actual landing site and time, against the launch-window target*: The published value is a planned angle; it is not judged..
+- *Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)*: Shows the size of the parallax the source leaves out..
+
+## Apollo 17 lunar module landing, 11 December 1972
+
+Terrain: none (smooth sphere).
+
+| Quantity | Published | Computed | Difference | Threshold | Result |
+|---|---|---|---|---|---|
+| Sun altitude at landing (source's site coordinates) | 13.330 | 13.347 | +0.017 | < 0.05 deg | **PASS** |
+| Sun azimuth at landing (difference on the sky) | 95.830 | 95.845 | +0.014 | < 0.05 deg | **PASS** |
+| East longitude of the sub-solar point | 106.260 | 106.236 | -0.024 | < 0.05 deg | **PASS** |
+| Latitude of the sub-solar point | -0.760 | -0.769 | -0.009 | < 0.05 deg | **PASS** |
+| Earth altitude at landing (source's site coordinates) | 45.520 | 45.479 | -0.041 | < 0.05 deg | **PASS** |
+| Earth azimuth at landing (difference on the sky) | 240.880 | 240.894 | +0.010 | < 0.05 deg | **PASS** |
+| East longitude of the sub-earth point | -7.100 | -7.138 | -0.038 | < 0.05 deg | **PASS** |
+| Latitude of the sub-earth point | -4.250 | -4.265 | -0.015 | < 0.05 deg | **PASS** |
+| Sun elevation at the actual landing site and time, against the launch-window target | 13.000 | 13.350 | +0.350 |  | reported |
+| Earth elevation seen from the actual site (with parallax) against the source's value (without parallax) | 45.520 | 45.282 | -0.238 |  | reported |
+
+- *Sun azimuth at landing (difference on the sky)*: azimuth difference +0.015 deg at altitude 13.3 deg.
+- *Earth azimuth at landing (difference on the sky)*: azimuth difference +0.014 deg at altitude 45.5 deg.
+- *Sun elevation at the actual landing site and time, against the launch-window target*: The published value is a planned angle; it is not judged..
+- *Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)*: Shows the size of the parallax the source leaves out..
 
 ## Sources
 

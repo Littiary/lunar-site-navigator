@@ -1,15 +1,15 @@
 {
-  "generated_utc": "2026-11-14T11:31:35Z",
+  "generated_utc": "2026-11-14T12:30:06Z",
   "core": {
     "frame": "MOON_ME_DE440_ME421",
     "aberration_correction": "LT+S",
     "kernel_set_id": "bfe870fccfa5"
   },
   "summary": {
-    "pass_fail_checks": 20,
-    "passed": 20,
+    "pass_fail_checks": 52,
+    "passed": 52,
     "failed": 0,
-    "reported_without_verdict": 5
+    "reported_without_verdict": 13
   },
   "cases": [
     {
@@ -391,6 +391,518 @@
           "threshold": null,
           "status": null,
           "note": "difference: days from computed sunrise to the start of 22 September 2023 (IST)"
+        }
+      ]
+    },
+    {
+      "id": "apollo12",
+      "mission": "Apollo 12 lunar module landing, 19 November 1969",
+      "terrain": "none (smooth sphere)",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo12_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 5.19,
+          "computed": 5.18920279822571,
+          "unit": "deg",
+          "difference": -0.0007972017742901016,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 91.16,
+          "computed": 91.16327704084964,
+          "unit": "deg",
+          "difference": 0.0032636097677670346,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.003 deg at altitude 5.2 deg"
+        },
+        {
+          "id": "apollo12_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 61.5,
+          "computed": 61.49654073084082,
+          "unit": "deg",
+          "difference": -0.003459269159179712,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": -1.44,
+          "computed": -1.4458272104496457,
+          "unit": "deg",
+          "difference": -0.005827210449645737,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 61.56,
+          "computed": 61.54794151908416,
+          "unit": "deg",
+          "difference": -0.012058480915840164,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 86.95,
+          "computed": 86.96033722614665,
+          "unit": "deg",
+          "difference": 0.004924894920200462,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.010 deg at altitude 61.5 deg"
+        },
+        {
+          "id": "apollo12_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": 5.02,
+          "computed": 5.031580017478483,
+          "unit": "deg",
+          "difference": 0.011580017478479476,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": -1.36,
+          "computed": -1.3647300128394857,
+          "unit": "deg",
+          "difference": -0.004730012839485598,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo12_sun_at_actual_site",
+          "kind": "reported",
+          "quantity": "Sun elevation at the actual landing site and time, against the launch-window target",
+          "published": 5.1,
+          "computed": 5.148835131574572,
+          "unit": "deg",
+          "difference": 0.04883513157457209,
+          "threshold": null,
+          "status": null,
+          "note": "The published value is a planned angle; it is not judged."
+        },
+        {
+          "id": "apollo12_earth_topocentric",
+          "kind": "reported",
+          "quantity": "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)",
+          "published": 61.56,
+          "computed": 61.395683366280245,
+          "unit": "deg",
+          "difference": -0.16431663371975702,
+          "threshold": null,
+          "status": null,
+          "note": "Shows the size of the parallax the source leaves out."
+        }
+      ]
+    },
+    {
+      "id": "apollo14",
+      "mission": "Apollo 14 lunar module landing, 5 February 1971",
+      "terrain": "none (smooth sphere)",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo14_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 10.36,
+          "computed": 10.355875368995008,
+          "unit": "deg",
+          "difference": -0.004124631004991386,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 89.54,
+          "computed": 89.55005029611704,
+          "unit": "deg",
+          "difference": 0.009886578808853049,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.010 deg at altitude 10.4 deg"
+        },
+        {
+          "id": "apollo14_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 62.17,
+          "computed": 62.171431879791,
+          "unit": "deg",
+          "difference": 0.0014318797909993464,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": -0.21,
+          "computed": -0.2181604007004284,
+          "unit": "deg",
+          "difference": -0.008160400700428394,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 66.1,
+          "computed": 66.06528627796386,
+          "unit": "deg",
+          "difference": -0.034713722036130434,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 96.7,
+          "computed": 96.80922525857298,
+          "unit": "deg",
+          "difference": 0.044312188274586634,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.109 deg at altitude 66.1 deg"
+        },
+        {
+          "id": "apollo14_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": 6.4,
+          "computed": 6.434637497369429,
+          "unit": "deg",
+          "difference": 0.034637497369431,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": -6.07,
+          "computed": -6.117052797180222,
+          "unit": "deg",
+          "difference": -0.04705279718022215,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo14_sun_at_actual_site",
+          "kind": "reported",
+          "quantity": "Sun elevation at the actual landing site and time, against the launch-window target",
+          "published": 10.3,
+          "computed": 10.3493833236426,
+          "unit": "deg",
+          "difference": 0.049383323642599564,
+          "threshold": null,
+          "status": null,
+          "note": "The published value is a planned angle; it is not judged."
+        },
+        {
+          "id": "apollo14_earth_topocentric",
+          "kind": "reported",
+          "quantity": "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)",
+          "published": 66.1,
+          "computed": 65.95168457585409,
+          "unit": "deg",
+          "difference": -0.14831542414590615,
+          "threshold": null,
+          "status": null,
+          "note": "Shows the size of the parallax the source leaves out."
+        }
+      ]
+    },
+    {
+      "id": "apollo15",
+      "mission": "Apollo 15 lunar module landing, 30 July 1971",
+      "terrain": "none (smooth sphere)",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo15_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 12.05,
+          "computed": 12.04530191388768,
+          "unit": "deg",
+          "difference": -0.004698086112320254,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 95.73,
+          "computed": 95.72163179867289,
+          "unit": "deg",
+          "difference": -0.008183957851696623,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference -0.008 deg at altitude 12.0 deg"
+        },
+        {
+          "id": "apollo15_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 80.33,
+          "computed": 80.3379961248669,
+          "unit": "deg",
+          "difference": 0.007996124866906484,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": 0.24,
+          "computed": 0.243729159706422,
+          "unit": "deg",
+          "difference": 0.003729159706422014,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 69.28,
+          "computed": 69.29044754346259,
+          "unit": "deg",
+          "difference": 0.010447543462589692,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 203.0,
+          "computed": 203.00102139591792,
+          "unit": "deg",
+          "difference": 0.00036119705331808487,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.001 deg at altitude 69.3 deg"
+        },
+        {
+          "id": "apollo15_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": -4.35,
+          "computed": -4.347176089113732,
+          "unit": "deg",
+          "difference": 0.0028239108862635476,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": 6.84,
+          "computed": 6.846140039173966,
+          "unit": "deg",
+          "difference": 0.006140039173966549,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo15_sun_at_actual_site",
+          "kind": "reported",
+          "quantity": "Sun elevation at the actual landing site and time, against the launch-window target",
+          "published": 12.2,
+          "computed": 12.024607379568549,
+          "unit": "deg",
+          "difference": -0.17539262043145065,
+          "threshold": null,
+          "status": null,
+          "note": "The published value is a planned angle; it is not judged."
+        },
+        {
+          "id": "apollo15_earth_topocentric",
+          "kind": "reported",
+          "quantity": "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)",
+          "published": 69.28,
+          "computed": 69.1796935750676,
+          "unit": "deg",
+          "difference": -0.10030642493239839,
+          "threshold": null,
+          "status": null,
+          "note": "Shows the size of the parallax the source leaves out."
+        }
+      ]
+    },
+    {
+      "id": "apollo17",
+      "mission": "Apollo 17 lunar module landing, 11 December 1972",
+      "terrain": "none (smooth sphere)",
+      "recomputed": true,
+      "rows": [
+        {
+          "id": "apollo17_sun_altitude",
+          "kind": "pass_fail",
+          "quantity": "Sun altitude at landing (source's site coordinates)",
+          "published": 13.33,
+          "computed": 13.347342510086177,
+          "unit": "deg",
+          "difference": 0.017342510086177043,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_sun_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Sun azimuth at landing (difference on the sky)",
+          "published": 95.83,
+          "computed": 95.84485956916366,
+          "unit": "deg",
+          "difference": 0.014458189234647763,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.015 deg at altitude 13.3 deg"
+        },
+        {
+          "id": "apollo17_sub_solar_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-solar point",
+          "published": 106.26,
+          "computed": 106.23603689705519,
+          "unit": "deg",
+          "difference": -0.02396310294483328,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_sub_solar_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-solar point",
+          "published": -0.76,
+          "computed": -0.7694268703452957,
+          "unit": "deg",
+          "difference": -0.009426870345295657,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_earth_altitude",
+          "kind": "pass_fail",
+          "quantity": "Earth altitude at landing (source's site coordinates)",
+          "published": 45.52,
+          "computed": 45.47857166452747,
+          "unit": "deg",
+          "difference": -0.04142833547253133,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_earth_azimuth",
+          "kind": "pass_fail",
+          "quantity": "Earth azimuth at landing (difference on the sky)",
+          "published": 240.88,
+          "computed": 240.89435332839588,
+          "unit": "deg",
+          "difference": 0.010064208923130551,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": "azimuth difference +0.014 deg at altitude 45.5 deg"
+        },
+        {
+          "id": "apollo17_sub_earth_longitude",
+          "kind": "pass_fail",
+          "quantity": "East longitude of the sub-earth point",
+          "published": -7.1,
+          "computed": -7.137876881233571,
+          "unit": "deg",
+          "difference": -0.037876881233557924,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_sub_earth_latitude",
+          "kind": "pass_fail",
+          "quantity": "Latitude of the sub-earth point",
+          "published": -4.25,
+          "computed": -4.26514272676002,
+          "unit": "deg",
+          "difference": -0.015142726760020153,
+          "threshold": 0.05,
+          "status": "PASS",
+          "note": ""
+        },
+        {
+          "id": "apollo17_sun_at_actual_site",
+          "kind": "reported",
+          "quantity": "Sun elevation at the actual landing site and time, against the launch-window target",
+          "published": 13.0,
+          "computed": 13.34957575395932,
+          "unit": "deg",
+          "difference": 0.3495757539593196,
+          "threshold": null,
+          "status": null,
+          "note": "The published value is a planned angle; it is not judged."
+        },
+        {
+          "id": "apollo17_earth_topocentric",
+          "kind": "reported",
+          "quantity": "Earth elevation seen from the actual site (with parallax) against the source's value (without parallax)",
+          "published": 45.52,
+          "computed": 45.281739495982755,
+          "unit": "deg",
+          "difference": -0.23826050401724785,
+          "threshold": null,
+          "status": null,
+          "note": "Shows the size of the parallax the source leaves out."
         }
       ]
     }
