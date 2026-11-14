@@ -61,6 +61,12 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - pick a site, an observer height and a time sample (slider, ±1 h, ±1 day, play, jump to the previous or next package event);
   - the SVG shows the terrain horizon (`horizon.elevation_deg`) and the Sun and the Earth at that sample (`timeline.series`);
   - tables list the values at that sample, every window that contains it, and the events around it.
+- **Sky panorama (Task 7 C, `js/sky.js`):**
+  - a 360° panorama: azimuth left to right, wrapping around, and elevation bottom to top;
+  - the terrain horizon, plus the paths of the Sun and the Earth over ±1 day to the whole window around the selected time;
+  - a path is solid where the package window `<body>_visible` contains the sample and faded elsewhere (a time comparison, no threshold);
+  - drag to pan, use the wheel, a pinch or the buttons to zoom; pointing at a path shows that sample's package values, and clicking or tapping it selects that time;
+  - angles map linearly to pixels, with no trigonometry; a built-in check reads the drawn horizon back and compares it with the package (it agrees to within floating-point rounding).
 - **3-D view (three.js 0.160.0 from jsDelivr):**
   - the horizon profile is drawn on a sphere around the observer, with the Sun and the Earth placed by their package directions behind it, so the terrain hides them when they are below its horizon;
   - drag to look around, use the wheel or the buttons to zoom;

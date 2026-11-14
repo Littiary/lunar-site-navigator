@@ -29,7 +29,7 @@ def strip_comments(source: str) -> str:
 
 class NoScienceInTheBrowserTests(unittest.TestCase):
     def test_loader_and_2d_viewer_use_no_numerical_functions(self):
-        for name in ("package.js", "panel.js", "viewer.js", "compare.js"):
+        for name in ("package.js", "panel.js", "viewer.js", "compare.js", "sky.js"):
             code = strip_comments((VIEWER / "js" / name).read_text(encoding="utf-8"))
             self.assertEqual(NUMERIC.findall(code), [], name)
 
@@ -43,7 +43,7 @@ class NoScienceInTheBrowserTests(unittest.TestCase):
         self.assertTrue(NUMERIC.findall(inside))  # the transform is where it should be
 
     def test_no_value_is_interpolated(self):
-        for name in ("panel.js", "viewer.js", "compare.js", "view3d.js"):
+        for name in ("panel.js", "viewer.js", "compare.js", "sky.js", "view3d.js"):
             code = strip_comments((VIEWER / "js" / name).read_text(encoding="utf-8")).lower()
             self.assertNotIn("interpolat", code, name)
 
@@ -53,7 +53,7 @@ class ExternalResourceTests(unittest.TestCase):
         html = (VIEWER / "index.html").read_text(encoding="utf-8")
         urls = re.findall(r"https?://[^\s\"'<>)]+", html)
         self.assertEqual(urls, ["https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"])
-        for name in ("package.js", "panel.js", "viewer.js", "compare.js", "view3d.js"):
+        for name in ("package.js", "panel.js", "viewer.js", "compare.js", "sky.js", "view3d.js"):
             code = (VIEWER / "js" / name).read_text(encoding="utf-8")
             self.assertEqual(re.findall(r"""(?:from|import)\s*\(?\s*["'](https?:[^"']+)""", code), [], name)
 
@@ -81,6 +81,22 @@ class SplitScreenTests(unittest.TestCase):
         code = (VIEWER / "js" / "compare.js").read_text(encoding="utf-8")
         self.assertIn("nearestSample(site, et)", code)
         self.assertIn("sampleUtc(site, i)", code)
+
+
+class SkyPanoramaTests(unittest.TestCase):
+    """Task 7 C: the 360° sky panorama is a tab of the single-site viewer."""
+
+    def test_viewer_has_a_sky_tab_and_panel(self):
+        html = (VIEWER / "index.html").read_text(encoding="utf-8")
+        for needle in ('id="tab-sky"', 'id="panel-sky"', 'id="sky"', 'id="sky-span"', 'id="check-sky"'):
+            self.assertIn(needle, html)
+
+    def test_paths_follow_the_package_window_and_horizon_is_checked(self):
+        code = (VIEWER / "js" / "sky.js").read_text(encoding="utf-8")
+        self.assertIn("_visible`", code)          # path style from the package window, not a threshold
+        self.assertIn("containing(", code)
+        self.assertIn("check()", code)            # drawn horizon read back against the package
+        self.assertNotIn("fraction[j] >", code)   # no threshold applied to a package value
 
 
 if __name__ == "__main__":

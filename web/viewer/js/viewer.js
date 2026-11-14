@@ -15,7 +15,7 @@ const INDEX_URL = params.get("index") || "../packages/index.json";
 const NOTICE_URL = params.get("notice") || "../notice.json";
 
 const $ = (id) => document.getElementById(id);
-const state = { index: null, site: null, h: 0, i: 0, data: null, view3d: null, playing: null };
+const state = { index: null, site: null, h: 0, i: 0, data: null, view3d: null, sky: null, playing: null };
 
 function showError(message) {
   const box = $("error");
@@ -60,6 +60,7 @@ function render() {
   }
   $("footer").innerHTML = footerHtml(site);
   if (state.view3d) state.view3d.update(viewInput());
+  if (state.sky && !$("panel-sky").hidden) updateSky();
   const q = new URLSearchParams(location.search);
   q.set("site", site.manifest.site.site_id); q.set("h", String(h)); q.set("i", String(i));
   history.replaceState(null, "", `?${q}`);
@@ -109,11 +110,33 @@ function wire() {
     button.textContent = "Pause"; button.setAttribute("aria-pressed", "true");
     state.playing = setInterval(() => setSample(state.i + 1 >= state.site.timeline.time.count ? 0 : state.i + 1), 120);
   });
-  const tabs = [["tab-2d", "panel-2d"], ["tab-3d", "panel-3d"]];
+  const tabs = [["tab-2d", "panel-2d"], ["tab-sky", "panel-sky"], ["tab-3d", "panel-3d"]];
   tabs.forEach(([tab, panel]) => $(tab).addEventListener("click", async () => {
     tabs.forEach(([t, p]) => { $(t).setAttribute("aria-selected", String(t === tab)); $(p).hidden = t !== tab; });
     if (tab === "tab-3d") await open3d();
+    if (tab === "tab-sky") await openSky();
   }));
+  $("sky-span").addEventListener("change", () => updateSky());
+  ["sky-zoom-in", "sky-zoom-out", "sky-center-sun", "sky-center-earth", "sky-reset"].forEach((id) =>
+    $(id).addEventListener("click", () => state.sky && state.sky.command(id)));
+}
+
+async function openSky() {
+  if (!state.sky) {
+    const { createSky } = await import("./sky.js");
+    state.sky = createSky($("sky"), { onPick: (j) => setSample(j) });
+  }
+  updateSky();
+  state.sky.resize();
+}
+
+function updateSky() {
+  if (!state.sky || !state.site) return;
+  const v = $("sky-span").value;
+  const span = v === "all" && state.site.timeline ? state.site.timeline.time.count : Number(v);
+  state.sky.update({ site: state.site, data: state.data, h: state.h, i: state.i, spanSamples: span });
+  const c = state.sky.check();
+  if (c) $("check-sky").textContent = `Horizon check: ${c.vertices} vertices read back from the drawing differ from the package profile by at most ${c.maxElevationDiffDeg.toExponential(1)}° in elevation and ${c.maxAzimuthDiffDeg.toExponential(1)}° in azimuth.`;
 }
 
 async function open3d() {

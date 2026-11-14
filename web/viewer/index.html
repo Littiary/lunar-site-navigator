@@ -43,12 +43,30 @@
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tab-2d" aria-selected="true">Horizon and time</button>
+    <button type="button" role="tab" id="tab-sky" aria-selected="false">Sky panorama</button>
     <button type="button" role="tab" id="tab-3d" aria-selected="false">3-D view</button>
   </nav>
 
   <section id="panel-2d" role="tabpanel" aria-labelledby="tab-2d">
     <div class="chart"><svg id="horizon" role="img" aria-label="Terrain horizon with the Sun and the Earth"></svg></div>
     <p class="muted small">Grey: terrain horizon at the selected observer height (<code>horizon.elevation_deg</code>). Markers: disc centres of the Sun and the Earth at the selected sample (<code>timeline.series</code>), without terrain.</p>
+  </section>
+
+  <section id="panel-sky" role="tabpanel" aria-labelledby="tab-sky" hidden>
+    <div class="time-row">
+      <label>Paths for <select id="sky-span">
+        <option value="24">±1 day</option>
+        <option value="168" selected>±7 days</option>
+        <option value="360">±15 days</option>
+        <option value="720">±30 days</option>
+        <option value="all">the whole time window</option>
+      </select></label>
+      <button type="button" id="sky-zoom-in">Zoom in</button><button type="button" id="sky-zoom-out">Zoom out</button>
+      <button type="button" id="sky-center-sun">Centre on the Sun</button><button type="button" id="sky-center-earth">Centre on the Earth</button>
+      <button type="button" id="sky-reset">Whole horizon</button>
+    </div>
+    <div id="sky" class="sky"></div>
+    <p class="muted small">360° panorama: azimuth left to right, elevation bottom to top. Grey: terrain horizon at the selected observer height. Lines: paths of the Sun and the Earth (disc centres, <code>timeline.series</code>) around the selected time, solid where the package window <code>&lt;body&gt;_visible</code> holds, faded where it does not. Drag to pan, use the wheel, a pinch or the buttons to zoom; point at a path to read its values, click or tap it to go to that time. <span id="check-sky"></span></p>
   </section>
 
   <section id="panel-3d" role="tabpanel" aria-labelledby="tab-3d" hidden>
