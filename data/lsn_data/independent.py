@@ -39,10 +39,10 @@ def _design(g, r):
     return np.column_stack([np.ones_like(gx), gx, gy, gx * (-y) + gy * x, gx * x + gy * y])
 
 
-def fit_displacement(d, g, r, block_m=10_000.0, n_boot=500, seed=SEED) -> dict:
+def fit_displacement(d, g, r, block_m=10_000.0, n_boot=500, seed=SEED, d_max=50.0, g_min=0.02, g_max=0.5) -> dict:
     """Least squares of d = c + g.(T + delta z x r + eps r) with block-bootstrap standard errors."""
     gl = np.hypot(g[:, 0], g[:, 1])
-    use = np.isfinite(d) & np.isfinite(gl) & (np.abs(d) <= 50.0) & (gl >= 0.02) & (gl <= 0.5)
+    use = np.isfinite(d) & np.isfinite(gl) & (np.abs(d) <= d_max) & (gl >= g_min) & (gl <= g_max)
     d, g, r = d[use], g[use], r[use]
     A = _design(g, r)
     p, *_ = np.linalg.lstsq(A, d, rcond=None)

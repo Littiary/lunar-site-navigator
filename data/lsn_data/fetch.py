@@ -332,3 +332,52 @@ def cross_check(root: Path, rel_paths: list[str] | None = None) -> list[str]:
     with ThreadPoolExecutor(max_workers=3) as ex:
         list(ex.map(one, todo))
     return problems
+
+
+def read_ranges(url: str, ranges: list[tuple[int, int]], per_request: int = 100, retries: int = 6) -> list[bytes]:
+    """Bytes [a, b] (inclusive) of ``url`` for every (a, b) in ``ranges``, many ranges per HTTP request
+    (multipart/byteranges). Order of the result follows ``ranges``."""
+    import re
+
+    out: dict[tuple[int, int], bytes] = {}
+    for k in range(0, len(ranges), per_request):
+        batch = ranges[k : k + per_request]
+        spec = ",".join(f"{a}-{b}" for a, b in batch)
+        for attempt in range(retries + 1):
+            try:
+                with _open(url, {"Range": f"bytes={spec}"}, timeout=180) as r:
+                    ctype = r.headers.get("Content-Type", "")
+                    body = r.read()
+                    if r.status != 206:
+                        raise OSError(f"range request not honoured (status {r.status})")
+                    if len(batch) == 1 and "multipart" not in ctype:
+                        out[batch[0]] = body
+                        break
+                    m = re.search(r"boundary=([^;]+)", ctype)
+                    if not m:
+                        raise OSError("no multipart boundary")
+                    boundary = ("--" + m.group(1).strip().strip('"')).encode()
+                    pos = 0
+                    while True:
+                        i = body.find(boundary, pos)
+                        if i < 0:
+                            break
+                        j = body.find(b"\r\n\r\n", i)
+                        if j < 0:
+                            break
+                        head = body[i:j].decode("latin1")
+                        cr = re.search(r"Content-Range:\s*bytes\s+(\d+)-(\d+)/", head, re.I)
+                        if not cr:
+                            break
+                        a, b = int(cr.group(1)), int(cr.group(2))
+                        out[(a, b)] = body[j + 4 : j + 4 + (b - a + 1)]
+                        pos = j + 4 + (b - a + 1)
+                    missing = [rg for rg in batch if rg not in out]
+                    if missing:
+                        raise OSError(f"{len(missing)} ranges missing from the response")
+                break
+            except (urllib.error.URLError, TimeoutError, ConnectionError, OSError):
+                if attempt == retries:
+                    raise
+                time.sleep(min(5 * (attempt + 1), 30))
+    return [out[rg] for rg in ranges]
