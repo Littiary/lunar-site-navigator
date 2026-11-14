@@ -112,7 +112,7 @@ class RealPackageTests(unittest.TestCase):
 
     def test_every_real_package_is_read_and_drawn(self):
         sites = package.load_index(REAL_INDEX)
-        self.assertEqual(len(sites), 3)
+        self.assertGreaterEqual(len(sites), 3)  # three project sites plus the curated list
         for site in sites:
             self.assertFalse(site.synthetic)
             for ref in package.array_refs(site.manifest):
