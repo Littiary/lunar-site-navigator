@@ -212,9 +212,10 @@ def run_fetch(root: Path, products: list[str], prefer: str = "mit", force: bool 
                 if pid == "_docs":
                     _fill_docs(m, root, prod)
                 continue
-            info = _label_info(raw_dir(root) / pid / lbl.local_name)
+            pdir = root / prod.base / pid
+            info = _label_info(pdir / lbl.local_name)
             for spec in prod.files:
-                rec = m["files"][(raw_dir(root) / pid / spec.local_name).relative_to(root).as_posix()]
+                rec = m["files"][(pdir / spec.local_name).relative_to(root).as_posix()]
                 rec["product_id"] = info["product_id"] or pid
                 rec["product_version"] = info["product_version"]
                 rec["data_set_id"] = info["data_set_id"]
