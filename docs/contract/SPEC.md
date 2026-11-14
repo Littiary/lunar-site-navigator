@@ -176,7 +176,7 @@ same package ids.
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
 `bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`),
-and since 0.7 `terrain_patches` (the patches that were written, finest first; absent if there are none).
+and since 0.7 `terrain_patches` (the patches that were written, in the canonical order of the core; absent if there are none).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -551,7 +551,7 @@ right.
 | `notice` | The rule above in one sentence |
 | `frame` | The frame in words: local East/North/Up of the site (`site.enu`), origin at the ground point of the site (`site.position_km`), metres |
 | `method` | Method card id |
-| `patches[]` | Finest first |
+| `patches[]` | The patches. A reader selects a patch by its `id`, never by its position in the list (see below) |
 
 A patch is a square grid centred on the site:
 
@@ -564,6 +564,13 @@ A patch is a square grid centred on the site:
 | `up_m` | Array reference: float32, shape `[count_north, count_east]`, metres. NaN where the elevation data ends; such nodes must be left out of the mesh |
 | `up_min_m`, `up_max_m` | Range of the values (`null` if there is none) |
 | `sources[]` | Where the heights were read: `product_id`, `level` (0 is the elevation product itself, level k its block average over 2^k x 2^k pixels), `pixel_m`, `statistic`, `sha256` of the file read, `derived_from_sha256` (the product's data file, for a derived level), `node_share`. The products are listed in `inputs.dem.layers[]` with their source address. Empty in a synthetic package |
+
+**Patches are selected by `id`; the order of the list is not part of the contract.** A
+reader looks a patch up by its `id` and must not take the first, second or third entry
+for `near`, `mid` or `far`, nor assume that there are three: a scenario may state other
+patches, for example a 5 m patch `site` around the site, and the package then holds
+that one as well. (The core writes the list with the smallest spacing first. Until
+0.11 this section stated that order; a reader must not rely on it.)
 
 Placing a vertex needs no projection and no correction for the curvature of the Moon,
 which is already in the values (on a smooth sphere `up` falls off as
@@ -590,7 +597,8 @@ The default patches (a scenario may state others in `terrain_patches`: at most 8
 | `mid` | 16 km | 80 m | 201 x 201 | 161 604 | its block average over 4 x 4 pixels |
 | `far` | 64 km | 320 m | 201 x 201 | 161 604 | its block average over 16 x 16 pixels |
 
-That is 0.49 MB per site, raw. Where patches overlap, draw the finest. Terrain beyond the
+That is 0.49 MB per site, raw. Where patches overlap, draw the one with the smallest
+`spacing_m`. Terrain beyond the
 largest patch is not in the package as a surface; its silhouette is
 `horizon.elevation_deg`, with `horizon.distance_m` saying how far away it is.
 
@@ -739,6 +747,7 @@ Additive; nothing that existed in 0.10 changed its meaning, name, unit or layout
 
 - Optional descriptive labels `programme` and `category` in `sites[]` of a scenario, in `site` of a site package and in the site entries of the index (5.2, 7). They are not part of `request`: package ids do not depend on them.
 - No change to any number. A reader written for 0.10 reads 0.11 packages unchanged and finds two fields it does not know.
+- Clarification, no change to any file: terrain patches are selected by `id`; the order and the number of `terrain.patches[]` are not part of the contract (5.9). Section 5.9 said "finest first" since 0.7. The core still writes them that way, but a reader must not rely on it: a package may hold a patch finer than `near`.
 
 ### 0.10 (14 November 2026)
 
