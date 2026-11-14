@@ -125,6 +125,26 @@ class MoonTerrain:
                 levels[sel] = self._cyl_level(c, want[sel], statistic)
         return ids.reshape(shape), levels.reshape(shape)
 
+    def describe_point(self, lon_deg: float, lat_deg: float) -> dict:
+        """Product, pixel size and terrain class of the finest data at one point, for provenance labels.
+
+        ``terrain_class``: "polar" (a polar stereographic product, 20 m or 60 m for LOLA), "global_coarse" (a
+        cylindrical mosaic: 118 m for SLDEM2015_256, 237 m for LDEM_128; terrain closer than a few pixels is not
+        resolved, so horizons there are a coarser class than polar ones), or "none".
+        """
+        ids, _ = self.source(lon_deg, lat_deg)
+        pid = str(np.asarray(ids).ravel()[0]) or None
+        if pid is None:
+            return {"product_id": None, "pixel_m": None, "terrain_class": "none", "note": "no terrain product covers the point"}
+        p = self.product(pid)
+        if isinstance(p, CylMosaic):
+            px = p.pixel_m(0)
+            return {"product_id": pid, "pixel_m": px, "terrain_class": "global_coarse",
+                    "note": f"cylindrical product with {px:.0f} m pixels (north-south): terrain within a few pixels "
+                            "(about {:.0f} m) is not resolved; horizons from it are a coarser class than from the polar products".format(3 * px)}
+        return {"product_id": pid, "pixel_m": p.grid0.pixel_m, "terrain_class": "polar",
+                "note": f"polar stereographic product with {p.grid0.pixel_m:.0f} m pixels"}
+
     # -- description -------------------------------------------------------------------------------
     def levels(self) -> list[dict]:
         out = [d for t in self.polar for d in t.levels()]
