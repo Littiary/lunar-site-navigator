@@ -3,6 +3,8 @@
 #include "LunarSiteNavigator.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Materials/Material.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "ProceduralMeshComponent.h"
 
@@ -65,7 +67,8 @@ ALsnSiteScene::ALsnSiteScene()
 	SunLight->SetupAttachment(Root);
 	SunLight->SetMobility(EComponentMobility::Movable);
 	SunLight->SetIntensity(SunLightLux);
-	SunLight->SetCastShadows(true);
+	// -LsnNoShadows exists for one measurement: whether a pattern on the ground is a shadow or shading.
+	SunLight->SetCastShadows(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoShadows")));
 	SunLight->SetAtmosphereSunLight(false);
 	// The terrain reaches out to the package's horizon search radius; shadows must not be cut off before it.
 	SunLight->DynamicShadowDistanceMovableLight = 1.0e9f;
@@ -260,7 +263,9 @@ void ALsnSiteScene::RebuildGeometry()
 	UnknownTerrainSamples = 0;
 	if (bHasRealTerrain)
 	{
-		LsnMesh::BuildGridTerrain(Frame, Package, HeightIndex, TerrainGrid, RegolithAlbedo, TerrainData, SkippedHorizonSamples, UnknownTerrainSamples);
+		// -LsnRawNormals shows the unsmoothed normals, for comparison.
+		const double Smoothing = FParse::Param(FCommandLine::Get(), TEXT("LsnRawNormals")) ? 0.0 : LsnMesh::DefaultNormalSmoothingM;
+		LsnMesh::BuildGridTerrain(Frame, Package, HeightIndex, TerrainGrid, RegolithAlbedo, Smoothing, TerrainData, SkippedHorizonSamples, UnknownTerrainSamples);
 	}
 	else
 	{

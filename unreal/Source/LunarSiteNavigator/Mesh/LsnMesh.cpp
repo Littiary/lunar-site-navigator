@@ -1,5 +1,6 @@
 #include "Mesh/LsnMesh.h"
 
+#include "Algo/BinarySearch.h"
 #include "Package/LsnPackage.h"
 #include "Terrain/LsnTerrainGrid.h"
 
@@ -157,8 +158,105 @@ double LsnMesh::CraterDepthM(double EastM, double NorthM, uint32 Seed)
 	return Depth;
 }
 
+namespace
+{
+	/**
+	 * Heights of a polar terrain grid averaged over a square of half-width RadiusM, for
+	 * normals only. The grid is first read onto a square raster in metres east and north
+	 * of the site (averaging on the polar grid itself would wipe out a plain tilt near the
+	 * site, where one ring is a small circle), then averaged twice with a running mean.
+	 */
+	class FSmoothedHeights
+	{
+	public:
+		FSmoothedHeights(const TArray<double>& InHeightsM, const TArray<double>& InRingsM, int32 InNumAz, double InSiteHeightM, double RadiusM, double ExtentM)
+			: HeightsM(InHeightsM), RingsM(InRingsM), NumAz(InNumAz), NumRings(InRingsM.Num()), SiteHeightM(InSiteHeightM), Extent(ExtentM + 2.0 * RadiusM)
+		{
+			Cell = FMath::Max(RadiusM / 4.0, 1.0);
+			Size = 2 * FMath::CeilToInt32(Extent / Cell) + 1;
+			Raster.SetNumUninitialized(Size * Size);
+			for (int32 J = 0; J < Size; ++J)
+			{
+				for (int32 I = 0; I < Size; ++I)
+				{
+					Raster[J * Size + I] = Polar(-Extent + I * Cell, -Extent + J * Cell);
+				}
+			}
+			const int32 Half = FMath::Max(FMath::RoundToInt32(RadiusM / Cell), 1);
+			TArray<double> Line, Sum;
+			for (int32 Pass = 0; Pass < 2; ++Pass)
+			{
+				for (int32 Axis = 0; Axis < 2; ++Axis)
+				{
+					Line.SetNumUninitialized(Size);
+					Sum.SetNumUninitialized(Size + 1);
+					for (int32 Other = 0; Other < Size; ++Other)
+					{
+						Sum[0] = 0.0;
+						for (int32 K = 0; K < Size; ++K)
+						{
+							Line[K] = Raster[Axis == 0 ? Other * Size + K : K * Size + Other];
+							Sum[K + 1] = Sum[K] + Line[K];
+						}
+						for (int32 K = 0; K < Size; ++K)
+						{
+							// A symmetric window, shortened equally on both sides at the edge, keeps a tilt a tilt.
+							const int32 Reach = FMath::Min3(Half, K, Size - 1 - K);
+							Raster[Axis == 0 ? Other * Size + K : K * Size + Other] = (Sum[K + Reach + 1] - Sum[K - Reach]) / (2 * Reach + 1);
+						}
+					}
+				}
+			}
+		}
+
+		/** Averaged height at a point east and north of the site, metres. */
+		double At(double EastM, double NorthM) const
+		{
+			const double X = FMath::Clamp((EastM + Extent) / Cell, 0.0, static_cast<double>(Size - 1) - 1e-9);
+			const double Y = FMath::Clamp((NorthM + Extent) / Cell, 0.0, static_cast<double>(Size - 1) - 1e-9);
+			const int32 I = static_cast<int32>(X), J = static_cast<int32>(Y);
+			const double U = X - I, V = Y - J;
+			return (1.0 - V) * ((1.0 - U) * Raster[J * Size + I] + U * Raster[J * Size + I + 1]) + V * ((1.0 - U) * Raster[(J + 1) * Size + I] + U * Raster[(J + 1) * Size + I + 1]);
+		}
+
+	private:
+		/** Height of the polar grid at a point, linear between its samples (and between the site and the first ring). */
+		double Polar(double EastM, double NorthM) const
+		{
+			const double Distance = FMath::Sqrt(EastM * EastM + NorthM * NorthM);
+			double Az = FMath::RadiansToDegrees(FMath::Atan2(EastM, NorthM));
+			Az = FMath::Fmod(Az + 360.0, 360.0) * NumAz / 360.0;
+			const int32 A0 = static_cast<int32>(Az) % NumAz, A1 = (A0 + 1) % NumAz;
+			const double W = Az - FMath::FloorToDouble(Az);
+			auto Ring = [&](int32 R) { return (1.0 - W) * HeightsM[A0 * NumRings + R] + W * HeightsM[A1 * NumRings + R]; };
+			if (Distance <= RingsM[0])
+			{
+				const double T = Distance / RingsM[0];
+				return (1.0 - T) * SiteHeightM + T * Ring(0);
+			}
+			int32 R1 = Algo::UpperBound(RingsM, Distance);
+			if (R1 >= NumRings)
+			{
+				return Ring(NumRings - 1);
+			}
+			const double T = (Distance - RingsM[R1 - 1]) / (RingsM[R1] - RingsM[R1 - 1]);
+			return (1.0 - T) * Ring(R1 - 1) + T * Ring(R1);
+		}
+
+		const TArray<double>& HeightsM;
+		const TArray<double>& RingsM;
+		int32 NumAz;
+		int32 NumRings;
+		double SiteHeightM;
+		double Extent;
+		double Cell = 10.0;
+		int32 Size = 0;
+		TArray<double> Raster;
+	};
+}
+
 void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
-	const FLsnTerrainGrid& Grid, float Albedo, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples)
+	const FLsnTerrainGrid& Grid, float Albedo, double NormalSmoothingM, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples)
 {
 	OutMesh = FLsnMeshData();
 	OutSkippedAzimuths = 0;
@@ -168,6 +266,8 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 	const int32 NumRings = Grid.RingDistanceM.Num();
 	const double EyeHeightM = Package.ObserverHeightsM[HeightIndex];
 
+	TArray<double> DrawnHeightsM;  // [A, R], what the positions were built from
+	DrawnHeightsM.Reserve(NumAz * NumRings);
 	OutMesh.Positions.Reserve(1 + NumAz * NumRings);
 	OutMesh.Positions.Add(FVector::ZeroVector); // the site's ground point
 	for (int32 A = 0; A < NumAz; ++A)
@@ -212,6 +312,7 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 			{
 				LastKnownHeightM = HeightM;
 			}
+			DrawnHeightsM.Add(LastKnownHeightM);
 			OutMesh.Positions.Add(R == CrestRing ? HorizonPoint : Frame.SurfacePointUnreal(Az, Grid.RingDistanceM[R], LastKnownHeightM));
 		}
 	}
@@ -235,6 +336,34 @@ void LsnMesh::BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage
 		}
 	}
 	OutMesh.ComputeNormals();
+
+	if (NormalSmoothingM > 0.0 && NumRings > 1)
+	{
+		// Normals for drawing: the same triangles over heights averaged near the site. The
+		// positions above stay as they are.
+		const FSmoothedHeights Smoothed(DrawnHeightsM, Grid.RingDistanceM, NumAz, Package.SurfaceHeightM, NormalSmoothingM, NormalSmoothingExtentM);
+		FLsnMeshData Shading;
+		Shading.Triangles = OutMesh.Triangles;
+		Shading.Positions = OutMesh.Positions;
+		const double FadeM = 0.2 * NormalSmoothingExtentM;
+		for (int32 A = 0; A < NumAz; ++A)
+		{
+			const double AzDeg = Package.AzimuthDegAt(A);
+			const double Sin = FMath::Sin(FMath::DegreesToRadians(AzDeg)), Cos = FMath::Cos(FMath::DegreesToRadians(AzDeg));
+			for (int32 R = 0; R < NumRings && Grid.RingDistanceM[R] < NormalSmoothingExtentM; ++R)
+			{
+				const double DistanceM = Grid.RingDistanceM[R];
+				// Full smoothing near the site, fading out to none at the edge of its extent.
+				const double Weight = FMath::Clamp((NormalSmoothingExtentM - DistanceM) / FadeM, 0.0, 1.0);
+				const double Drawn = DrawnHeightsM[A * NumRings + R];
+				const double HeightM = Drawn + Weight * (Smoothed.At(DistanceM * Sin, DistanceM * Cos) - Drawn);
+				// Every ring vertex stands at its own ring here, the crest ring included.
+				Shading.Positions[Index(A, R)] = Frame.SurfacePointUnreal(AzDeg, DistanceM, HeightM);
+			}
+		}
+		Shading.ComputeNormals();
+		OutMesh.Normals = MoveTemp(Shading.Normals);
+	}
 }
 
 void LsnMesh::BuildHorizonTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,

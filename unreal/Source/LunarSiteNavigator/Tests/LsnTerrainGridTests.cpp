@@ -126,7 +126,7 @@ bool FLsnTerrainGridMeshTest::RunTest(const FString& Parameters)
 
 	FLsnMeshData Mesh;
 	int32 Skipped = -1, Unknown = -1;
-	LsnMesh::BuildGridTerrain(Frame, P, P.DefaultHeightIndex, Grid, 0.13f, Mesh, Skipped, Unknown);
+	LsnMesh::BuildGridTerrain(Frame, P, P.DefaultHeightIndex, Grid, 0.13f, 0.0, Mesh, Skipped, Unknown);
 	TestEqual(TEXT("horizon samples that could not be placed"), Skipped, 0);
 	TestEqual(TEXT("grid samples without data"), Unknown, 0);
 	TestEqual(TEXT("one centre vertex, and per azimuth one vertex per ring"), Mesh.Positions.Num(), 1 + P.AzimuthCount * 3);
@@ -169,6 +169,107 @@ bool FLsnTerrainGridMeshTest::RunTest(const FString& Parameters)
 		}
 	}
 	TestTrue(TEXT("vertices of an azimuth are ordered outwards"), bOrdered);
+	return true;
+}
+
+// Normals for drawing (decided 14 November 2026, after measuring with Scripts/measure_banding.py
+// that the bands on the near ground at a very low Sun come from the 0.5 m steps of the LOLA
+// heights: neighbouring 20 m pixels can only differ by multiples of 1.43 deg in slope).
+//
+// Criteria, written before the first run:
+//  - Smoothing changes normals only. The positions of the mesh are identical, bit for bit,
+//    with smoothing switched off and on; so the silhouette and the test that no terrain
+//    sample rises above the package horizon are untouched.
+//  - On a tilted plane whose heights are rounded to 0.5 m, the normals of the vertices 50 m
+//    to 1000 m from the site deviate from the normal of the plane by an RMS angle that is
+//    at most half of what it is without smoothing.
+//  - A real slope must survive: on the same plane without rounding the smoothed normals
+//    stay within 0.1 deg of the normal of the plane.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLsnTerrainSmoothNormalsTest, "LunarSiteNavigator.Terrain.SmoothedNormalsForDrawing", LsnTest::Flags)
+bool FLsnTerrainSmoothNormalsTest::RunTest(const FString& Parameters)
+{
+	FLsnSitePackage P;
+	FString Error;
+	if (!TestTrue(FString::Printf(TEXT("the sample package loads (%s)"), *Error),
+		LsnPackageIO::LoadSitePackage(LsnTest::FixturePackageDir(TEXT("site")), P, Error)))
+	{
+		return false;
+	}
+	// The horizon points are moved far outside the tested range, so that they do not enter the comparison.
+	for (float& Distance : P.HorizonDistanceM) { Distance = 250000.0f; }
+	for (float& Elevation : P.HorizonElevationDeg) { Elevation = -5.0f; }
+	const FLsnSiteFrame Frame = FLsnSiteFrame::Make(P.LatDeg, P.LonDeg, P.ReferenceRadiusM, P.SurfaceHeightM);
+	const int32 H = P.DefaultHeightIndex;
+	const double Gradient = 0.03;  // rise per metre towards the east: 1.72 deg
+	const FVector PlaneNormal = FVector(0.0, -Gradient, 1.0).GetSafeNormal();  // Unreal: X north, Y east, Z up
+
+	auto MakeGrid = [&](bool bRounded)
+	{
+		FLsnTerrainGrid Grid;
+		Grid.SiteId = P.SiteId;
+		Grid.PackageId = P.PackageId;
+		Grid.ReferenceRadiusM = P.ReferenceRadiusM;
+		Grid.AzimuthStartDeg = P.AzimuthStartDeg;
+		Grid.AzimuthStepDeg = P.AzimuthStepDeg;
+		Grid.AzimuthCount = P.AzimuthCount;
+		const int32 NumRings = 200;
+		for (int32 R = 0; R < NumRings; ++R)
+		{
+			Grid.RingDistanceM.Add(5.0 * FMath::Pow(300000.0 / 5.0, static_cast<double>(R) / (NumRings - 1)));
+		}
+		Grid.HeightsM.SetNumUninitialized(P.AzimuthCount * NumRings);
+		for (int32 A = 0; A < P.AzimuthCount; ++A)
+		{
+			const double East = FMath::Sin(FMath::DegreesToRadians(Grid.AzimuthDegAt(A)));
+			for (int32 R = 0; R < NumRings; ++R)
+			{
+				const double Rise = Gradient * East * Grid.RingDistanceM[R];
+				Grid.HeightsM[A * NumRings + R] = static_cast<float>(P.SurfaceHeightM + (bRounded ? 0.5 * FMath::RoundToDouble(Rise / 0.5) : Rise));
+			}
+		}
+		return Grid;
+	};
+	auto RmsAndWorstDeg = [&](const FLsnTerrainGrid& Grid, double SmoothingM, double& OutWorstDeg, FLsnMeshData& OutMesh)
+	{
+		int32 Skipped = 0, Unknown = 0;
+		LsnMesh::BuildGridTerrain(Frame, P, H, Grid, 0.13f, SmoothingM, OutMesh, Skipped, Unknown);
+		double Sum = 0.0;
+		int32 Count = 0;
+		OutWorstDeg = 0.0;
+		for (int32 I = 1; I < OutMesh.Positions.Num(); ++I)
+		{
+			const double DistanceM = OutMesh.Positions[I].Size2D() / FLsnSiteFrame::CmPerM;
+			if (DistanceM < 50.0 || DistanceM > 1000.0)
+			{
+				continue;
+			}
+			// The mesh lies on a sphere: the local vertical turns by the arc distance over the radius.
+			const double AngleDeg = LsnTest::AngleDeg(OutMesh.Normals[I], PlaneNormal);
+			Sum += AngleDeg * AngleDeg;
+			OutWorstDeg = FMath::Max(OutWorstDeg, AngleDeg);
+			++Count;
+		}
+		return Count > 0 ? FMath::Sqrt(Sum / Count) : 0.0;
+	};
+
+	const FLsnTerrainGrid Rounded = MakeGrid(true), Exact = MakeGrid(false);
+	FLsnMeshData RawMesh, SmoothMesh, ExactMesh;
+	double RawWorst = 0.0, SmoothWorst = 0.0, ExactWorst = 0.0;
+	const double RawRms = RmsAndWorstDeg(Rounded, 0.0, RawWorst, RawMesh);
+	const double SmoothRms = RmsAndWorstDeg(Rounded, LsnMesh::DefaultNormalSmoothingM, SmoothWorst, SmoothMesh);
+	const double ExactRms = RmsAndWorstDeg(Exact, LsnMesh::DefaultNormalSmoothingM, ExactWorst, ExactMesh);
+
+	bool bSamePositions = RawMesh.Positions.Num() == SmoothMesh.Positions.Num() && RawMesh.Triangles == SmoothMesh.Triangles;
+	for (int32 I = 0; bSamePositions && I < RawMesh.Positions.Num(); ++I)
+	{
+		bSamePositions = RawMesh.Positions[I] == SmoothMesh.Positions[I];
+	}
+	AddInfo(FString::Printf(TEXT("plane rounded to 0.5 m, vertices 50 to 1000 m from the site: normals off the plane normal by RMS %.3f deg (worst %.3f) without smoothing, RMS %.3f deg (worst %.3f) with %.0f m smoothing; exact plane with smoothing: RMS %.4f deg (worst %.4f)"),
+		RawRms, RawWorst, SmoothRms, SmoothWorst, LsnMesh::DefaultNormalSmoothingM, ExactRms, ExactWorst));
+	TestTrue(TEXT("positions and triangles are identical with and without smoothing"), bSamePositions);
+	TestTrue(TEXT("the test surface does show the effect of rounding"), RawRms > 0.2);
+	TestTrue(TEXT("smoothing at least halves the RMS deviation of the normals on a rounded plane"), SmoothRms <= 0.5 * RawRms);
+	TestTrue(TEXT("a real slope survives the smoothing"), ExactWorst <= 0.1);
 	return true;
 }
 

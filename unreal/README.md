@@ -199,6 +199,16 @@ without the LOLA files.
   stills; the read-out then says that this is not the observer's view, and the markers
   that only make sense from the site are not drawn. `-LsnNoHud` leaves a caption line
   (site, time, package) and, for a synthetic package, the synthetic marker.
+- Normals near the site are not those of the raw mesh. Measured with
+  `Scripts/measure_banding.py`: every LOLA height around the three sites is a multiple of
+  0.5 m, so the slope between 20 m pixels moves in steps of 1.43 deg; under a Sun 0.5 to
+  1.6 deg high that changes the grazing illumination along one line by a factor of 15 to
+  105 and drew bands on the near ground. The bands stayed with shadows switched off
+  (`-LsnNoShadows`), so they were shading, not shadow error. The normals within 3 km are
+  now taken from heights averaged over 40 m; the positions of the mesh are bit for bit the
+  same (`Terrain.SmoothedNormalsForDrawing`), so the silhouette and the test that no
+  terrain sample rises above the package horizon are untouched. Relief smaller than about
+  80 m no longer shows in the shading near the site. `-LsnRawNormals` shows the raw ones.
 - Display values (light intensity, fixed exposure, albedo 0.13, fill light, the limit of
   the regolith factor) are not photometry. The exposure is fixed for a Sun a few degrees
   above the horizon; nothing adapts to the scene.

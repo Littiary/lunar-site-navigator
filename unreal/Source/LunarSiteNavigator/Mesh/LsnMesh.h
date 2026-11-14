@@ -92,9 +92,21 @@ namespace LsnMesh
 	 * Origin: the site's ground point. OutSkippedAzimuths counts horizon samples that could
 	 * not be placed, OutUnknownSamples grid samples without data (drawn at the height of
 	 * the nearest ring that has data).
+	 *
+	 * NormalSmoothingM > 0: the normals (and only the normals) are taken from the heights
+	 * averaged over a square of that half-width, within NormalSmoothingExtentM of the site.
+	 * The LOLA heights come in steps of 0.5 m, which between 20 m pixels are steps of
+	 * 1.43 deg in slope; under a Sun one or two degrees high those steps show as bands
+	 * that are not relief. The positions, and with them the silhouette and every test
+	 * against the package horizon, are the same with and without smoothing.
 	 */
 	LUNARSITENAVIGATOR_API void BuildGridTerrain(const FLsnSiteFrame& Frame, const FLsnSitePackage& Package, int32 HeightIndex,
-		const FLsnTerrainGrid& Grid, float Albedo, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples);
+		const FLsnTerrainGrid& Grid, float Albedo, double NormalSmoothingM, FLsnMeshData& OutMesh, int32& OutSkippedAzimuths, int32& OutUnknownSamples);
+
+	/** Half-width of the averaging for the normals: two pixels of the 20 m elevation product. A drawing choice. */
+	inline constexpr double DefaultNormalSmoothingM = 40.0;
+	/** Smoothing is applied out to this distance from the site; farther out the mesh is coarser than the averaging. */
+	inline constexpr double NormalSmoothingExtentM = 3000.0;
 
 	/**
 	 * Depth of the procedural craters at a horizontal position, metres, always >= 0.
