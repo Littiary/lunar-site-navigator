@@ -74,6 +74,15 @@ The packages were first handed over as `packages_sites.zip` (contract 0.1). Thei
 
 The site is static: any host that serves files works, with no build step and no server code. Publishing copies `web/dist/site/` to the hosting location as it is.
 
+GitHub Pages serves the branch `gh-pages` (root folder) at https://littiary.github.io/lunar-site-navigator/. That branch holds only the built site, in its own history, and is never edited by hand. A repository admin switches Pages on once: Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`. To publish a new build:
+
+```
+cd web && python -m lsn_web.site && cd ..
+git worktree add <folder> gh-pages
+# replace the content of <folder> with web/dist/site/ (including .nojekyll), then in <folder>:
+git add -A && git commit -m "Publish the evidence site built from packages/ at <commit>" && git push origin gh-pages
+```
+
 ## Tests
 
 ```
