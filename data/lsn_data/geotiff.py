@@ -75,7 +75,15 @@ def parse_header(buf: bytes) -> TiffInfo:
         g = tags[34735]
         for i in range(int(g[3])):
             key, loc, cnt, off = g[4 + 4 * i : 8 + 4 * i]
-            gk[key] = off if loc == 0 else (loc, cnt, off)
+            if loc == 0:
+                gk[key] = off
+            elif loc == 34736 and 34736 in tags:
+                v = tags[34736][off : off + cnt]
+                gk[key] = v[0] if cnt == 1 else tuple(v)
+            elif loc == 34737 and 34737 in tags:
+                gk[key] = tags[34737][off : off + cnt]
+            else:
+                gk[key] = (loc, cnt, off)
     return TiffInfo(
         width=int(tags[256][0]),
         height=int(tags[257][0]),
@@ -107,8 +115,10 @@ def open_array(path: str | Path, info: TiffInfo | None = None) -> np.ndarray:
     return np.memmap(path, dtype=info.dtype, mode="r", offset=info.strip_offsets[0], shape=(info.height, info.width))
 
 
-def write_test_tiff(path: str | Path, arr: np.ndarray, x_ul: float, y_ul: float, pixel: float) -> None:
-    """Write a small uncompressed float32 GeoTIFF (for tests; PixelIsArea, tie point at the upper-left corner)."""
+def write_test_tiff(path: str | Path, arr: np.ndarray, x_ul: float, y_ul: float, pixel: float,
+                    origin_lat: float = -90.0, scale_at_origin: float = 1.0, radius_m: float = 1737400.0) -> None:
+    """Write a small uncompressed float32 GeoTIFF for tests: PixelIsArea, tie point at the upper-left corner, polar
+    stereographic GeoKeys laid out as in the PGDA 5 m products (CT 15, origin latitude, scale, sphere)."""
     arr = np.ascontiguousarray(arr, dtype="<f4")
     h, w = arr.shape
     entries = []
@@ -135,7 +145,10 @@ def write_test_tiff(path: str | Path, arr: np.ndarray, x_ul: float, y_ul: float,
     add(339, 3, 1, struct.pack("<H", 3))
     add(33550, 12, 3, struct.pack("<3d", pixel, pixel, 0.0))
     add(33922, 12, 6, struct.pack("<6d", 0.0, 0.0, 0.0, x_ul, y_ul, 0.0))
-    add(34735, 3, 8, struct.pack("<8H", 1, 1, 0, 1, 1025, 0, 1, 1))
+    keys = [(1024, 0, 1, 1), (1025, 0, 1, 1), (2057, 34736, 1, 0), (2058, 34736, 1, 1), (3075, 0, 1, 15),
+            (3081, 34736, 1, 2), (3092, 34736, 1, 3), (3095, 34736, 1, 4)]
+    add(34735, 3, 4 + 4 * len(keys), struct.pack(f"<{4 + 4 * len(keys)}H", 1, 1, 0, len(keys), *[v for k in keys for v in k]))
+    add(34736, 12, 5, struct.pack("<5d", radius_m, radius_m, origin_lat, scale_at_origin, 0.0))
     ifd_off = data_off + len(image)
     ifd_size = 2 + 12 * len(entries) + 4
     ext_off = ifd_off + ifd_size
