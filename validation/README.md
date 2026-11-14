@@ -2,6 +2,14 @@
 
 Independent checks of the science core. Each check has a threshold file that is written and committed before the comparison is run and is not edited afterwards.
 
+## `card/` — the validation card
+
+`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code; `tests/test_card.py` fails if the committed card and a fresh build disagree.
+
+## `sites/` — end-to-end results for the south-polar site records
+
+`python -m validation.sites.run <sites.json>` runs the whole pipeline (LOLA terrain horizon, direction table, events, windows, countdowns) for the site records of the data stream and validates the packages against the contract. `sites/scenario.json` is the input, `sites/results/site_summary.md` and `.json` the summary. The packages go to `build/packages/sites` (not under version control). These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
+
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 
 **What is compared.** The apparent azimuth, elevation, angular diameter and distance of the Sun and of the Earth, seen from seven points on the lunar reference sphere, computed by the core (`core/lsncore/ephem/`) and by the JPL Horizons system (observer table, user-defined site on body 301).
