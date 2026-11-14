@@ -217,6 +217,11 @@ def test_site_package_with_real_timeline_is_valid(tmp_path, table_dir, horizon, 
     assert manifest["site"]["frame"] == "MOON_ME_DE440_ME421"
     assert manifest["methods"]["timeline.direction"]["validation"]["status"] == "externally-validated"
     assert manifest["methods"]["timeline.events"]["validation"]["status"] == "analytic-test-passed"
+    # The lit fraction of the Sun is a stored channel with its own method card; the Earth has none.
+    sun, earth = manifest["timeline"]["series"]["SUN"], manifest["timeline"]["series"]["EARTH"]
+    assert sun["lit_fraction"]["shape"] == sun["visible_fraction"]["shape"] and sun["lit_fraction"]["method"] == "timeline.lit_fraction"
+    assert "lit_fraction" not in earth
+    assert manifest["methods"]["timeline.lit_fraction"]["validation"]["status"] == "analytic-test-passed"
 
 
 # ------------------------------------------------------------------ eclipses in the timeline
@@ -250,6 +255,51 @@ def test_eclipse_of_march_2025_appears_in_the_timeline(tmp_path):
     assert metrics["sun_eclipse_count"] == 1.0 and metrics["sun_eclipse_total_count"] == 1.0
     assert metrics["sun_eclipse_max_covered_fraction"] == 1.0
     assert abs(metrics["sun_eclipse_longest_totality_s"] - (total[1] - total[0])) < 1e-6
+
+
+def test_lit_fraction_is_the_visible_fraction_where_there_is_no_eclipse(timeline):
+    sun = timeline.series["SUN"]
+    assert sun.lit_fraction is not None and sun.lit_fraction.shape == sun.visible_fraction.shape
+    assert np.array_equal(sun.lit_fraction, sun.visible_fraction)
+    assert timeline.series["EARTH"].lit_fraction is None
+
+
+def test_lit_fraction_drops_during_the_eclipse_of_march_2025(tmp_path):
+    from lsncore.events import eclipse
+
+    window = {"start_utc": "2025-03-12T00:00:00.000Z", "end_utc": "2025-03-16T00:00:00.000Z", "step_s": 600.0}
+    table_dir = tb.write_direction_table(tmp_path, window["start_utc"], window["end_utc"])
+    site = {"site_id": "test-near-side", "name": "Test point, near side", "lat_deg": 10.0, "lon_deg": -20.0}
+    horizon = smooth_sphere_horizon([0.0, 2.0], azimuth_step_deg=1.0)
+    result = tl.compute_timeline(site, horizon, table_dir, window, ["SUN", "EARTH"], THRESHOLDS)
+    by_id = {w["id"]: w for w in result.windows if w["height_index"] == 0}
+    (partial,) = by_id["sun_eclipsed_by_earth"]["intervals_et_s"]
+    (total,) = by_id["sun_totally_eclipsed_by_earth"]["intervals_et_s"]
+    sun = result.series["SUN"]
+    t = result.time["start_et_s"] + result.time["step_s"] * np.arange(result.time["count"])
+    in_partial = (t >= partial[0]) & (t <= partial[1])
+    in_total = (t >= total[0]) & (t <= total[1])
+    assert in_total.sum() >= 3 and (in_partial & ~in_total).sum() >= 6
+
+    # Outside the eclipse nothing changes; inside, the Sun is up at this site and loses light to the Earth only.
+    assert np.array_equal(sun.lit_fraction[:, ~in_partial], sun.visible_fraction[:, ~in_partial])
+    assert np.all(sun.visible_fraction[:, in_partial] == 1.0)
+    assert np.all(sun.lit_fraction[:, in_total] == 0.0)
+    edge = sun.lit_fraction[0, in_partial & ~in_total]
+    assert np.all((edge >= 0.0) & (edge <= 1.0)) and np.any((edge > 0.05) & (edge < 0.95))
+    assert np.all(sun.lit_fraction <= sun.visible_fraction + 1e-12)
+
+    # The stored values are those of the eclipse module's power line for the same horizon.
+    ground = d.Site(site["lon_deg"], site["lat_deg"], horizon.surface_height_m / 1000.0)
+    table = tb.load_table(table_dir)
+    for h in range(2):
+        profile = ev.Horizon(0.0, horizon.azimuth_step_deg, np.asarray(horizon.elevation_deg[h], dtype=np.float64), np.asarray(horizon.distance_m[h], dtype=np.float64))
+        assert np.allclose(sun.lit_fraction[h, in_partial], eclipse.power_line(ground, table, profile, t[in_partial]), atol=1e-12)
+
+    # Covered fraction at mid-partial against the closed form for two discs (no terrain in the way).
+    k = int(np.flatnonzero(in_partial & ~in_total)[2])
+    separation, r_sun, r_earth = eclipse.site_geometry(ground, table)(t[k])
+    assert abs((1.0 - sun.lit_fraction[0, k]) - float(eclipse.covered_fraction(separation, r_sun, r_earth)[0])) < 0.002
 
 
 # ------------------------------------------------------------------ ground stations in the timeline
