@@ -201,16 +201,33 @@ void ALsnSiteScene::UpdateLook()
 	{
 		NearGroundShadeShare = LsnMesh::NearGroundFacingAwayShare(TerrainGrid, Package.SurfaceHeightM, SunNow.AzimuthDeg, SunNow.ElevationDeg, FMath::Max(Package.HorizonSearchStartM(), 5.0));
 	}
-	// The shaded sides of the scale objects: with the Sun up, light reflected from the sunlit
-	// ground reaches them; with the fill on, a little of it. Stand-ins chosen by eye.
-	const float Ambient = LsnLook::ObjectAmbient.GetValueOnGameThread() * static_cast<float>(SunShare) + (FillLight->IsVisible() ? 0.035f : 0.0f);
+	// The shaded sides of the scale objects are lit by the sunlit ground around them. The engine's
+	// own bounce (Lumen) does not see the terrain, which is a procedural mesh without a surface
+	// cache (tried on 14 November 2026: no light from the ground reached the lander), so the bounce
+	// is the textbook case of a wide lit plane under the object:
+	//   irradiance on a face = radiance of the ground x pi x (1 - n.z) / 2.
+	// The radiance of the ground is that of the ground as it is drawn here: albedo x the Sun's
+	// irradiance on it (sine of the package's Sun elevation) x the regolith factor 2 / (mu0 + mu)
+	// for a view 60 degrees from the normal, / pi; less where the package says part of the Sun is
+	// hidden and where the ground near the site lies in its own shadow. Not a fill light: it is
+	// zero when the ground is dark, and a face that looks up gets none.
+	float Ambient = 0.0f;
+	FLsnBodyAtTime SunForBounce;
+	if (SunShare > 0.0 && SampleBody(TEXT("SUN"), TimePosition, SunForBounce))
+	{
+		const float Mu0 = FMath::Max(FMath::Sin(FMath::DegreesToRadians(static_cast<float>(SunForBounce.ElevationDeg))), 0.0f);
+		const float Ground = RegolithAlbedo * Mu0 * FMath::Min(2.0f / (Mu0 + 0.5f), 4.0f) * SunLight->Intensity / UE_PI;
+		Ambient = Ground * static_cast<float>(SunShare) * static_cast<float>(1.0 - NearGroundShadeShare) * LsnLook::BounceScale.GetValueOnGameThread();
+	}
+	// With the fill on (a viewing aid while the Sun is down), a little of it from below as well.
+	Ambient += FillLight->IsVisible() ? 0.01f : 0.0f;
 	if (ObjectMaterial)
 	{
 		ObjectMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
 	}
 	if (RockMaterial)
 	{
-		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), 1.5f * Ambient);
+		RockMaterial->SetScalarParameterValue(TEXT("Ambient"), Ambient);
 	}
 	if (StarMaterial)
 	{
@@ -317,6 +334,9 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
 	ObjectMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	ObjectMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
+	// Foil, metal and glass have a sheen; the Sun picks out their bevelled edges.
+	ObjectMaterial->SetScalarParameterValue(TEXT("Roughness"), 0.45f);
+	ObjectMaterial->SetScalarParameterValue(TEXT("Specular"), 0.5f);
 	RockMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	// Detail finer than the data on real elevation data only; the placeholder surface is no data at all.
 	RegolithMaterial->SetScalarParameterValue(TEXT("DetailStrength"), (bHasRealTerrain && !FParse::Param(FCommandLine::Get(), TEXT("LsnNoDetail"))) ? 1.0f : 0.0f);
@@ -533,8 +553,8 @@ void ALsnSiteScene::RebuildScaleObjects()
 		static const FPlaced Placed[] = {
 			{ TEXT("lander"), 150.0, 38.0, 20.0, 1.0 },
 			{ TEXT("boulder_1"), 118.0, 15.0, 0.0, 1.0 }, { TEXT("boulder_2"), 133.0, 10.0, 70.0, 1.0 }, { TEXT("boulder_3"), 100.0, 27.0, 140.0, 1.0 },
-			{ TEXT("boulder_2"), 147.0, 19.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 16.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 31.0, 30.0, 1.0 },
-			{ TEXT("boulder_2"), 20.0, 13.0, 110.0, 1.0 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
+			{ TEXT("boulder_4"), 147.0, 19.0, 200.0, 1.3 }, { TEXT("boulder_1"), 300.0, 16.0, 250.0, 1.0 }, { TEXT("boulder_3"), 215.0, 31.0, 30.0, 1.0 },
+			{ TEXT("boulder_4"), 20.0, 13.0, 110.0, 0.8 }, { TEXT("boulder_1"), 70.0, 21.0, 300.0, 0.8 },
 		};
 		FLsnMeshData All, Rocks;
 		TMap<FString, FLsnMeshData> Models;

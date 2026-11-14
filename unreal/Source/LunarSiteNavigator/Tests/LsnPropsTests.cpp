@@ -40,7 +40,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLsnPropsModelsTest, "LunarSiteNavigator.Props.
 bool FLsnPropsModelsTest::RunTest(const FString& Parameters)
 {
 	using namespace LsnPropsTest;
-	for (const TCHAR* Name : { TEXT("lander"), TEXT("mast_base"), TEXT("mast_pole"), TEXT("boulder_1"), TEXT("boulder_2"), TEXT("boulder_3") })
+	for (const TCHAR* Name : { TEXT("lander"), TEXT("mast_base"), TEXT("mast_pole"), TEXT("boulder_1"), TEXT("boulder_2"), TEXT("boulder_3"), TEXT("boulder_4") })
 	{
 		FLsnMeshData Mesh;
 		FString Error;

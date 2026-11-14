@@ -25,8 +25,9 @@ namespace LsnLook
 	extern TAutoConsoleVariable<float> WideBackM, WideUpM, WidePitchDeg, WideFovDeg;
 	/** The wide view: turn of the whole view from the Sun's azimuth; 0 looks at the Sun, 90 has the Sun on the left. */
 	extern TAutoConsoleVariable<float> WideYawDeg;
-	/** Light on the sides of the scale objects that face away from the Sun, as a share of the lit side: stands for the light the ground throws back. */
-	extern TAutoConsoleVariable<float> ObjectAmbient;
+
 	/** Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground. */
 	extern TAutoConsoleVariable<float> HighSunExposure;
+	/** Light the sunlit ground throws back onto the scale objects, as a multiple of what the form-factor formula gives (1 = the formula). */
+	extern TAutoConsoleVariable<float> BounceScale;
 }

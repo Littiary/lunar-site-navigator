@@ -15,7 +15,7 @@ FColor LsnProps::MaterialColor(const FString& MaterialName)
 	if (MaterialName.EndsWith(TEXT("metal"))) { return FLinearColor(0.55f, 0.55f, 0.57f).ToFColor(false); }
 	if (MaterialName.EndsWith(TEXT("dark"))) { return FLinearColor(0.06f, 0.06f, 0.06f).ToFColor(false); }
 	if (MaterialName.EndsWith(TEXT("panel"))) { return FLinearColor(0.03f, 0.05f, 0.12f).ToFColor(false); }
-	return FLinearColor(0.15f, 0.15f, 0.15f).ToFColor(false);  // rock
+	return FLinearColor(0.28f, 0.28f, 0.27f).ToFColor(false);  // rock: fresh rock is brighter than the regolith around it
 }
 
 bool LsnProps::LoadObj(const FString& File, FLsnMeshData& OutMesh, FString& OutError)
