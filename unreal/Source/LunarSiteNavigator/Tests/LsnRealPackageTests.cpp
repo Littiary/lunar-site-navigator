@@ -21,6 +21,13 @@
 //    - the direction-table positions mapped through the site frame give the Sun and
 //      Earth series within 0.0002 deg (same threshold as for the sample).
 //    If the folder is absent the test reports a warning instead of passing silently.
+//
+//    Amendment (2026-11-14, packages of contract 0.6). The countdown metrics of a package
+//    count from its reference instant. Up to contract 0.2 that was the first sample; a
+//    package with a planned landing (request.timeline.landing_utc, since 0.3) counts from
+//    that landing, as the labels of its metrics say. The comparison is therefore made at
+//    the planned landing where the package has one, and at the first sample otherwise.
+//    The tolerance of 1e-3 s is unchanged.
 
 #include "Tests/LsnTestSupport.h"
 #include "Engine/Engine.h"
@@ -166,7 +173,17 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 		LsnHudText::BuildStatusLines(P, P.DefaultHeightIndex, 0.0, Lines);
 		TestEqual(FString::Printf(TEXT("%s: no synthetic marker"), *P.SiteId), LinesSayingSynthetic(Lines), 0);
 
-		// Countdown at the first sample against the package's own metrics.
+		// Countdown at the reference instant of the package against the package's own metrics.
+		double ReferenceEtS = P.Time.StartEtS;
+		for (const FLsnOpportunity& Opportunity : P.Opportunities)
+		{
+			if (Opportunity.Planned.bPresent)
+			{
+				ReferenceEtS = Opportunity.Planned.EtS;
+				break;
+			}
+		}
+		AddInfo(FString::Printf(TEXT("%s: countdown metrics compared %.0f s after the first sample"), *P.SiteId, ReferenceEtS - P.Time.StartEtS));
 		int32 CountdownsChecked = 0;
 		double WorstCountdownS = 0.0;
 		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
@@ -174,7 +191,7 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 			const FString Tag = FString(Body).ToLower();
 			for (int32 H = 0; H < P.NumHeights(); ++H)
 			{
-				const FLsnCountdown C = P.CountdownAt(Body, H, P.Time.StartEtS);
+				const FLsnCountdown C = P.CountdownAt(Body, H, ReferenceEtS);
 				if (!TestTrue(FString::Printf(TEXT("%s %s height %d: countdown available"), *P.SiteId, Body, H), C.bAvailable))
 				{
 					continue;
@@ -184,7 +201,7 @@ bool FLsnRealPackagesTest::RunTest(const FString& Parameters)
 				const FLsnMetric* Bound = P.FindMetric(C.bVisibleNow ? Tag + TEXT("_time_to_set_is_lower_bound") : Tag + TEXT("_time_to_rise_is_lower_bound"), H);
 				if (Visible && Visible->bHasValue)
 				{
-					TestEqual(FString::Printf(TEXT("%s %s height %d: visible at the start as the package says"), *P.SiteId, Body, H), C.bVisibleNow, Visible->Value > 0.5);
+					TestEqual(FString::Printf(TEXT("%s %s height %d: visible at the reference instant as the package says"), *P.SiteId, Body, H), C.bVisibleNow, Visible->Value > 0.5);
 				}
 				if (Time && Time->bHasValue)
 				{
