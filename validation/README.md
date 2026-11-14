@@ -12,6 +12,46 @@ Independent checks of the science core. Each check has a threshold file that is 
 
 The published packages are regenerated, never edited by hand, and are republished in the same commit as any change that alters results. These results are **unverified** against any independent illumination product; the summary says which events are set by terrain closer than 1 km, where the 20 m elevation grid limits the accuracy.
 
+## `pgda/` — terrain-dependent results versus the published LOLA illumination maps
+
+**What is compared.** The share of time, over one 18.6-year nodal cycle at hourly steps, during which any part of the Sun's disc, and any part of the Earth's disc, is above the terrain horizon. The reference is an independent computation by the LOLA Science Team at NASA Goddard (Mazarico et al. 2011), published as 60 m maps of the south pole through the Planetary Geodesy Data Archive: `AVGVISIB_85S_060M_201608`, `..._EARTH` and the permanent-shadow map `LPSR_85S_060M_201608`. Their labels define the values exactly as that share. This checks the whole terrain chain at once: reading the elevation model, the horizon, the ephemeris and the disc test.
+
+**Points.** 100 pixel centres of the published grid, chosen from the elevation model alone by a seeded rule before any map value was read (`points.json`): 33 ridges and rims, 33 floors, 31 plains and slopes, and the three site records. Thresholds in `thresholds.json` (commit d044186).
+
+**Result** (`pgda/results/validation_table.md`), run A, the like-for-like run on the 60 m LOLA product, observer on the surface:
+
+| Quantity | Threshold | Sun | Earth |
+|---|---|---|---|
+| Correlation over the 100 points | at least 0.90 | 0.9973 | 0.9993 |
+| Median absolute difference | at most 0.05 | 0.0006 | 0.0004 |
+| Median signed difference | within 0.02 | +0.0000 | +0.0000 |
+| 10th to 90th percentile of the difference | reported | -0.004 to +0.007 | -0.002 to +0.001 |
+| Largest absolute difference | reported | 0.079 | 0.044 |
+| Points beyond 0.05 / 0.10 / 0.20 | reported | 2 / 0 / 0 | 0 / 0 / 0 |
+
+Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %; all 14 points published as permanently shadowed are never lit in our period, and no other point is.
+
+**How comparable the two are.**
+
+| Aspect | Published maps | Our run A | Effect |
+|---|---|---|---|
+| Quantity | share of timesteps lit "by any fraction" of the disc | the same (upper limb above the horizon) | none |
+| Light source | finite disc | finite disc | none |
+| Time step | hourly | hourly | none |
+| Period | one nodal cycle of about 18.6 years; dates not stated | 2020-01-01 plus 6798.38 days | a second cycle starting 2000-01-01 changes the share by at most 0.001 (Sun) and 0.005 (Earth) at the 10 points tried |
+| Observer height | not stated | 0 m | at 2 m our Sun shares are higher by +0.013 on average, at 0 m by +0.002: the maps behave like a surface-level product |
+| Elevation model | LDEM_85S_060M of 2016, 60 m | LDEM_60S_60M V2.0, 60 m | not separable from the method; part of the 0.08 largest difference |
+| Location | value of a 60 m pixel | horizon computed at the pixel centre | none at this resolution |
+
+**Resolution effect (run B, reported, not judged).** With the terrain the tool actually uses (20 m near the pole) the median difference stays at -0.000 (Sun) and +0.000 (Earth), but the mean drops to -0.012 and -0.011, 4 Sun points and 3 Earth points differ by more than 0.10, and the largest differences are 0.18 and 0.32. At the three site records, which sit on crests, the 20 m terrain gives a Sun share lower by 0.075 in the median. Finer terrain resolves small obstacles that a 60 m grid smooths away, so crests come out less lit; this is a property of the data, not a disagreement between the methods.
+
+**Limits.**
+
+* The like-for-like run shows that the method reproduces an independent computation on terrain of the same resolution. It does not show that 60 m, or 20 m, terrain is the truth: both sides rest on LOLA elevation data.
+* 100 points; with that number a correlation is known to about ±0.04, and the many points in permanent shadow raise it. It is therefore also given per stratum in the table of results.
+* The published maps are long-term shares. They do not test individual rise and set times.
+* The period, observer height, disc sampling and horizon settings of the reference are not stated by its sources.
+
 ## `landers/` — published records of real lunar landers
 
 **What is compared.** Four missions, each with the published time and place of a real event and what the source says about the Sun or the Earth at that moment. Every published value is in `landers/cases.json` as printed, with its source URL, retrieval time, page checksum, printed precision and whether the source calls it approximate. `cases.json` and `thresholds.json` were committed before the core was run on these cases (commit eaf5634). The test is **not blind**: research before the hackathon had compared some of these values with Horizons, so the thresholds follow fixed rules derived from each source's printed precision and wording.
