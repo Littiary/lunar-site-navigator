@@ -683,10 +683,14 @@ void ALsnViewGameMode::Tick(float DeltaSeconds)
 	if (!MovieDir.IsEmpty())
 	{
 		const APlayerController* Player = GetWorld()->GetFirstPlayerController();
-		const ALsnObserverPawn* Pawn = Player ? Cast<ALsnObserverPawn>(Player->GetPawn()) : nullptr;
+		ALsnObserverPawn* Pawn = Player ? Cast<ALsnObserverPawn>(Player->GetPawn()) : nullptr;
 		if (MovieWarmUpFrames > 0)
 		{
 			--MovieWarmUpFrames;
+			if (Pawn)
+			{
+				Pawn->HoldArrivalAtStart();
+			}
 		}
 		else if (FramesUntilQuit < 0)
 		{

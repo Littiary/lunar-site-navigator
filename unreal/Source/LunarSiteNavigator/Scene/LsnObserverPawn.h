@@ -90,6 +90,8 @@ public:
 	ELsnCameraView GetCameraView() const { return CameraView; }
 	/** True while the camera moves from high above down to the site: a camera move, no simulated descent. */
 	bool IsArrivalRunning() const { return bArrival; }
+	/** Holds a running arrival move at its start; a recording calls this until its first frame. */
+	void HoldArrivalAtStart() { if (bArrival) { ArrivalElapsedS = 0.0; } }
 	/** True while the first lunar day after the planned landing is being played. */
 	bool IsFirstDayPlaying() const { return bFirstDay && bPlaying; }
 	/** Sample position at which the playing stops; negative if it runs to the end. */

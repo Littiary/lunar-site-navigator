@@ -600,6 +600,7 @@ void ALsnHud::DrawHUD()
 			DrawText(FString::Printf(TEXT("%s - invented values for interface testing, not results"), LsnHudText::SyntheticMarker()), Alert, Margin, Margin, Font, 1.4f * Scale);
 		}
 		const FString Viewpoint = (Pawn && Pawn->IsOverview()) ? (Pawn->GetCameraUpM() >= 1000.0 ? FString::Printf(TEXT("overview from %.0f km above the site, not the observer's view"), Pawn->GetCameraUpM() / 1000.0)
+			: Pawn->IsArrivalRunning() ? FString(TEXT("camera move from high above down to the site; a camera move only, no descent is simulated"))
 			: Pawn->GetCameraView() == ELsnCameraView::Hero ? FString(TEXT("camera near the lander, not the observer's view")) : Pawn->GetCameraView() == ELsnCameraView::Wide ? FString(TEXT("wide view of the site, Sun outside the picture to the right; not the observer's view"))
 			: FString::Printf(TEXT("camera %.0f m above and behind the observer, not the observer's view"), Pawn->GetCameraUpM()))
 			: FString::Printf(TEXT("observer %.1f m"), P.ObserverHeightsM[H]);
