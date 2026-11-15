@@ -203,3 +203,58 @@ def test_countdown_metrics_state_the_instant_they_count_from(tmp_path):
         assert others and not any("reference" in m for m in others)
         # the label still says it in words
         assert all(expected in m["label"] for m in counted if m["id"].endswith(("_time_to_set_s", "_at_reference")))
+
+
+def test_default_height_is_part_of_the_request_and_of_the_package_id(tmp_path):
+    """The default observer height decides default_height_index, the height of the band
+    statistics, of the terrain source and of the site pairs. Two runs that differ only in
+    it are different requests: they must not get the same package id (SPEC 3.4), or the
+    second would overwrite the first."""
+    scenario = single_site_scenario(
+        "ridge-site", "Analytic ridge site", -86.0, 20.0, dem_set_id="ANALYTIC-ridges", synthetic=False, azimuth_step_deg=5.0, max_range_m=50_000.0,
+    )
+    manifests = {}
+    for height in (2.0, 10.0, 2.0):
+        scenario["default_height_m"] = height
+        (path,) = run_scenario(scenario, tmp_path, _ridge_terrain())
+        manifest = validate_package(path)
+        assert manifest["request"]["default_height_m"] == height
+        heights = manifest["horizon"]["observer_heights_m"]
+        assert heights[manifest["horizon"]["default_height_index"]] == height
+        manifests.setdefault(height, []).append(manifest)
+    two, ten = manifests[2.0][0], manifests[10.0][0]
+    assert two["package_id"] != ten["package_id"] and two["content_sha256"] != ten["content_sha256"]
+    # both are on disk next to each other, and the same request gives the same package again
+    assert sorted(p.name for p in (tmp_path / "site" / "ridge-site").iterdir()) == sorted([two["package_id"], ten["package_id"]])
+    again = manifests[2.0][1]
+    assert (again["package_id"], again["content_sha256"]) == (two["package_id"], two["content_sha256"])
+
+
+@pytest.mark.parametrize("pixel_m, expected_m", [(5.0, 5.0), (20.0, 20.0), (116.4, 20.0), (237.0, 20.0)])
+def test_method_card_states_where_the_search_really_starts(tmp_path, pixel_m, expected_m):
+    """The first point of a ray is one pixel from the site but never farther than 20 m.
+    The card of a package on a coarse product said one pixel (116.4 m) while the search had
+    started at 20 m."""
+    from lsncore.horizon import HorizonSettings, _layout
+
+    terrain = AnalyticTerrain(_ridge, R, finest_pixel_m=pixel_m, ceiling_height_m=800.0, dem_set_id="ANALYTIC-ridges")
+    scenario = single_site_scenario(
+        "ridge-site", "Analytic ridge site", -86.0, 20.0, dem_set_id="ANALYTIC-ridges", synthetic=False, heights_m=[2.0], azimuth_step_deg=5.0, max_range_m=20_000.0,
+    )
+    (path,) = run_scenario(scenario, tmp_path, terrain)
+    manifest = validate_package(path)
+    stated = manifest["methods"][manifest["horizon"]["elevation_deg"]["method"]]["parameters"]["first_point_m"]
+    assert stated == expected_m == _layout(terrain, 20_000.0, HorizonSettings())[0]
+
+
+@pytest.mark.parametrize("spec", [{"quantity": "visible_fraction", "op": ">=", "value": 0.0}, {"quantity": "visible_fraction", "op": ">", "value": 1.0}])
+def test_a_threshold_that_is_always_or_never_true_is_refused(spec):
+    """'>' and '>=' give the same events except at the two ends of the scale, where one of
+    them defines no event at all; the operator was not looked at."""
+    pytest.importorskip("spiceypy")
+    from lsncore.events.finder import threshold_from_contract
+
+    with pytest.raises(ValueError, match="no event"):
+        threshold_from_contract(spec)
+    assert threshold_from_contract({"quantity": "visible_fraction", "op": ">", "value": 0.0}).limb == "upper_limb"
+    assert threshold_from_contract({"quantity": "visible_fraction", "op": ">=", "value": 1.0}).limb == "lower_limb"

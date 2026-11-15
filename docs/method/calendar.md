@@ -39,6 +39,24 @@ window is reported. Nothing is assumed beyond the computed range: a requirement 
 cannot be checked inside the range counts as not met, and a window that ends at the last
 time that can be judged gives a lower bound.
 
+**The end of what can be judged.** The last landing time that can be judged
+(`latest_landing`) is the end of the computed range minus the mission duration, for
+every requirement that states a duration. A landing window can end without any event
+ending it in two ways: at `latest_landing`, or where a "continuous from landing"
+condition can no longer be proven because the visibility it needs is still going on
+when the range ends (the end of the range minus its required time). Such a window is
+marked as cut, and a slip tolerance inside it is a lower bound. A planned landing later
+than that is neither feasible nor infeasible: it gets no slip report, and the package
+says so in its warnings.
+
+Until 15 November 2026 the core applied the first rule only to requirements with a
+"total within the mission" condition. For the others (two of the three example
+requirements) `latest_landing` was the end of the range, the feasible share was divided
+by too long a time (about 1 % too low over 24 months) and a last window that ends there
+was not marked as cut. An independent review found it; the landing windows themselves
+were right. The example requirement of section 3 has such a condition, so the table
+there was not affected.
+
 ## 2. Checks
 
 Thresholds were fixed in the test file before the code was written.
@@ -50,6 +68,9 @@ Thresholds were fixed in the test file before the code was written.
 | Landing windows of the three condition kinds against hand-computed sets | 1e-6 s | exact |
 | Landing windows of 25 random cases (three conditions each) against a scan in 1 s steps | 2 s | passes |
 | Slip report: inside a window, outside, no window, window cut by the range | 1e-6 s | exact |
+| The end of what can be judged, case of the review: 30 days, Earth always in view, Sun from day 5 to the end, 10 days of unbroken sunlight, mission of 10 days, landing planned on day 12. Expected, fixed before the fix: latest landing day 20, feasible share 0.75, window cut, slip of 8 days a lower bound | 1e-6 s; 1e-12 | failed before the fix (day 30, 0.50, not cut), passes |
+| A window that ends at an event is not marked; a window cut by a condition that cannot be proven is marked whatever the mission duration; the three example requirements end at latest landing when the Sun stays up | exact | passes |
+| A planned landing after what can be judged gets no slip report and a sentence in the warnings | exact | passes |
 
 One literal in the first version of the boundary test was a miscount (six boundaries in
 200 days; there are seven for the phase used). The count is now taken from the closed
@@ -80,6 +101,13 @@ from landing, Earth in view for at least half of a 14-day stay.
 | de Gerlache crater rim crest | 24 | 23.1 % | 9.7 d, 8.1 d | not feasible; next window in 20.8 d | feasible; can slip 7.6 d |
 | Mons Malapert summit | 30 | 42.3 % | 22.4 d, 9.3 d | not feasible; next window in 11.2 d | not feasible; next window in 0.9 d |
 
+*The 0 m figures below were computed before 15 November 2026, when the search began one
+pixel from the site. With the ground at the site searched they are lower (in 30 days the
+Sun is in view of a 0 m observer for 411 instead of 421 h at the Shackleton record, 387
+instead of 544 h at de Gerlache, 440 instead of 517 h at Malapert;
+[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. To be
+recomputed with the next published set.*
+
 At the Malapert record the feasible share depends strongly on the observer height: 32.9 %
 on the surface, 42.3 % at 2 m, 72.6 % at 20 m. The summit's horizon is set by terrain
 within 1 km in most azimuths, so these numbers rest on a few DEM pixels.
@@ -93,7 +121,10 @@ within 1 km in most azimuths, so these numbers rest on a few DEM pixels.
    near the poles; the uncertainty band (contract 0.4) shows by how much for a stated
    horizon error.
 3. **Range.** Landings later than the end of the range minus the mission duration cannot
-   be judged and are not in the windows.
+   be judged and are not in the windows. `feasible_fraction` is the share of the time up
+   to that instant, not of the whole range. Between that instant and the end of the range
+   some landings could in fact be ruled out (the Earth is not in view at landing); the
+   package does not say so for a planned landing there.
 4. **Sun visibility is geometric.** "Visible" means any part of the disc above the terrain
    horizon. Power needs the lit fraction and the panel; eclipses by the Earth are in the
    eclipse-aware window `sun_lit`, which a requirement can name instead of `sun_visible`.

@@ -305,9 +305,13 @@ def threshold_from_contract(spec: dict, label: str = "visible") -> ThresholdSign
     * ``visible_fraction > v`` with 0 < v < 1: located on the fraction itself.
     * ``margin_deg > m``: the disc centre is more than m degrees above the horizon.
 
-    ``>`` and ``>=`` differ only at single instants and give the same events.
+    ``>`` and ``>=`` differ only at single instants and give the same events, except at the
+    two ends of the scale: ``visible_fraction >= 0`` is always true and ``visible_fraction > 1``
+    never, so they define no event and are refused.
     """
     quantity, value = spec["quantity"], float(spec["value"])
+    if quantity == "visible_fraction" and ((spec.get("op") == ">=" and value <= 0.0) or (spec.get("op") == ">" and value >= 1.0)):
+        raise ValueError(f"threshold visible_fraction {spec['op']} {value:g} is always or never true: it defines no event")
     if quantity == "margin_deg":
         return ThresholdSignal(label, "center", offset_deg=value)
     if quantity == "visible_fraction":

@@ -23,6 +23,7 @@ from .timeline import IntervalSet, TimeGrid
 
 CONDITION_KINDS = ("visible_at_landing", "continuous_from_landing", "total_in_mission")
 _EPS = 1e-9
+_LIMIT_TOL_S = 1e-6  # two instants closer than this are the same edge of a window
 
 
 def lunar_day_periods(et_s, sun_km, domain=None) -> list[dict]:
@@ -131,11 +132,19 @@ def landing_windows(requirement: dict, windows: dict, domain) -> tuple[IntervalS
 
     Nothing is assumed about the time after the computed range: a landing is feasible
     only if the requirement is proven inside the range. Returns the feasible set and
-    {"mission_duration_s", "latest_landing_et_s"}.
+    {"mission_duration_s", "latest_landing_et_s", "knowledge_limits_et_s"}.
+
+    latest_landing_et_s is the end of the range minus the mission duration: the mission
+    must end inside the range, whatever the conditions are. knowledge_limits_et_s are the
+    instants at which a landing window can end without an event ending it: latest_landing,
+    and for every "continuous from landing" condition whose visibility is still going on
+    when the range ends, the end of the range minus min_s. A window that ends at one of
+    them is cut by what is known; the truth may extend further.
     """
     start, end = float(domain[0]), float(domain[1])
     duration = float(requirement.get("mission_duration_s", 0.0))
-    latest = end
+    latest = end - duration
+    limits = {latest, end}
     feasible = IntervalSet.full((start, end))
     for condition in requirement["conditions"]:
         kind = condition["kind"]
@@ -146,15 +155,21 @@ def landing_windows(requirement: dict, windows: dict, domain) -> tuple[IntervalS
             need = float(condition["min_s"])
             # a stretch exactly as long as required admits a single instant, which has no length
             part = [(s, e - need) for s, e in window.intervals if e - s > need]
+            if window.intervals and window.intervals[-1][1] >= end - _LIMIT_TOL_S:
+                limits.add(end - need)  # visibility beyond the range is unknown
         elif kind == "total_in_mission":
-            latest = min(latest, end - duration)
             part = _total_in_mission(window, duration, float(condition["min_s"]), start, end - duration)
         else:
             raise ValueError(f"unknown condition kind {kind!r}; expected one of {CONDITION_KINDS}")
         feasible = feasible.intersection(IntervalSet(part, (start, end)))
     if latest < end:
         feasible = feasible.intersection(IntervalSet([(start, latest)], (start, end))) if latest > start else IntervalSet.empty((start, end))
-    return feasible, {"mission_duration_s": duration, "latest_landing_et_s": latest}
+    return feasible, {"mission_duration_s": duration, "latest_landing_et_s": latest, "knowledge_limits_et_s": sorted(limits)}
+
+
+def is_knowledge_limit(t, limits) -> bool:
+    """True if an instant is one of the knowledge limits of landing_windows."""
+    return t is not None and any(abs(float(t) - limit) <= _LIMIT_TOL_S for limit in limits)
 
 
 def slip_report(feasible: IntervalSet, planned_et_s: float) -> dict:
@@ -221,7 +236,12 @@ def add_calendar_to_timeline(
     et_to_utc,
 ) -> None:
     """Add the lunar-day calendar and, for every stated requirement, the landing windows
-    and the slip tolerance of the planned landing to a site timeline."""
+    and the slip tolerance of the planned landing to a site timeline.
+
+    Returns sentences for the warnings of the package: a planned landing that lies after
+    what can be judged gets no slip report (it is neither feasible nor infeasible), and
+    the package says so.
+    """
     grid = TimeGrid.from_contract(timeline.time)
     domain = (grid.start_et_s, grid.end_et_s)
     table = table_package.manifest
@@ -253,8 +273,9 @@ def add_calendar_to_timeline(
         ],
         "quantities": quantities,
     }
+    notes: list[str] = []
     if not requirements:
-        return
+        return notes
 
     opportunities = []
     for requirement in requirements:
@@ -266,11 +287,20 @@ def add_calendar_to_timeline(
                 raise ValueError(f"requirement {requirement['id']!r} names a window the timeline does not have: {err}") from None
             feasible, info = landing_windows(requirement, windows, domain)
             latest = info["latest_landing_et_s"]
+            limits = info["knowledge_limits_et_s"]
+            judged_until = min(limits)
             lengths = [b - a for a, b in feasible.intervals]
             planned = None
-            if planned_landing_et_s is not None and domain[0] <= planned_landing_et_s <= domain[1]:
+            if planned_landing_et_s is not None and judged_until + _LIMIT_TOL_S < planned_landing_et_s <= domain[1]:
+                note = (
+                    f"opportunities: the planned landing {et_to_utc(planned_landing_et_s)} lies after the last landing time that can be judged "
+                    f"for requirement '{requirement['id']}' ({et_to_utc(judged_until)}); it gets no slip report, which says neither that it is feasible nor that it is not"
+                )
+                if note not in notes:
+                    notes.append(note)
+            elif planned_landing_et_s is not None and domain[0] <= planned_landing_et_s <= domain[1]:
                 report = slip_report(feasible, planned_landing_et_s)
-                cut = report["window_end_et_s"] is not None and report["window_end_et_s"] >= latest - 1e-6
+                cut = is_knowledge_limit(report["window_end_et_s"], limits)
                 planned = {
                     "utc": et_to_utc(planned_landing_et_s),
                     "et_s": float(planned_landing_et_s),
@@ -290,7 +320,7 @@ def add_calendar_to_timeline(
                     "landing_windows_et_s": feasible.as_list(),
                     "landing_windows_utc": [[et_to_utc(a), et_to_utc(b)] for a, b in feasible.intervals],
                     "clipped_start": bool(feasible.clipped_start),
-                    "clipped_end": bool(lengths and feasible.intervals[-1][1] >= latest - 1e-6),
+                    "clipped_end": bool(lengths and is_knowledge_limit(feasible.intervals[-1][1], limits)),
                     "latest_landing_et_s": float(latest),
                     "latest_landing_utc": et_to_utc(latest),
                     "feasible_fraction": float(feasible.total_s() / (latest - domain[0])) if latest > domain[0] else 0.0,
@@ -303,3 +333,4 @@ def add_calendar_to_timeline(
                 }
             )
     timeline.opportunities = opportunities
+    return notes

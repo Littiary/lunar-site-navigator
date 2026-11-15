@@ -133,6 +133,111 @@ def _reader_quality(reader, pixels: dict, lon_deg, lat_deg) -> dict:
     return {"product_id": ids, "pixel_m": pixel, "constrained": constrained, "height_rms_error_m": rms}
 
 
+_MANIFEST_FILES: dict | None = None
+
+
+def _manifest_entry(manifest_path) -> dict:
+    """What the data stream's manifest records for a file the reader names (empty if unknown)."""
+    global _MANIFEST_FILES
+    if not manifest_path:
+        return {}
+    if _MANIFEST_FILES is None:
+        try:
+            from lsn_data import manifest as data_manifest
+            from lsn_data.paths import manifest_path as where
+
+            _MANIFEST_FILES = data_manifest.load(where())["files"]
+        except Exception:  # pragma: no cover - depends on the environment
+            _MANIFEST_FILES = {}
+    return _MANIFEST_FILES.get(str(manifest_path), {})
+
+
+def _layer_version(item: dict, data_files: list) -> str:
+    """The version a product states. A product that states none (the 5 m site rasters) is
+    recorded as "file of <date>": the date its source reports for the data file, which
+    together with the checksum says which file it was. Never the word None."""
+    version = item.get("product_version")
+    if version not in (None, "", "None"):
+        return str(version)
+    from email.utils import parsedate_to_datetime
+
+    dates = []
+    for record in data_files:
+        stamp = _manifest_entry(record.get("manifest_path")).get("http_last_modified")
+        try:
+            dates.append(parsedate_to_datetime(stamp).date().isoformat())
+        except (TypeError, ValueError):
+            pass
+    if dates:
+        return f"file of {max(dates)}"
+    retrieved = sorted(str(record["retrieved_utc"])[:10] for record in data_files if record.get("retrieved_utc"))
+    return f"retrieved {retrieved[-1]}" if retrieved else "not stated"
+
+
+def _layer_record(item: dict, projection: str) -> dict:
+    """One entry of inputs.dem.layers from what the data reader reports for a product.
+
+    A product of one data file carries the checksum and source address of that file. A
+    product of several (the tiles of a mosaic) carries each of them in ``files`` and, as
+    its own checksum, the SHA-256 of the lines "<name>:<sha256>\n" of its data files in the
+    order of their names, so that the package id depends on the bytes of every tile.
+    """
+    import hashlib
+    import os
+
+    data = sorted((f for f in item.get("files", []) if f.get("role") == "data"), key=lambda f: str(f.get("name")))
+    layer = {
+        "layer_id": str(item["product_id"]),
+        "product_id": str(item["product_id"]),
+        "version": _layer_version(item, data),
+        "source_url": str(item.get("source_url") or ""),
+        "sha256": item.get("sha256"),
+        "pixel_m": float(item["pixel_m"]),
+        "projection": projection,
+    }
+    if len(data) == 1:
+        layer["source_url"] = str(data[0].get("source_url") or layer["source_url"])
+        layer["sha256"] = data[0].get("sha256") or layer["sha256"]
+    elif len(data) > 1:
+        layer["files"] = [{"name": str(f["name"]), "sha256": f.get("sha256"), "source_url": str(f.get("source_url") or "")} for f in data]
+        if all(f["sha256"] for f in layer["files"]):
+            lines = "".join(f"{f['name']}:{f['sha256']}\n" for f in layer["files"])
+            layer["sha256"] = hashlib.sha256(lines.encode("ascii")).hexdigest()
+        urls = [f["source_url"] for f in layer["files"]]
+        if all(urls):
+            common = os.path.commonprefix(urls)
+            layer["source_url"] = common[: common.rfind("/") + 1]
+    return layer
+
+
+def _unapproved_raster_notes(lat_deg: float, lon_deg: float) -> list[str]:
+    """A sentence for the package of a site that lies on a 5 m raster the data stream holds
+    back (present under the data root, but not approved because a check failed)."""
+    try:
+        import lsn_data
+        from lsn_data.georef import lonlat_to_xy
+
+        held_back = set(lsn_data.unapproved_site_dems())
+        if not held_back:
+            return []
+        for raster in lsn_data.site_dems(include_unapproved=True):
+            if str(raster.product_id) not in held_back:
+                continue
+            x, y = lonlat_to_xy(np.array([lon_deg]), np.array([lat_deg]), raster.grid0.radius_m, -1)
+            if bool(raster.grid0.covers_xy(x, y)[0]):
+                return [
+                    f"terrain: the site lies on the 5 m raster {raster.product_id}, which is present but not approved "
+                    "(data/manifest/approved_near_field.json: one of its checks failed); the near field is not used here and the 20 m product serves the site"
+                ]
+    except Exception:  # pragma: no cover - an older data reader without the approval gate
+        return []
+    return []
+
+
+def _dem_set_id(layers: list) -> str:
+    return "lola:" + "+".join(f"{layer['product_id']}@{layer['version'].replace(' ', '-')}" for layer in layers)
+
+
 def open_lola(label_paths=None, near_field: bool = False) -> "LolaTerrain":
     """Open LOLA terrain through the data stream's reader.
 
@@ -144,7 +249,9 @@ def open_lola(label_paths=None, near_field: bool = False) -> "LolaTerrain":
     except ImportError as err:  # pragma: no cover - depends on the environment
         raise RuntimeError("the data reader is not installed: pip install -e data") from err
     if near_field and label_paths is None:
-        return LolaTerrain(lsn_data.open_terrain(near_field=True))
+        adapter = LolaTerrain(lsn_data.open_terrain(near_field=True))
+        adapter.near_field_requested = True
+        return adapter
     return LolaTerrain(lsn_data.open_terrain(label_paths=label_paths))
 
 
@@ -198,12 +305,26 @@ class LolaTerrain:
             for q in products
         )
 
+    near_field_requested = False  # set by open_lola and open_moon when the near field was asked for
+
+    def _with_notes(self, view, lat_deg: float, lon_deg: float):
+        """The wide-only view of a site; if the near field was asked for and the site lies on
+        a raster that is held back, a copy that carries a sentence for the package."""
+        notes = _unapproved_raster_notes(lat_deg, lon_deg) if self.near_field_requested else []
+        if not notes:
+            return view
+        import copy
+
+        noted = copy.copy(view)
+        noted.site_notes = notes
+        return noted
+
     def for_site(self, lat_deg: float, lon_deg: float, range_m: float):
         """The terrain to use for one site: this one if it has no near-field refinement;
         otherwise the wide products, refined by the near-field product the site lies on
         (see NearFieldTerrain), or the wide products alone if it lies on none."""
         if not self._local:
-            return self
+            return self._with_notes(self, lat_deg, lon_deg)
         from lsn_data.georef import lonlat_to_xy
 
         products = self._terrain.products
@@ -216,7 +337,7 @@ class LolaTerrain:
             self._site_views[key] = (LolaTerrain(type(self._terrain)(mine + wide)), far) if mine else (far, far)
         near, far = self._site_views[key]
         if not mine:
-            return far
+            return self._with_notes(far, lat_deg, lon_deg)
         # the farthest corner of the refinement, as arc length from the site, plus two wide pixels
         reach = 0.0
         for p in mine:
@@ -522,22 +643,8 @@ class LolaTerrain:
         """The elevation layers for the package record: product, version, and the checksum
         and source address of the product's data file as the data reader reports them."""
         if self._described is None:
-            layers = []
-            for item in self._terrain.provenance():
-                data_file = next((f for f in item.get("files", []) if f.get("role") == "data"), {})
-                layers.append(
-                    {
-                        "layer_id": str(item["product_id"]),
-                        "product_id": str(item["product_id"]),
-                        "version": str(item.get("product_version")),
-                        "source_url": str(data_file.get("source_url") or item.get("source_url") or ""),
-                        "sha256": data_file.get("sha256") or item.get("sha256"),
-                        "pixel_m": float(item["pixel_m"]),
-                        "projection": "polar stereographic on a sphere, true scale at the pole",
-                    }
-                )
-            ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
-            self._described = {"dem_set_id": f"lola:{ids}", "layers": layers}
+            layers = [_layer_record(item, "polar stereographic on a sphere, true scale at the pole") for item in self._terrain.provenance()]
+            self._described = {"dem_set_id": _dem_set_id(layers), "layers": layers}
         return self._described
 
 
@@ -826,12 +933,9 @@ class MoonTerrainAdapter:
             for item in self._moon.provenance():
                 files = item.get("files", [])
                 data = [f for f in files if f.get("role") == "data"]
+                projection = "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)" if item.get("projection") == "simple cylindrical" else "polar stereographic on a sphere, true scale at the pole"
                 records[str(item["product_id"])] = {
-                    "pixel_m": float(item["pixel_m"]),
-                    "version": str(item.get("product_version")),
-                    "projection": "simple cylindrical (east-west pixel = pixel_m times the cosine of the latitude)" if item.get("projection") == "simple cylindrical" else "polar stereographic on a sphere, true scale at the pole",
-                    "sha256": data[0].get("sha256") if len(data) == 1 else None,
-                    "source_url": str(data[0].get("source_url") or "") if len(data) == 1 else "",
+                    **_layer_record(item, projection),
                     "levels": {f["name"]: f.get("sha256") for f in files if f.get("role") == "pyramid"} if len(data) == 1 else {},
                 }
             self._records = records
@@ -839,12 +943,8 @@ class MoonTerrainAdapter:
 
     def describe(self) -> dict:
         if self._described is None:
-            layers = [
-                {"layer_id": pid, "product_id": pid, "version": rec["version"], "source_url": rec["source_url"], "sha256": rec["sha256"], "pixel_m": rec["pixel_m"], "projection": rec["projection"]}
-                for pid, rec in self._product_records().items()
-            ]
-            ids = "+".join(f"{layer['product_id']}@{layer['version']}" for layer in layers)
-            self._described = {"dem_set_id": f"lola:{ids}", "layers": layers}
+            layers = [{key: value for key, value in rec.items() if key != "levels"} for rec in self._product_records().values()]
+            self._described = {"dem_set_id": _dem_set_id(layers), "layers": layers}
         return self._described
 
     def source_at(self, lon_deg, lat_deg) -> tuple[np.ndarray, dict]:
@@ -884,4 +984,7 @@ def open_moon(near_field: bool = False) -> MoonTerrainAdapter:
     except ImportError as err:  # pragma: no cover - depends on the environment
         raise RuntimeError("the data reader is not installed: pip install -e data") from err
     # near_field adds the 5 m site rasters of the data stream inside the polar products
-    return MoonTerrainAdapter(lsn_data.open_terrain(products="moon", near_field=True) if near_field else lsn_data.open_terrain(products="moon"))
+    adapter = MoonTerrainAdapter(lsn_data.open_terrain(products="moon", near_field=True) if near_field else lsn_data.open_terrain(products="moon"))
+    for polar in adapter._polar:
+        polar.near_field_requested = bool(near_field)
+    return adapter

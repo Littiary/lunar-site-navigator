@@ -55,6 +55,9 @@ class HorizonSettings:
 
     first_sample_px: float = 1.0  # distance of the first point from the site ...
     first_sample_max_m: float = 20.0  # ... but never farther than this: on a coarse grid the ground next to the site counts too
+    lead_eighths: int = 7  # points in front of the first one, at eighths of its distance ...
+    lead_min_m: float = 0.01  # ... and at its distance halved again and again, as long as that is not closer than this (2 cm for 5 m and 20 m pixels): closer, a point cannot be placed well enough for its elevation to mean anything; see compute_horizon
+    ground_from_first_point: bool = False  # True: an observer at 0 m is not offered the ground in front of the first point (the convention of pixel-based illumination maps)
     fine_step_px: float = 0.5  # lattice step
     inner_zone_px: float = 10.0  # extent of the denser lattice next to the site
     inner_step_px: float = 0.125  # its step: elevation angles are most sensitive there
@@ -234,8 +237,23 @@ def compute_horizon(
     inner = first + np.arange(1, int(settings.inner_zone_px / settings.inner_step_px)) * (
         terrain.finest_pixel_m * settings.inner_step_px
     )
-    s_near = np.unique(np.round(np.concatenate([s_near, inner[inner < s_near[-1]]]), 9))
+    # The ground between the site and the first point is terrain like any other: steep
+    # relief within a pixel can stand in the way of an observer above the ground, and for
+    # an observer at 0 m, the surface point itself, the slope of the ground at the site is
+    # its nearest horizon. It is searched for every observer height, down to about two
+    # centimetres. settings.ground_from_first_point leaves it out for the 0 m observer
+    # only: the convention of pixel-based illumination maps, for comparisons with them
+    # (docs/method/horizon.md, section 8).
+    lead = np.empty(0)
+    if start_m is None:
+        lead = first * np.concatenate([
+            np.arange(1, settings.lead_eighths + 1) / (settings.lead_eighths + 1.0),
+            0.5 ** np.arange(4, 4 + max(0, int(math.floor(math.log2(first / settings.lead_min_m))) - 3)),
+        ])
+    s_near = np.unique(np.round(np.concatenate([s_near, inner[inner < s_near[-1]], lead]), 9))
     n_near = s_near.size
+    n_lead = int(np.count_nonzero(s_near < first - 1e-9))  # they come first: s_near is sorted
+    on_ground = (heights == 0.0) & bool(settings.ground_from_first_point)
 
     def tan_all(h_terrain, gamma):
         """tan(elevation) for every observer height; the leading axis is the height."""
@@ -255,6 +273,10 @@ def compute_horizon(
     def offer(ray, s, h_terrain):
         """Offer points (flat arrays) to the best-point table."""
         t = tan_all(h_terrain, s / radius)
+        if n_lead and on_ground.any():
+            in_front = s < first - 1e-9
+            if in_front.any():
+                t[np.ix_(on_ground, in_front)] = -np.inf
         for i in range(n_h):
             top = np.full(n_az, -np.inf)
             np.maximum.at(top, ray, t[i])
@@ -296,6 +318,8 @@ def compute_horizon(
     h_near = np.asarray(terrain.height_m(near_lon, near_lat), dtype=np.float64)
     near_valid = np.isfinite(h_near)
     t_near = tan_all(h_near, g_near[None, :])  # [H, A, N]
+    if n_lead:
+        t_near[on_ground, :, :n_lead] = -np.inf
     k_best = np.argmax(t_near, axis=2)  # [H, A]
     best_t[:] = np.take_along_axis(t_near, k_best[..., None], axis=2)[..., 0]
     best_s[:] = s_near[k_best]
@@ -383,10 +407,12 @@ def compute_horizon(
         else:
             cand = np.broadcast_to(np.arange(n_near), (n_az, n_near)).copy()
         # brackets: around the best near-zone maxima and around the best point so far
-        s0 = np.nan_to_num(best_s[i], nan=s_near[0])
-        lo = np.concatenate([s_near[np.maximum(cand - 1, 0)], (s0 - fine)[:, None]], axis=1)
-        hi = np.concatenate([s_near[np.minimum(cand + 1, n_near - 1)], (s0 + fine)[:, None]], axis=1)
-        lo, hi = np.clip(lo, *s_limit), np.clip(hi, *s_limit)
+        k_low = n_lead if on_ground[i] else 0  # the first point this observer is offered
+        limit = (s_near[k_low], s_limit[1])
+        s0 = np.nan_to_num(best_s[i], nan=s_near[k_low])
+        lo = np.concatenate([s_near[np.maximum(cand - 1, k_low)], (s0 - fine)[:, None]], axis=1)
+        hi = np.concatenate([s_near[np.maximum(np.minimum(cand + 1, n_near - 1), k_low)], (s0 + fine)[:, None]], axis=1)
+        lo, hi = np.clip(lo, *limit), np.clip(hi, *limit)
         for _ in range(settings.refine_rounds):
             pts = lo[..., None] + (hi - lo)[..., None] * frac  # [A, C, P]
             g = pts / radius
@@ -457,8 +483,8 @@ def compute_horizon(
     }
     if ceiling_assumed:
         warnings.append(
-            "far field: no terrain ceiling was supplied; the highest terrain found inside the search "
-            "radius was used as the ceiling for the far-field bound"
+            "far field: no terrain ceiling was supplied; the highest terrain the search evaluated (near zone, "
+            "limiting points, site) was used as the ceiling for the far-field bound, which is not the highest terrain inside the search radius"
         )
 
     lattice_points = int(cell_count.sum()) * n_az
