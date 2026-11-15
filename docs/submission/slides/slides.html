@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lunar Site Navigator: backup slides</title>
+<!-- Source of docs/submission/Lunar_Site_Navigator_backup_slides.pdf. Seven slides, the limit of the
+     2026 Project Submission Guide. Rebuild the PDF with docs/submission/README.md, "Rebuilding". -->
+<style>
+@page { size: 1280px 720px; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #0b0f17; }
+body { font: 22px/1.35 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: #e8edf5; }
+section { width: 1280px; height: 720px; padding: 44px 56px 40px; position: relative; overflow: hidden;
+          page-break-after: always; break-after: page; background: #0b0f17; }
+section:last-child { page-break-after: auto; break-after: auto; }
+h1 { font-size: 54px; line-height: 1.08; margin: 0 0 14px; letter-spacing: -0.5px; }
+h2 { font-size: 38px; line-height: 1.12; margin: 0 0 18px; letter-spacing: -0.3px; }
+p { margin: 0 0 12px; }
+ul { margin: 0; padding-left: 24px; }
+li { margin: 0 0 9px; }
+.kicker { color: #f2b84b; font-size: 18px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 10px; }
+.muted { color: #9fb0c6; }
+.small { font-size: 16px; line-height: 1.35; }
+.num { position: absolute; right: 30px; bottom: 20px; font-size: 15px; color: #6f8098; }
+.foot { position: absolute; left: 56px; bottom: 20px; font-size: 14px; color: #6f8098; max-width: 1050px; }
+.cols { display: flex; gap: 36px; }
+.cols > div { flex: 1; min-width: 0; }
+img { display: block; width: 100%; border-radius: 8px; border: 1px solid #263246; }
+figure { margin: 0; }
+figcaption { font-size: 14px; color: #9fb0c6; margin-top: 6px; }
+.big { font-size: 64px; font-weight: 700; line-height: 1; color: #f2b84b; }
+.big.red { color: #ff7b72; }
+.stat { background: #121a27; border: 1px solid #263246; border-radius: 10px; padding: 14px 18px; }
+.stat p { margin: 6px 0 0; font-size: 17px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.flow { display: flex; align-items: stretch; gap: 10px; margin: 6px 0 18px; }
+.box { flex: 1; background: #121a27; border: 1px solid #263246; border-radius: 10px; padding: 12px 14px; font-size: 17px; }
+.box strong { display: block; color: #f2b84b; font-size: 18px; margin-bottom: 4px; }
+.arrow { align-self: center; color: #6f8098; font-size: 28px; }
+table { border-collapse: collapse; width: 100%; font-size: 17px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #263246; vertical-align: top; }
+th { color: #9fb0c6; font-weight: 600; }
+td.r { text-align: right; white-space: nowrap; }
+.pass { color: #56d364; font-weight: 700; }
+.fail { color: #ff7b72; font-weight: 700; }
+.cover { padding: 0; }
+.cover img { position: absolute; inset: 0; width: 1280px; height: 720px; object-fit: cover; border: 0; border-radius: 0; }
+.cover .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,15,23,0.96) 0%, rgba(11,15,23,0.86) 46%, rgba(11,15,23,0.15) 78%); }
+.cover .text { position: absolute; left: 56px; top: 70px; width: 640px; }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="cover">
+  <img src="img/a_opening_south_pole_wide.jpg" alt="South-polar terrain around Shackleton crater with the Sun low over the horizon">
+  <div class="shade"></div>
+  <div class="text">
+    <p class="kicker">NASA Space Apps Challenge 2026 · Aachen</p>
+    <h1>Lunar Site Navigator</h1>
+    <p style="font-size:27px">When does a landing site at the Moon's south pole have sunlight and a view of the Earth, and how far can the landing date slip?</p>
+    <p style="margin-top:26px"><strong>Team Kestro Aerospace</strong><br>Kaan Eşrefoğlu · Barkın Kocatepe</p>
+    <p class="muted">Challenge: Lunar Landing Site Navigator</p>
+    <p class="small muted" style="margin-top:26px">Try it: littiary.github.io/lunar-site-navigator<br>Code and data records: github.com/Littiary/lunar-site-navigator</p>
+  </div>
+  <div class="foot" style="left:auto;right:30px;bottom:44px;text-align:right">Picture: render of NASA LOLA elevation data around Shackleton crater,<br>19 September 2027, from the project's Unreal Engine view. Not AI-generated.</div>
+  <div class="num">1 / 7</div>
+</section>
+
+<!-- 2 -->
+<section>
+  <p class="kicker">The problem</p>
+  <h2>At the south pole, a ridge 673 m away decides whether a lander has power</h2>
+  <div class="cols">
+    <div style="flex:1.25">
+      <figure><img src="img/c_key_moment_near_ridge.jpg" alt="View from the Shackleton rim: the Sun behind a nearby ridge, with a card showing 373 hours of Sun lost">
+      <figcaption>Shackleton crater rim, 2 m above the ground, 6 December 2026: the Sun goes behind a ridge 673 m away.</figcaption></figure>
+    </div>
+    <div>
+      <ul>
+        <li>Near the pole the Sun stays within a few degrees of the horizon. Small relief casts very long shadows.</li>
+        <li>A mission needs <strong>sunlight for power</strong> and the <strong>Earth in view for radio contact</strong>, at the same time, for days.</li>
+        <li>Both change hour by hour, differ between neighbouring sites, and depend on the height of the mast.</li>
+      </ul>
+      <div class="stat" style="margin-top:16px"><span class="big">373 h</span>
+        <p>of sunlight lost in two years to this one ridge: 31 % of everything the site loses to terrain (observer at 2 m).</p></div>
+    </div>
+  </div>
+  <div class="num">2 / 7</div>
+</section>
+
+<!-- 3 -->
+<section>
+  <p class="kicker">Our solution</p>
+  <h2>Compare landing sites and dates on one screen</h2>
+  <div class="cols">
+    <div style="flex:1.3">
+      <figure><img src="img/b_product_two_sites.jpg" alt="Two sites side by side: at Shackleton the Sun is behind terrain, at de Gerlache it is up">
+      <figcaption>Shackleton and de Gerlache rim crests at the same hour: status cards for Sun, Earth and landing conditions, one shared timeline.</figcaption></figure>
+    </div>
+    <div>
+      <ul>
+        <li><strong>Compare</strong> two sites at any hour of a two-year window: Sun and Earth visible or hidden, time to the next rise or set.</li>
+        <li><strong>Explain</strong> a loss: which terrain hides the Sun, how far away it is, how many hours it costs.</li>
+        <li><strong>Plan</strong>: a 24-month calendar, landing windows for a stated requirement, days a landing can slip.</li>
+        <li><strong>Change</strong> the mast height (0 to 20 m) and see what it buys.</li>
+      </ul>
+      <p class="small muted" style="margin-top:14px">20 published sites, from Apollo 11 to a point in an Artemis III candidate region. Any other coordinate: one command of the open-source core.</p>
+    </div>
+  </div>
+  <div class="num">3 / 7</div>
+</section>
+
+<!-- 4 -->
+<section>
+  <p class="kicker">Real NASA data · scientific method</p>
+  <h2>One science core computes every number; the views only read it</h2>
+  <div class="flow">
+    <div class="box"><strong>NASA and partner data</strong>LOLA elevation: 5 m site models, 20 m and 60 m polar grids (LRO, NASA GSFC, PDS) · SLDEM2015 at 118 m (LOLA with Kaguya Terrain Camera data, JAXA) · SPICE kernels with DE440 (NASA/JPL NAIF) · lander coordinates from LROC</div>
+    <div class="arrow">→</div>
+    <div class="box"><strong>Science core (Python)</strong>360° terrain horizon traced on the sphere out to 300 km · Sun and Earth directions with light time and aberration · the Sun as a disc · rise and set events at six observer heights</div>
+    <div class="arrow">→</div>
+    <div class="box"><strong>Result packages</strong>Versioned files with a SHA-256 for every array, the method and validation status of every number, and an uncertainty band on event times at the seven south-polar sites</div>
+    <div class="arrow">→</div>
+    <div class="box"><strong>Views</strong>Web planner and Unreal Engine scene. They look values up and count down to published times. No science in the browser or the engine.</div>
+  </div>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>No raw data is stored in the repository: scripts download it and check every file against a committed checksum.</li>
+        <li>Every dataset, library and asset is listed with licence, source and retrieval time in <strong>CREDITS.md</strong>.</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li>Reference data for checking: JPL Horizons, LOLA illumination maps (NASA GSFC), LROC images, Apollo and CLPS mission records.</li>
+        <li>Reproducible: <code>python scripts/bootstrap.py --test</code> sets up, downloads and runs the tests.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="num">4 / 7</div>
+</section>
+
+<!-- 5 -->
+<section>
+  <p class="kicker">Verification</p>
+  <h2>32 checks with thresholds fixed in advance: 31 pass, 1 fails, and the failure stays on the page</h2>
+  <div class="cols">
+    <div style="flex:1.55">
+      <table>
+        <tr><th>What is computed</th><th>Checked against</th><th>Largest difference</th><th></th></tr>
+        <tr><td>Directions of the Sun and the Earth</td><td>JPL Horizons, 95,676 rows</td><td class="r">0.005 arcsec</td><td class="pass">PASS</td></tr>
+        <tr><td>Sunrise and sunset on a smooth sphere</td><td>JPL Horizons rise and set search</td><td class="r">57 s</td><td class="pass">PASS</td></tr>
+        <tr><td>Long-term share of sunlit time on LOLA terrain</td><td>published LOLA illumination maps, 100 points</td><td class="r">0.0006 (median)</td><td class="pass">PASS</td></tr>
+        <tr><td>Sun and Earth angles at six Apollo landings</td><td>48 published angles</td><td class="r">0.05°</td><td class="pass">PASS</td></tr>
+        <tr><td>Eclipse of 14 March 2025 at the Blue Ghost site</td><td>contact times predicted by Firefly</td><td class="r">0.83 min</td><td class="pass">PASS</td></tr>
+        <tr><td>Sunlit or shadowed ground along an LRO image strip</td><td>LROC NAC image, 267 of 298 points</td><td class="r">89.6 % agree, 90 % required</td><td class="fail">FAIL</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="grid3" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+        <div class="stat"><span class="big">25</span><p>checks against outside sources (24 pass)</p></div>
+        <div class="stat"><span class="big">7</span><p>analytical and internal tests (7 pass)</p></div>
+      </div>
+      <div class="stat"><p style="margin:0"><strong>Not validated:</strong> individual rise and set times on real terrain. No independent source gives such a time; the elevation model sets their accuracy.</p></div>
+    </div>
+  </div>
+  <div class="foot">Source: validation/card/validation_card.md and the "Accuracy and limits" page of the site. Height of the global terrain models against the five lunar laser retroreflectors: within 7 m.</div>
+  <div class="num">5 / 7</div>
+</section>
+
+<!-- 6 -->
+<section>
+  <p class="kicker">Interactive planner · in the browser, no login</p>
+  <h2>Two sites, one timeline, a 24-month calendar</h2>
+  <div class="cols">
+    <div>
+      <figure><img src="img/web_compare.jpg" alt="Web comparison page: status cards and horizon charts of two sites at the same time">
+      <figcaption>Web view at 2027-01-04 10:00 UTC: Sun, Earth and landing status per site, the terrain horizon with the Sun and the Earth.</figcaption></figure>
+    </div>
+    <div>
+      <figure><img src="img/web_calendar.jpg" alt="Opportunity calendar: hours of Sun and Earth per lunar day for two sites, with landing windows">
+      <figcaption>Opportunity calendar: hours with the Sun and the Earth per lunar day, landing windows of an example requirement chosen by the team.</figcaption></figure>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:12px">Also in the web view: 360° sky panorama, 3-D ground view on the package terrain, Moon globe, CSV export, evidence page. It works on a phone and from an offline copy; every array is checked against its SHA-256 in the browser.</p>
+  <div class="num">6 / 7</div>
+</section>
+
+<!-- 7 -->
+<section>
+  <p class="kicker">Comparative value · limits</p>
+  <h2>What it adds to existing tools, and where it stops</h2>
+  <div class="cols">
+    <div style="flex:1.15">
+      <table>
+        <tr><th></th><th>LROC QuickMap, NASA Moon Trek</th><th>Lunar Site Navigator</th></tr>
+        <tr><td>Scope</td><td>Maps of the whole Moon, hundreds of layers</td><td>20 sites, point by point</td></tr>
+        <tr><td>Light</td><td>Long-term visibility maps; shadows at a chosen time (QuickMap)</td><td>Every rise and set over two years, with its cause</td></tr>
+        <tr><td>Planning</td><td>Time slider; Sun angle over a date range</td><td>Calendar, landing windows, slip tolerance, two sites on one timeline</td></tr>
+        <tr><td>Mast height</td><td>not stated for the map layers</td><td>six heights, each with its own results</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:8px">Both portals tried hands-on on 15 November 2026 (web/docs/tool_comparison). They find places; our tool compares dates and heights at a place. No accuracy ranking is claimed.</p>
+    </div>
+    <div>
+      <p><strong>Limits</strong></p>
+      <ul class="small" style="font-size:17px">
+        <li>Event times on real terrain have no independent reference; one of two image checks fails.</li>
+        <li>Outside the polar grids the terrain is 118 m per pixel: nearby obstacles smaller than about 240 m are not seen.</li>
+        <li>Within 1 km of the site a result depends on single pixels and on a few metres of position.</li>
+        <li>The landing requirement shown is an example of the team, not a mission criterion. The sites are not official landing sites.</li>
+      </ul>
+      <p class="small muted" style="margin-top:12px">Use of AI: parts of the code and text were written with AI coding assistants and reviewed by the team (CREDITS.md). No image or video is AI-generated.</p>
+    </div>
+  </div>
+  <div class="num">7 / 7</div>
+</section>
+
+</body>
+</html>

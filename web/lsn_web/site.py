@@ -4,8 +4,10 @@ Output folder (default ``web/dist/site``)::
 
     index.html          the split-screen comparison viewer
     compare.html        the split-screen comparison viewer
-    evidence.html       the evidence page (self-contained; charts embedded)
-    charts/*.svg        the same charts as separate files, linked from the page
+    evidence.html       the evidence page; it shows the chart files of charts/
+    charts/*.svg        per site its horizon panorama and window strip, and the windows of all sites
+    accuracy.html       the accuracy and limits page (self-contained)
+    learn.html          the education page (self-contained; learn.<code>.html for further languages)
     viewer/             the interactive viewer (copied from web/viewer)
     packages/           the packages the viewer reads: index.json and exactly the files it lists
     notice.json         the notice and the validation summary of the card, for the viewer
@@ -33,10 +35,10 @@ from pathlib import Path
 
 if __package__ in (None, ""):  # allow `python web/lsn_web/site.py`
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from lsn_web import charts, evidence, summary
+    from lsn_web import accuracy, charts, evidence, learn, summary
     from lsn_web.package import array_refs, load_packages
 else:
-    from . import charts, evidence, summary
+    from . import accuracy, charts, evidence, learn, summary
     from .package import array_refs, load_packages
 
 WEB = Path(__file__).resolve().parent.parent
@@ -65,10 +67,16 @@ def build(packages: list[str], card: Path | None, notice: str | None, out: Path)
         written.append(path)
 
     for site in sites:
-        write(out / "charts" / f"horizon_panorama__{site.manifest['site']['site_id']}.svg", charts.horizon_panorama(site, notice))
+        site_id = site.manifest["site"]["site_id"]
+        write(out / "charts" / f"horizon_panorama__{site_id}.svg", charts.horizon_panorama(site, notice))
+        if site.timeline:
+            write(out / "charts" / f"window_strip__{site_id}.svg", charts.window_strip([site], notice))
     if any(site.timeline for site in sites):
         write(out / "charts" / "window_strip.svg", charts.window_strip(sites, notice))
     write(out / "evidence.html", evidence.build_page(sites, card, notice, chart_links=True))
+    write(out / "accuracy.html", accuracy.build_page(sites, card, notice, repo=REPO, site_links=True))
+    for code in learn.languages():
+        write(out / learn.page_name(code), learn.build_page(sites, code, site_links=True))
     write(out / "index.html", comparison_page())
     write(out / "compare.html", comparison_page())
     write(out / ".nojekyll", "")
@@ -102,6 +110,8 @@ def comparison_page() -> str:
             .replace('href="index.html"', 'href="viewer/index.html"')
             .replace('href="../index.html"', 'href="evidence.html"')
             .replace('href="../evidence.html"', 'href="evidence.html"')
+            .replace('href="../accuracy.html"', 'href="accuracy.html"')
+            .replace('href="../learn.html"', 'href="learn.html"')
             .replace('src="js/compare.js"', 'src="viewer/js/compare.js"')
             .replace('"./vendor/three/three.module.js"', '"./viewer/vendor/three/three.module.js"'))
 
