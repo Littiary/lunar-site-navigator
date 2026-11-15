@@ -142,10 +142,6 @@ public:
 	UProceduralMeshComponent* GetStarsComponent() const { return Stars; }
 	/** Share of the Sun's disc the package gives as visible at the selected sample and height; 0 without a value. */
 	double GetSunVisibleFraction() const;
-	/** The share of the Earth's disc visible at the selected sample, as the package gives it. */
-	double GetEarthVisibleFraction() const;
-	/** True while the earthshine light is on. */
-	bool IsEarthshineOn() const;
 
 	/** What the ground between the site and the horizon line is, for the read-out. */
 	FString GetGroundNote() const;
@@ -158,7 +154,6 @@ public:
 
 	UDirectionalLightComponent* GetSunLight() const { return SunLight; }
 	UDirectionalLightComponent* GetFillLight() const { return FillLight; }
-	UDirectionalLightComponent* GetEarthLight() const { return EarthLight; }
 
 	/**
 	 * Which of two scenes shown side by side this is (0 or 1). Each slot lights and is
@@ -239,9 +234,6 @@ private:
 	 */
 	UPROPERTY()
 	TObjectPtr<UDirectionalLightComponent> FillLight;
-	/** Light from the Earth while the package gives the Sun as hidden and the Earth as visible. */
-	UPROPERTY()
-	TObjectPtr<UDirectionalLightComponent> EarthLight;
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInterface> SurfaceMaterial;
@@ -249,7 +241,7 @@ private:
 	/** The regolith surface of this scene; its "SunDirection" follows the package. */
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> RegolithMaterial;
-	/** Light function of the earthshine and the zenith fill: the ambient occlusion of the regolith's detail textures. */
+	/** Light function of the zenith fill: the ambient occlusion of the regolith's detail textures. */
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> LightOcclusionMaterial;
 
