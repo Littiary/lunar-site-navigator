@@ -52,5 +52,28 @@ Measured with the repository's horizon search (`core/`, read-only use), comparin
   0.148 deg, 95 % of azimuths within 0.50 deg, and a largest value of 0.79 deg (at 153.25 deg).
 * Runtime: 8.7 s with the near field, 2.6 s with 20 m only (one search, cold start).
 
-Whether Malapert keeps the 5 m near field is the team lead's decision. The options and numbers are in the report to
-the control session.
+## Decision (team lead, 2026-11-15): option B, Malapert on the 20 m product
+
+A layer that fails its checkpoint is not used. This is the same rule as for SLDEM2015_512.
+
+* **What A would have risked:** keeping the 5 m layer at Malapert. The seam would change its horizon by at most
+  0.12 deg (the p95 bound above).
+* **What B gives up:** the whole effect of the 5 m layer at Malapert (median 0.148 deg, p95 0.50 deg, largest
+  0.79 deg) and the 1 m error band inside the 5 m extent. Malapert returns to the 20 m band of 5 m / 7 m (2-sigma, by
+  slope).
+
+**How it is enforced.** `data/manifest/approved_near_field.json` lists the near-field layers that may be used: Site04
+and Site11. The reader (`lsn_data.near_field_usable`) opens a 5 m layer only if it is listed there and
+`near_field_report.json` records both its comparison and its seam as passed. Site23 is not special-cased. It fails
+the rule and so is not opened.
+
+* `open_terrain(near_field=True)` and `open_terrain(products="moon", near_field=True)` read the Malapert record
+  from `LDEM_80S_20M`; the moon terrain reports Site23 as "present but not approved".
+* Only the near-field checkpoints themselves open every layer (`site_dems(include_unapproved=True)`).
+* Test: `data/tests/test_near_field_gate.py`.
+
+**Effect on the published site list.** `data/sites/curated_sites.json` was regenerated. Only the Malapert record
+changed:
+
+* `terrain.near_field` is now null.
+* The ground height is now from `LDEM_80S_20M`: 5173.50 m instead of 5172.89 m (ground radius 1742573.50 m).

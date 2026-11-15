@@ -80,17 +80,53 @@ def attach_counts(dem, root=None) -> bool:
     return True
 
 
-def site_dems(root=None):
-    """The 5 m/pixel site DEMs present under ``<root>/raw/lola_5mpp`` (south pole), as polar products."""
+def near_field_usable(pid: str, approved: dict, report: dict) -> bool:
+    """A near-field layer may be used only if it is listed in approved_near_field.json and its report entry records
+    both the comparison and the seam as passed."""
+    s = report.get("sites", {}).get(pid)
+    return pid in approved and s is not None and bool(s.get("passed")) and bool(s.get("seam", {}).get("passed"))
+
+
+def _near_field_gate():
+    import json
+
+    from .paths import repo_data_dir
+
+    approved = json.loads((repo_data_dir() / "manifest" / "approved_near_field.json").read_text(encoding="utf-8"))["approved"]
+    report = json.loads((repo_data_dir() / "checkpoints" / "near_field_report.json").read_text(encoding="utf-8"))
+    return approved, report
+
+
+def unapproved_site_dems(root=None) -> list[str]:
+    """Product ids of 5 m site DEMs present under the data root that the gate keeps out."""
+    from . import catalog
+    from .paths import data_root
+
+    root = Path(root) if root else data_root()
+    approved, report = _near_field_gate()
+    return [f"LOLA5MPP_{s.upper()}" for s in catalog.SITE_DEM_SITES
+            if (root / "raw" / "lola_5mpp" / f"LOLA5MPP_{s.upper()}" / f"{s}_final_adj_5mpp_surf.tif").exists()
+            and not near_field_usable(f"LOLA5MPP_{s.upper()}", approved, report)]
+
+
+def site_dems(root=None, include_unapproved: bool = False):
+    """The 5 m/pixel site DEMs present under ``<root>/raw/lola_5mpp`` (south pole), as polar products.
+
+    Only layers that pass the gate (``near_field_usable``) are returned; ``include_unapproved=True`` is for the
+    near-field checkpoints themselves, which must evaluate every layer.
+    """
     from . import catalog
     from .dem import PolarDEM
     from .paths import data_root, derived_dir
 
     root = Path(root) if root else data_root()
+    approved, report = _near_field_gate()
     out = []
     for site in catalog.SITE_DEM_SITES:
         pid = f"LOLA5MPP_{site.upper()}"
         f = root / "raw" / "lola_5mpp" / pid / f"{site}_final_adj_5mpp_surf.tif"
+        if not include_unapproved and not near_field_usable(pid, approved, report):
+            continue
         if f.exists():
             from . import geotiff as gt
 
@@ -138,6 +174,7 @@ def open_moon(root=None, near_field=False, candidates=()):
                 missing.append(pid)
         if near_field and pole < 0:
             dems += site_dems(root)
+            missing += [f"{pid} (present but not approved in data/manifest/approved_near_field.json)" for pid in unapproved_site_dems(root)]
         if dems:
             polar.append(Terrain(dems))
     import json
