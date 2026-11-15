@@ -1,8 +1,8 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-15T05:02:53Z",
+  "generated_utc": "2026-11-15T06:21:53Z",
   "generated_from": {
-    "commit": "c547a5a",
+    "commit": "c87c192",
     "uncommitted_changes": false
   },
   "core": {
@@ -135,7 +135,7 @@
     {
       "id": "tdb_minus_utc",
       "group": "Independent source",
-      "quantity": "Time scales: TDB minus UTC",
+      "quantity": "Time scales: TDB minus UTC from the core's own conversion of the UTC time tags, against the TDB minus UT that Horizons prints for the same rows",
       "compared_against": "JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14",
       "cases": "28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h",
       "threshold": {
@@ -148,12 +148,14 @@
         "where": "validation/horizons/thresholds.json (commit f25145f)"
       },
       "measured": {
-        "value": 3.803738438534765e-05,
+        "value": 3.8092102045084175e-05,
         "unit": "s"
       },
       "status": "PASS",
       "evidence": "validation/horizons/results/validation_table.md; test validation/tests/test_horizons.py",
       "limits": [
+        "The ET that the core gives for each row, minus the calendar seconds of its UTC tag, is compared: an error of the conversion shows in full (a shift of 1 s gives 1 s).",
+        "The leap-second kernel alone (SPICE deltet) agrees with Horizons to 3.8e-05 s.",
         "For dates after the last announced leap second both sides assume that no further leap second is introduced."
       ],
       "limit": "For dates after the last announced leap second both sides assume that no further leap second is introduced."
@@ -426,7 +428,7 @@
       "limits": [
         "An ephemeris check, independent of terrain."
       ],
-      "limit": "An ephemeris check against values printed to 0.01 deg; it does not involve terrain."
+      "limit": "An ephemeris check against values printed to 0.01 deg, recomputed at every build from the two image times; it does not involve terrain."
     },
     {
       "id": "station_earth_end",
@@ -875,9 +877,10 @@
       "evidence": "test core/tests/events/test_events.py::test_scan_step_does_not_lose_events_on_a_rough_polar_horizon",
       "limits": [
         "Invented profile, not terrain.",
-        "Pairs of crossings closer than 60 s are not reported by the default scan."
+        "Pairs of crossings closer than 60 s are not reported by the default scan.",
+        "Both scans are the same finder: an error common to the 5 s and the 60 s scan would leave this row at zero. The independent check at the level of seconds is row 31."
       ],
-      "limit": "An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan."
+      "limit": "An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan, and an error common to the 5 s and the 60 s scan would leave this row at zero (the independent check at the level of seconds is row 31)."
     }
   ],
   "not_validated": [

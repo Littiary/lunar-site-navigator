@@ -1,6 +1,6 @@
 # Validation card: ephemeris, time and event finding
 
-Generated 2026-11-15T05:02:53Z by `validation/card/build.py` from commit `c547a5a`; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
+Generated 2026-11-15T06:21:53Z by `validation/card/build.py` from commit `c87c192`; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
 
 **31 of 32 checks pass; 1 fails (row 14). A failed check is shown as it is: no threshold, rule or reference was changed after a result.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
 
@@ -10,7 +10,7 @@ Generated 2026-11-15T05:02:53Z by `validation/card/build.py` from commit `c547a5
 | 2 | Same direction through the site-independent direction table that viewers read | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 1 arcsec | 0.0988 arcsec | **PASS** |
 | 3 | Apparent angular diameter of the Sun and the Earth | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 0.1 arcsec | 0.00057 arcsec | **PASS** |
 | 4 | Distance from the site to the Sun and to the Earth | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 1 km | 0.0042 km | **PASS** |
-| 5 | Time scales: TDB minus UTC | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 0.002 s | 3.8e-05 s | **PASS** |
+| 5 | Time scales: TDB minus UTC from the core's own conversion of the UTC time tags, against the TDB minus UT that Horizons prints for the same rows | JPL Horizons observer tables, DE441 (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 28 queries, 95676 rows: 7 lunar surface points (3 south-polar), Sun and Earth, 14-16 Nov 2026 at 10 min and 2026-11-01 to 2045-07-01 at 25 h | < 0.002 s | 3.8e-05 s | **PASS** |
 | 6 | Sunrise and sunset times on a smooth sphere (upper limb, with the dip of the horizon) | JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31 | < 120 s | 56.5 s | **PASS** |
 | 7 | Sunrise and sunset events without a counterpart on the other side | JPL Horizons rise/transit/set search, 1-minute step (https://ssd.jpl.nasa.gov/horizons/), retrieved 2026-11-14 | 16 sunrise and sunset events: 4 lunar surface points (one 1 km above the sphere), 2026-11-01 to 2026-12-31 | ≤ 0 events | 0 events | **PASS** |
 | 8 | Share of time with any part of the Sun above the LOLA terrain horizon: median absolute difference to the published map | LOLA illumination maps of the south pole, 60 m (AVGVISIB_85S_060M_201608, _EARTH, LPSR_85S_060M_201608), LOLA Science Team, NASA GSFC, PGDA product 69 (https://pgda.gsfc.nasa.gov/products/69), retrieved 2026-11-14 | 100 points fixed beforehand (33 ridges and rims, 33 floors, 31 plains and slopes, 3 site records); one nodal cycle of 18.6 years at hourly steps; terrain of the same 60 m resolution as the maps | ≤ 0.05 share of time | 0.00058 share of time | **PASS** |
@@ -57,7 +57,7 @@ Numbers as in the table above.
 12. One nodal cycle at hourly steps, so a point lit for less than an hour in 18.6 years counts as never lit; 2 points on a boundary of the published map were left out.
 13. One point in one image, read by the camera team and not by us, where the terrain that hides the Sun is only 0.12 km away, so the state depends on the pole's position on the 20 m elevation grid.
 14. Fails as registered (89.6 % against 90 %): all 31 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon and the image rule reads as shadow, which fits either a single brightness threshold that reads dimly lit ground as shadow or a terrain horizon of the core that is too low there by that amount, and the data do not decide between the two; the rule and the criterion were not changed after the result.
-15. An ephemeris check against values printed to 0.01 deg; it does not involve terrain.
+15. An ephemeris check against values printed to 0.01 deg, recomputed at every build from the two image times; it does not involve terrain.
 16. No terrain at either end, and both sides use JPL ephemerides and Earth orientation data of the same origin.
 17. No terrain at either end, and both sides use JPL ephemerides and Earth orientation data of the same origin.
 18. As for the station rows above; in addition the fast path evaluates both ends of the link at one instant.
@@ -74,7 +74,7 @@ Numbers as in the table above.
 29. A uniform disc without limb darkening, cut by a straight horizon.
 30. Numerical accuracy for a given horizon profile, not the physical accuracy of an event time on real terrain.
 31. Internal and without terrain.
-32. An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan.
+32. An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan, and an error common to the 5 s and the 60 s scan would leave this row at zero (the independent check at the level of seconds is row 31).
 
 ## Where each threshold was fixed
 
