@@ -350,6 +350,10 @@ def synthetic_timeline(
             metrics.append(_metric(f"{tag}_visible_fraction_of_time", f"Share of the window with {body} visible", iv.fraction(), "1", h))
             metrics.append(_metric(f"{tag}_longest_visible_s", f"Longest continuous {body} visibility", iv.longest_s(), "s", h))
             metrics.append(_metric(f"{tag}_longest_outage_s", f"Longest continuous interval without {body}", iv.complement().longest_s(), "s", h))
+            outages = iv.complement().intervals
+            longest_outage = max(outages, key=lambda interval: interval[1] - interval[0], default=None)
+            cut = longest_outage is not None and (longest_outage[0] <= domain[0] + 1e-6 or longest_outage[1] >= domain[1] - 1e-6)
+            metrics.append(_metric(f"{tag}_longest_outage_is_lower_bound", f"1 if the longest interval without {body} runs into the start or the end of the computed range, so that it is only a lower bound, else 0", 1.0 if cut else 0.0, "1", h))
 
         if ellipse is not None:
             # the same body seen from every sample point: each point has its own local frame

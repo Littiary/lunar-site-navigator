@@ -1189,6 +1189,14 @@
               "type": "string"
             }
           }
+        },
+        "earliest_clipped": {
+          "type": "boolean",
+          "description": "Since 0.12. earliest_et_s is the start of the computed range: the band runs on before it, and the true earliest time is unknown."
+        },
+        "latest_clipped": {
+          "type": "boolean",
+          "description": "Since 0.12. latest_et_s is the end of the computed range: the band runs on after it, and the true latest time is unknown."
         }
       }
     },
@@ -2407,6 +2415,14 @@
                 "type": "string",
                 "minLength": 1,
                 "description": "Since 0.11. Descriptive only: what kind of entry the site is in a site list (for example past landing, candidate, project site). Passed through unchanged from the site record; no number depends on it."
+              },
+              "start_utc": {
+                "$ref": "#/$defs/utc",
+                "description": "Since 0.12, for a site package with a timeline: start of its time window."
+              },
+              "end_utc": {
+                "$ref": "#/$defs/utc",
+                "description": "Since 0.12, for a site package with a timeline: end of its time window."
               }
             }
           }
@@ -2825,15 +2841,30 @@
           "type": "boolean"
         },
         "latest_landing_et_s": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "null (since 0.12) if the time window is shorter than the mission duration: no landing time can be judged."
         },
         "latest_landing_utc": {
-          "$ref": "#/$defs/utc"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/utc"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "feasible_fraction": {
-          "type": "number",
+          "type": [
+            "number",
+            "null"
+          ],
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "description": "null (since 0.12) if no landing time can be judged in the time window; that is not 0."
         },
         "window_count": {
           "type": "integer",

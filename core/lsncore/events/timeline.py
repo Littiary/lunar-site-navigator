@@ -194,6 +194,10 @@ def compute_timeline(
             metrics.append(_metric(f"{tag}_visible_fraction_of_time", f"Share of the window with the {name} visible", iv.fraction(), "1", h))
             metrics.append(_metric(f"{tag}_longest_visible_s", f"Longest continuous {name} visibility", iv.longest_s(), "s", h))
             metrics.append(_metric(f"{tag}_longest_outage_s", f"Longest continuous interval without the {name}", iv.complement().longest_s(), "s", h))
+            outages = iv.complement().intervals
+            longest_outage = max(outages, key=lambda interval: interval[1] - interval[0], default=None)
+            cut = longest_outage is not None and (longest_outage[0] <= domain[0] + 1e-6 or longest_outage[1] >= domain[1] - 1e-6)
+            metrics.append(_metric(f"{tag}_longest_outage_is_lower_bound", f"1 if the longest interval without the {name} runs into the start or the end of the computed range, so that it is only a lower bound, else 0", 1.0 if cut else 0.0, "1", h))
 
             down = finder.countdown(result, "visible", reference_et)
             to_set, set_bound = _time_to(result, "set", reference_et)

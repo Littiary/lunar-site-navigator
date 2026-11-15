@@ -49,6 +49,14 @@ marked as cut, and a slip tolerance inside it is a lower bound. A planned landin
 than that is neither feasible nor infeasible: it gets no slip report, and the package
 says so in its warnings.
 
+**A window that is too short.** If the time window is not longer than the mission
+duration, no landing time at all can be judged. The package then gives no landing
+windows, `feasible_fraction` and `latest_landing` are `null`, and a warning says that the
+window is shorter than the mission duration of that requirement. `null` is not 0: until
+15 November 2026 the core wrote 0.0 there, which reads as "never feasible". The same
+holds where a condition asks for more unbroken visibility than the window is long and
+that visibility is still going on when the window ends.
+
 Until 15 November 2026 the core applied the first rule only to requirements with a
 "total within the mission" condition. For the others (two of the three example
 requirements) `latest_landing` was the end of the range, the feasible share was divided

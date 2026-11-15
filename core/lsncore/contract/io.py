@@ -277,6 +277,10 @@ def write_index(root: Path | str, scenario_id: str | None = None) -> Path:
                 lon_deg=m["site"]["lon_deg"],
                 has_timeline="timeline" in m,
             )
+            # One site can have several packages (another time window, other settings): the
+            # window lets a reader tell them apart; package_id is what identifies an entry.
+            if "timeline" in m:
+                entry.update(start_utc=m["timeline"]["time"]["start_utc"], end_utc=m["timeline"]["time"]["end_utc"])
             # descriptive labels, for the site list of a viewer
             entry.update({label: m["site"][label] for label in ("programme", "category") if label in m["site"]})
         elif m["kind"] == "site_pairs":

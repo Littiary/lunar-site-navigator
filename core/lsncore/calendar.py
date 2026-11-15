@@ -291,7 +291,24 @@ def add_calendar_to_timeline(
             judged_until = min(limits)
             lengths = [b - a for a, b in feasible.intervals]
             planned = None
-            if planned_landing_et_s is not None and judged_until + _LIMIT_TOL_S < planned_landing_et_s <= domain[1]:
+            # A window shorter than the mission (or than the unbroken visibility a condition
+            # asks for) allows no landing time to be judged. That is not "never feasible".
+            judgeable = judged_until > domain[0] + _LIMIT_TOL_S
+            if not judgeable:
+                if latest <= domain[0] + _LIMIT_TOL_S:
+                    note = (
+                        f"opportunities: the time window is shorter than the mission duration of requirement '{requirement['id']}' "
+                        f"({info['mission_duration_s'] / 86400.0:g} days): no landing time can be judged; feasible_fraction and latest_landing are null, "
+                        "which does not mean that no landing is feasible"
+                    )
+                else:
+                    note = (
+                        f"opportunities: the time window is too short to judge requirement '{requirement['id']}': the unbroken visibility it asks for "
+                        "cannot be proven inside it; feasible_fraction is null, which does not mean that no landing is feasible"
+                    )
+                if note not in notes:
+                    notes.append(note)
+            elif planned_landing_et_s is not None and judged_until + _LIMIT_TOL_S < planned_landing_et_s <= domain[1]:
                 note = (
                     f"opportunities: the planned landing {et_to_utc(planned_landing_et_s)} lies after the last landing time that can be judged "
                     f"for requirement '{requirement['id']}' ({et_to_utc(judged_until)}); it gets no slip report, which says neither that it is feasible nor that it is not"
@@ -321,9 +338,9 @@ def add_calendar_to_timeline(
                     "landing_windows_utc": [[et_to_utc(a), et_to_utc(b)] for a, b in feasible.intervals],
                     "clipped_start": bool(feasible.clipped_start),
                     "clipped_end": bool(lengths and is_knowledge_limit(feasible.intervals[-1][1], limits)),
-                    "latest_landing_et_s": float(latest),
-                    "latest_landing_utc": et_to_utc(latest),
-                    "feasible_fraction": float(feasible.total_s() / (latest - domain[0])) if latest > domain[0] else 0.0,
+                    "latest_landing_et_s": float(latest) if latest > domain[0] + _LIMIT_TOL_S else None,
+                    "latest_landing_utc": et_to_utc(latest) if latest > domain[0] + _LIMIT_TOL_S else None,
+                    "feasible_fraction": float(feasible.total_s() / (latest - domain[0])) if judgeable else None,
                     "window_count": len(lengths),
                     "longest_window_s": float(max(lengths, default=0.0)),
                     "median_window_s": float(np.median(lengths)) if lengths else None,

@@ -29,6 +29,7 @@ from .results import TimelineResult
 from .timeline import IntervalSet, TimeGrid
 
 _GOLDEN_ANGLE = math.pi * (3.0 - math.sqrt(5.0))
+_RANGE_EDGE_S = 1e-6  # a time within this of an end of the computed range is that end
 _EVENT_SLACK_S = 1.0
 
 
@@ -339,7 +340,12 @@ def add_uncertainty_to_timeline(
             mine = [event for event in timeline.events if event["body"] == body and event["height_index"] == h]
             for event, (a, b) in zip(mine, event_time_bounds([event["et_s"] for event in mine], band)):
                 a, b = min(a, event["et_s"]), max(b, event["et_s"])
-                event.update(earliest_et_s=a, latest_et_s=b, earliest_utc=et_to_utc(a), latest_utc=et_to_utc(b))
+                # A bound that lies on an end of the computed range is not a bound of the event:
+                # the band runs on beyond the range, and nothing is known there.
+                event.update(
+                    earliest_et_s=a, latest_et_s=b, earliest_utc=et_to_utc(a), latest_utc=et_to_utc(b),
+                    earliest_clipped=bool(a <= grid.start_et_s + _RANGE_EDGE_S), latest_clipped=bool(b >= grid.end_et_s - _RANGE_EDGE_S),
+                )
         block = {}
         if stated.get("horizon_error_deg"):
             block["error_deg"] = float(stated["horizon_error_deg"])

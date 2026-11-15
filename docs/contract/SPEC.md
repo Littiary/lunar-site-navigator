@@ -322,7 +322,8 @@ have it in the label only; there the rule above applies, with `request.timeline.
 terrain that hides or reveals it), `threshold` (the condition crossed), `method`.
 Optional: `obstacle_lat_deg`, `obstacle_lon_deg`, `sigma_s` (1-sigma time uncertainty),
 `closing_rate_deg_per_h`, `grazing`, and since 0.4 `earliest_et_s`, `latest_et_s`,
-`earliest_utc`, `latest_utc` (range of the event time for the stated horizon error; 5.7).
+`earliest_utc`, `latest_utc` (range of the event time for the stated horizon error; 5.7)
+and, since 0.12, with them `earliest_clipped`, `latest_clipped` (the bound is an end of the computed range; 5.7).
 
 **Window:** `id`, `subject` (`SUN`, `EARTH`, `COMBINED`), `height_index`, `definition`
 (a sentence), optional `threshold`, `intervals_et_s` (`[[start, end], …]`, sorted,
@@ -331,6 +332,12 @@ disjoint), `intervals_utc` (the same instants as strings), `clipped_start` and
 true start or end is unknown), `method`.
 
 **Metric:** `id`, `label`, `value`, `unit`, `height_index` (or `null`), `method`.
+
+Metrics over the whole range are totals of the range, not of the site. Where the range
+cuts what is measured, a flag says so: the two `_is_lower_bound` flags of the countdowns
+(below), and since 0.12 `<body>_longest_outage_is_lower_bound` (1 if the longest interval
+without the body, `<body>_longest_outage_s`, runs into the start or the end of the
+computed range, so that the outage is at least that long; else 0).
 
 Window ids written by the core, each per observer height: `<body>_visible` (the
 scenario's condition), `<body>_any_part_visible`, `<body>_full_disc_visible`,
@@ -447,9 +454,9 @@ in total between landing and landing + `mission_duration_s`. All conditions must
 |---|---|
 | `requirement_id`, `height_index` | Which requirement (in `request.timeline.requirements`), which observer height |
 | `landing_windows_et_s`, `landing_windows_utc` | The landing times for which the requirement holds: sorted, disjoint intervals |
-| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration, for every requirement that states a duration, whatever its conditions (the end of the range if it states none). Later landings are not in the windows, whatever the truth |
+| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration, for every requirement that states a duration, whatever its conditions (the end of the range if it states none). Later landings are not in the windows, whatever the truth. `null` (since 0.12) if the time window is not longer than the mission duration: then no landing time can be judged |
 | `clipped_start`, `clipped_end` | The first window starts at the start of the range, or the last one ends where knowledge ends and not at an event: at `latest_landing`, or, for a `continuous_from_landing` condition whose visibility is still going on when the range ends, at the end of the range minus its `min_s`. Its true extent is unknown |
-| `feasible_fraction` | Total length of the windows divided by the time from the start of the range to `latest_landing` |
+| `feasible_fraction` | Total length of the windows divided by the time from the start of the range to `latest_landing`. `null` (since 0.12) if no landing time can be judged in the time window: it is shorter than the mission duration, or than the unbroken visibility a condition asks for while that visibility is still going on at its end. `null` is not 0: the package then has no landing windows for that requirement and says in `warnings` that the window is too short. (Before 0.12 it was written as 0.0, which reads as "never feasible") |
 | `window_count`, `longest_window_s`, `median_window_s` | Summary of the windows |
 | `feasible_s_per_period` | Feasible landing time inside each period of the calendar |
 | `planned_landing` | The slip report for the site's `landing_utc` (below); `null` if the scenario states no planned landing, if it lies outside the computed range, or if it lies after what can be judged (after `latest_landing`, or after the end of a window cut as described for `clipped_end`). In the last case the planned landing is neither feasible nor infeasible, and `warnings` of the package says so; a reader finds the stated landing in `request.timeline.landing_utc` |
@@ -491,7 +498,14 @@ the angle is that of the limiting terrain point alone: `possible` is an outer bo
 set a horizon above the raised profile ([method note](../method/uncertainty.md), section 5). Metrics
 `<body>_visible_certain_s`, `<body>_visible_possible_s`, `<body>_visible_uncertain_s`.
 Every event gets `earliest_et_s`, `latest_et_s` (and the UTC strings): the interval of
-the band that contains it; equal to the event time if the band is empty there. A
+the band that contains it; equal to the event time if the band is empty there. The band
+is known inside the computed range only. Where it runs into the start or the end of the
+range, the bound of the event is that start or end, and since 0.12 the event says so:
+`earliest_clipped: true` means that the true earliest time is unknown and lies at or
+before `earliest_et_s`; `latest_clipped: true` that the true latest time lies at or
+after `latest_et_s`. A reader must not show a clipped bound as the range of the event.
+(Before 0.12 such bounds were written without any mark: in the 24-month set published
+under 0.11, 60 events, one of them at a default observer height.) A
 requirement (5.6) may name `sun_visible_certain` instead of `sun_visible` to get landing
 windows that hold under the stated error.
 
@@ -735,7 +749,17 @@ data can be moved between the sites.
 
 `packages[]`: `kind`, `package_id`, `path`, `synthetic`, `status`; for sites also
 `site_id`, `name`, `lat_deg`, `lon_deg`, `has_timeline` and, since 0.11 and only where
-the site states them, `programme` and `category` (5.2); for site pairs `site_ids`.
+the site states them, `programme` and `category` (5.2); since 0.12, for a site with a
+timeline, `start_utc` and `end_utc` of its time window; for site pairs `site_ids`.
+
+**`package_id` identifies an entry; `site_id` does not.** A site is a place. One place
+can have several packages under one package root (another time window, another default
+observer height, other stated assumptions), all with the same `site_id` and each in its
+own directory `site/<site_id>/<package_id>/`. A reader that keeps one record per
+`site_id` loses all but one of them without noticing; it must key its records by
+`package_id` and, if it shows one entry per site, choose among them openly (the window
+in the entry is there for that). The core's default id of a custom site follows the
+coordinates to 1e-7 degrees, so two places it can tell apart never share an id.
 
 ## 8. Versioning
 
@@ -774,6 +798,9 @@ After an independent review of the core. One field is new; two values were compu
 - `inputs.dem.layers[]`: new optional `files` for a product of several data files, whose `sha256` and `source_url` are now filled; a product without a version of its own is recorded as `file of <date>` instead of `None` (5.1).
 - Section 6: the direction formula no longer shows the observer height, which the core does not apply (below 0.01 arcsecond).
 - Wording: `visible_certain` is not a guarantee for a height error (5.7).
+- New: events with bounds carry `earliest_clipped` and `latest_clipped` (5.7); the metric `<body>_longest_outage_is_lower_bound` (5.4); `start_utc` and `end_utc` in the site entries of the index (7).
+- `feasible_fraction` and `latest_landing_et_s`, `latest_landing_utc` can be `null`: a time window in which no landing time can be judged (5.6). They were 0.0 and an instant before the start of the range.
+- Section 7 states that `package_id`, not `site_id`, identifies an index entry.
 
 ### 0.11 (14 November 2026)
 

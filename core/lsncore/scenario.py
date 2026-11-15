@@ -145,9 +145,11 @@ def custom_site_scenario(
     except ValueError as err:
         raise ValueError(f"start: {err}") from err
     if name is None:
-        east = canonical_lon(lon_deg)
-        name = f"Custom site {abs(lat_deg):.4f} {'S' if lat_deg < 0 else 'N'}, {abs(east):.4f} {'W' if east < 0 else 'E'}"
-        default_id = f"custom-{abs(lat_deg):.4f}{'s' if lat_deg < 0 else 'n'}-{abs(east):.4f}{'w' if east < 0 else 'e'}"
+        # The default id follows the canonical coordinates (1e-7 deg, a few millimetres), so that
+        # two places the package tells apart never share an id; the name is good to 0.3 m.
+        north, east = round(lat_deg, 7), round(canonical_lon(lon_deg), 7)
+        name = f"Custom site {abs(north):.5f} {'S' if north < 0 else 'N'}, {abs(east):.5f} {'W' if east < 0 else 'E'}"
+        default_id = f"custom-{abs(north):.7f}{'s' if north < 0 else 'n'}-{abs(east):.7f}{'w' if east < 0 else 'e'}"
     else:
         default_id = name
     site = {"site_id": site_id or slug(default_id), "name": name, "lat_deg": lat_deg, "lon_deg": lon_deg}

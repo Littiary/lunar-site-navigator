@@ -82,7 +82,7 @@ def test_custom_scenario_states_window_requirements_and_band():
     validate_document(scenario)
     (site,) = scenario["sites"]
     assert site["lat_deg"] == 26.1 and site["lon_deg"] == 3.6 and "landing_utc" not in site
-    assert site["name"] == "Custom site 26.1000 N, 3.6000 E" and site["site_id"] == "custom-26-1000n-3-6000e"
+    assert site["name"] == "Custom site 26.10000 N, 3.60000 E" and site["site_id"] == "custom-26-1000000n-3-6000000e"
     assert scenario["time_window"] == {"start_utc": "2026-11-14T00:00:00.000Z", "end_utc": "2026-12-14T00:00:00.000Z", "step_s": 3600.0}
     assert [r["id"] for r in scenario["requirements"]] == list(requirement_presets())
     presets = height_error_presets()
@@ -103,7 +103,7 @@ def test_custom_scenario_states_window_requirements_and_band():
 def test_start_date_is_read_as_utc(start, expected):
     scenario = custom_site_scenario(-85.0, 200.0, start, days=1.5)
     assert scenario["time_window"]["start_utc"] == expected
-    assert scenario["sites"][0]["name"] == "Custom site 85.0000 S, 160.0000 W"
+    assert scenario["sites"][0]["name"] == "Custom site 85.00000 S, 160.00000 W"
 
 
 @pytest.mark.parametrize("start", ["14.11.2026", "2026-13-01", "tomorrow", "2026-11-14T06:30+03:00"])
@@ -217,7 +217,7 @@ def test_custom_command_writes_a_complete_package_and_prints_progress(tmp_path, 
 
     manifest, index = _site_manifest(tmp_path)
     assert sorted(p["kind"] for p in index["packages"]) == ["direction_table", "site"]
-    assert manifest["status"] == "ok" and manifest["site"]["name"] == "Custom site 90.0000 S, 0.0000 E"
+    assert manifest["status"] == "ok" and manifest["site"]["name"] == "Custom site 90.00000 S, 0.00000 E"
     timeline = manifest["timeline"]
     assert timeline["time"]["start_utc"] == "2026-11-14T00:00:00.000Z" and timeline["time"]["end_utc"] == "2026-11-18T00:00:00.000Z"
     assert {"sun_visible", "earth_visible"} <= {w["id"] for w in timeline["windows"]}

@@ -83,7 +83,7 @@ table, site package, `index.json`), so a viewer reads it like any other.
 | Option | Default | Meaning |
 |---|---|---|
 | `--days` | 30 | Length of the window |
-| `--name`, `--site-id` | `Custom site 26.1000 N, 3.6000 E`, `custom-26-1000n-3-6000e` | How the site is called |
+| `--name`, `--site-id` | `Custom site 26.10000 N, 3.60000 E`, `custom-26-1000000n-3-6000000e` | How the site is called. The default id follows the coordinates to 1e-7 degrees, so two places a few metres apart get different ids. One place computed for two time windows keeps one id and gets two packages; a reader tells them apart by `package_id` and by the window in the index |
 | `--landing-utc` | none | Planned landing: reference of the countdowns and of the slip tolerance |
 | `--preset <id>` | all three | Example requirements to state (repeatable; `none` for no landing windows) |
 | `--no-band` | band on | Leave out the uncertainty band |
@@ -110,7 +110,7 @@ progress 4/6 Sun and Earth visibility, events, countdowns and landing windows: 3
 progress 5/6 uncertainty band
 progress 6/6 terrain patches and package files
 <package root>/direction_table/dirtab-8b0176a10b9b3c9b
-<package root>/site/custom-26-1000n-3-6000e/site-43b399bf78b6c900
+<package root>/site/custom-26-1000000n-3-6000000e/site-43b399bf78b6c900
 <package root>/index.json
 ```
 

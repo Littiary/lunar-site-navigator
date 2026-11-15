@@ -252,6 +252,10 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
             errors.append(f"timeline/events/{i}: et_s outside the time grid")
         if "earliest_et_s" in ev and not ev["earliest_et_s"] <= ev["et_s"] <= ev["latest_et_s"]:
             errors.append(f"timeline/events/{i}: the event must lie between its earliest and latest time")
+        if "earliest_et_s" in ev and tuple(int(part) for part in manifest["contract"]["version"].split(".")) >= (0, 12):
+            # since 0.12 a bound that is an end of the computed range says so
+            if ev.get("earliest_clipped") != (ev["earliest_et_s"] <= t0 + 1e-3) or ev.get("latest_clipped") != (ev["latest_et_s"] >= t1 - 1e-3):
+                errors.append(f"timeline/events/{i}: earliest_clipped and latest_clipped must say whether the bound is an end of the time grid")
         if last is not None and ev["et_s"] < last:
             errors.append(f"timeline/events/{i}: events must be sorted by et_s")
         last = ev["et_s"]
