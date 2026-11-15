@@ -125,7 +125,9 @@ class SiteFileUrlTests(unittest.TestCase):
             out = Path(tmp) / "site"
             site_build.main(["--packages", str(INDEX), "--out", str(out), "--card", ""])
             base = "https://example.org/proj/"
-            pages = ["index.html", "compare.html", "viewer/index.html", "viewer/compare.html"]
+            # The root index.html is the React landing page when web/app/dist is built; the classic
+            # comparison page is at compare.html and classic.html (the app is tested in test_app.py).
+            pages = ["classic.html", "compare.html", "viewer/index.html", "viewer/compare.html"]
             for page in pages:
                 html = (out / page).read_text(encoding="utf-8")
                 scripts = re.findall(r'<script type="module" src="([^"]+)"', html)

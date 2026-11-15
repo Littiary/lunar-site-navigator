@@ -20,12 +20,14 @@ from lsn_web import charts, evidence, package, site
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 INDEX = FIXTURES / "contract-sample-0.3" / "packages" / "index.json"
 CARD = FIXTURES / "validation-card" / "validation_card.json"
+# A stand-in for the React build (web/app/dist): the same layout (index.html, compare/, assets/), no React.
+APP = FIXTURES / "app-build"
 
 
 class SiteBuildTests(unittest.TestCase):
     def build(self, tmp: str, notice_text: str | None) -> Path:
         out = Path(tmp) / "site"
-        args = ["--packages", str(INDEX), "--card", str(CARD), "--out", str(out)]
+        args = ["--packages", str(INDEX), "--card", str(CARD), "--out", str(out), "--app", str(APP)]
         if notice_text is not None:
             notice = Path(tmp) / "notice.txt"
             notice.write_text(notice_text, encoding="utf-8")
@@ -38,9 +40,9 @@ class SiteBuildTests(unittest.TestCase):
             out = self.build(tmp, "TEST NOTICE")
             names = sorted(str(p.relative_to(out)).replace("\\", "/") for p in out.rglob("*") if p.is_file())
             top = [n for n in names if not n.startswith(("viewer/", "packages/", "summary/"))]
-            self.assertEqual(top, [".nojekyll", "accuracy.html", "charts/horizon_panorama__synthetic-sample-site.svg",
-                                   "charts/window_strip.svg", "charts/window_strip__synthetic-sample-site.svg", "compare.html", "evidence.html",
-                                   "index.html", "learn.html", "notice.json",
+            self.assertEqual(top, [".nojekyll", "accuracy.html", "assets/main-fixture.js", "charts/horizon_panorama__synthetic-sample-site.svg",
+                                   "charts/window_strip.svg", "charts/window_strip__synthetic-sample-site.svg", "classic.html", "compare.html",
+                                   "compare/index.html", "evidence.html", "index.html", "learn.html", "notice.json",
                                    "submission/Lunar_Site_Navigator_backup_slides.pdf"])
             self.assertIn("summary/index.json", names)
             self.assertIn("viewer/index.html", names)
@@ -122,11 +124,14 @@ class SiteBuildTests(unittest.TestCase):
             self.assertEqual([x["item"] for x in v["not_validated"]], [x["item"] for x in card["not_validated"]])
 
     def test_page_links_the_viewer(self):
+        # The classic comparison page stays at compare.html and classic.html; the root index.html
+        # is the app's landing page (see AppBuildTests).
         with tempfile.TemporaryDirectory() as tmp:
-            html = (self.build(tmp, "N") / "index.html").read_text(encoding="utf-8")
+            html = (self.build(tmp, "N") / "classic.html").read_text(encoding="utf-8")
             self.assertIn('src="viewer/js/compare.js"', html)
             self.assertIn('href="evidence.html"', html)
             self.assertEqual((self.build(tmp, "N") / "compare.html").read_text(encoding="utf-8"), html)
+            self.assertEqual((self.build(tmp, "N") / "index.html").read_bytes(), (APP / "index.html").read_bytes())
 
     def test_rebuild_is_identical(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:

@@ -149,20 +149,24 @@ The site build writes `summary/index.json` (one entry per site of the index: ide
 
 ## Public site (`lsn_web/site.py`)
 
-One command builds the hosted site from the packages published by the core stream in `packages/`:
+One command builds the hosted site from the packages published by the core stream in `packages/`; build the React app first (see React site below), so that its landing page becomes the root `index.html`:
 
 ```
-cd web
+cd web/app && npm ci && npm run build && cd ..
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page, showing the chart files), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file: per site the panorama and the window strip, and the windows of all sites on one axis), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page, showing the chart files), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file: per site the panorama and the window strip, and the windows of all sites on one axis), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. With a React build in `web/app/dist` (option `--app`, an empty string leaves it out) it also copies that build to the root: `index.html` becomes the landing page, `compare/` the React comparison page and `assets/` their files; the classic comparison page is then at `compare.html` and `classic.html`. Without an app build the root `index.html` is the classic page, as before, and the command says so. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 
 **When the packages change:** fetch the branch that holds the new `packages/`, run `python -m lsn_web.site`, then publish `web/dist/site/` (see Hosting).
 
 The packages were first handed over as `packages_sites.zip` (contract 0.1). Their content digests are identical to the published ones in `packages/` (commit `945546d`, generated from core commit `d1af9e6` with a clean working tree).
+
+## React site (`web/app/`)
+
+The landing page and the comparison of the public site are a React app in `web/app/` (React, Vite, TypeScript). The comparison page runs `viewer/js/compare.js` unchanged, so it shows the numbers of the classic page. Build with `cd web/app && npm ci && npm run build`; architecture, data flow and how it reuses `web/viewer/js/`: [web/app/README.md](app/README.md). Screenshots at desktop and phone width: `docs/web/react/`.
 
 ## Hosting
 

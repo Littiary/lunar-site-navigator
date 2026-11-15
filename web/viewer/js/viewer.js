@@ -339,7 +339,7 @@ async function main() {
     await selectSite(state.index.sites[Math.max(0, wanted)], wanted >= 0);
     if (state.site.manifest.synthetic) {
       const box = $("notice");
-      box.textContent = `SYNTHETIC SAMPLE DATA — ${state.site.manifest.synthetic_notice || "invented values, not a result"}`;
+      box.textContent = `SYNTHETIC SAMPLE DATA: ${state.site.manifest.synthetic_notice || "invented values, not a result"}`;
       box.hidden = false;
     }
     // ?tab=3d (or 2d, sky, globe, calendar) opens that view, for links from the comparison.

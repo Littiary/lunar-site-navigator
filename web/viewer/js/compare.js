@@ -306,7 +306,7 @@ function renderPairs() {
   const card = method && state.pairs.methods && state.pairs.methods[method];
   const status = card && card.validation ? card.validation.status : "unknown";
   // SPEC 6a: covered_share_of_better_outage is null when the better site lacks no time.
-  const share = (v) => (v === null || v === undefined ? "— (no outage)" : `${fixed(v * 100, 1)} %`);
+  const share = (v) => (v === null || v === undefined ? "none (no outage)" : `${fixed(v * 100, 1)} %`);
   const hours = (s) => `${fixed(s / 3600, 1)} h`;
   const nameOf = (id) => esc((info[id] && info[id].name) || id);
   const rows = pair.windows.map((w) => `<tr><td><code>${esc(w.window)}</code></td><td class="num">${hours(w.a_s)}</td><td class="num">${hours(w.b_s)}</td>
@@ -319,7 +319,7 @@ function renderPairs() {
     ${warnings ? `<ul class="small note">${warnings}</ul>` : ""}
     <div class="table"><table><thead><tr><th>Window (${range})</th><th>At ${nameOf(pair.site_a)}</th><th>At ${nameOf(pair.site_b)}</th><th>Either site</th><th>Both</th><th>Neither (joint outage)</th><th>Longest joint outage</th><th>Gain over the better site</th><th>Share of the better site's outage covered</th></tr></thead><tbody>${rows}</tbody></table></div>
     <details class="details small"><summary>Details: pair package and method</summary>
-      <p>Package <code>${esc(state.pairs.package_id)}</code>, method <code>${esc(method || "—")}</code> [${esc(status)}]; great-circle distance ${fixed(pair.distance_m, 0)} m.
+      <p>Package <code>${esc(state.pairs.package_id)}</code>, method <code>${esc(method || "n/a")}</code> [${esc(status)}]; great-circle distance ${fixed(pair.distance_m, 0)} m.
       Computed at the observer heights ${heights} (the default heights of the site packages); read from <code>site_pairs</code>, not recomputed.
       The package says when at least one site sees the body; it does not say that power or data can be moved between the sites.</p></details>`;
 }
@@ -479,7 +479,7 @@ async function main() {
     mark("full");
     if (state.panes.some((p) => p.site.manifest.synthetic)) {
       const box = $("notice");
-      box.textContent = "SYNTHETIC SAMPLE DATA — invented values, not results.";
+      box.textContent = "SYNTHETIC SAMPLE DATA: invented values, not results.";
       box.hidden = false;
     }
   } catch (e) {

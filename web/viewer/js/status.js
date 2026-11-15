@@ -12,7 +12,7 @@ import { containing, esc, eventsAtHeight, windowsAtHeight } from "./panel.js";
 
 // A time span for reading: "3 d 4 h", "5 h 12 min", "12 min", "under 1 min".
 export function durationText(seconds) {
-  if (!Number.isFinite(seconds)) return "—";
+  if (!Number.isFinite(seconds)) return "n/a";
   const m = Math.floor(seconds / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
   if (d > 0) return `${d} d ${h % 24} h`;
   if (h > 0) return `${h} h ${m % 60} min`;

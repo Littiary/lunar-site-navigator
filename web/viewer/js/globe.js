@@ -23,6 +23,23 @@ import { webglAvailable } from "./view3d.js";
 import { enableViewportResize } from "./viewport-resize.js";
 
 const TEXTURE = new URL("../vendor/moon/lroc_color_2k.jpg", import.meta.url).href;
+// Sharper copies of the same NASA map (vendor/moon/HD_TEXTURES.md). The 2K map is shown first;
+// the largest copy this device should load then replaces it: 4K wherever WebGL takes a 4096-pixel
+// texture, 8K only on a large screen with a fine pointer (a desktop), so a phone loads 1.4 MB,
+// not 4.8 MB. Looks only: positions, lighting and every number are unchanged.
+const TEXTURE_HD = [
+  { url: new URL("../vendor/moon/lroc_color_8k.jpg", import.meta.url).href, width: 8192, desktopOnly: true },
+  { url: new URL("../vendor/moon/lroc_color_4k.jpg", import.meta.url).href, width: 4096, desktopOnly: false },
+];
+
+// The sharpest copy for a device: maxTextureSize of its WebGL, desktop = large screen, fine pointer.
+export function hdTextureFor(maxTextureSize, desktop) {
+  return TEXTURE_HD.find((t) => t.width <= maxTextureSize && (desktop || !t.desktopOnly)) || null;
+}
+
+function isDesktop() {
+  return Boolean(window.matchMedia && window.matchMedia("(min-width: 1200px) and (hover: hover) and (pointer: fine)").matches);
+}
 const FOV = 35;
 
 // display-transform:start
@@ -103,6 +120,17 @@ export function createGlobe(container, { onPickSite } = {}) {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const moon = new THREE.Mesh(texturedSphere(240, 120), new THREE.MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 }));
+  const hd = hdTextureFor(renderer.capabilities.maxTextureSize, isDesktop());
+  if (hd) {
+    new THREE.TextureLoader().load(hd.url, (sharp) => {
+      sharp.colorSpace = THREE.SRGBColorSpace;
+      sharp.anisotropy = texture.anisotropy;
+      moon.material.map = sharp;
+      moon.material.needsUpdate = true;
+      texture.dispose();
+      requestDraw();
+    }); // on an error the 2K map simply stays
+  }
   scene.add(moon);
   const grid = new THREE.LineSegments(graticule(30, 1.0015), new THREE.LineBasicMaterial({ color: 0xc9d1d9, transparent: true, opacity: 0.12, toneMapped: false }));
   scene.add(grid);
