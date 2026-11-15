@@ -158,6 +158,7 @@ public:
 
 	UDirectionalLightComponent* GetSunLight() const { return SunLight; }
 	UDirectionalLightComponent* GetFillLight() const { return FillLight; }
+	UDirectionalLightComponent* GetEarthLight() const { return EarthLight; }
 
 	/**
 	 * Which of two scenes shown side by side this is (0 or 1). Each slot lights and is
@@ -248,6 +249,9 @@ private:
 	/** The regolith surface of this scene; its "SunDirection" follows the package. */
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> RegolithMaterial;
+	/** Light function of the earthshine and the zenith fill: the ambient occlusion of the regolith's detail textures. */
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> LightOcclusionMaterial;
 
 	/**
 	 * The Earth with its map (since contract 0.8): NASA Blue Marble, turned by the earth_view
