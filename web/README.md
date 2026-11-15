@@ -149,20 +149,35 @@ The site build writes `summary/index.json` (one entry per site of the index: ide
 
 ## Public site (`lsn_web/site.py`)
 
-One command builds the hosted site from the packages published by the core stream in `packages/`:
+One command builds the hosted site from the packages published by the core stream in `packages/`; build the React app first (see React site below), so that its landing page becomes the root `index.html`:
 
 ```
-cd web
+cd web/app && npm ci && npm run build && cd ..
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page, showing the chart files), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file: per site the panorama and the window strip, and the windows of all sites on one axis), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page, showing the chart files), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file: per site the panorama and the window strip, and the windows of all sites on one axis), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. With a React build in `web/app/dist` (option `--app`, an empty string leaves it out) it also copies that build to the root: `index.html` becomes the landing page, `compare/` the React comparison page and `assets/` their files; the classic comparison page is then at `compare.html` and `classic.html`. Without an app build the root `index.html` is the classic page, as before, and the command says so. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 
 **When the packages change:** fetch the branch that holds the new `packages/`, run `python -m lsn_web.site`, then publish `web/dist/site/` (see Hosting).
 
 The packages were first handed over as `packages_sites.zip` (contract 0.1). Their content digests are identical to the published ones in `packages/` (commit `945546d`, generated from core commit `d1af9e6` with a clean working tree).
+
+## React site (`web/app/`)
+
+React, Vite and TypeScript, static output for the project path `/lunar-site-navigator/` of GitHub Pages. Two pages:
+
+- `index.html`, the landing page: hero, three figures of the Shackleton rim package, renders of the Unreal scene, how the parts fit together, the published sites, the validation card (counts and the failed check) and the team. The figures, the site list and the card are read at build time from `packages/` and `validation/card/validation_card.json` by `web/app/plugins/facts.ts`, copied unchanged and only rounded for display; the third figure (74.1 h to 1.8 h) is quoted from `docs/method/near_field.md` and links it.
+- `compare/index.html`, the comparison: a layout around the elements of the classic page (same ids, same pane template) that loads `viewer/js/compare.js` from the published `viewer/` folder at run time. Package loading, SHA-256 checks, status cards, charts, sky panorama, ground view, calendar and pair table are therefore the classic code, and the panes show the same bytes as `classic.html` for the same address. three.js comes from `viewer/vendor` through the import map, as on the classic page.
+
+```
+cd web/app
+npm ci            # dependencies from package-lock.json
+npm run build     # type check, then dist/ (ignored by git)
+```
+
+To look at it locally, build the site and serve its parent under the project path, for example with a folder `serve/lunar-site-navigator` that links to `web/dist/site`, then `python -m http.server 8000 --directory serve` and open http://localhost:8000/lunar-site-navigator/. Screenshots of both pages at desktop and phone width are in `docs/web/react/`.
 
 ## Hosting
 

@@ -26,7 +26,7 @@
 .cmp details.more-controls label { display: inline-flex; gap: 6px; align-items: center; color: #c9d0da; font-size: 0.9rem; }
 @media (max-width: 900px) { .cmp .timebar { position: sticky; top: 60px; } }
 @media (max-width: 600px) {
-  .cmp .timebar { padding: 6px 0 2px; }
+  .cmp .timebar { position: static; padding: 6px 0 2px; }
   .tb-steps { flex-basis: 100%; }
   .tb-steps button { padding: 4px 8px; }
   .segmented { width: 100%; }
