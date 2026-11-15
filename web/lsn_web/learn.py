@@ -141,7 +141,7 @@ def build_page(sites: list[SitePackage], lang: str = DEFAULT_LANGUAGE, site_link
     assumption = (((site.timeline or {}).get("uncertainty") or {}).get("horizon_error") or {}).get("assumption") if site else None
     banner = ""
     if site and site.synthetic:
-        banner = '<div class="banner">SYNTHETIC SAMPLE DATA — the example values on this page are invented interface-test values, not results.</div>'
+        banner = '<div class="banner">SYNTHETIC SAMPLE DATA: the example values on this page are invented interface-test values, not results.</div>'
     nav = [(f"#{section['id']}", section["heading"]) for section in text["sections"]]
     if site_links:
         nav += [("compare.html", text["nav_compare"]), ("evidence.html", text["nav_evidence"]), ("accuracy.html", text["nav_accuracy"])]

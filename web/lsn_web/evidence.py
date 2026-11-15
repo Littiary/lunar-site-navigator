@@ -160,7 +160,7 @@ def site_section(site: SitePackage, notice: str | None = None, chart_links: bool
     out = [f'<h2 id="site-{e(slug(s["site_id"]))}">{e(s["name"])}</h2>']
     if site.synthetic:
         out.append(
-            '<div class="banner">SYNTHETIC SAMPLE DATA — not a result'
+            '<div class="banner">SYNTHETIC SAMPLE DATA: not a result'
             f"<p>{e(m.get('synthetic_notice', ''))}</p></div>"
         )
     for warning in m.get("warnings", []):
@@ -324,7 +324,7 @@ def methods_section(sites: list[SitePackage]) -> str:
                 ("Limits", "<br>".join(e(x) for x in limits) or "—"),
             ]
             out.append(
-                f"<details><summary><code>{e(method_id)}</code> — {e(card.get('title'))} "
+                f"<details><summary><code>{e(method_id)}</code>: {e(card.get('title'))} "
                 f"{status_badge(validation.get('status', 'unknown'))}</summary>{facts(pairs)}</details>"
             )
     return "\n".join(out)
@@ -416,7 +416,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
         nav.append(("#validation", "Validation"))
     banner = ""
     if any(site.synthetic for site in sites):
-        banner = ('<div class="banner">SYNTHETIC SAMPLE DATA — this page shows invented interface-test values, '
+        banner = ('<div class="banner">SYNTHETIC SAMPLE DATA: this page shows invented interface-test values, '
                   "not results.</div>")
     if notice:
         banner += f'<div class="banner">{e(notice)}</div>'
@@ -433,7 +433,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
         "</head>",
         "<body><main>",
         "<header>",
-        "<h1>Lunar Site Navigator — evidence</h1>",
+        "<h1>Lunar Site Navigator: evidence</h1>",
         "<p>For a chosen point on the Moon, the science core computes the local 360° terrain horizon from NASA LOLA "
         "elevation data and finds when the Sun and the Earth are above that horizon. This page shows those results "
         "with the method, reference frame, data version and validation status of every number.</p>",

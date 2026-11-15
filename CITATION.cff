@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software or its result packages, please cite it as below."
+type: software
+title: "Lunar Site Navigator"
+abstract: >-
+  Lunar Site Navigator computes, for any point on the Moon, the 360-degree terrain
+  horizon from NASA LOLA elevation data and the directions of the Sun and the Earth with
+  NASA SPICE, and reports when each is visible, which terrain blocks it and how many hours
+  that costs. Results are published as versioned packages with SHA-256 checksums, read by
+  a web viewer and an Unreal Engine planner, and compared with independent sources on a
+  validation card. Made by team Kestro Aerospace for the NASA Space Apps Challenge 2026,
+  challenge "Lunar Landing Site Navigator".
+authors:
+  - given-names: Kaan
+    family-names: Eşrefoğlu
+    affiliation: RWTH Aachen University
+  - given-names: Barkın
+    family-names: Kocatepe
+    affiliation: Haliç University
+license: Apache-2.0
+repository-code: "https://github.com/Littiary/lunar-site-navigator"
+url: "https://littiary.github.io/lunar-site-navigator/"
+date-released: "2026-11-15"
+keywords:
+  - Moon
+  - lunar south pole
+  - landing site
+  - illumination
+  - LOLA
+  - SPICE
+  - NASA Space Apps Challenge
