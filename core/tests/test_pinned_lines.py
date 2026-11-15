@@ -283,3 +283,25 @@ def test_a_slope_exactly_on_a_class_limit_belongs_to_the_class_below():
     model = {"rules": {"*": {"slope_classes": [{"up_to_deg": 30.0, "error_m": 5.0}, {"up_to_deg": 90.0, "error_m": 7.0}]}}}
     error, source = height_error_for_points(model, np.array(["A", "A", "A"], dtype=object), np.full(3, np.nan), np.array([29.999, 30.0, 30.001]))
     assert error.tolist() == [5.0, 5.0, 7.0] and set(source.tolist()) == {"slope_class"}
+
+
+# -- 7. the far-field bound reaches out to the tangent point ---------------------------------------
+# Wrong version: the bound evaluated at the end of the ray only (g_eval = g_end). It passed
+# every test of the core and of the validation. For an observer above the ceiling, terrain
+# of ceiling height beyond the end of the ray is seen highest at the tangent point, not at
+# the end of the ray, so the wrong version said "proven complete" where it is not.
+
+def test_far_field_bound_covers_the_sphere_beyond_a_short_ray_seen_from_above():
+    """A sphere without relief, an observer 100 m up, a search of 5 km only. The horizon of
+    the whole sphere is the dip, 0.615 deg below the horizontal, 18.6 km away; within 5 km
+    the surface is seen 1.228 deg below it. What the search found plus the bound it states
+    must reach the true horizon. Tolerance: that of the smooth-sphere test, 0.0005 deg."""
+    from lsncore.horizon import compute_horizon
+
+    terrain = AnalyticTerrain(_flat, R, ceiling_height_m=0.0, dem_set_id="ANALYTIC-flat")
+    result = compute_horizon(terrain, -85.0, 30.0, [100.0], azimuth_step_deg=5.0, max_range_m=5_000.0)
+    dip = math.degrees(math.acos(R / (R + 100.0)))
+    found = result.elevation_deg[0]
+    assert np.abs(found + 1.228).max() < 0.001  # the surface 5 km away, far below the true horizon
+    assert np.abs(found + result.far_field_bound_deg[0] + dip).max() <= 0.0005
+    assert result.error_bounds["far_field_max_deg"][0] == pytest.approx(1.228 - dip, abs=0.001)
