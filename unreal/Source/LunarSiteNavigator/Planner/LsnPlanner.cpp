@@ -343,6 +343,43 @@ FString LsnPlanner::CustomTimelineArguments(const FString& Template, const FStri
 	return Template.Replace(TEXT("{lat}"), *LatitudeText).Replace(TEXT("{lon}"), *LongitudeText).Replace(TEXT("{name}"), *Name).Replace(TEXT("{out}"), *OutputRoot).Replace(TEXT("{start}"), *StartDate);
 }
 
+bool LsnPlanner::ChooseSite(const TArray<FLsnIndexEntry>& Sites, const FString& PackageId, const FString& SiteId, int32& OutIndex, FString& OutWarning)
+{
+	OutIndex = INDEX_NONE;
+	OutWarning.Reset();
+	if (!PackageId.IsEmpty())
+	{
+		OutIndex = Sites.IndexOfByPredicate([&PackageId](const FLsnIndexEntry& Entry) { return Entry.PackageId == PackageId; });
+		if (OutIndex == INDEX_NONE)
+		{
+			OutWarning = FString::Printf(TEXT("the site list has no package '%s'"), *PackageId);
+			return false;
+		}
+		return true;
+	}
+	TArray<FString> PackagesOfSite;
+	for (int32 Index = 0; Index < Sites.Num(); ++Index)
+	{
+		if (Sites[Index].SiteId == SiteId)
+		{
+			OutIndex = OutIndex == INDEX_NONE ? Index : OutIndex;
+			PackagesOfSite.Add(Sites[Index].PackageId);
+		}
+	}
+	if (OutIndex == INDEX_NONE)
+	{
+		OutWarning = FString::Printf(TEXT("the site list has no site '%s'"), *SiteId);
+		return false;
+	}
+	if (PackagesOfSite.Num() > 1)
+	{
+		// The input is identified by its package id (SPEC 7); a site id alone is ambiguous here.
+		OutWarning = FString::Printf(TEXT("site '%s' appears in %d packages (%s); the first, %s, is shown. Give -LsnPackage=<package_id> to choose."),
+			*SiteId, PackagesOfSite.Num(), *FString::Join(PackagesOfSite, TEXT(", ")), *PackagesOfSite[0]);
+	}
+	return true;
+}
+
 FString LsnPlanner::DefaultCustomTimelineTemplate()
 {
 	return TEXT("-m lsncore custom --lat {lat} --lon {lon} --start {start} --name \"{name}\" --out \"{out}\"");

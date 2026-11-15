@@ -38,6 +38,17 @@ FString LsnHudText::FormatDuration(double Seconds)
 	return FString::Printf(TEXT("%lld min %02lld s"), Minutes, Secs);
 }
 
+FString LsnHudText::FeasibleShareText(const FLsnOpportunity& Opportunity, double RangeStartEtS)
+{
+	// No share where the package gives none, or where no landing in the range can be judged at all
+	// (the latest landing that can be judged lies before the start of the range).
+	if (!Opportunity.bHasFeasibleFraction || Opportunity.LatestLandingEtS < RangeStartEtS)
+	{
+		return TEXT("share of the range in which a landing meets it: cannot be judged");
+	}
+	return FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged"), 100.0 * Opportunity.FeasibleFraction);
+}
+
 FString LsnHudText::UtcLabelOfPosition(const FLsnSitePackage& Package, double SamplePosition)
 {
 	// SPEC 3.5: start_utc + i * step_s is a valid label only without a leap second in the range.
@@ -1247,6 +1258,10 @@ void ALsnHud::DrawHUD()
 			{
 				Lines.Add({ FString::Printf(TEXT("site %d of %d in the package root"), SiteIndex + 1, SiteCount), Dim, 1.0f });
 			}
+			if (GameMode && !GameMode->GetSelectionWarning().IsEmpty())
+			{
+				Lines.Add({ GameMode->GetSelectionWarning(), Alert, 1.0f });
+			}
 			if (Pawn)
 			{
 				Lines.Add({ FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
@@ -1303,7 +1318,7 @@ void ALsnHud::DrawHUD()
 			}
 			if (Opportunity)
 			{
-				FString Summary = FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged (%d windows, longest %s)"), 100.0 * Opportunity->FeasibleFraction,
+				FString Summary = LsnHudText::FeasibleShareText(*Opportunity, P.Time.StartEtS) + FString::Printf(TEXT(" (%d windows, longest %s)"),
 					Opportunity->WindowCount, *LsnHudText::FormatDuration(Opportunity->LongestWindowS));
 				if (Opportunity->Planned.bPresent)
 				{

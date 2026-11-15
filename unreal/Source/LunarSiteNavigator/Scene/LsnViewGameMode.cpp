@@ -199,7 +199,8 @@ void ALsnViewGameMode::StartPlay()
 	}
 
 	FString Directory;
-	if (FParse::Value(FCommandLine::Get(), TEXT("LsnPackage="), Directory))
+	// -LsnPackage= names a package directory, or (SPEC 7) a package id of the site list.
+	if (FParse::Value(FCommandLine::Get(), TEXT("LsnPackage="), Directory) && FPaths::DirectoryExists(FPaths::ConvertRelativePathToFull(Directory)))
 	{
 		// One package given by its directory: no site list.
 		if (Scenes[0]->LoadPackageDirectory(FPaths::ConvertRelativePathToFull(Directory), LoadError))
@@ -236,14 +237,36 @@ void ALsnViewGameMode::StartPlay()
 			{
 				Compare.Split(TEXT(","), &Wanted, &CompareWith);
 			}
+			// The input is identified by its package id (SPEC 7): -LsnPackage=<package_id> chooses the
+			// left (or only) view; a site id alone chooses the first entry with it, with a warning if
+			// more than one entry has it.
+			FString WantedPackage;
+			FParse::Value(FCommandLine::Get(), TEXT("LsnPackage="), WantedPackage);
 			auto IndexOf = [this](const FString& SiteId)
 			{
-				return Sites.IndexOfByPredicate([&SiteId](const FLsnIndexEntry& Entry) { return Entry.SiteId == SiteId; });
+				int32 Found = INDEX_NONE;
+				FString Warning;
+				LsnPlanner::ChooseSite(Sites, FString(), SiteId, Found, Warning);
+				if (!Warning.IsEmpty() && Found != INDEX_NONE)
+				{
+					UE_LOG(LogLsn, Warning, TEXT("%s"), *Warning);
+					SelectionWarning = SelectionWarning.IsEmpty() ? Warning : SelectionWarning + TEXT(" ") + Warning;
+				}
+				return Found;
 			};
-			const int32 FirstSite = Wanted.IsEmpty() ? 0 : IndexOf(Wanted);
+			int32 FirstSite = 0;
+			FString Problem;
+			if (!WantedPackage.IsEmpty())
+			{
+				LsnPlanner::ChooseSite(Sites, WantedPackage, FString(), FirstSite, Problem);
+			}
+			else if (!Wanted.IsEmpty())
+			{
+				FirstSite = IndexOf(Wanted);
+			}
 			if (FirstSite == INDEX_NONE)
 			{
-				LoadError = FString::Printf(TEXT("%s has no site '%s'"), *PackageRoot, *Wanted);
+				LoadError = !Problem.IsEmpty() ? FString::Printf(TEXT("%s: %s"), *PackageRoot, *Problem) : FString::Printf(TEXT("%s has no site '%s'"), *PackageRoot, *Wanted);
 			}
 			else
 			{

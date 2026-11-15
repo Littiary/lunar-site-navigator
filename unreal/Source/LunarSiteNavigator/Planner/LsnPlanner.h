@@ -122,6 +122,13 @@ namespace LsnPlanner
 	LUNARSITENAVIGATOR_API bool PositionOfUtc(const FLsnSitePackage& Package, const FString& Utc, double& OutPosition);
 
 	/** The site packages of a package root, in the order of index.json. */
+	/**
+	 * The entry of a site list to show (SPEC 7: the input is identified by its package_id). A package
+	 * id selects its entry; otherwise a site id selects its first entry, with a warning if more than
+	 * one entry has it. False with the reason in OutWarning if nothing fits.
+	 */
+	LUNARSITENAVIGATOR_API bool ChooseSite(const TArray<FLsnIndexEntry>& Sites, const FString& PackageId, const FString& SiteId, int32& OutIndex, FString& OutWarning);
+
 	LUNARSITENAVIGATOR_API bool ListSites(const FString& PackageRoot, TArray<FLsnIndexEntry>& OutSites, FString& OutError);
 
 	/**

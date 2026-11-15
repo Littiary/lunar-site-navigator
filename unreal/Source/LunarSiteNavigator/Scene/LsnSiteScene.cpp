@@ -495,7 +495,7 @@ void ALsnSiteScene::RebuildGeometry()
 		FLsnMeshData Candidate, Beyond;
 		int32 Ignored = 0;
 		LsnMesh::BuildPatchTerrain(TerrainPatches, RegolithAlbedo, Candidate, Ignored);
-		LsnMesh::AppendByDistance(Candidate, Package.HorizonSearchStartM(), 0.0, Beyond);
+		LsnMesh::AppendByDistance(Candidate, Package.GroundCheckStartM(), 0.0, Beyond);
 		FLsnPlacedMesh Placed;
 		Placed.Mesh = &Beyond;
 		Placed.Origin = FVector::ZeroVector;

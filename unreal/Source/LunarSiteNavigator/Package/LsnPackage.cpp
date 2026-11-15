@@ -1,4 +1,5 @@
 #include "Package/LsnPackage.h"
+#include "Package/LsnSha256.h"
 
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
@@ -142,6 +143,7 @@ namespace
 		const FString Unit = GetString(Ctx, Ref, TEXT("unit"), Field);
 		const FString Method = GetString(Ctx, Ref, TEXT("method"), Field);
 		const double NanCount = GetNumber(Ctx, Ref, TEXT("nan_count"), Field);
+		const FString Digest = GetString(Ctx, Ref, TEXT("sha256"), Field);
 		const TArray<TSharedPtr<FJsonValue>>* ShapeValues = nullptr;
 		if (!Ctx.Failed() && (!Ref->TryGetArrayField(TEXT("shape"), ShapeValues) || !ShapeValues))
 		{
@@ -188,6 +190,12 @@ namespace
 		if (Bytes.Num() != NumItems * static_cast<int64>(sizeof(T)))
 		{
 			Ctx.Fail(FString::Printf(TEXT("%s has %d bytes, the manifest implies %lld"), *File, Bytes.Num(), NumItems * static_cast<int64>(sizeof(T))));
+			return;
+		}
+		// The file must be the one the manifest describes (SPEC 3.1): a changed or damaged file is refused.
+		if (LsnSha256::HexOf(Bytes.GetData(), Bytes.Num()) != Digest.ToLower())
+		{
+			Ctx.Fail(FString::Printf(TEXT("%s: SHA-256 differs from the manifest (the file was changed or damaged); the package is refused"), *File));
 			return;
 		}
 		OutValues.SetNumUninitialized(static_cast<int32>(NumItems));
@@ -298,6 +306,18 @@ double FLsnSitePackage::HorizonSearchStartM() const
 	const FLsnMethodCard* Card = Methods.Find(HorizonElevationMethod);
 	const double* Start = Card ? Card->NumericParameters.Find(TEXT("first_point_m")) : nullptr;
 	return Start ? *Start : 0.0;
+}
+
+double FLsnSitePackage::GroundCheckStartM() const
+{
+	// Since 0.12 the core searches the ground from about 2 cm from the site for every observer
+	// height and says so in the parameter ground_at_the_site: the check starts at the site.
+	const FLsnMethodCard* Card = Methods.Find(HorizonElevationMethod);
+	if (Card && Card->TextParameters.Contains(TEXT("ground_at_the_site")))
+	{
+		return 0.0;
+	}
+	return HorizonSearchStartM();
 }
 
 FString FLsnSitePackage::ValidationStatusOf(const FString& MethodId) const
@@ -485,9 +505,14 @@ bool LsnPackageIO::LoadSitePackage(const FString& PackageDirectory, FLsnSitePack
 				for (const auto& Parameter : (*CardParameters)->Values)
 				{
 					double Number = 0.0;
+					FString Words;
 					if (Parameter.Value.IsValid() && Parameter.Value->Type == EJson::Number && Parameter.Value->TryGetNumber(Number))
 					{
 						Card.NumericParameters.Add(FString(Parameter.Key), Number);
+					}
+					else if (Parameter.Value.IsValid() && Parameter.Value->Type == EJson::String && Parameter.Value->TryGetString(Words))
+					{
+						Card.TextParameters.Add(FString(Parameter.Key), Words);
 					}
 				}
 			}

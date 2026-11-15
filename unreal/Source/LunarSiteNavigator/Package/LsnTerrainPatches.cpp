@@ -1,4 +1,5 @@
 #include "Package/LsnTerrainPatches.h"
+#include "Package/LsnSha256.h"
 
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
@@ -56,11 +57,11 @@ bool LsnPackageIO::LoadTerrainPatches(const FString& PackageDirectory, TArray<FL
 		}
 		FLsnTerrainPatch Patch;
 		double CountEast = 0.0, CountNorth = 0.0;
-		FString File, DType;
+		FString File, DType, Digest;
 		if (!(*Object)->TryGetStringField(TEXT("id"), Patch.Id) || !(*Object)->TryGetNumberField(TEXT("spacing_m"), Patch.SpacingM) || !(*Object)->TryGetNumberField(TEXT("half_width_m"), Patch.HalfWidthM)
 			|| !(*Object)->TryGetNumberField(TEXT("east_min_m"), Patch.EastMinM) || !(*Object)->TryGetNumberField(TEXT("north_min_m"), Patch.NorthMinM)
 			|| !(*Object)->TryGetNumberField(TEXT("count_east"), CountEast) || !(*Object)->TryGetNumberField(TEXT("count_north"), CountNorth)
-			|| !(*Ref)->TryGetStringField(TEXT("file"), File) || !(*Ref)->TryGetStringField(TEXT("dtype"), DType))
+			|| !(*Ref)->TryGetStringField(TEXT("file"), File) || !(*Ref)->TryGetStringField(TEXT("dtype"), DType) || !(*Ref)->TryGetStringField(TEXT("sha256"), Digest))
 		{
 			OutError = FString::Printf(TEXT("terrain patch '%s' lacks a field of SPEC 5.9"), *Patch.Id);
 			return false;
@@ -77,6 +78,11 @@ bool LsnPackageIO::LoadTerrainPatches(const FString& PackageDirectory, TArray<FL
 		if (!FFileHelper::LoadFileToArray(Bytes, *FPaths::Combine(PackageDirectory, File)) || Bytes.Num() != Expected)
 		{
 			OutError = FString::Printf(TEXT("%s is missing or does not hold %d x %d 32-bit values"), *File, Patch.CountNorth, Patch.CountEast);
+			return false;
+		}
+		if (LsnSha256::HexOf(Bytes.GetData(), Bytes.Num()) != Digest.ToLower())
+		{
+			OutError = FString::Printf(TEXT("%s: SHA-256 differs from the manifest (the file was changed or damaged)"), *File);
 			return false;
 		}
 		Patch.UpM.SetNumUninitialized(Patch.CountEast * Patch.CountNorth);
