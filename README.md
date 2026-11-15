@@ -47,7 +47,7 @@ For every comparison with an outside source, the pass criterion was committed be
 | Sunrise and sunset on a smooth sphere | JPL Horizons rise and set tables | 57 seconds |
 | Eclipse of March 2025 at the Blue Ghost site | contact times predicted by Firefly | 0.83 minutes |
 | Sun and Earth angles at six Apollo landings | 48 published angles | 0.05° |
-| Sunlit and shadowed ground in an LRO image | LROC camera image strip | 89.3 % agreement against a required 90 %: **fails** |
+| Sunlit and shadowed ground in an LRO image | LROC camera image strip | 89.6 % agreement against a required 90 %: **fails** |
 
 The terrain model has its own acceptance checks ([data/checkpoints/](data/checkpoints/)):
 
