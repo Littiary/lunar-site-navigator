@@ -26,7 +26,7 @@ Task 13 of the web stream. Rules taken from the 2026 Project Submission Guide (h
 
 | Slide | Numbers | Source |
 |---|---|---|
-| 2 | ridge 673 m away, 373 h, 31 % | `packages/site/shackleton-rim-crest/site-38037e9b701a7d2d/manifest.json`, `timeline.blockers`, observer height 2 m: `peak_distance_m` 672.9, `lost_s` 1,341,948 s, `share_of_lost` 0.307 |
+| 2 | ridge 673 m away, 373 h, 31 % | `packages/site/shackleton-rim-crest/site-689eb279e17d7879/manifest.json`, `timeline.blockers`, observer height 2 m: `peak_distance_m` 672.9, `lost_s` 1,341,948 s, `share_of_lost` 0.307 |
 | 3 | 20 sites, heights 0 to 20 m, two-year window | `packages/index.json`; `horizon.observer_heights_m`; `timeline.time` |
 | 4 | 300 km, six heights, seven sites with an uncertainty band | package manifests (`horizon.max_range_m`, `timeline.uncertainty`) |
 | 5 | 32 checks, 31 pass, 1 fails; 25 against outside sources, 7 analytical; the six rows; reflectors within 7 m | `validation/card/validation_card.json` (rows 1, 6, 8, 20, 23, 14; groups as on the accuracy page); `data/checkpoints/llr_report.json` (largest difference 6.9 m) |
@@ -35,7 +35,7 @@ Task 13 of the web stream. Rules taken from the 2026 Project Submission Guide (h
 | Picture in `slides/img/` | Made from |
 |---|---|
 | `a_opening_south_pole_wide.jpg`, `b_product_two_sites.jpg`, `c_key_moment_near_ridge.jpg` | `docs/unreal/pitch/` stills of the same names (renders of the running Unreal scene from the published packages; described in `docs/unreal/pitch/README.txt`) |
-| `web_compare.jpg`, `web_calendar.jpg` | crops of `web/docs/tool_comparison/screenshots/2026-11-15_lsn_compare_horizon_2027-01-04T1000Z_0m.png` and `..._lsn_compare_calendar_2m.png` (the web view, local build) |
+| `web_compare.jpg`, `web_calendar.jpg` | crops of `web/docs/tool_comparison/screenshots/2026-11-15_lsn_compare_horizon_2027-01-04T1000Z_0m.png` and `..._lsn_compare_calendar_2m.png` (the web view, local build from the contract 0.12 packages) |
 
 ## Subtitles
 

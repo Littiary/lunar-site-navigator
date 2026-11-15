@@ -14,8 +14,8 @@ The tools are complementary: a planner would use QuickMap or Moon Trek to find c
 
 | | LROC QuickMap | NASA Moon Trek | Lunar Site Navigator |
 |---|---|---|---|
-| Address | https://quickmap.lroc.im-ldi.com (the former address quickmap.lroc.asu.edu redirects; the start notice says the site is now hosted at Intuitive Machines) | https://trek.nasa.gov/moon/ (portal version 3.6.29 in its file names) | local build of this repository at commit `022f1e6` (`python -m lsn_web.site`), served on localhost |
-| Session (UTC) | 2026-11-15, 04:05 to 04:14 | 2026-11-15, 04:14 to 04:17 | 2026-11-15, 04:16 |
+| Address | https://quickmap.lroc.im-ldi.com (the former address quickmap.lroc.asu.edu redirects; the start notice says the site is now hosted at Intuitive Machines) | https://trek.nasa.gov/moon/ (portal version 3.6.29 in its file names) | local build of this repository (`python -m lsn_web.site`), served on localhost. First tried at commit `022f1e6` (contract 0.11); the package values and the two screenshots below were taken again the same day from the packages republished in contract 0.12 |
+| Session (UTC) | 2026-11-15, 04:05 to 04:14 | 2026-11-15, 04:14 to 04:17 | 2026-11-15, 04:16 and 09:20 |
 | Login | none | none; no account was created | none |
 | Browser | desktop Chromium, viewport 1280 × 800 | same | headless Edge, viewport 1600 wide |
 
@@ -23,8 +23,8 @@ The tools are complementary: a planner would use QuickMap or Moon Trek to find c
 
 | Site | Latitude | Longitude | Package |
 |---|---|---|---|
-| Shackleton crater rim crest | −89.80531° | −154.23109° (205.76891° E) | `site-38037e9b701a7d2d`, contract 0.11 |
-| de Gerlache crater rim crest | −88.66410° | −68.41044° (291.58956° E) | `site-61a82bfea156b494`, contract 0.11 |
+| Shackleton crater rim crest | −89.80531° | −154.23109° (205.76891° E) | `site-689eb279e17d7879`, contract 0.12 |
+| de Gerlache crater rim crest | −88.66410° | −68.41044° (291.58956° E) | `site-9aced62d65a3bd00`, contract 0.12 |
 
 **Instant.** 2027-01-04 10:00:00 UTC, inside the package window (2026-11-14 to 2028-11-14) and inside the stated validity of the QuickMap shadow layer (2025 to 2043).
 
@@ -48,7 +48,7 @@ The tools are complementary: a planner would use QuickMap or Moon Trek to find c
 | **Time-dependent planning** | Timeline with play and step controls; countdown to the next rise or set; 24-month calendar by lunar day; landing windows of a stated requirement; days a planned landing can slip [H]. Fixed window 2026-11-14 to 2028-11-14. The shipped landing requirement is an example chosen by the team. | Time control with play, speed and an ISO 8601 date field; the shadow layer follows it [H]. A list of rise and set times, windows or a calendar for a point was not found [N]. | Sun angle over a chosen date range [H]. Nothing found for windows or a calendar [N]. |
 | **Observer height** | Six heights per site (0, 1, 2, 5, 10, 20 m), each with its own horizon, events and metrics [H]. | The search box accepts `lat,lon(,height)` [H: placeholder text]; its effect was not tested [N]. The description of the visibility layers does not state an observer height [H]. | No height field in the Sun Angle dialog [H]. |
 | **Comparison of several sites** | Two sites side by side on one shared UTC timeline; a site-pairs package with the hours either, both or neither site sees the Sun or the Earth [H]. | Several markers on one map; a map layer by nature shows all places at once [H]. No side-by-side time comparison found [N]. | Not found [N]. |
-| **Data provenance and validation** | Package id and SHA-256 of every array, checked in the browser; the method status of every number; a validation card with 32 checks, 31 passed and 1 failed, and a list of what is not validated [H]. | Each layer has a description with its method and citation (the visibility layers cite Mazarico et al. 2011) [H]. | Source information for each data product [D]. |
+| **Data provenance and validation** | Package id and SHA-256 of every array, checked in the browser; the method status of every number; a validation card with 32 checks, 31 passed and 1 failed, and a list of what is not validated; a separate accuracy and limits page [H]. | Each layer has a description with its method and citation (the visibility layers cite Mazarico et al. 2011) [H]. | Source information for each data product [D]. |
 | **Coverage** | 20 published sites; any other coordinate needs the Python core and the terrain data on a computer. | Every pixel of the mapped region, in the browser [H]. | Whole Moon, in the browser [H]. |
 
 ## 4. Numbers read on the day
@@ -59,8 +59,8 @@ These are readouts, placed side by side for context. They are **not** an accurac
 
 | Site | QuickMap "Sun Visibility 60m" | Lunar Site Navigator `sun_visible_fraction_of_time` | QuickMap "Earth Visibility 60m" | Lunar Site Navigator `earth_visible_fraction_of_time` |
 |---|---|---|---|---|
-| Shackleton rim crest | 0.76840 (map shown at 57.48 m/px) | 0.4773 at 0 m, 0.7201 at 1 m, 0.7693 at 2 m, 0.8626 at 20 m | 0.56600 | 0.5244 at 0 m to 0.5248 at 20 m |
-| de Gerlache rim crest | 0.82692 (map shown at 52.16 m/px) | 0.6294 at 0 m, 0.8378 at 1 m, 0.8465 at 2 m, 0.8848 at 20 m | 0.61420 | 0.4794 at 0 m, 0.5729 at 1 m, 0.5738 at 20 m |
+| Shackleton rim crest | 0.76840 (map shown at 57.48 m/px) | 0.4668 at 0 m, 0.7201 at 1 m, 0.7693 at 2 m, 0.8626 at 20 m | 0.56600 | 0.5244 at 0 m to 0.5248 at 20 m |
+| de Gerlache rim crest | 0.82692 (map shown at 52.16 m/px) | 0.5003 at 0 m, 0.8378 at 1 m, 0.8465 at 2 m, 0.8848 at 20 m | 0.61420 | 0.2443 at 0 m, 0.5729 at 1 m, 0.5738 at 20 m |
 
 Differences in definition:
 - QuickMap: average over about 18.6 years in 1-hour steps, one value per 60 m pixel, method of Mazarico et al. (2011) with updated topography; observer height not stated in the layer description.
@@ -94,7 +94,7 @@ All taken on 2026-11-15 (UTC). The QuickMap and Moon Trek captures are 800 × 50
 | `2026-11-15_moontrek_tools_menu_account_required.jpg` | Moon Trek tools menu without an account. Greyed entries (Slope, Surface Lighting, Line of Sight and others) show the tooltip "This tool requires a Trek account". |
 | `2026-11-15_moontrek_sun_angle_dialog_shackleton_area.jpg` | Moon Trek "Calculate Sun Angle" dialog: start and end date in UTC and an interval. |
 | `2026-11-15_moontrek_sun_angle_result_shackleton_area.jpg` | Its result: azimuth and elevation against time, with "Export Sun Angle to CSV". |
-| `2026-11-15_lsn_compare_horizon_2027-01-04T1000Z_0m.png` | Lunar Site Navigator, both sites at 2027-01-04 10:00 UTC and 0 m observer height: status cards, horizon with the Sun and the Earth, pair table. |
+| `2026-11-15_lsn_compare_horizon_2027-01-04T1000Z_0m.png` | Lunar Site Navigator, both sites at 2027-01-04 10:00 UTC and 0 m observer height: status cards and the horizon with the Sun and the Earth. |
 | `2026-11-15_lsn_compare_calendar_2m.png` | Lunar Site Navigator opportunity calendar for both sites at 2 m: hours per lunar day, landing windows of the example requirement. |
 
 ## 6. What Lunar Site Navigator adds, and what it lacks
@@ -138,6 +138,6 @@ Provider pages, read on 2026-11-15:
 | E. Law and B. Day, "Moon Trek" abstract EPSC2022-93 (2022), https://meetingorganizer.copernicus.org/EPSC2022/EPSC2022-93.html | Lighting analysis and Sun angle tools, line of sight being added |
 | E. Mazarico, G. A. Neumann, D. E. Smith, M. T. Zuber, M. H. Torrence (2011), "Illumination Conditions of the Lunar Polar Regions Using LOLA Topography", Icarus 211, 1066, doi:10.1016/j.icarus.2010.10.030 | Method cited by the QuickMap visibility layers (as quoted in their layer descriptions; the paper itself was not consulted) |
 
-Package values: `packages/site/shackleton-rim-crest/site-38037e9b701a7d2d/manifest.json` and `packages/site/de-gerlache-rim-crest/site-61a82bfea156b494/manifest.json` (`timeline.metrics`, `timeline.windows`).
+Package values: `packages/site/shackleton-rim-crest/site-689eb279e17d7879/manifest.json` and `packages/site/de-gerlache-rim-crest/site-9aced62d65a3bd00/manifest.json` (`timeline.metrics`, `timeline.windows`).
 
 QuickMap and its layers are products of the LROC team and Applied Coherent Technology; Moon Trek is a NASA Solar System Treks portal developed at JPL. The screenshots are shown for comparison and are credited in `CREDITS.md`.
