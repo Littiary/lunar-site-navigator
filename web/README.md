@@ -166,18 +166,7 @@ The packages were first handed over as `packages_sites.zip` (contract 0.1). Thei
 
 ## React site (`web/app/`)
 
-React, Vite and TypeScript, static output for the project path `/lunar-site-navigator/` of GitHub Pages. Two pages:
-
-- `index.html`, the landing page: hero, three figures of the Shackleton rim package, renders of the Unreal scene, how the parts fit together, the published sites, the validation card (counts and the failed check) and the team. The figures, the site list and the card are read at build time from `packages/` and `validation/card/validation_card.json` by `web/app/plugins/facts.ts`, copied unchanged and only rounded for display; the third figure (74.1 h to 1.8 h) is quoted from `docs/method/near_field.md` and links it.
-- `compare/index.html`, the comparison: a layout around the elements of the classic page (same ids, same pane template) that loads `viewer/js/compare.js` from the published `viewer/` folder at run time. Package loading, SHA-256 checks, status cards, charts, sky panorama, ground view, calendar and pair table are therefore the classic code, and the panes show the same bytes as `classic.html` for the same address. three.js comes from `viewer/vendor` through the import map, as on the classic page.
-
-```
-cd web/app
-npm ci            # dependencies from package-lock.json
-npm run build     # type check, then dist/ (ignored by git)
-```
-
-To look at it locally, build the site and serve its parent under the project path, for example with a folder `serve/lunar-site-navigator` that links to `web/dist/site`, then `python -m http.server 8000 --directory serve` and open http://localhost:8000/lunar-site-navigator/. Screenshots of both pages at desktop and phone width are in `docs/web/react/`.
+The landing page and the comparison of the public site are a React app in `web/app/` (React, Vite, TypeScript). The comparison page runs `viewer/js/compare.js` unchanged, so it shows the numbers of the classic page. Build with `cd web/app && npm ci && npm run build`; architecture, data flow and how it reuses `web/viewer/js/`: [web/app/README.md](app/README.md). Screenshots at desktop and phone width: `docs/web/react/`.
 
 ## Hosting
 

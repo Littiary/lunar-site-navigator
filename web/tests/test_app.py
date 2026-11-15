@@ -109,26 +109,30 @@ class ComparePageRunsTheClassicModule(unittest.TestCase):
     """The React comparison page is a layout around web/viewer/js/compare.js."""
 
     def setUp(self):
-        self.tsx = (APP_SRC / "src" / "pages" / "Compare.tsx").read_text(encoding="utf-8")
+        self.compare_src = "\n".join(p.read_text(encoding="utf-8") for p in sorted((APP_SRC / "src" / "compare").glob("*.ts*")))
         self.classic = (WEB / "viewer" / "compare.html").read_text(encoding="utf-8")
 
-    def test_pane_template_is_the_classic_one(self):
-        classic = re.search(r'<template id="pane-template">(.*?)</template>', self.classic, re.S).group(1)
-        app = re.search(r"const PANE_TEMPLATE = `(.*?)`;", self.tsx, re.S).group(1)
-        self.assertEqual(app, classic)
+    def test_pane_template_is_read_from_the_classic_page_not_copied(self):
+        plugin = (APP_SRC / "plugins" / "classic.ts").read_text(encoding="utf-8")
+        self.assertIn('resolve(REPO, "web", "viewer", "compare.html")', plugin)
+        self.assertIn('<template id="pane-template">', plugin)
+        self.assertIn('from "virtual:lsn-classic"', self.compare_src)
+        # No pasted copy of the template in the app source.
+        for path in (APP_SRC / "src").rglob("*.ts*"):
+            self.assertNotIn('data-role="readout"', path.read_text(encoding="utf-8"), path.name)
 
     def test_every_element_the_module_looks_up_is_on_the_page(self):
         code = (WEB / "viewer" / "js" / "compare.js").read_text(encoding="utf-8")
         ids = set(re.findall(r'\$\("([\w-]+)"\)', code)) | {f"view-{v}" for v in ("chart", "sky", "ground", "calendar")}
         ids |= {"pane-a", "pane-b", "pane-template"}
         self.assertGreater(len(ids), 20)
-        for element_id in sorted(ids):
-            self.assertIn(f'id="{element_id}"', self.tsx, element_id)
-        for step in ("-24", "-1", "1", "24"):
-            self.assertIn(f'data-step="{step}"', self.tsx)
+        declared = set(re.findall(r'\bid(?:="|: ")([\w-]+)"', self.compare_src))
+        self.assertEqual(sorted(ids - declared), [])
+        steps = set(re.findall(r'step: "(-?\d+)"', self.compare_src))
+        self.assertEqual(steps, set(re.findall(r'data-step="(-?\d+)"', self.classic)))
 
     def test_module_is_loaded_at_run_time_from_the_published_viewer(self):
-        self.assertIn('at("viewer/js/compare.js")', self.tsx)
+        self.assertIn('at("viewer/js/compare.js")', self.compare_src)
         for path in (APP_SRC / "src").rglob("*.ts*"):
             source = path.read_text(encoding="utf-8")
             self.assertNotRegex(source, r"from\s+['\"][./]*viewer/js/", path.name)
@@ -167,6 +171,15 @@ class BuiltAppTests(unittest.TestCase):
         html = (APP_DIST / "compare" / "index.html").read_text(encoding="utf-8")
         self.assertIn('"three": "../viewer/vendor/three/three.module.js"', html)
         self.assertLess(html.index('type="importmap"'), html.index('type="module"'))
+
+    def test_compare_bundle_carries_the_classic_pane_template(self):
+        classic = (WEB / "viewer" / "compare.html").read_text(encoding="utf-8")
+        template = re.search(r'<template id="pane-template">(.*?)</template>', classic, re.S).group(1)
+        bundle = "".join(p.read_text(encoding="utf-8") for p in (APP_DIST / "assets").glob("*.js"))
+        roles = re.findall(r'data-role="([\w-]+)"', template)
+        self.assertGreater(len(roles), 10)
+        for role in roles:
+            self.assertIn(f'data-role="{role}"', bundle, role)
 
     def test_landing_facts_are_those_of_the_published_files(self):
         bundle = "".join(p.read_text(encoding="utf-8") for p in (APP_DIST / "assets").glob("*.js"))
