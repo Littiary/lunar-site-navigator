@@ -3,7 +3,7 @@
 One science core computes every number. It writes them to versioned result packages with checksums. The web viewer and the Unreal Engine planner read those packages and compute no science result of their own. The validation card compares what the core computes with independent sources.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph NASA["NASA and other public data"]
         LOLA["LOLA elevation<br/>5 m site models, 20 m and 60 m polar,<br/>SLDEM2015 118 m"]
         SPICE["SPICE kernels<br/>DE440, Moon orientation,<br/>leap seconds, ground stations"]
