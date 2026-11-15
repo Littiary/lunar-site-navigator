@@ -29,6 +29,9 @@ namespace LsnHudText
 	/** The share of the range in which a landing meets the requirement, or that it cannot be judged (SPEC 5.6). */
 	LUNARSITENAVIGATOR_API FString FeasibleShareText(const struct FLsnOpportunity& Opportunity, double RangeStartEtS);
 
+	/** The note on a view lit by the earthshine (the Sun hidden, the Earth visible); empty otherwise. */
+	LUNARSITENAVIGATOR_API FString EarthshineLabel(bool bEarthshineOn);
+
 	/** UTC label of a position on the time axis; empty when the contract does not allow labelling (leap second in range). */
 	LUNARSITENAVIGATOR_API FString UtcLabelOfPosition(const FLsnSitePackage& Package, double SamplePosition);
 
