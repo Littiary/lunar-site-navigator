@@ -64,6 +64,12 @@ img { max-width: 100%; }
 .eyebrow { margin: 0 0 10px; color: var(--earth); font-size: 0.78rem; font-weight: 650; letter-spacing: 0.16em; text-transform: uppercase; }
 .eyebrow.sun { color: var(--sun); }
 
+/* Segmented control (view switch of the comparison, site switch of the 3-D view) */
+.segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.segmented button { border: 0; background: transparent; min-height: 32px; padding: 4px 14px; border-radius: 9px; color: #c9d0da; }
+.segmented button:hover:not(:disabled) { background: var(--surface-2); border: 0; }
+.segmented button[aria-pressed="true"] { background: var(--earth); color: #0b0d12; font-weight: 600; }
+
 /* Landing: hero */
 .hero-l { position: relative; min-height: min(86vh, 760px); display: flex; align-items: flex-end; background: #05070a center 62% / cover no-repeat; overflow: hidden; }
 .hero-shade { position: absolute; inset: 0; background:
@@ -179,3 +185,24 @@ img { max-width: 100%; }
 .foot li a { color: #c9d0da; text-decoration: none; }
 .foot li a:hover { color: var(--earth); text-decoration: underline; }
 @media (max-width: 860px) { .foot-in { grid-template-columns: 1fr 1fr; padding: 32px 16px 40px; } .foot-in > div:first-child { grid-column: 1 / -1; } }
+
+/* Landing: the viewer stylesheet is loaded first for the 3-D view; keep the page full width. */
+main.landing { max-width: none; margin: 0; padding: 0; }
+
+/* Landing: "See it in 3-D" */
+.g3d { scroll-margin-top: 64px; }
+.g3d-lead { max-width: 70ch; }
+.g3d-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 12px; }
+.btn-small { padding: 9px 16px; font-size: 0.92rem; }
+.g3d-frame { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); background: #05070a; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45); }
+.g3d-view.view3d { aspect-ratio: 16 / 8; min-height: 300px; max-height: 72vh; border: 0; border-radius: 0; }
+.g3d-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; background: radial-gradient(600px 300px at 50% 40%, rgba(156, 203, 245, 0.08), transparent 70%), #05070a; }
+.g3d-failed { background: #05070a center / cover no-repeat; align-items: end; }
+.g3d-failed p { margin: 0; padding: 10px 14px; border-radius: 10px; background: rgba(5, 7, 10, 0.8); color: #d6dbe2; font-size: 0.9rem; }
+.g3d-caption { margin: 14px 0 0; color: #d6dbe2; font-size: 0.95rem; }
+@media (max-width: 600px) {
+  .g3d-view.view3d { aspect-ratio: 4 / 3.4; min-height: 0; max-height: 58vh; }
+  .g3d-bar .segmented { width: 100%; }
+  .g3d-bar .segmented button { flex: 1 1 45%; }
+  .g3d-bar .btn-small { width: 100%; justify-content: center; }
+}

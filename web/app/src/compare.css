@@ -18,10 +18,6 @@
 .tb-steps #slider { flex: 1 1 auto; min-width: 80px; }
 .cmp #utc { font-size: 1.05rem; font-weight: 600; min-width: 13ch; font-variant-numeric: tabular-nums; }
 .tb-label { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.1em; }
-.segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
-.segmented button { border: 0; background: transparent; min-height: 32px; padding: 4px 14px; border-radius: 9px; color: #c9d0da; }
-.segmented button:hover:not(:disabled) { background: var(--surface-2); border: 0; }
-.segmented button[aria-pressed="true"] { background: var(--earth); color: #0b0d12; font-weight: 600; }
 .cmp details.more-controls > summary { margin: 4px 0; }
 .cmp details.more-controls label { display: inline-flex; gap: 6px; align-items: center; color: #c9d0da; font-size: 0.9rem; }
 @media (max-width: 900px) { .cmp .timebar { position: sticky; top: 60px; } }

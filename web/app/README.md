@@ -16,6 +16,7 @@ cd .. && python -m lsn_web.site   # copies dist/ to the site root, next to every
 | Page | Source | Data | When it is read |
 |---|---|---|---|
 | `index.html` (landing) | `src/landing/` | Shackleton figures, the list of sites, the validation card | at build time, by `plugins/facts.ts` |
+| `index.html`, section "See it in 3-D" | `src/landing/GroundView.tsx` | the Shackleton and de Gerlache rim packages, terrain patches, direction table | at run time, by `web/viewer/js/ground-scene.js`, when the section nears the screen |
 | `compare/index.html` | `src/compare/` | the site packages, summaries, pair package, notice | at run time, by `web/viewer/js/compare.js` |
 | both | `src/components/`, `src/site/` | `notice.json` (banner) | at run time |
 
@@ -23,10 +24,12 @@ cd .. && python -m lsn_web.site   # copies dist/ to the site root, next to every
 
 **Comparison.** The page does not reimplement the comparison. `src/compare/ComparePage.tsx` lays out the elements of the classic page (same ids and `data-role`s) and `useClassicCompare` loads `viewer/js/compare.js` from the published `viewer/` folder with a run-time `import()`. That one module, unchanged and shared with `classic.html`, loads the index, the summaries and the two site packages with their SHA-256 checks and fills the status cards, the horizon chart, the sky panorama, the ground view (`view3d.js`, three.js from `viewer/vendor` through the import map in `compare/index.html`), the calendar and the pair table. The per-pane template is not copied either: `plugins/classic.ts` reads `<template id="pane-template">` from `web/viewer/compare.html` at build time (`virtual:lsn-classic`). For the same address both pages therefore show the same numbers; this was checked in a browser by comparing the HTML of both panes, the pair table and the time readout between `classic.html` and `compare/` for two site pairs (identical), and `test_app.py` checks that every element the module looks up exists on the React page.
 
+**3-D section of the landing page.** Right after the key figures, the landing page shows the live ground view of the planner at 2026-12-07 04:00 UTC, observer 2 m: at Shackleton rim crest the package gives the Sun as hidden behind the terrain 673 m away; a switch shows de Gerlache rim crest at the same instant. `web/viewer/js/ground-scene.js` runs the steps of a comparison pane (site package with its checks, nearest sample, `loadSiteData`, `groundData`, `groundInput`, `view3d.createView`) and returns the package values the caption prints, including the Sun blocker of `timeline.blockers` that holds that sample. The module, three.js and the packages are fetched only when the section comes within 300 px of the screen (`useInView`), so the top of the page stays light; the landing page carries the import map for three.js. "Open in the planner" opens `compare/` with both sites, 2 m and the ground view at the same sample. Without WebGL the section shows the Unreal render of the same moment and says why.
+
 ## Layout of the source
 
 ```
-index.html, compare/index.html   page shells (Vite entries); the compare page holds the import map for three.js
+index.html, compare/index.html   page shells (Vite entries); both hold the import map for three.js
 plugins/facts.ts                 build-time facts of the landing page (virtual:lsn-facts)
 plugins/classic.ts               build-time pane template of the classic page (virtual:lsn-classic)
 src/main-landing.tsx             entry of the landing page
@@ -35,8 +38,8 @@ src/site/links.ts                site and repository addresses, the shared link 
 src/site/notice.ts               notice.json of the site build (banner)
 src/site/facts.ts                typed access to virtual:lsn-facts
 src/site/format.ts               rounding and units for display
-src/components/                  Shell (frame of every page), Nav, Footer, Mark, Actions, SectionHead
-src/landing/                     one component per landing section (Hero, KeyFigures, Stills, HowItWorks, SiteList, Trust, Closing)
+src/components/                  Shell (frame of every page), Nav, Footer, Mark, Actions, SectionHead, useInView
+src/landing/                     one component per landing section (Hero, KeyFigures, GroundView, Stills, HowItWorks, SiteList, Trust, Closing)
 src/compare/                     ComparePage, TimeBar, useClassicCompare
 src/styles.css, src/compare.css  palette (background #0b0d12, Sun #ffd966, Earth #9ccbf5, failure #f28b82) and layout
 src/assets/                      three Unreal renders scaled to 1600 px (originals in docs/unreal/pitch/)
