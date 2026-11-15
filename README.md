@@ -2,7 +2,7 @@
 
 ![Shackleton crater rim crest and de Gerlache crater rim crest side by side on 28 July 2027: on the left the Sun sets behind a ridge, on the right it stays up](docs/media/two_sites.gif)
 
-<sub>Shackleton crater rim crest (left) and de Gerlache crater rim crest (right), 40 km apart, from 16:30 to 20:00 UTC on 28 July 2027, observer 2 m above the ground: on the left the Sun sets behind a ridge, on the right it stays up. A 5.9 s cut of the pitch video, a real render of the Unreal planner reading the result packages (packages of contract 0.11 at the time of the render; see [docs/unreal/pitch/README.txt](docs/unreal/pitch/README.txt)).</sub>
+<sub>Shackleton crater rim crest (left) and de Gerlache crater rim crest (right), 40 km apart, from 16:35 to 19:58 UTC on 28 July 2027, observer 2 m above the ground: on the left the Sun sets behind a ridge, on the right it stays up. A 5.9 s cut of the pitch video, a real render of the Unreal planner reading the result packages (packages of contract 0.11 at the time of the render; see [docs/unreal/pitch/README.txt](docs/unreal/pitch/README.txt)).</sub>
 
 [![Live site](https://img.shields.io/badge/live_site-open-2ea44f)](https://littiary.github.io/lunar-site-navigator/)
 [![Slides PDF](https://img.shields.io/badge/slides-PDF-1f6feb)](https://littiary.github.io/lunar-site-navigator/submission/Lunar_Site_Navigator_backup_slides.pdf)
