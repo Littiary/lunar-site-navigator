@@ -111,8 +111,10 @@ ALsnSiteScene::ALsnSiteScene()
 	EarthLight->SetAtmosphereSunLight(false);
 	EarthLight->DynamicShadowDistanceMovableLight = 1.0e9f;
 	EarthLight->SetVisibility(false);
-	// No atmosphere: hard shadows; contact shadows pick up what the shadow map misses at the feet of objects.
-	SunLight->ContactShadowLength = 0.02f;
+	// No contact shadows: their length is a share of the screen, so under a Sun 1 to 2 degrees high they
+	// darkened the sunlit ridges of distant terrain (f69e0ae). Shadows come from the shadow maps only.
+	SunLight->ContactShadowLength = 0.0f;
+	EarthLight->ContactShadowLength = 0.0f;
 	// The Sun is the light the engine treats as the main directional light.
 	SunLight->ForwardShadingPriority = 1;
 	FillLight->ForwardShadingPriority = 0;
@@ -238,14 +240,22 @@ void ALsnSiteScene::UpdateLook()
 		EarthLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread() * LsnLook::EarthshineShare.GetValueOnGameThread() * static_cast<float>(LitShare * EarthShare));
 	}
 	EarthLight->SetVisibility(bEarthshine);
-	// The zenith fill (a viewing aid) only where there is no earthshine either.
-	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0 && !bEarthshine)));
+	// The zenith fill (a viewing aid) as in 0b1cb68: on while the Sun is hidden, at the same level; the
+	// earthshine is added on top of it.
+	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
 	if (RegolithMaterial)
 	{
 		// The opposition surge belongs to sunlight: none while the Sun is hidden.
 		RegolithMaterial->SetScalarParameterValue(TEXT("OppositionStrength"), SunShare > 0.0 ? LsnLook::OppositionStrength.GetValueOnGameThread() : 0.0f);
 		RegolithMaterial->SetScalarParameterValue(TEXT("OppositionWidth"), LsnLook::OppositionWidth.GetValueOnGameThread());
 		RegolithMaterial->SetScalarParameterValue(TEXT("GrainStrength"), LsnLook::GrainStrength.GetValueOnGameThread());
+	}
+	if (LightOcclusionMaterial && RegolithMaterial)
+	{
+		// The same textures at the same strength as on the ground (none on the placeholder surface).
+		float Detail = 0.0f;
+		RegolithMaterial->GetScalarParameterValue(FName(TEXT("DetailStrength")), Detail);
+		LightOcclusionMaterial->SetScalarParameterValue(TEXT("Strength"), Detail * LsnLook::GrainStrength.GetValueOnGameThread());
 	}
 	// Ground close to the site that the drawing puts in its own shadow while the package gives the Sun as visible.
 	NearGroundShadeShare = 0.0;
@@ -414,6 +424,24 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	}
 
 	RegolithMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
+	// Ambient occlusion darkens only light that is not the Sun's: the earthshine and the zenith fill get
+	// the occlusion of the detail textures as a light function; the Sun is darkened by its shadow maps only.
+	if (UMaterialInterface* LightOcclusion = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Lsn/M_LsnLightAO.M_LsnLightAO")))
+	{
+		LightOcclusionMaterial = UMaterialInstanceDynamic::Create(LightOcclusion, this);
+		for (UDirectionalLightComponent* Light : { EarthLight.Get(), FillLight.Get() })
+		{
+			Light->SetLightFunctionMaterial(LightOcclusionMaterial);
+			// Where the function is not evaluated the light keeps its full brightness: it can only take light away.
+			Light->SetLightFunctionDisabledBrightness(1.0f);
+			Light->SetLightFunctionFadeDistance(1.0e5f);
+		}
+	}
+	else
+	{
+		UE_LOG(LogLsn, Warning, TEXT("Material /Game/Lsn/M_LsnLightAO is missing; run Scripts/make_materials.py. The earthshine is drawn without ambient occlusion."));
+	}
+	SunLight->SetLightFunctionMaterial(nullptr);
 	EarthMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
 	EarthMaterial->SetScalarParameterValue(TEXT("RegolithShading"), 0.0f);
 	ObjectMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
