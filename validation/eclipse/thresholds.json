@@ -1,7 +1,7 @@
 {
   "title": "Acceptance thresholds: eclipse of the Sun by the Earth seen from a lunar site, against the published eclipse of 14 March 2025",
   "written_utc": "2026-11-14T11:20:31Z",
-  "rule": "Written and committed together with cases.json before the eclipse code of the core was run on this eclipse. Not edited afterwards. If a check fails, the cause is looked for and reported; the threshold stays.",
+  "rule": "Written and committed together with cases.json before the eclipse code of the core was run on this eclipse. The threshold values have not been changed since that commit. The field written_utc was rewritten once, in commit edef799, to the time of the commit that added this file; the commit history is the record. If a check fails, the cause is looked for and reported; the threshold stays.",
   "disclosure": "Not a blind test. Research done before the hackathon had computed the contact times of this eclipse at the Blue Ghost site with JPL Horizons, so their rough values were known when this file was written. The thresholds follow from the fixed rules below, which use only the printed precision of each source and a stated allowance for the edge of the Earth.",
   "model_under_test": "The Earth is an opaque disc of its equatorial radius (no atmosphere); the Sun is a uniform disc. Contacts: C1 and C4 when the two discs touch from outside (separation = Earth radius + Sun radius), C2 and C3 when the Sun's disc touches the Earth's limb from inside (separation = Earth radius - Sun radius). All angles as seen from the site, with parallax.",
   "rules": {

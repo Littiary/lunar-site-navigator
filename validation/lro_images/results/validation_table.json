@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T12:53:09Z",
+ "generated_utc": "2026-11-15T01:42:50Z",
  "terrain": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0",
  "kernel_set_id": "bfe870fccfa5",
  "summary": {
@@ -131,7 +131,23 @@
     0.9015276522179657,
     1.2967725488054689
    ]
-  }
+  },
+  "one_threshold_on_the_point_brightness": {
+   "best_threshold": 14.5,
+   "best_agreement": 0.9865771812080537,
+   "thresholds_with_agreement_of_at_least_0.9": [
+    5.5,
+    33.5
+   ]
+  },
+  "agreed_shadow_with_our_sun_centre_less_than_1_deg_below_the_horizon": {
+   "points": 83,
+   "image_brightness_min_max": [
+    3.0,
+    21.423131170662906
+   ]
+  },
+  "rank_correlation_of_brightness_with_our_centre_margin_at_the_disputed_points": 0.2452346041055718
  },
  "strip_points": [
   {

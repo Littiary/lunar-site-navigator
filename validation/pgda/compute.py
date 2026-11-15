@@ -4,7 +4,9 @@ For every point of ``points.json`` the terrain horizon is computed twice (run A:
 LOLA product alone; run B: the terrain the tool uses), and the share of hourly timesteps
 over one nodal cycle at which any part of the Sun's disc, and of the Earth's disc, is above
 that horizon is counted, for an observer at 0 m and at 2 m. Nothing of the published maps
-is read here. Settings are those fixed in ``thresholds.json``.
+is read here. Settings are those fixed in ``thresholds.json``. The result records the
+commit of the code, the terrain layers and the settings of the horizon search, because
+the horizon depends on all three.
 
 Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
 
@@ -13,8 +15,10 @@ Usage (from the repository root, with the LOLA data under LSN_DATA_ROOT)::
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as dt
 import json
+import subprocess
 import time
 from pathlib import Path
 
@@ -60,48 +64,76 @@ def shares(site: d.Site, table: d.DirectionTable, elevation_deg: np.ndarray) -> 
     return out
 
 
-def main() -> None:
+def code_state() -> dict:
+    """The commit of the working copy, and whether the code that gives these numbers differs from it."""
+
+    def git(*args: str) -> str:
+        return subprocess.run(["git", *args], cwd=HERE, capture_output=True, text=True, check=True).stdout.strip()
+
+    try:
+        return {"git_commit": git("rev-parse", "--short", "HEAD"), "uncommitted_changes": bool(git("status", "--porcelain", "--", ":/core", ":/data", ":/validation/pgda/compute.py"))}
+    except (OSError, subprocess.CalledProcessError):
+        return {"git_commit": None, "uncommitted_changes": None}
+
+
+def open_terrains() -> dict:
+    """Run A: the 60 m LOLA product alone, as the published maps use it. Run B: the terrain the tool uses."""
     import lsn_data
 
     from lsncore.dem import LolaTerrain, open_lola
-    from lsncore.horizon import HorizonSettings, compute_horizon
+
+    return {"run_A_60m": LolaTerrain(lsn_data.open_terrain(products=("LDEM_60S_60M",))), "run_B_production": open_lola()}
+
+
+def point_row(point: dict, terrains: dict, table: d.DirectionTable, settings, second: d.DirectionTable | None = None) -> dict:
+    """Horizon and shares of one comparison point for every run; ``second`` adds the shares of run A over a second cycle."""
+    from lsncore.horizon import compute_horizon
+
+    row = {"id": point["id"], "stratum": point["stratum"]}
+    for run, terrain in terrains.items():
+        horizon = compute_horizon(terrain, point["lat_deg"], point["lon_deg"], HEIGHTS_M, AZIMUTH_STEP_DEG, MAX_RANGE_M, settings)
+        elevation = np.asarray(horizon.elevation_deg, dtype=np.float64)
+        if not np.all(np.isfinite(elevation)):
+            raise RuntimeError(f"horizon has gaps at {point['id']}")
+        site = d.Site(point["lon_deg"], point["lat_deg"], horizon.surface_height_m / 1000.0)
+        row[run] = {
+            "surface_height_m": float(horizon.surface_height_m),
+            "horizon_min_deg": float(elevation[0].min()),
+            "horizon_max_deg": float(elevation[0].max()),
+            "share_of_horizon_set_closer_than_1km": float((np.asarray(horizon.distance_m[0]) < 1000.0).mean()),
+            "coverage_complete": bool(horizon.coverage_complete),
+            "shares": shares(site, table, elevation),
+        }
+        if run == "run_A_60m" and second is not None:
+            row["run_A_60m"]["shares_second_cycle"] = shares(site, second, elevation)
+    return row
+
+
+def main() -> None:
+    from lsncore.horizon import HorizonSettings
 
     kernels.load()
     points = json.loads((HERE / "points.json").read_text(encoding="utf-8"))["points"]
-    terrains = {"run_A_60m": LolaTerrain(lsn_data.open_terrain(products=("LDEM_60S_60M",))), "run_B_production": open_lola()}
+    terrains = open_terrains()
     table = hourly_table(PERIOD_START_UTC)
     second = hourly_table(SECOND_PERIOD_START_UTC)
     second_ids = {p["id"] for p in points if p["id"].endswith(("_01", "_02", "_03"))} | {"site_shackleton_rim_crest"}
     settings = HorizonSettings()
     out, t0 = [], time.perf_counter()
     for n, point in enumerate(points):
-        row = {"id": point["id"], "stratum": point["stratum"]}
-        for run, terrain in terrains.items():
-            horizon = compute_horizon(terrain, point["lat_deg"], point["lon_deg"], HEIGHTS_M, AZIMUTH_STEP_DEG, MAX_RANGE_M, settings)
-            elevation = np.asarray(horizon.elevation_deg, dtype=np.float64)
-            if not np.all(np.isfinite(elevation)):
-                raise RuntimeError(f"horizon has gaps at {point['id']}")
-            site = d.Site(point["lon_deg"], point["lat_deg"], horizon.surface_height_m / 1000.0)
-            row[run] = {
-                "surface_height_m": float(horizon.surface_height_m),
-                "horizon_min_deg": float(elevation[0].min()),
-                "horizon_max_deg": float(elevation[0].max()),
-                "share_of_horizon_set_closer_than_1km": float((np.asarray(horizon.distance_m[0]) < 1000.0).mean()),
-                "coverage_complete": bool(horizon.coverage_complete),
-                "shares": shares(site, table, elevation),
-            }
-            if run == "run_A_60m" and point["id"] in second_ids:
-                row["run_A_60m"]["shares_second_cycle"] = shares(site, second, elevation)
-        out.append(row)
+        out.append(point_row(point, terrains, table, settings, second if point["id"] in second_ids else None))
         if (n + 1) % 10 == 0:
             print(f"{n + 1} points, {time.perf_counter() - t0:.0f} s", flush=True)
     RESULTS.mkdir(exist_ok=True)
     result = {
         "generated_utc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "code": code_state(),
         "settings": {"period_start_utc": PERIOD_START_UTC, "second_period_start_utc": SECOND_PERIOD_START_UTC, "hourly_steps": STEPS, "observer_heights_m": HEIGHTS_M,
                      "azimuth_step_deg": AZIMUTH_STEP_DEG, "max_range_m": MAX_RANGE_M, "quantity": "share of timesteps with any part of the disc above the terrain horizon",
                      "frame": d.FRAME, "aberration_correction": d.ABCORR, "kernel_set_id": kernels.kernel_set_id()},
+        "horizon_settings": dataclasses.asdict(settings),
         "terrain": {run: terrain.describe()["dem_set_id"] for run, terrain in terrains.items()},
+        "terrain_layers": {run: terrain.describe().get("layers") for run, terrain in terrains.items()},
         "run_time_s": time.perf_counter() - t0,
         "points": out,
     }

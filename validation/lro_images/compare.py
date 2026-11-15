@@ -250,6 +250,8 @@ def run(recompute: bool = False) -> dict:
             "our_centre_margin_deg_min_median_max": [float(f([r["centre_margin_deg"] for r in agreed_sunlit])) for f in (np.min, np.median, np.max)],
         },
     }
+    if disputed and agreed_shadow:
+        exploratory.update(_two_readings(judged, disputed, agreed_shadow))
     return {
         "generated_utc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "terrain": ours["terrain"], "kernel_set_id": ours["kernel_set_id"],
@@ -259,6 +261,27 @@ def run(recompute: bool = False) -> dict:
         "exploratory_after_the_result": exploratory,
         "strip_points": rows,
     }
+
+
+def _two_readings(judged: list, disputed: list, agreed_shadow: list) -> dict:
+    """Numbers for and against the two causes that fit a one-sided disagreement. Exploratory, not a criterion."""
+    mean = np.array([r["image_mean"] for r in judged])
+    ours = np.array([r["state"] == "sunlit" for r in judged])
+    scan = [(float(t), float(((mean > t) == ours).mean())) for t in np.arange(2.5, 80.0, 1.0)]
+    good = [t for t, share in scan if share >= 0.9]
+    best = max(scan, key=lambda item: item[1])
+    near = [r["image_mean"] for r in agreed_shadow if -1.0 <= r["centre_margin_deg"] < 0.0]
+
+    def rank(values):
+        return np.argsort(np.argsort(values))
+
+    brightness, margin = [r["image_mean"] for r in disputed], [r["centre_margin_deg"] for r in disputed]
+    return {
+        "one_threshold_on_the_point_brightness": {"best_threshold": best[0], "best_agreement": best[1], "thresholds_with_agreement_of_at_least_0.9": [min(good), max(good)] if good else None},
+        "agreed_shadow_with_our_sun_centre_less_than_1_deg_below_the_horizon": {"points": len(near), "image_brightness_min_max": [float(min(near)), float(max(near))]} if near else None,
+        "rank_correlation_of_brightness_with_our_centre_margin_at_the_disputed_points": float(np.corrcoef(rank(brightness), rank(margin))[0, 1]) if len(disputed) > 2 else None,
+    }
+
 
 
 def _share(rows: list):
@@ -292,17 +315,25 @@ def to_markdown(report: dict) -> str:
     e = report["exploratory_after_the_result"]
     if strip["status"] == "FAIL" and e["image_shadow_ours_sunlit"] and e["judged_points"]:
         d_, j = e["image_shadow_ours_sunlit"], e["judged_points"]
+        low, high = d_["our_centre_margin_deg_min_median_max"][0], d_["our_centre_margin_deg_min_median_max"][2]
+        scan, near, rho = e["one_threshold_on_the_point_brightness"], e["agreed_shadow_with_our_sun_centre_less_than_1_deg_below_the_horizon"], e["rank_correlation_of_brightness_with_our_centre_margin_at_the_disputed_points"]
         lines += [
             "",
-            "## Why the strip check failed (looked at after the result; not a criterion)",
+            "## What the failed strip check shows (looked at after the result; not a criterion)",
             "",
-            f"All {d_['points']} disagreements go one way: the image rule reads shadow, our state is sunlit. At those points the image is not black: its brightness is {d_['image_brightness_min_median_max'][0]:.0f} to {d_['image_brightness_min_median_max'][2]:.0f} (median {d_['image_brightness_min_median_max'][1]:.0f}) of 255, "
-            f"against a median of {e['image_shadow_ours_shadow_brightness_median']:.0f} where both sides say shadow, and our Sun stands only {d_['our_centre_margin_deg_min_median_max'][0]:+.2f} to {d_['our_centre_margin_deg_min_median_max'][2]:+.2f} deg above the terrain horizon. "
-            "Ground lit at such a grazing angle is dim. The registered rule uses one brightness threshold for the whole image (Otsu), and that threshold "
-            f"({report['image']['threshold']:.1f}) settles between the bright Sun-facing slopes and everything else, so dimly lit ground is counted as shadow. The rule, not the horizon, is the likely cause.",
+            f"All {d_['points']} disagreements go one way: the image rule reads shadow, our state is sunlit, with the centre of our Sun {low:+.2f} to {high:+.2f} deg above the terrain horizon. "
+            "Two causes fit this pattern, and these data do not decide between them.",
             "",
-            f"Without any threshold: among the {j['our_sunlit_points'] + j['our_shadow_points']} judged points, a point our model calls sunlit is brighter in the image than a point it calls shadow with probability {j['probability_that_an_our_sunlit_point_is_brighter_than_an_our_shadow_point']:.3f} "
-            f"(median brightness {j['median_brightness_our_sunlit']:.0f} against {j['median_brightness_our_shadow']:.0f}). This supports the explanation but was computed after seeing the result; the registered check stays failed.",
+            f"1. The image rule. It uses one brightness threshold for the whole image (Otsu, {report['image']['threshold']:.1f} of 255), which settles between the bright Sun-facing slopes and everything else, so ground lit at a grazing angle would be read as shadow. "
+            f"For this cause: the disputed points are brighter than agreed shadow in the median ({d_['image_brightness_min_median_max'][1]:.0f} against {e['image_shadow_ours_shadow_brightness_median']:.0f}); "
+            f"with one threshold on the brightness of a point between {scan['thresholds_with_agreement_of_at_least_0.9'][0]:.1f} and {scan['thresholds_with_agreement_of_at_least_0.9'][1]:.1f} the agreement would be 90 % or more "
+            f"(at best {100 * scan['best_agreement']:.1f} % at {scan['best_threshold']:.1f}); and without any threshold, among the {j['our_sunlit_points'] + j['our_shadow_points']} judged points, a point our model calls sunlit is brighter in the image "
+            f"than a point it calls shadow with probability {j['probability_that_an_our_sunlit_point_is_brighter_than_an_our_shadow_point']:.3f}.",
+            f"2. Our horizon. A terrain horizon that is {low:.2f} to {high:.2f} deg too low at these points gives the same one-sided pattern. "
+            f"For this cause: the brightness of the disputed points ({d_['image_brightness_min_median_max'][0]:.0f} to {d_['image_brightness_min_median_max'][2]:.0f}) overlaps that of the {near['points']} points which both sides call shadow "
+            f"with our Sun less than 1 deg below the horizon ({near['image_brightness_min_max'][0]:.0f} to {near['image_brightness_min_max'][1]:.0f}); and among the disputed points the brightness follows the height of our Sun only weakly (rank correlation {rho:.2f}).",
+            "",
+            "These numbers were computed after seeing the result. They are not a criterion; the registered check stays failed.",
         ]
     return "\n".join(lines) + "\n"
 

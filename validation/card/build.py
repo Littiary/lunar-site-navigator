@@ -18,6 +18,7 @@ from __future__ import annotations
 import datetime as dt
 import importlib.util
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -285,6 +286,13 @@ def build() -> dict:
 
     lro = json.loads((REPO / "validation" / "lro_images" / "results" / "validation_table.json").read_text(encoding="utf-8"))
     lro_checks = {check["id"]: check for check in lro["checks"]}
+    # The two thresholds of the image rows are read from the criteria of the committed cases, not typed here.
+    lro_criteria = {check["id"]: check["criterion"] for case in json.loads((REPO / "validation" / "lro_images" / "cases.json").read_text(encoding="utf-8"))["cases"] for check in case["checks"]}
+    strip_threshold = float(re.search(r"at least (\d+(?:\.\d+)?) percent", lro_criteria["nadir_2010_agreement"]).group(1)) / 100.0
+    sub_solar_thresholds = {float(re.search(r"less than (\d+(?:\.\d+)?) degree", lro_criteria[key]).group(1)) for key in ("pole_2022_sub_solar_point", "nadir_2010_sub_solar_point")}
+    if len(sub_solar_thresholds) != 1:
+        raise ValueError(f"the two sub-solar criteria state different thresholds: {sorted(sub_solar_thresholds)}")
+    sub_solar_threshold = sub_solar_thresholds.pop()
     lro_where = "validation/lro_images/cases.json (commit fb05da0)"
     lro_how = "committed on its own before any computation for these cases and before the image was downloaded"
     lro_evidence = "validation/lro_images/results/validation_table.md; test validation/tests/test_lro_images.py (stored result; recomputed by validation/lro_images/compare.py)"
@@ -293,8 +301,9 @@ def build() -> dict:
     disputed = lro["exploratory_after_the_result"]["image_shadow_ours_sunlit"]
     if strip["status"] == "FAIL" and disputed:
         low, _, high = disputed["our_centre_margin_deg_min_median_max"]
-        strip_limit = (f"Fails as registered ({100 * strip['computed']:.1f} % against 90 %): all {disputed['points']} disagreements are ground the core calls sunlit with the centre of the Sun only {low:.2f} to {high:.2f} deg above the terrain horizon, "
-                       "which is dim but not black in the image and which one brightness threshold for the whole image reads as shadow; the rule and the criterion were not changed after the result.")
+        strip_limit = (f"Fails as registered ({100 * strip['computed']:.1f} % against 90 %): all {disputed['points']} disagreements are ground the core calls sunlit with the centre of the Sun only {low:.2f} to {high:.2f} deg above the terrain horizon and the image rule reads as shadow, "
+                       "which fits either a single brightness threshold that reads dimly lit ground as shadow or a terrain horizon of the core that is too low there by that amount, and the data do not decide between the two; "
+                       "the rule and the criterion were not changed after the result.")
         strip_cause = [strip_limit, "The cause was looked for after the result (validation/lro_images/results/validation_table.md); that analysis is not a criterion."]
 
     internal = _measure_internal_directions(t_dir)
@@ -353,13 +362,13 @@ def build() -> dict:
     ] + ([
         _check("image_strip_agreement", "Dated image", "Sunlit or shadowed state along a nadir NAC strip of 13 December 2010, read from the image by a fixed rule: share of judged points that agree",
                "LROC NAC image M146846913L, calibrated browse product (https://pds.lroc.im-ldi.com/), retrieved 2026-11-14",
-               0.90, "share of points", lro_how, lro_where, strip["computed"], lro_evidence,
+               strip_threshold, "share of points", lro_how, lro_where, strip["computed"], lro_evidence,
                f"{strip['detail']['judged']} judged points of {strip['detail']['points']} along the strip ({strip['detail']['mixed_or_outside']} near a shadow edge or outside were not judged)",
                ["Corner-based georeferencing (corners printed to 300 m) of a lossy browse image: it tests broad sunlit and shadowed areas, not the position of a shadow edge.", "One image, near Shackleton crater."] + strip_cause, comparison=">="),
     ] if strip["status"] in ("PASS", "FAIL") else []) + [
         _check("image_sub_solar_points", "Dated image", "Sub-solar latitude and longitude at the two image times against the values printed on the LROC data pages (largest difference)",
                "LROC data pages of NAC images M1407524099LE and M146846913LE, retrieved 2026-11-14",
-               0.02, "deg", lro_how, lro_where, max(abs(v) for key in ("pole_2022_sub_solar_point", "nadir_2010_sub_solar_point") for v in lro_checks[key]["difference_deg"]), lro_evidence, "2 images, 4 angles printed to 0.01 deg",
+               sub_solar_threshold, "deg", lro_how, lro_where, max(abs(v) for key in ("pole_2022_sub_solar_point", "nadir_2010_sub_solar_point") for v in lro_checks[key]["difference_deg"]), lro_evidence, "2 images, 4 angles printed to 0.01 deg",
                ["An ephemeris check, independent of terrain."]),
         _check("station_earth_end", "Independent source", "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)", stn_source,
                stn_limit["earth_end_direction_arcsec_max"], "arcsec", SEPARATE_COMMIT, stn_where, stn_sum["earth_end_exact_arcsec_max"], stn_evidence, stn_cases, stn_limits),

@@ -1,7 +1,7 @@
 {
   "title": "Acceptance thresholds: science core versus published records of real lunar landers (first four cases)",
   "written_utc": "2026-11-14T11:10:47Z",
-  "rule": "Written and committed together with cases.json before the core was run on any of these cases. Not edited afterwards. If a check fails, the cause is looked for and reported; the threshold stays.",
+  "rule": "Written and committed together with cases.json before the core was run on any of these cases. The threshold values have not been changed since that commit. The field written_utc was rewritten once, in commit edef799, to the time of the commit that added this file; the commit history is the record. If a check fails, the cause is looked for and reported; the threshold stays.",
   "disclosure": "Not a blind test. Research done before the hackathon had compared some of these published values with JPL Horizons, so the rough size of several differences was known when this file was written. For that reason the thresholds are not chosen case by case: they follow from the fixed rules below, which use only the printed precision, the wording and the stated method of each source.",
   "rules": {
     "R1_angle_same_inputs": {
