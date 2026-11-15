@@ -142,6 +142,10 @@ public:
 	UProceduralMeshComponent* GetStarsComponent() const { return Stars; }
 	/** Share of the Sun's disc the package gives as visible at the selected sample and height; 0 without a value. */
 	double GetSunVisibleFraction() const;
+	/** The share of the Earth's disc visible at the selected sample, as the package gives it. */
+	double GetEarthVisibleFraction() const;
+	/** True while the earthshine light is on. */
+	bool IsEarthshineOn() const;
 
 	/** What the ground between the site and the horizon line is, for the read-out. */
 	FString GetGroundNote() const;
@@ -234,6 +238,9 @@ private:
 	 */
 	UPROPERTY()
 	TObjectPtr<UDirectionalLightComponent> FillLight;
+	/** Light from the Earth while the package gives the Sun as hidden and the Earth as visible. */
+	UPROPERTY()
+	TObjectPtr<UDirectionalLightComponent> EarthLight;
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInterface> SurfaceMaterial;

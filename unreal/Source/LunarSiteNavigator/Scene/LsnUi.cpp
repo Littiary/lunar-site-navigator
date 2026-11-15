@@ -42,12 +42,30 @@ namespace
 			Brushes.Reset(Items.Num());
 			for (const FLsnUiItem& Item : Items)
 			{
+				// What belongs to one half of the window is clipped to it.
+				if (Item.bClip)
+				{
+					const FVector2D Min = Geometry.LocalToAbsolute(Item.Clip.Min * ToLocal), Max = Geometry.LocalToAbsolute(Item.Clip.Max * ToLocal);
+					Out.PushClip(FSlateClippingZone(FSlateRect(Min.X, Min.Y, Max.X, Max.Y)));
+				}
+				PaintItem(Item, Geometry, Out, Layer, ToLocal);
+				if (Item.bClip)
+				{
+					Out.PopClip();
+				}
+			}
+			return Layer + 2;
+		}
+
+		void PaintItem(const FLsnUiItem& Item, const FGeometry& Geometry, FSlateWindowElementList& Out, int32 Layer, float ToLocal) const
+		{
+			{
 				if (Item.Kind == FLsnUiItem::EKind::Box)
 				{
 					const FVector2D Size = (Item.Box.Max - Item.Box.Min) * ToLocal;
 					if (Size.X <= 0.0 || Size.Y <= 0.0)
 					{
-						continue;
+						return;
 					}
 					FSlateBrush& Brush = Brushes.Emplace_GetRef(FSlateRoundedBoxBrush(FSlateColor(Item.Color), Item.Radius * ToLocal, FSlateColor(Item.Border), Item.BorderPx * ToLocal));
 					FSlateDrawElement::MakeBox(Out, Layer, Geometry.ToPaintGeometry(FVector2f(Size), FSlateLayoutTransform(FVector2f(Item.Box.Min * ToLocal))), &Brush, ESlateDrawEffect::None, Item.Color);
@@ -63,7 +81,6 @@ namespace
 					FSlateDrawElement::MakeLines(Out, Layer + 1, Geometry.ToPaintGeometry(), Points, ESlateDrawEffect::None, Item.Color, true, FMath::Max(Item.Thickness * ToLocal, 1.0f * ToLocal));
 				}
 			}
-			return Layer + 2;
 		}
 
 	private:
