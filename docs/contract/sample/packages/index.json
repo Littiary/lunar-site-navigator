@@ -1,23 +1,23 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.11"
+    "version": "0.12"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T19:10:47.468Z",
+  "generated_utc": "2026-11-15T01:49:33.691Z",
   "scenario_id": "synthetic-sample",
   "packages": [
     {
       "kind": "direction_table",
-      "package_id": "dirtab-1521fe7b441e805a",
-      "path": "direction_table/dirtab-1521fe7b441e805a",
+      "package_id": "dirtab-df1d0ddd64a12f9a",
+      "path": "direction_table/dirtab-df1d0ddd64a12f9a",
       "synthetic": true,
       "status": "ok"
     },
     {
       "kind": "site",
-      "package_id": "site-f1c146c44ab38509",
-      "path": "site/synthetic-sample-site/site-f1c146c44ab38509",
+      "package_id": "site-d775d1c7dcb31ed6",
+      "path": "site/synthetic-sample-site/site-d775d1c7dcb31ed6",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site",
@@ -30,8 +30,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-c9a0531a0b71cf1f",
-      "path": "site/synthetic-sample-site-b/site-c9a0531a0b71cf1f",
+      "package_id": "site-20cab14cdde4e114",
+      "path": "site/synthetic-sample-site-b/site-20cab14cdde4e114",
       "synthetic": true,
       "status": "ok",
       "site_id": "synthetic-sample-site-b",
@@ -44,8 +44,8 @@
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-e2847d97406565b8",
-      "path": "site_pairs/pairs-e2847d97406565b8",
+      "package_id": "pairs-f0d281e3a8c4f623",
+      "path": "site_pairs/pairs-f0d281e3a8c4f623",
       "synthetic": true,
       "status": "ok",
       "site_ids": [

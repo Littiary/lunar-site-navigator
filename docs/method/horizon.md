@@ -3,12 +3,15 @@
 Code: `core/lsncore/horizon.py`, terrain interface `core/lsncore/dem.py`.
 Tests: `core/tests/test_horizon.py`, `core/tests/test_pipeline.py`.
 
-Status on 14 November 2026: checked against analytic cases, against exhaustive reference
-scans on a gridded synthetic raster and on the LOLA south-polar products. **Not yet
-compared with an independent horizon product** (another tool or a published horizon), and
-elevation-model errors are not yet propagated. What is established below is that the code
-finds the horizon of the surface it is given; how well that surface matches the Moon is a
-separate question (section 8).
+Status on 15 November 2026: checked against analytic cases, against exhaustive reference
+scans on a gridded synthetic raster and on the LOLA south-polar products. **Not compared
+with an independent horizon product** (another tool or a published horizon); `validation/`
+compares what follows from the horizon, sunlight at a place and time, with published maps
+and images. Errors of the elevation model are not in the horizon itself; a package can
+carry a band for a stated error ([uncertainty.md](uncertainty.md), since contract 0.4 and
+0.6). What is established below is that the code finds the horizon of the surface it is
+given, from the first point of each ray outward (section 8, item 6); how well that
+surface matches the Moon is a separate question (section 8).
 
 ## 1. What is computed
 
@@ -61,7 +64,11 @@ rebuilt so that nothing is skipped without proof:
 1. **Lattice.** Points half a pixel apart cover the whole ray, starting one pixel from
    the site and never farther than 20 m (section 9) (10 m steps for the 20 m product; 2.5 m steps in the first 200 m, where the
    elevation angle is most sensitive to small relief).
-2. **Near zone.** Every lattice point out to about 4.6 km is evaluated on the finest data.
+2. **Near zone.** Every lattice point out to about 2.3 km is evaluated on the finest data
+   (229 lattice steps: 0.6 km for a 5 m raster, 13.6 km for the 118 m global product).
+   For observers above 0 m the ground in front of the first point is evaluated as well,
+   at eighths of its distance and then at that distance halved down to 1 cm; for an
+   observer at 0 m it is not (section 8, item 6).
 3. **Cells with a proof.** Beyond that the lattice is grouped into cells whose length
    grows with distance (0.5 deg in radians times the distance, up to 2.4 km). For each
    cell the terrain source returns an upper bound of the surface inside it, read from
@@ -97,7 +104,7 @@ proven irrelevant or walked completely.
 | Setting | Value |
 |---|---|
 | Azimuth step | 0.25 deg (1440 rays), configurable |
-| First point | one finest pixel from the site |
+| First point | one finest pixel from the site, at most 20 m. In front of it, for observers above 0 m only: 7 points at eighths of that distance and 8 more at that distance halved from 1/16 down to 1/2048 |
 | Lattice step | half a finest pixel; an eighth of a pixel within 10 pixels of the site |
 | Cell length | 0.5 deg in radians times the distance, at most 256 lattice points, and never more than the overview levels can bound |
 | Interpolation | bilinear between pixel centres (data reader), finest product that covers the point |
@@ -121,7 +128,7 @@ The package stores, in `horizon.error_bounds`:
 |---|---|
 | `far_field_max_deg` | Largest bound over all azimuths and heights. 0 means: proven complete under the ceiling assumption |
 | `far_field_open_azimuth_fraction` | Share of azimuths whose bound is not zero |
-| `ceiling_height_m` | The ceiling used: the highest terrain in the elevation products, or, if that is not available, the highest terrain met inside the search radius (then a warning says so) |
+| `ceiling_height_m` | The ceiling used: the highest terrain in the elevation products. If the terrain source cannot state that, the highest of what the search evaluated is used instead: the near zone, the limiting points found and the site (a warning says so). That is not the highest terrain inside the search radius, because cells that were skipped were never read; the bound is then weaker than its name suggests. No published package uses this fallback |
 | `shortest_reach_m` | Shortest ray: the search radius, or less where the data ends earlier |
 
 Where data ends before the search radius, the ray ends there: the flags
@@ -179,6 +186,25 @@ is recomputed independently from the data and must have the elevation the code s
 
 Where the code is above the reference, it found a crease or a peak between the
 reference's 1 m steps; the recomputation confirms these points are real.
+
+**The first pixel.** The reference above starts 20 m from the site, as the search did,
+so neither could see what the ground closer than that does. An independent review on
+15 November 2026 scanned from 1 m and found the horizon of a 0 m observer too low by
+0.5 to 0.8 degrees in single azimuths at two places. Repeated here with a scan that
+starts 5 cm from the site, in 5 cm steps (tolerance 0.002 deg, as above):
+
+| Observer | Before | Now |
+|---|---|---|
+| 0 m, LOLA, five places, all 1440 azimuths | too low by up to 2.8, 0.7, 4.4, 0.03 and 2.7 deg; at the Shackleton record in 957 azimuths | unchanged, by definition: see section 8, item 6. Kept in the test suite as a strict expected failure |
+| 0 m against a scan from the first point outward | within tolerance | within tolerance |
+| 1 m to 20 m, LOLA, the same five places | nothing over the tolerance | nothing over the tolerance |
+| 1 m, synthetic rough raster with single-pixel spikes | too low by 1.69 deg at one site | within tolerance |
+
+So on LOLA data the ground within the first pixel never reached the horizon of an
+observer 1 m or more above it, but on steeper relief it can, and the search did not
+look. It does now, for every observer height above 0 m. On the 20 curated sites and
+three other places this changes no horizon value by more than 1.5e-12 deg (rounding;
+five mid-latitude sites) and none at 0 m.
 
 Self-convergence on LOLA data: repeating the six test points with a lattice four times
 finer, 16 refined maxima and six refinement rounds changes no value by more than 0.0006
@@ -258,10 +284,11 @@ rebuilt.
    than 1 km in 14 to 66 % of the azimuths (observer at 2 m). `distance_m` shows, per
    azimuth, how near the limiting terrain is; such azimuths depend on DEM detail and on
    the exact observer height.
-2. **Elevation model errors are not included.** Height and position errors of the DEM
-   translate directly into horizon errors (height error divided by distance). Single
-   high pixels are taken at face value, whether they are terrain or noise. No uncertainty
-   band is computed yet.
+2. **Elevation model errors are not in the horizon.** Height and position errors of the
+   DEM translate directly into horizon errors (height error divided by distance). Single
+   high pixels are taken at face value, whether they are terrain or noise. A package can
+   carry a band for a stated error; what that band is and is not is in
+   [uncertainty.md](uncertainty.md), section 5.
 3. **Narrow obstacles between rays.** Each ray is searched completely, but rays are 0.25
    deg apart. On a synthetic rough surface, linear interpolation of the 0.25 deg profile
    differed from a 0.05 deg profile by less than 0.0012 deg in 95 % of the azimuths and
@@ -273,9 +300,20 @@ rebuilt.
 5. **Sphere.** Distances, the local vertical and the horizontal plane refer to a sphere of
    the DEM reference radius. The local vertical is the radial direction, not the plumb
    line; the Moon's flattening and gravity anomalies are ignored.
-6. **Observer.** A point at height `m` above the DEM surface. The lander's own structure
-   and the terrain within the first pixel are not modelled. Height 0 means the terrain
-   surface itself and is the most sensitive to the first points.
+6. **Observer, and the ground at its feet.** A point at height `m` above the DEM surface.
+   The lander's own structure is not modelled. For `m` above 0 the ground between the
+   site and the first lattice point is searched like all other terrain. **Height 0 is
+   different by definition:** it is the surface point itself, and its horizon is that of
+   the terrain from the first lattice point outward (one pixel, at most 20 m), which is
+   how pixel-based illumination maps treat a surface element. The slope of the ground
+   closer than that is not in it. On a slope the surface itself rises above the
+   horizontal in the uphill directions, so a scan that starts at the site finds a higher
+   horizon: by up to 4.4 deg at the Shackleton record, 2.8 and 0.7 deg at the two places
+   of the review, 2.7 deg near Mons Malapert (section 5.2). A 0 m row of a package is
+   therefore the lighting of a surface element as a map would give it, not the view of
+   an instrument lying on that slope; for an instrument, use a height above 0. The
+   interpolated surface between posts 20 m apart carries no measured slope at that scale
+   either way.
 7. **Geometry only.** No refraction (there is none to speak of), no scattering, no
    reflected light; this is line of sight to bare terrain.
 8. **Products without overviews.** The proof in section 3 needs block-maximum overview

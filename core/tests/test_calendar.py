@@ -187,3 +187,155 @@ def test_slip_tolerance_of_a_planned_landing():
     open_end = slip_report(IntervalSet([(900, 1000)], DOMAIN), 950.0)
     assert open_end["slip_tolerance_s"] == pytest.approx(50.0) and open_end["slip_tolerance_is_lower_bound"] is True
     assert inside["slip_tolerance_is_lower_bound"] is False
+
+
+# -- the end of what can be judged -----------------------------------------------------------
+#
+# SPEC 5.6: latest_landing is the end of the computed range minus the mission duration,
+# for every requirement that states one, whatever its conditions. A landing window that
+# ends there, or that ends where a visibility interval cut by the end of the range can no
+# longer prove a "continuous from landing" condition, is cut by what is known, not by an
+# event: it is marked clipped, and a slip tolerance inside it is a lower bound.
+# Expected values fixed before the first run (case of the independent review, 15 November).
+
+class _Table:
+    """Stand-in for a direction-table package: a Sun circling the body-fixed frame."""
+
+    def __init__(self, time):
+        et = time["start_et_s"] + time["step_s"] * np.arange(time["count"])
+        self.manifest = {"positions_km": "sun", "bodies": ["SUN"], "time": time}
+        self._positions = _circling_sun(et, 29.53 * DAY)[:, None, :]
+
+    def array(self, ref):
+        return self._positions
+
+
+class _Timeline:
+    """Stand-in for a site timeline with given visibility windows (one observer height)."""
+
+    def __init__(self, time, windows):
+        self.time, self._windows, self.calendar, self.opportunities = time, windows, None, None
+
+    def window(self, window_id, height_index):
+        return self._windows[window_id]
+
+
+def _opportunity(sun, earth, requirement, planned_day=None, days=30.0):
+    from lsncore.calendar import add_calendar_to_timeline
+
+    time = {"start_et_s": 0.0, "step_s": HOUR, "count": int(days * 24) + 1}
+    domain = (0.0, days * DAY)
+    windows = {"sun_visible": IntervalSet([(a * DAY, b * DAY) for a, b in sun], domain), "earth_visible": IntervalSet([(a * DAY, b * DAY) for a, b in earth], domain)}
+    timeline = _Timeline(time, windows)
+    add_calendar_to_timeline(timeline, _Table(time), 1, [requirement], None if planned_day is None else planned_day * DAY, lambda et: f"day {et / DAY:.6f}")
+    (record,) = timeline.opportunities
+    return record
+
+
+def _standard(duration_days=10.0, continuous_days=10.0):
+    requirement = {
+        "id": "like-example-standard",
+        "conditions": [
+            {"window": "earth_visible", "kind": "visible_at_landing"},
+            {"window": "sun_visible", "kind": "continuous_from_landing", "min_s": continuous_days * DAY},
+        ],
+    }
+    if duration_days is not None:
+        requirement["mission_duration_s"] = duration_days * DAY
+    return requirement
+
+
+def test_latest_landing_is_the_end_of_the_range_minus_the_mission_duration():
+    """30 days, the Earth always in view, the Sun from day 5 to the end; 10 days of unbroken
+    sunlight from landing, mission of 10 days, landing planned on day 12."""
+    domain = (0.0, 30.0 * DAY)
+    windows = {"sun_visible": IntervalSet([(5 * DAY, 30 * DAY)], domain), "earth_visible": IntervalSet([(0.0, 30 * DAY)], domain)}
+    feasible, info = landing_windows(_standard(), windows, domain)
+    assert feasible.as_list() == [[5 * DAY, 20 * DAY]]
+    assert info["latest_landing_et_s"] == 20 * DAY
+
+    record = _opportunity([(5, 30)], [(0, 30)], _standard(), planned_day=12)
+    assert record["landing_windows_et_s"] == [[5 * DAY, 20 * DAY]]
+    assert record["latest_landing_et_s"] == 20 * DAY
+    assert record["feasible_fraction"] == pytest.approx(0.75, abs=1e-12)  # 15 of the 20 days that can be judged
+    assert record["clipped_end"] is True  # the Sun is still up when the computed range ends
+    planned = record["planned_landing"]
+    assert planned["feasible"] is True and planned["slip_tolerance_s"] == pytest.approx(8 * DAY, abs=TOL_ALGEBRA_S)
+    assert planned["slip_tolerance_is_lower_bound"] is True
+
+
+def test_a_window_that_ends_at_an_event_is_not_marked_as_cut():
+    record = _opportunity([(5, 22)], [(0, 30)], _standard(), planned_day=8)  # the Sun sets on day 22
+    assert record["landing_windows_et_s"] == [[5 * DAY, 12 * DAY]]
+    assert record["latest_landing_et_s"] == 20 * DAY and record["feasible_fraction"] == pytest.approx(7 / 20, abs=1e-12)
+    assert record["clipped_end"] is False
+    assert record["planned_landing"]["slip_tolerance_s"] == pytest.approx(4 * DAY, abs=TOL_ALGEBRA_S)
+    assert record["planned_landing"]["slip_tolerance_is_lower_bound"] is False
+
+
+@pytest.mark.parametrize(
+    "duration_days, continuous_days, window_end_day, latest_day",
+    [
+        (10.0, 4.0, 20.0, 20.0),   # the mission must end inside the range: cut at latest_landing
+        (3.0, 10.0, 20.0, 27.0),   # the sunlight cannot be proven beyond day 20: cut there, before latest_landing
+        (None, 10.0, 20.0, 30.0),  # no mission duration stated: latest_landing is the end of the range
+    ],
+)
+def test_a_window_cut_by_the_end_of_the_range_is_marked_whatever_cuts_it(duration_days, continuous_days, window_end_day, latest_day):
+    record = _opportunity([(5, 30)], [(0, 30)], _standard(duration_days, continuous_days), planned_day=12)
+    assert record["landing_windows_et_s"] == [[5 * DAY, window_end_day * DAY]]
+    assert record["latest_landing_et_s"] == latest_day * DAY
+    assert record["clipped_end"] is True
+    assert record["planned_landing"]["slip_tolerance_is_lower_bound"] is True
+    assert record["feasible_fraction"] == pytest.approx((window_end_day - 5.0) / latest_day, abs=1e-12)
+
+
+def test_the_three_example_requirements_end_at_latest_landing_when_the_sun_stays_up():
+    from lsncore.scenario import requirement_presets
+
+    for requirement in requirement_presets().values():
+        days = requirement["mission_duration_s"] / DAY
+        record = _opportunity([(2, 40)], [(0, 40)], requirement, days=40.0)
+        assert record["latest_landing_et_s"] == (40.0 - days) * DAY, requirement["id"]
+        assert record["landing_windows_et_s"][-1][1] == pytest.approx((40.0 - days) * DAY, abs=TOL_ALGEBRA_S)
+        assert record["clipped_end"] is True, requirement["id"]
+
+
+def test_a_planned_landing_after_what_can_be_judged_gets_no_slip_report():
+    """It is neither feasible nor infeasible: the mission would end after the computed
+    range. The record carries no slip report, and a sentence for the warnings says why."""
+    from lsncore.calendar import add_calendar_to_timeline
+
+    time = {"start_et_s": 0.0, "step_s": HOUR, "count": 721}
+    domain = (0.0, 30.0 * DAY)
+    windows = {"sun_visible": IntervalSet([(5 * DAY, 30 * DAY)], domain), "earth_visible": IntervalSet([(0.0, 30 * DAY)], domain)}
+    for planned_day, judged in ((25.0, False), (20.0, True), (12.0, True), (3.0, True)):
+        timeline = _Timeline(time, windows)
+        notes = add_calendar_to_timeline(timeline, _Table(time), 1, [_standard()], planned_day * DAY, lambda et: f"day {et / DAY:.6f}")
+        (record,) = timeline.opportunities
+        if judged:
+            assert notes == [] and record["planned_landing"]["feasible"] is (planned_day >= 5.0)
+        else:
+            assert record["planned_landing"] is None
+            (note,) = notes
+            assert "day 25.000000" in note and "like-example-standard" in note and "day 20.000000" in note
+    # the windows themselves do not depend on the planned landing
+    assert record["landing_windows_et_s"] == [[5 * DAY, 20 * DAY]]
+
+
+def test_a_package_says_when_its_planned_landing_cannot_be_judged(tmp_path):
+    """The sentence reaches the warnings of the package, and the package stays valid."""
+    from lsncore.contract import contract_dir, validate_package
+    from lsncore.scenario import load_scenario
+    from lsncore.synthetic import run_synthetic_scenario
+
+    scenario = load_scenario(contract_dir() / "sample" / "SYNTHETIC_scenario.json")
+    scenario["sites"] = scenario["sites"][:1]
+    scenario["sites"][0]["landing_utc"] = "2026-12-13T12:00:00.000Z"  # half a day before the end of the range
+    paths = run_synthetic_scenario(scenario, tmp_path)
+    manifest = validate_package(next(p for p in paths if p.name.startswith("site-")))
+    records = manifest["timeline"]["opportunities"]
+    assert records and all(r["planned_landing"] is None for r in records)
+    assert manifest["request"]["timeline"]["landing_utc"] == "2026-12-13T12:00:00.000Z"
+    notes = [w for w in manifest["warnings"] if w.startswith("opportunities: the planned landing")]
+    assert len(notes) == len({r["requirement_id"] for r in records}) and all("2026-12-13T12:00:00.000Z" in n for n in notes)

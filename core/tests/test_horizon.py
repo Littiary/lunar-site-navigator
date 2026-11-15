@@ -483,3 +483,87 @@ def test_order_of_the_rounds_does_not_change_the_horizon_on_lola_data():
     at_once, rounds = _assert_same_horizon_whatever_the_order(LolaTerrain(reader), -89.5, 137.0, 300_000.0)
     # and it is worth it: fewer lattice points for the same horizon
     assert rounds.search_stats["lattice_points_walked"] < at_once.search_stats["lattice_points_walked"]
+
+
+# -- the first pixel -------------------------------------------------------------------------
+#
+# The search starts one pixel from the site, never farther than 20 m, and the reference scan
+# above starts at 20 m as well, so neither can see what the ground closer than that does.
+# An independent review (15 November 2026) scanned from 1 m and found the core's horizon of
+# a 0 m observer too low by 0.5 to 0.8 degrees at two places. The scan below starts 5 cm
+# from the site, in 5 cm steps over the first 60 m. Fixed before its first run, with the
+# tolerance of the completeness tests (0.002 degrees):
+#   * from 1 m up, nothing within the first pixel reaches the horizon;
+#   * at 0 m the horizon is that of the terrain from the first point outward. Against the
+#     scan from the site it is too low: a stated limit (docs/method/horizon.md, section 8),
+#     kept visible here as a strict expected failure.
+
+def _scan_from(reader, radius, lat, lon, azimuth_deg, observer_m, start_m, stop_m=60.0, step_m=0.05):
+    s = np.arange(start_m, stop_m, step_m)
+    g = s / radius
+    plat, plon = gc_point(lat, lon, azimuth_deg, g)
+    ground = float(reader.height_m(lon, lat))
+    return float(np.nanmax(exact_elevation_deg(radius + ground + observer_m, radius + reader.height_m(plon, plat), g)))
+
+
+def _first_pixel_shortfall(terrain, reader, lat, lon, heights, start_m):
+    """Largest amount by which the core's horizon lies below a scan of the first 60 m that
+    starts at start_m, per observer height, over azimuths every 5 degrees."""
+    res = compute_horizon(terrain, lat, lon, list(heights), azimuth_step_deg=0.25, max_range_m=20_000.0)
+    worst = []
+    for i, m in enumerate(heights):
+        low = [
+            _scan_from(reader, terrain.reference_radius_m, lat, lon, az, m, start_m) - res.elevation_deg[i, int(round(az / 0.25))]
+            for az in np.arange(0.0, 360.0, 5.0)
+        ]
+        worst.append(max(low))
+    return worst
+
+
+FIRST_PIXEL_POINTS = [(-88.8, -150.0), (-89.98, 0.0), (-89.80531, -154.23109)]  # two of the review, and the Shackleton record
+
+
+@pytest.fixture(scope="module")
+def lola_first_pixel():
+    lsn_data = pytest.importorskip("lsn_data")
+    from lsncore.dem import LolaTerrain
+
+    try:
+        reader = lsn_data.open_terrain()
+    except FileNotFoundError:
+        pytest.skip("LOLA products are not on this machine")
+    return LolaTerrain(reader), reader
+
+
+@pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
+def test_from_one_metre_up_nothing_within_the_first_pixel_reaches_the_horizon(lola_first_pixel, lat, lon):
+    terrain, reader = lola_first_pixel
+    worst = _first_pixel_shortfall(terrain, reader, lat, lon, (1.0, 2.0, 20.0), start_m=0.05)
+    assert max(worst) <= TOL_COMPLETENESS_DEG, worst
+
+
+@pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
+def test_at_zero_metres_the_horizon_is_that_of_the_terrain_from_the_first_point_outward(lola_first_pixel, lat, lon):
+    terrain, reader = lola_first_pixel
+    (worst,) = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0,), start_m=20.0)
+    assert worst <= TOL_COMPLETENESS_DEG
+
+
+@pytest.mark.xfail(strict=True, reason="stated limit: the ground within the first pixel is not part of the horizon of a 0 m observer")
+@pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
+def test_zero_metre_observer_against_a_scan_that_starts_at_the_site(lola_first_pixel, lat, lon):
+    terrain, reader = lola_first_pixel
+    (worst,) = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0,), start_m=0.05)
+    assert worst <= TOL_COMPLETENESS_DEG
+
+
+def test_first_pixel_on_a_rough_gridded_surface(rough_raster):
+    """The same three statements on the synthetic raster with single-pixel peaks."""
+    from lsncore.dem import LolaTerrain
+
+    terrain = LolaTerrain(rough_raster)
+    for lat, lon in [(-89.7, 40.0), (-89.4, -110.0)]:
+        up = _first_pixel_shortfall(terrain, rough_raster, lat, lon, (1.0, 2.0, 20.0), start_m=0.05)
+        assert max(up) <= TOL_COMPLETENESS_DEG, (lat, lon, up)
+        (outward,) = _first_pixel_shortfall(terrain, rough_raster, lat, lon, (0.0,), start_m=20.0)
+        assert outward <= TOL_COMPLETENESS_DEG, (lat, lon, outward)

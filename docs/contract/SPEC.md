@@ -1,4 +1,4 @@
-# Package contract, version 0.11
+# Package contract, version 0.12
 
 This document defines the files the science core writes and every viewer reads. It is the
 only interface between the core and the web pages, the Three.js view and the Unreal scene.
@@ -105,7 +105,7 @@ All packages start with the same fields:
 
 | Field | Content |
 |---|---|
-| `contract` | `{"name": "lsn-package", "version": "0.11"}` |
+| `contract` | `{"name": "lsn-package", "version": "0.12"}` |
 | `kind` | `site`, `direction_table` or `site_pairs` |
 | `package_id` | `site-`, `dirtab-` or `pairs-` followed by 16 hex digits; see 3.4 |
 | `content_sha256` | Digest of the package content; see 3.4 |
@@ -176,7 +176,9 @@ same package ids.
 `site` (`site_id`, `name`, `lat_deg`, `lon_deg`), `observer_heights_m`, `horizon`
 (`azimuth_step_deg`, `max_range_m`) and `timeline` (`start_utc`, `end_utc`, `step_s`,
 `bodies`, `thresholds`, since 0.3 `requirements` and the site's `landing_utc`, since 0.4 `uncertainty`; or `null`),
-and since 0.7 `terrain_patches` (the patches that were written, in the canonical order of the core; absent if there are none).
+since 0.7 `terrain_patches` (the patches that were written, in the canonical order of the core; absent if there are none),
+and since 0.12 `default_height_m` (the default observer height of the scenario, which decides `horizon.default_height_index`,
+the height of the band statistics, of the ellipse survey, of the terrain source and of the site pairs).
 
 `inputs` holds `science_version`, `dem` (`dem_set_id` and one entry per elevation layer:
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
@@ -435,19 +437,19 @@ in total between landing and landing + `mission_duration_s`. All conditions must
 |---|---|
 | `requirement_id`, `height_index` | Which requirement (in `request.timeline.requirements`), which observer height |
 | `landing_windows_et_s`, `landing_windows_utc` | The landing times for which the requirement holds: sorted, disjoint intervals |
-| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration. Later landings are not in the windows, whatever the truth |
-| `clipped_start`, `clipped_end` | The first window starts at the start of the range, or the last one ends at `latest_landing`: its true extent is unknown |
+| `latest_landing_et_s`, `latest_landing_utc` | Last landing time that can be judged: the end of the computed range minus the mission duration, for every requirement that states a duration, whatever its conditions (the end of the range if it states none). Later landings are not in the windows, whatever the truth |
+| `clipped_start`, `clipped_end` | The first window starts at the start of the range, or the last one ends where knowledge ends and not at an event: at `latest_landing`, or, for a `continuous_from_landing` condition whose visibility is still going on when the range ends, at the end of the range minus its `min_s`. Its true extent is unknown |
 | `feasible_fraction` | Total length of the windows divided by the time from the start of the range to `latest_landing` |
 | `window_count`, `longest_window_s`, `median_window_s` | Summary of the windows |
 | `feasible_s_per_period` | Feasible landing time inside each period of the calendar |
-| `planned_landing` | `null`, or the slip report for the site's `landing_utc` (below) |
+| `planned_landing` | The slip report for the site's `landing_utc` (below); `null` if the scenario states no planned landing, if it lies outside the computed range, or if it lies after what can be judged (after `latest_landing`, or after the end of a window cut as described for `clipped_end`). In the last case the planned landing is neither feasible nor infeasible, and `warnings` of the package says so; a reader finds the stated landing in `request.timeline.landing_utc` |
 | `method` | Method card |
 
 **Slip report** (`planned_landing`): `utc`, `et_s`; `feasible` (the requirement holds for
 a landing at the planned time); `slip_tolerance_s` (the landing can be delayed by up to
 this much and the requirement still holds; 0 if not feasible); `early_tolerance_s` (or
 advanced by this much); `slip_tolerance_is_lower_bound` (the window is cut by the end of
-what can be judged); `wait_s` (0 if feasible, otherwise the time to the next landing
+what can be judged, as `clipped_end` describes); `wait_s` (0 if feasible, otherwise the time to the next landing
 window, `null` if there is none in the range); `wait_after_window_s` (from the end of the
 current window to the next one); `next_window_start_utc`, `next_window_length_s`.
 
@@ -473,7 +475,10 @@ profile is raised and lowered by the resulting error. Per body and observer heig
 | `<body>_visible_possible` | Visible if the horizon is lower by that angle |
 | `<body>_visible_uncertain` | Possible and not certain: the band |
 
-Always: certain is inside `<body>_visible`, which is inside possible. Metrics
+Always: certain is inside `<body>_visible`, which is inside possible. For a height error
+the angle is that of the limiting terrain point alone: `possible` is an outer bound, but
+`certain` is not a guarantee, because higher terrain in front of the limiting point could
+set a horizon above the raised profile ([method note](../method/uncertainty.md), section 5). Metrics
 `<body>_visible_certain_s`, `<body>_visible_possible_s`, `<body>_visible_uncertain_s`.
 Every event gets `earliest_et_s`, `latest_et_s` (and the UTC strings): the interval of
 the band that contains it; equal to the event time if the band is empty there. A
@@ -740,6 +745,17 @@ intervals are sorted and disjoint; the package id and the content digest can be
 recomputed; synthetic data is labelled as such.
 
 ## 10. Changes
+
+### 0.12 (15 November 2026)
+
+After an independent review of the core. One field is new; two values were computed wrongly and are corrected; nothing changed its name, unit or layout. `science_version` is 2, so every package id changes.
+
+- New: `request.default_height_m` in a site package. The default observer height changes what a package contains, so it belongs to the request and to the package id (3.4). Before, two runs that differed only in it got the same id and the second replaced the first.
+- Corrected: `latest_landing` is the end of the range minus the mission duration for every requirement that states a duration, as this document always said. The core applied it only to requirements with a `total_in_mission` condition; for the others `latest_landing` was the end of the range, `feasible_fraction` was divided by too long a time, and `clipped_end` and `slip_tolerance_is_lower_bound` were not set for a window that ends there.
+- Corrected: `clipped_end` and `slip_tolerance_is_lower_bound` are also set where a window ends because a `continuous_from_landing` condition can no longer be proven inside the range (5.6).
+- `planned_landing` is `null` for a planned landing that lies after what can be judged; it was reported as `feasible: false`. No new field: `null` was already allowed, `warnings` says why (5.6).
+- Horizon: for observer heights above 0 the ground in front of the first lattice point is searched as well; for 0 m the horizon is, by definition, that of the terrain from the first lattice point outward. The method card of the horizon says so; its parameter `first_point_m` now states where the search starts (it named one pixel also where the search started at 20 m).
+- Wording: `visible_certain` is not a guarantee for a height error (5.7).
 
 ### 0.11 (14 November 2026)
 
