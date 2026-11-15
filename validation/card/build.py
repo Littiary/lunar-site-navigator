@@ -509,6 +509,10 @@ def build() -> dict:
             "The external reference (Horizons) and the core use JPL ephemerides of the same family; an error common to both would not show.",
             "Thresholds marked as written in the acceptance test were committed in the same commit as the code they test; the thresholds of the comparisons with external sources have commits of their own that predate the data or the computation, as listed above.",
             "The lander and eclipse comparisons are not blind: earlier research had compared some of the published values with Horizons.",
+            "Row 14 is not blind for one of its points. " + strip_not_blind,
+            "Rows 8 to 12 were recomputed on 15 November 2026 with the horizon the packages use, in which the ground between the point and the first pixel counts for an observer at 0 m. "
+            "That this default is the one judged, and not the convention of pixel-based maps, was decided before the result was seen; the thresholds were not changed. "
+            "The first result, of 14 November, searched from one pixel outward (Sun correlation 0.9973, permanent-shadow agreement 100 %).",
         ],
     }
 
