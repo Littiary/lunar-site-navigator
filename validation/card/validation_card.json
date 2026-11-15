@@ -1,8 +1,8 @@
 {
   "title": "Validation card: ephemeris, time and event finding",
-  "generated_utc": "2026-11-14T13:10:07Z",
+  "generated_utc": "2026-11-15T01:49:49Z",
   "generated_from": {
-    "commit": "c768268",
+    "commit": "95aab3a",
     "uncommitted_changes": false
   },
   "core": {
@@ -396,10 +396,10 @@
       "limits": [
         "Corner-based georeferencing (corners printed to 300 m) of a lossy browse image: it tests broad sunlit and shadowed areas, not the position of a shadow edge.",
         "One image, near Shackleton crater.",
-        "Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon, which is dim but not black in the image and which one brightness threshold for the whole image reads as shadow; the rule and the criterion were not changed after the result.",
+        "Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon and the image rule reads as shadow, which fits either a single brightness threshold that reads dimly lit ground as shadow or a terrain horizon of the core that is too low there by that amount, and the data do not decide between the two; the rule and the criterion were not changed after the result.",
         "The cause was looked for after the result (validation/lro_images/results/validation_table.md); that analysis is not a criterion."
       ],
-      "limit": "Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon, which is dim but not black in the image and which one brightness threshold for the whole image reads as shadow; the rule and the criterion were not changed after the result."
+      "limit": "Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon and the image rule reads as shadow, which fits either a single brightness threshold that reads dimly lit ground as shadow or a terrain horizon of the core that is too low there by that amount, and the data do not decide between the two; the rule and the criterion were not changed after the result."
     },
     {
       "id": "image_sub_solar_points",

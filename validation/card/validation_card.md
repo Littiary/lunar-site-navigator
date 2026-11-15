@@ -1,6 +1,6 @@
 # Validation card: ephemeris, time and event finding
 
-Generated 2026-11-14T13:10:07Z by `validation/card/build.py` from commit `c768268`; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
+Generated 2026-11-15T01:49:49Z by `validation/card/build.py` from commit `95aab3a`; every measured value is recomputed from the stored reference data and the code or, for the terrain and image checks, read from their stored result tables. Do not edit by hand.
 
 **31 of 32 checks pass; 1 fails (row 14). A failed check is shown as it is: no threshold, rule or reference was changed after a result.** Core: SPICE, frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5`.
 
@@ -56,7 +56,7 @@ Numbers as in the table above.
 11. A median hides the tails: 2 of 100 points differ by more than 0.05 in the Sun share (largest 0.079), and their cause was not traced.
 12. One nodal cycle at hourly steps, so a point lit for less than an hour in 18.6 years counts as never lit; 2 points on a boundary of the published map were left out.
 13. One point in one image, read by the camera team and not by us, where the terrain that hides the Sun is only 0.12 km away, so the state depends on the pole's position on the 20 m elevation grid.
-14. Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon, which is dim but not black in the image and which one brightness threshold for the whole image reads as shadow; the rule and the criterion were not changed after the result.
+14. Fails as registered (89.3 % against 90 %): all 32 disagreements are ground the core calls sunlit with the centre of the Sun only 0.02 to 0.46 deg above the terrain horizon and the image rule reads as shadow, which fits either a single brightness threshold that reads dimly lit ground as shadow or a terrain horizon of the core that is too low there by that amount, and the data do not decide between the two; the rule and the criterion were not changed after the result.
 15. An ephemeris check against values printed to 0.01 deg; it does not involve terrain.
 16. No terrain at either end, and both sides use JPL ephemerides and Earth orientation data of the same origin.
 17. No terrain at either end, and both sides use JPL ephemerides and Earth orientation data of the same origin.

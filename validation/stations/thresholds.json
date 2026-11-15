@@ -1,7 +1,7 @@
 {
   "title": "Acceptance thresholds: ground-station geometry of the core versus JPL Horizons",
   "written_utc": "2026-11-14T11:38:04Z",
-  "rule": "Written and committed together with cases.json before any of these Horizons responses was fetched and before the station code of the core existed. Not edited afterwards. If a comparison exceeds a threshold, the cause is found and reported; the threshold stays.",
+  "rule": "Written and committed together with cases.json before any of these Horizons responses was fetched and before the station code of the core existed. The threshold values have not been changed since that commit. The field written_utc was rewritten once, in commit edef799, to the time of the commit that added this file; the commit history is the record. If a comparison exceeds a threshold, the cause is found and reported; the threshold stays.",
   "what_is_checked": "The two conditions of a direct link between a lunar site and a ground station: (a) how high the lunar site stands above the station's horizon (Earth end), (b) where the station appears in the sky of the lunar site (Moon end). No terrain on either side.",
   "thresholds": {
     "earth_end_direction_arcsec_max": {
