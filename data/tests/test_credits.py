@@ -55,3 +55,59 @@ def test_sldem_rows_state_the_kaguya_contribution_and_the_citation():
         row = next(ln for ln in text.splitlines() if ln.startswith("| ") and key in ln.split(" | ")[0])
         assert "JAXA" in row and "Terrain Camera" in row and "10.1016/j.icarus.2015.07.039" in row
     assert re.search(r"SLDEM2015_512.*not approved", text)
+
+
+def _all_rows() -> list[list[str]]:
+    """Rows of the Data, Software libraries and Images tables (the AI-tools table lists one person per row)."""
+    text = (repo_data_dir().parent / "CREDITS.md").read_text(encoding="utf-8").split("## Use of AI tools", 1)[0]
+    return [[c.strip() for c in ln.strip().strip("|").split(" | ")] for ln in text.splitlines()
+            if ln.startswith("| ") and not ln.startswith("|---") and not ln.startswith("| Name") and not ln.startswith("| Team member")]
+
+
+def _same_item_key(row: list[str]) -> tuple:
+    """Name without its parenthetical details, second column and source column: two rows with the same key credit the
+    same item (it catches a row copied again with a longer list in brackets, e.g. the Gazetteer feature list)."""
+    name = re.sub(r"\s+", " ", re.sub(r"\([^()]*\)", "", row[0])).strip(" ,;")
+    return name, row[1], row[-2]
+
+
+def test_no_row_appears_twice():
+    keys = [_same_item_key(r) for r in _all_rows()]
+    dup = sorted({k[0] for k in keys if keys.count(k) > 1})
+    assert not dup, dup
+
+
+def _urls(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, str) and v.startswith("https://") and k in ("url", "source_url"):
+                yield v
+            else:
+                yield from _urls(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            if isinstance(v, str) and v.startswith("https://"):
+                yield v
+            else:
+                yield from _urls(v)
+
+
+def test_every_cited_source_of_the_checkpoints_and_site_list_is_credited():
+    """Reference values in the threshold files and the sources of the published site list each have a credit row."""
+    text = (repo_data_dir().parent / "CREDITS.md").read_text(encoding="utf-8")
+    credited = re.findall(r"https://[^\s|)\]]+", text)
+    cp = repo_data_dir() / "checkpoints"
+    missing = []
+    for f in sorted(cp.glob("thresholds*.json")):
+        for u in _urls(json.loads(f.read_text(encoding="utf-8"))):
+            if not any(u.startswith(c) for c in credited):  # the row may name the directory that holds the file
+                missing.append((f.name, u))
+    sites = json.loads((repo_data_dir() / "sites" / "curated_sites.json").read_text(encoding="utf-8"))
+    for s in sites["sites"]:
+        for u in s.get("nasa_sources", []):
+            if u not in text:
+                missing.append((s["site_id"], u))
+        host = s["coordinate_source"]["url"].split("/")[2]
+        if host not in text:
+            missing.append((s["site_id"], host))
+    assert not missing, missing
