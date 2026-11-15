@@ -29,7 +29,7 @@ function colourOf(id) {
 // Site name for the row label of the chart, shortened to fit (the full name is in the tooltip).
 const shortName = (n) => (n.length > 30 ? `${n.slice(0, 29)}…` : n);
 
-const hoursText = (s) => (s === null || s === undefined || Number.isNaN(s) ? "—" : `${fixed(s / 3600, 1)} h`);
+const hoursText = (s) => (s === null || s === undefined || Number.isNaN(s) ? "n/a" : `${fixed(s / 3600, 1)} h`);
 
 // Requirement records of a package by id (request.timeline.requirements).
 function requirementsOf(site) {
@@ -169,10 +169,10 @@ function opportunitiesHtml(usable, reqId) {
     const p = o.planned_landing;
     let planned = "No planned landing is stated in the scenario, so there is no slip tolerance or wait time.";
     if (p) {
-      const later = p.feasible ? `${p.slip_tolerance_is_lower_bound ? "at least " : ""}${hoursText(p.slip_tolerance_s)}` : "—";
-      const wait = p.feasible ? "—" : p.wait_s === null || p.wait_s === undefined ? "no window in the computed range" : hoursText(p.wait_s);
+      const later = p.feasible ? `${p.slip_tolerance_is_lower_bound ? "at least " : ""}${hoursText(p.slip_tolerance_s)}` : "n/a";
+      const wait = p.feasible ? "n/a" : p.wait_s === null || p.wait_s === undefined ? "no window in the computed range" : hoursText(p.wait_s);
       const next = p.next_window_start_utc ? `; next window ${esc(p.next_window_start_utc)} (${hoursText(p.next_window_length_s)})` : "";
-      planned = `${esc(p.utc)}: requirement ${p.feasible ? "holds" : "does not hold"}; later by up to ${later}; earlier by up to ${p.feasible ? hoursText(p.early_tolerance_s) : "—"}; wait ${wait}${next}`;
+      planned = `${esc(p.utc)}: requirement ${p.feasible ? "holds" : "does not hold"}; later by up to ${later}; earlier by up to ${p.feasible ? hoursText(p.early_tolerance_s) : "n/a"}; wait ${wait}${next}`;
     }
     const clipped = [o.clipped_start ? "the first window starts at the start of the range" : "", o.clipped_end ? "the last window ends at the latest landing that can be judged" : ""].filter(Boolean).join("; ");
     return `<tr><td>${esc(e.name)} · ${h} m</td><td class="num">${fixed(o.feasible_fraction * 100, 1)} %</td><td class="num">${esc(o.window_count)}</td>

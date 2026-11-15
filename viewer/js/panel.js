@@ -19,7 +19,7 @@ export function esc(text) {
 }
 
 export function fixed(value, digits) {
-  return value === null || value === undefined || Number.isNaN(value) ? "—" : Number(value).toFixed(digits);
+  return value === null || value === undefined || Number.isNaN(value) ? "n/a" : Number(value).toFixed(digits);
 }
 
 // ------------------------------------------------------------------ time grid (SPEC 3.5)
@@ -157,7 +157,7 @@ export function inWindow(site, h, id, et) {
   return w ? containing(w.intervals_et_s, et) >= 0 : null;
 }
 
-const yesNo = (v) => (v === null ? "—" : v ? '<span class="yes">yes</span>' : '<span class="no">no</span>');
+const yesNo = (v) => (v === null ? "n/a" : v ? '<span class="yes">yes</span>' : '<span class="no">no</span>');
 
 export function readoutHtml(site, data, h, i) {
   if (!site.timeline) return '<tbody><tr><td>This package has no time window.</td></tr></tbody>';
@@ -194,7 +194,7 @@ export function eventsHtml(site, h, i, before = 3, after = 3) {
   const rows = shown.map((e) => `<tr><td class="mono">${esc(e.utc)}</td><td>${e.et_s > et ? "next" : "past"}</td>
     <td>${NAMES[e.body] || esc(e.body)}</td><td>${esc(e.type)}</td><td class="num">${fixed(e.azimuth_deg, 2)}°</td>
     <td class="num">${fixed(e.horizon_elevation_deg, 3)}°</td>
-    <td class="num">${e.obstacle_distance_m === null || e.obstacle_distance_m === undefined ? "—" : fixed(e.obstacle_distance_m / 1000, 2) + " km"}</td>
+    <td class="num">${e.obstacle_distance_m === null || e.obstacle_distance_m === undefined ? "n/a" : fixed(e.obstacle_distance_m / 1000, 2) + " km"}</td>
     <td>${terrainQualityText(e)}</td></tr>`);
   return `<thead><tr><th>Time (UTC)</th><th></th><th>Body</th><th>Event</th><th>Body azimuth</th>
     <th>Terrain horizon elevation</th><th>Obstacle distance</th><th>Terrain quality</th></tr></thead><tbody>${rows.join("") ||
@@ -204,7 +204,7 @@ export function eventsHtml(site, h, i, before = 3, after = 3) {
 export function metricText(metric) {
   // Formatting only: fractions and shares as percentages, seconds as hours, flags and counts as stored.
   const v = metric.value;
-  if (v === null || v === undefined) return "—";
+  if (v === null || v === undefined) return "n/a";
   if (metric.unit === "1") return metric.id.includes("fraction") || metric.id.endsWith("_share") ? `${fixed(100 * v, 1)} %` : String(v);
   if (metric.unit === "s") return `${fixed(v / 3600, 1)} h`;
   return `${v} ${esc(metric.unit)}`;
@@ -224,7 +224,7 @@ export function siteOptionsHtml(sites, catalogue = null) {
     const cls = c && c.terrain && c.terrain.resolution_class;
     return [s.category, cls ? `${cls} terrain${cls === "coarse" ? " (warning)" : ""}` : ""].filter(Boolean).join(", ");
   };
-  const option = (s, k) => `<option value="${k}">${esc(s.name || s.site_id)}${extra(s) ? ` — ${esc(extra(s))}` : ""}</option>`;
+  const option = (s, k) => `<option value="${k}">${esc(s.name || s.site_id)}${extra(s) ? ` · ${esc(extra(s))}` : ""}</option>`;
   if (!sites.some((s) => s.programme)) return sites.map(option).join("");
   const groups = new Map();
   sites.forEach((s, k) => {
@@ -250,10 +250,10 @@ export function terrainSourceHtml(site) {
 
 // The terrain quality of an event (contract 0.10): the class of the pixel that limits the
 // horizon, the elevation product, the height error used for the uncertainty band and where that
-// error comes from, and the earliest and latest time of the band. "—" where the package has none.
+// error comes from, and the earliest and latest time of the band. "n/a" where the package has none.
 export function terrainQualityText(e) {
   const q = e.terrain_quality;
-  if (!q) return "—";
+  if (!q) return "n/a";
   const parts = [q.limiting_pixel ? `pixel ${esc(q.limiting_pixel)}` : "", q.product_id ? esc(q.product_id) : "",
     q.height_error_m !== undefined && q.height_error_m !== null ? `height error ${esc(q.height_error_m)} m` : "",
     q.band_source ? `band from ${esc(q.band_source)}` : "",
@@ -294,12 +294,12 @@ export function footerHtml(site) {
 }
 
 function hours(seconds) {
-  return seconds === null || seconds === undefined ? "—" : `${fixed(seconds / 3600, 1)} h`;
+  return seconds === null || seconds === undefined ? "n/a" : `${fixed(seconds / 3600, 1)} h`;
 }
 
 // A package value with its unit, formatted only (seconds as hours, fractions as percentages).
 function valueText(value, unit, id = "") {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "n/a";
   if (unit === "s") return hours(value);
   if (unit === "1") return id.includes("fraction") || id.endsWith("_share") ? `${fixed(100 * value, 1)} %` : String(value);
   return `${value} ${esc(unit || "")}`.trim();
@@ -319,7 +319,7 @@ export function contract06Html(site, h) {
 
   const calendar = t.calendar;
   if (calendar) {
-    parts.push(`<p class="small">Calendar: ${esc(calendar.period || "—")}, ${(calendar.periods || []).length} periods in the package (${esc(t.time.start_utc)} to ${esc(t.time.end_utc)})${statusOf(site, calendar.method)}.</p>`);
+    parts.push(`<p class="small">Calendar: ${esc(calendar.period || "n/a")}, ${(calendar.periods || []).length} periods in the package (${esc(t.time.start_utc)} to ${esc(t.time.end_utc)})${statusOf(site, calendar.method)}.</p>`);
   }
 
   const u = t.uncertainty || {};
@@ -354,7 +354,7 @@ export function contract06Html(site, h) {
   if (t.blockers) {
     const rows = t.blockers.filter((b) => b.height_index === h).map((b) => `<tr><td>${esc(NAMES[b.body] || b.body)}</td>
       <td class="num">${fixed(b.azimuth_start_deg, 2)}° to ${fixed(b.azimuth_end_deg, 2)}°</td>
-      <td class="num">${b.peak_distance_m === null || b.peak_distance_m === undefined ? "—" : fixed(b.peak_distance_m / 1000, 2) + " km"}</td>
+      <td class="num">${b.peak_distance_m === null || b.peak_distance_m === undefined ? "n/a" : fixed(b.peak_distance_m / 1000, 2) + " km"}</td>
       <td>${b.near_field ? "yes (within 1 km: depends on single pixels of the elevation model)" : "no"}</td>
       <td class="num">${hours(b.lost_s)}</td><td class="num">${fixed(100 * b.share_of_lost, 1)} %</td><td><code>${esc(b.obstacle_id)}</code></td></tr>`).join("");
     parts.push(`<h3>Obstacles that cost visible time at ${esc(heights[h])} m</h3><p class="small">Time lost compared with a smooth sphere through the site, largest first${statusOf(site, (t.blockers[0] || {}).method)}.</p>
@@ -366,9 +366,9 @@ export function contract06Html(site, h) {
     const rows = t.opportunities.filter((o) => o.height_index === h).map((o) => {
       const p = o.planned_landing;
       if (!p) return `<tr><td>${esc(o.requirement_id)}</td><td colspan="4">No planned landing is stated in the scenario.</td></tr>`;
-      const late = p.feasible ? `${p.slip_tolerance_is_lower_bound ? "at least " : ""}${hours(p.slip_tolerance_s)}` : "—";
-      const wait = p.feasible ? "—" : p.wait_s === null || p.wait_s === undefined ? "no window in the computed range" : hours(p.wait_s);
-      return `<tr><td>${esc(o.requirement_id)}</td><td>${esc(p.utc)}: ${p.feasible ? "requirement holds" : "requirement does not hold"}</td><td class="num">${late}</td><td class="num">${p.feasible ? hours(p.early_tolerance_s) : "—"}</td><td class="num">${wait}</td></tr>`;
+      const late = p.feasible ? `${p.slip_tolerance_is_lower_bound ? "at least " : ""}${hours(p.slip_tolerance_s)}` : "n/a";
+      const wait = p.feasible ? "n/a" : p.wait_s === null || p.wait_s === undefined ? "no window in the computed range" : hours(p.wait_s);
+      return `<tr><td>${esc(o.requirement_id)}</td><td>${esc(p.utc)}: ${p.feasible ? "requirement holds" : "requirement does not hold"}</td><td class="num">${late}</td><td class="num">${p.feasible ? hours(p.early_tolerance_s) : "n/a"}</td><td class="num">${wait}</td></tr>`;
     }).join("");
     parts.push(`<h3>Landing-date tolerance at ${esc(heights[h])} m</h3><p class="small">For each stated requirement: whether it holds for the planned landing, how much later or earlier the landing could be, or how long until the next landing window${statusOf(site, (t.opportunities[0] || {}).method)}.</p>
       <div class="table"><table><thead><tr><th>Requirement</th><th>Planned landing</th><th>Later by up to</th><th>Earlier by up to</th><th>Wait for the next window</th></tr></thead>
