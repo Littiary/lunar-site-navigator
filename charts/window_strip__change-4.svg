@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 443" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Lighting and direct-to-Earth windows, packages site-16dd250b013bcb86">
+<style>
+  svg { --bg: #ffffff; --ink: #1b1f24; --muted: #57606a; --grid: #d0d7de; --terrain: #8c959f;
+        --terrain-fill: #d8dee4; --sun: #b35c00; --earth: #1f5fbf; --combined: #1a7f37; --warn: #b42318; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg: #0d1117; --ink: #e6edf3; --muted: #9da7b3; --grid: #30363d; --terrain: #8b949e;
+          --terrain-fill: #262c33; --sun: #f0a54a; --earth: #6ea8fe; --combined: #56d364; --warn: #ff7b72; }
+  }
+  .bg { fill: var(--bg); }
+  text { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; fill: var(--ink); }
+  .title { font-size: 18px; font-weight: 600; }
+  .sub, .foot, .tick, .tick-time, .row { font-size: 12px; fill: var(--muted); }
+  .row { fill: var(--ink); }
+  .banner { font-size: 14px; font-weight: 700; fill: var(--warn); }
+  .grid { stroke: var(--grid); stroke-width: 1; }
+  .frame { fill: none; stroke: var(--muted); stroke-width: 1; }
+  .terrain { fill: var(--terrain-fill); }
+  .horizon { fill: none; stroke: var(--terrain); stroke-width: 1.5; }
+  .track { fill: none; stroke-width: 1.2; }
+  .track.sun { stroke: var(--sun); }
+  .track.earth { stroke: var(--earth); }
+  .bar.sun { fill: var(--sun); }
+  .bar.earth { fill: var(--earth); }
+  .bar.combined { fill: var(--combined); }
+  .bar.eclipse { fill: var(--muted); }
+  .mark { stroke-width: 2; }
+  .mark.sun { stroke: var(--sun); }
+  .mark.earth { stroke: var(--earth); }
+  .mark.combined { stroke: var(--combined); }
+  .mark.eclipse { stroke: var(--ink); }
+  .lane { fill: var(--grid); opacity: 0.35; }
+</style>
+<rect class="bg" x="0" y="0" width="1200" height="443"/>
+<text x="24" y="30" class="title" text-anchor="start">Lighting and direct-to-Earth windows</text>
+<text x="24" y="50" class="sub" text-anchor="start">Intervals in which the Sun and the Earth are above the terrain horizon, on one UTC axis</text>
+<text x="24" y="72" class="banner" text-anchor="start">PROVISIONAL RESULTS, NOT FINAL: built from the result packages published in packages/ of the repository. Event times and</text>
+<text x="24" y="94" class="banner" text-anchor="start">visibility shares on real terrain are unverified against an independent source (see Validation). This page is rebuilt</text>
+<text x="24" y="116" class="banner" text-anchor="start">whenever the packages change.</text>
+<g id="plot" data-x0="300" data-x1="1170" data-y0="130" data-y1="300" data-xmin="847886469.183" data-xmax="911044869.183" data-ymin="0" data-ymax="1">
+<line class="grid" x1="300" x2="300" y1="130" y2="300"/>
+<text x="300" y="316" class="tick-time" text-anchor="middle">2026-11-14</text>
+<line class="grid" x1="372.6" x2="372.6" y1="130" y2="300"/>
+<text x="372.6" y="316" class="tick-time" text-anchor="middle">2027-01-14</text>
+<line class="grid" x1="445.2" x2="445.2" y1="130" y2="300"/>
+<text x="445.2" y="316" class="tick-time" text-anchor="middle">2027-03-16</text>
+<line class="grid" x1="517.8" x2="517.8" y1="130" y2="300"/>
+<text x="517.8" y="316" class="tick-time" text-anchor="middle">2027-05-16</text>
+<line class="grid" x1="590.4" x2="590.4" y1="130" y2="300"/>
+<text x="590.4" y="316" class="tick-time" text-anchor="middle">2027-07-16</text>
+<line class="grid" x1="663" x2="663" y1="130" y2="300"/>
+<text x="663" y="316" class="tick-time" text-anchor="middle">2027-09-15</text>
+<line class="grid" x1="735.6" x2="735.6" y1="130" y2="300"/>
+<text x="735.6" y="316" class="tick-time" text-anchor="middle">2027-11-15</text>
+<line class="grid" x1="808.19" x2="808.19" y1="130" y2="300"/>
+<text x="808.19" y="316" class="tick-time" text-anchor="middle">2028-01-15</text>
+<line class="grid" x1="880.79" x2="880.79" y1="130" y2="300"/>
+<text x="880.79" y="316" class="tick-time" text-anchor="middle">2028-03-16</text>
+<line class="grid" x1="953.39" x2="953.39" y1="130" y2="300"/>
+<text x="953.39" y="316" class="tick-time" text-anchor="middle">2028-05-16</text>
+<line class="grid" x1="1025.99" x2="1025.99" y1="130" y2="300"/>
+<text x="1025.99" y="316" class="tick-time" text-anchor="middle">2028-07-16</text>
+<line class="grid" x1="1098.59" x2="1098.59" y1="130" y2="300"/>
+<text x="1098.59" y="316" class="tick-time" text-anchor="middle">2028-09-15</text>
+<text x="735" y="332" class="tick" text-anchor="middle">Date (UTC, ticks at 00:00)</text>
+<rect class="bg" x="16" y="140" width="1154" height="18"/>
+<text x="24" y="154" class="row" text-anchor="start">Chang'e 4 lander (observer 2 m)</text>
+<text x="36" y="173" class="sub" text-anchor="start">Sun visible · 49.0 % of window</text>
+<rect class="lane" x="300" y="160" width="870" height="18"/>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="300" y="160" width="3.967" height="18"><title>Sun visible: 2026-11-14T00:00:00.000Z to 2026-11-17T07:59:37.266Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="321.477" y="160" width="17.694" height="18"><title>Sun visible: 2026-12-02T01:05:45.234Z to 2026-12-16T21:54:18.984Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="356.762" y="160" width="17.588" height="18"><title>Sun visible: 2026-12-31T16:37:46.639Z to 2027-01-15T11:17:31.170Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="392.066" y="160" width="17.429" height="18"><title>Sun visible: 2027-01-30T08:33:24.607Z to 2027-02-14T00:01:39.138Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="427.355" y="160" width="17.259" height="18"><title>Sun visible: 2027-03-01T00:10:17.575Z to 2027-03-15T12:11:56.950Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="462.592" y="160" width="17.122" height="18"><title>Sun visible: 2027-03-30T14:44:57.419Z to 2027-04-14T00:01:38.200Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="497.75" y="160" width="17.06" height="18"><title>Sun visible: 2027-04-29T03:44:21.794Z to 2027-05-13T11:45:56.482Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="532.831" y="160" width="17.083" height="18"><title>Sun visible: 2027-05-28T15:09:32.576Z to 2027-06-11T23:38:18.045Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="567.85" y="160" width="17.182" height="18"><title>Sun visible: 2027-06-27T01:19:49.452Z to 2027-07-11T11:49:03.515Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="602.839" y="160" width="17.332" height="18"><title>Sun visible: 2027-07-26T10:54:11.015Z to 2027-08-10T00:24:47.578Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="637.845" y="160" width="17.487" height="18"><title>Sun visible: 2027-08-24T20:49:33.984Z to 2027-09-08T13:27:02.578Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="672.886" y="160" width="17.625" height="18"><title>Sun visible: 2027-09-23T07:25:51.797Z to 2027-10-08T02:50:35.391Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="707.999" y="160" width="17.697" height="18"><title>Sun visible: 2027-10-22T19:31:08.672Z to 2027-11-06T16:23:37.266Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="743.209" y="160" width="17.67" height="18"><title>Sun visible: 2027-11-21T09:31:59.765Z to 2027-12-06T05:51:16.640Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="778.495" y="160" width="17.552" height="18"><title>Sun visible: 2027-12-21T01:05:34.452Z to 2028-01-04T19:01:49.921Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="813.8" y="160" width="17.397" height="18"><title>Sun visible: 2028-01-19T17:02:13.826Z to 2028-02-03T07:51:16.170Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="849.1" y="160" width="17.232" height="18"><title>Sun visible: 2028-02-18T08:53:11.013Z to 2028-03-03T20:23:07.732Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="884.348" y="160" width="17.112" height="18"><title>Sun visible: 2028-03-18T23:40:35.856Z to 2028-04-02T08:44:27.419Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="919.514" y="160" width="17.07" height="18"><title>Sun visible: 2028-04-17T12:48:49.450Z to 2028-05-01T21:01:56.482Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="954.598" y="160" width="17.11" height="18"><title>Sun visible: 2028-05-17T00:18:27.888Z to 2028-05-31T09:20:34.920Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="989.615" y="160" width="17.222" height="18"><title>Sun visible: 2028-06-15T10:26:33.045Z to 2028-06-29T21:44:22.733Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="1024.601" y="160" width="17.372" height="18"><title>Sun visible: 2028-07-14T19:57:41.952Z to 2028-07-29T10:16:42.890Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="1059.603" y="160" width="17.515" height="18"><title>Sun visible: 2028-08-13T05:47:24.140Z to 2028-08-27T22:59:28.359Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="1094.633" y="160" width="17.638" height="18"><title>Sun visible: 2028-09-11T16:10:54.141Z to 2028-09-26T11:51:39.610Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="1129.741" y="160" width="17.687" height="18"><title>Sun visible: 2028-10-11T04:09:09.610Z to 2028-10-26T00:49:12.422Z</title></rect>
+<rect class="bar sun" data-window="sun_visible" data-site="change-4" x="1164.946" y="160" width="5.054" height="18"><title>Sun visible: 2028-11-09T18:05:03.047Z to 2028-11-14T00:00:00.000Z</title></rect>
+<text x="303" y="173" class="tick" text-anchor="start">◂</text>
+<text x="1167" y="173" class="tick" text-anchor="end">▸</text>
+<text x="36" y="197" class="sub" text-anchor="start">Earth visible · 0.0 % of window</text>
+<rect class="lane" x="300" y="184" width="870" height="18"/>
+<text x="36" y="221" class="sub" text-anchor="start">Two-way link with a DSN complex</text>
+<rect class="lane" x="300" y="208" width="870" height="18"/>
+<text x="36" y="245" class="sub" text-anchor="start">Sun and Earth visible</text>
+<rect class="lane" x="300" y="232" width="870" height="18"/>
+<text x="36" y="269" class="sub" text-anchor="start">Sun eclipsed by the Earth</text>
+<rect class="lane" x="300" y="256" width="870" height="18"/>
+<rect class="bar eclipse" data-window="sun_eclipsed_by_earth" data-site="change-4" x="417.762" y="256" width="0.048" height="18"><title>Sun eclipsed by the Earth: 2027-02-20T22:43:31.169Z to 2027-02-20T23:41:10.076Z</title></rect>
+<line class="mark eclipse" x1="417.786" x2="417.786" y1="256" y2="274"><title>Sun eclipsed by the Earth: 2027-02-20T22:43:31.169Z to 2027-02-20T23:41:10.076Z</title></line>
+<rect class="bar eclipse" data-window="sun_eclipsed_by_earth" data-site="change-4" x="628.774" y="256" width="0.138" height="18"><title>Sun eclipsed by the Earth: 2027-08-17T05:53:51.328Z to 2027-08-17T08:40:24.140Z</title></rect>
+<line class="mark eclipse" x1="628.843" x2="628.843" y1="256" y2="274"><title>Sun eclipsed by the Earth: 2027-08-17T05:53:51.328Z to 2027-08-17T08:40:24.140Z</title></line>
+<rect class="bar eclipse" data-window="sun_eclipsed_by_earth" data-site="change-4" x="804.745" y="256" width="0.171" height="18"><title>Sun eclipsed by the Earth: 2028-01-12T02:26:56.952Z to 2028-01-12T05:54:03.514Z</title></rect>
+<line class="mark eclipse" x1="804.831" x2="804.831" y1="256" y2="274"><title>Sun eclipsed by the Earth: 2028-01-12T02:26:56.952Z to 2028-01-12T05:54:03.514Z</title></line>
+<rect class="bar eclipse" data-window="sun_eclipsed_by_earth" data-site="change-4" x="1014.925" y="256" width="0.158" height="18"><title>Sun eclipsed by the Earth: 2028-07-06T16:49:37.733Z to 2028-07-06T20:00:25.077Z</title></rect>
+<line class="mark eclipse" x1="1015.004" x2="1015.004" y1="256" y2="274"><title>Sun eclipsed by the Earth: 2028-07-06T16:49:37.733Z to 2028-07-06T20:00:25.077Z</title></line>
+</g>
+<text x="24" y="346" class="foot" text-anchor="start">Chang'e 4 lander:</text>
+<text x="24" y="363" class="foot" text-anchor="start">   Package site-16dd250b013bcb86 · content SHA-256 7fe7e5b749fc9d3b… · contract 0.12 · status ok</text>
+<text x="24" y="380" class="foot" text-anchor="start">   Frame MOON_ME_DE440_ME421 · reference sphere radius 1737.4 km · site -45.4562°, 177.5886° (planetocentric, east-positive) · observer 2 m above terrain</text>
+<text x="24" y="397" class="foot" text-anchor="start">   Time window 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z UTC (series on a TDB grid, step 3600 s, 17545 samples)</text>
+<text x="24" y="414" class="foot" text-anchor="start">   Validation status: timeline.windows [analytic-test-passed], timeline.events [analytic-test-passed] · ◂ ▸ the interval runs past the computed range</text>
+</svg>

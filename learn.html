@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Lunar Site Navigator: how to read it</title>
+<style>:root { --bg: #ffffff; --surface: #f6f8fa; --ink: #1b1f24; --muted: #57606a; --line: #d0d7de;
+        --accent: #1f5fbf; --warn: #b42318; --warn-bg: #fdecea; --ok: #1a7f37; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0d1117; --surface: #161b22; --ink: #e6edf3; --muted: #9da7b3; --line: #30363d;
+          --accent: #6ea8fe; --warn: #ff7b72; --warn-bg: #3a1514; --ok: #56d364; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+h2 { font-size: 1.25rem; margin: 40px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 1.05rem; margin: 24px 0 8px; }
+p, li { max-width: 72ch; }
+a { color: var(--accent); }
+code, .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85em; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+nav { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 12px 0 0; font-size: 0.95rem; }
+.banner { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); border-radius: 6px;
+          padding: 10px 14px; margin: 16px 0; font-weight: 600; }
+.banner p { margin: 4px 0 0; font-weight: 400; }
+figure { margin: 16px 0; }
+.chart { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 6px; }
+.chart img { width: 100%; min-width: 760px; height: auto; display: block; }
+figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+.table { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px 0 16px; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 0.9rem; }
+td code { white-space: nowrap; }
+th, td { text-align: left; vertical-align: top; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 8px 0 16px; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { dl.facts { grid-template-columns: 1fr; } dl.facts dd { margin-bottom: 6px; } }
+details { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 8px 0; background: var(--surface); }
+summary { cursor: pointer; font-weight: 600; }
+.status { display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 600;
+          border: 1px solid currentColor; white-space: nowrap; }
+.status.pass, .status.externally-validated, .status.analytic-test-passed { color: var(--ok); }
+.status.fail, .status.unverified, .status.synthetic, .status.unknown { color: var(--warn); }
+footer { margin-top: 48px; font-size: 0.85rem; color: var(--muted); }
+.example { border-left: 4px solid var(--accent); padding: 6px 14px; margin: 14px 0; background: var(--surface); }
+.example .label { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.example p { margin: 4px 0; }
+blockquote { margin: 8px 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); color: var(--muted); }</style>
+</head>
+<body><main>
+<header>
+<h1>Lunar Site Navigator — how to read it</h1>
+<p>Four ideas are enough to read every view of the tool: the horizon, visibility windows, the uncertainty of the terrain, and landing opportunities. Each is explained below in a few sentences, with one real example taken from a published result package.</p>
+<nav><a href="#horizon">1. The horizon: what the terrain hides</a><a href="#windows">2. Visibility windows: when the Sun and the Earth can be seen</a><a href="#uncertainty">3. Terrain uncertainty: why a time is an estimate</a><a href="#opportunities">4. Landing opportunities: which dates work</a><a href="compare.html">Compare two sites</a><a href="evidence.html">Evidence page</a><a href="accuracy.html">Accuracy and limits</a></nav>
+</header>
+<h2 id="horizon">1. The horizon: what the terrain hides</h2>
+<p>Stand at one point on the Moon and turn around once. In every direction the ground ends somewhere against the sky: a nearby ridge, a crater rim, a far mountain. The line where ground meets sky is the terrain horizon. The tool stores it as one angle for each direction (azimuth): how many degrees above or below the level direction the ground reaches.</p>
+<p>At the Moon&#x27;s poles the Sun never climbs high. It circles close to the level direction, so the horizon decides everything: where the terrain rises a degree or two, the Sun is hidden behind it. The Earth also stays low and in nearly the same direction, rocking slowly up and down.</p>
+<p>The horizon depends on how high you stand. From a mast you see over nearby ground, so the tool computes the horizon for several observer heights.</p>
+<div class="example" data-example="horizon"><div class="label">Example from the package</div><p>At Shackleton crater rim crest the terrain is searched out to 300 km in every direction, for observer heights of 0, 1, 2, 5, 10, 20 m. At 2 m, the terrain that costs the most sunlight is only 673 m away: it hides the Sun for 373 hours of the window, 31 % of all the sunlight this site loses to terrain.</p></div>
+<h2 id="windows">2. Visibility windows: when the Sun and the Earth can be seen</h2>
+<p>The Sun and the Earth move across the sky along paths that can be computed very precisely. Each time one of them crosses the terrain horizon, an event happens: a rise or a set. The time between a rise and the next set is a visibility window.</p>
+<p>The Sun is not a point but a disc about half a degree wide. The tool counts the Sun as visible as soon as any part of the disc shows above the terrain, so a partial sunrise already gives some light.</p>
+<p>Sunlight means power and warmth. The Earth in view means a direct radio link. A lander usually needs both, so the tool also lists the windows in which the Sun and the Earth are visible together, and the longest stretches without each.</p>
+<div class="example" data-example="windows"><div class="label">Example from the package</div><p>At Shackleton crater rim crest, over the whole window, the Sun is visible 46.7 % of the time for an observer on the ground (0 m) and 76.9 % of the time at 2 m. The Earth is visible 52.4 % of the time at 2 m. The first Sun event in the window at 2 m is a set at 2026-12-07T02:03:08.203Z UTC.</p></div>
+<h2 id="uncertainty">3. Terrain uncertainty: why a time is an estimate</h2>
+<p>The shape of the Moon&#x27;s surface is known from laser measurements taken from orbit, stored as a grid of heights. Each height has a small error, and between measured points the grid is filled in. If the ridge that hides the Sun is really a few metres higher or lower than the grid says, the Sun disappears a little earlier or later.</p>
+<p>Because the Sun moves so slowly along the horizon near the poles, a small error in height can shift a sunrise or sunset by many minutes. A ridge close to the observer matters most: the same few metres of height are a larger angle when seen from nearby.</p>
+<p>Where the height error of the terrain has been measured, the tool gives each event an earliest and a latest time instead of pretending to know it exactly. Where it has not been measured, the tool says so and gives no band. No rise or set time on real terrain has been checked against an independent measurement.</p>
+<div class="example" data-example="uncertainty"><div class="label">Example from the package</div><p>For the event above (set at 2026-12-07T02:03:08.203Z UTC) the package gives the earliest time 2026-12-07T01:22:14.765Z and the latest time 2026-12-07T02:30:01.171Z UTC. The terrain that sets this event is 0.663 km away.</p><p class="muted">As the package states it (in English):</p><blockquote lang="en">The terrain point that sets the horizon in each azimuth may be higher or lower than the elevation model says by the stated height; seen from the site that is atan(height error / distance), so near terrain gets a wide band and far terrain a narrow one. The same sign is assumed at every azimuth. The height is taken from the stated model: Two sigma for the LOLA products: on the 5 m site rasters twice the producers&#x27; RMS error map at the pixel (1 m where the map is empty); on every other product 5 m up to 30 degrees of slope and 7 m above. &#x27;Certain&#x27; holds even with the horizon that much higher than computed; &#x27;possible&#x27; needs it that much lower. Other error sources (ephemeris, landing position, observer height) are not in this band.</blockquote></div>
+<h2 id="opportunities">4. Landing opportunities: which dates work</h2>
+<p>A mission states what it needs, for example: the Earth must be in view at touchdown, and the Sun must stay up without a break for a number of days afterwards. A landing time is feasible if the visibility windows satisfy that requirement. All feasible landing times in a row form a landing window.</p>
+<p>Launches slip. So for a planned landing date the tool also reports how many hours or days the landing can be late and still meet the requirement, and, if the planned date does not work, how long the wait is until the next landing window opens.</p>
+<p>The opportunity calendar shows all of this by lunar day, the roughly 29.5 Earth days from one new Moon to the next, so that good and bad months can be seen at a glance and two sites can be compared on one time axis.</p>
+<div class="example" data-example="opportunities"><div class="label">Example from the package</div><p>With the requirement below, Shackleton crater rim crest at 2 m has 15 landing windows in the two-year window; landing is feasible 19.9 % of the time, and the longest landing window lasts 318 hours. For the planned landing on 2027-01-10T00:00:00.000Z UTC the package says: the requirement does not hold, and the next landing window opens after a wait of 9 hours.</p><p class="muted">As the package states it (in English):</p><blockquote lang="en">EXAMPLE chosen by the team, not a NASA requirement: Earth in view at landing and 10 Earth days of unbroken sunlight from landing</blockquote></div>
+<p class="muted">Example site: Shackleton crater rim crest, package site-689eb279e17d7879, time window 2026-11-14T00:00:00.000Z to 2028-11-14T00:00:00.000Z UTC. The numbers are read from that package and only formatted here.</p>
+<footer><p>Team Kestro Aerospace, NASA Space Apps Challenge 2026. The landing requirement used in the example is an example chosen by the team, not a mission requirement. The sites are not official landing sites.</p></footer>
+</main></body>
+</html>
