@@ -55,12 +55,13 @@ export function groundInput({ site, h, i, data, g, view3dModule, missing = null 
     const s = data.series[body];
     return s ? { az: s.az[i], el: s.el[i], r: g.radius[body] ? g.radius[body][i] : NaN, fraction: s.fraction[i] } : null;
   };
-  let earthPole = null, subLunar = "";
+  let earthPole = null, subLunar = "", subLunarPoint = null;
   if (g.earthView && g.table && site.timeline) {
     const { k, exact } = tableRecord(g.table, et), B = g.table.table.manifest.bodies.length, b = g.table.table.manifest.bodies.indexOf("EARTH");
     if (b >= 0) {
       const gBody = Array.from(g.table.positions.values.subarray((k * B + b) * 3, (k * B + b) * 3 + 3));
       earthPole = view3dModule.earthPole(gBody, g.earthView.lat[k], g.earthView.angle[k], g.earthView.flattening, site.manifest.site.enu);
+      subLunarPoint = { lat: g.earthView.lat[k], lon: g.earthView.lon[k] };   // turns the Earth's map (drawing only)
       subLunar = `Earth's disc centred over ${fixed(g.earthView.lat[k], 2)}°, ${fixed(g.earthView.lon[k], 2)}° (earth_view record ${k}${exact ? "" : ", nearest"}) [${esc(g.earthView.status)}]`;
     }
   }
@@ -79,5 +80,5 @@ export function groundInput({ site, h, i, data, g, view3dModule, missing = null 
   const hudSummary = `${[share("SUN"), share("EARTH")].filter(Boolean).join(" · ")} above the horizon`;
   return { siteId: site.id, h, horizon: data.horizon, hudSummary, distance: data.distance, azimuth: site.manifest.horizon.azimuth,
     terrain: site.manifest.terrain || null, up: g.up, observerHeight: height,
-    sun: pick("SUN"), earth: pick("EARTH"), earthPole, hud, missing };
+    sun: pick("SUN"), earth: pick("EARTH"), earthPole, subLunar: subLunarPoint, hud, missing };
 }
