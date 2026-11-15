@@ -2,11 +2,15 @@
 
 Output folder (default ``web/dist/site``)::
 
-    index.html          the evidence page (self-contained; charts embedded)
+    index.html          the split-screen comparison viewer
+    compare.html        the split-screen comparison viewer
+    evidence.html       the evidence page (self-contained; charts embedded)
     charts/*.svg        the same charts as separate files, linked from the page
     viewer/             the interactive viewer (copied from web/viewer)
     packages/           the packages the viewer reads: index.json and exactly the files it lists
-    notice.json         the notice, for the viewer
+    notice.json         the notice and the validation summary of the card, for the viewer
+    summary/            the first-screen summary: a catalogue of the sites and, per site, the
+                        package fields the first screen shows, copied unchanged (see summary.py)
     .nojekyll           serve the files as they are on GitHub Pages
 
 The notice shown on the page and on every chart is read from a text file (default
@@ -29,10 +33,10 @@ from pathlib import Path
 
 if __package__ in (None, ""):  # allow `python web/lsn_web/site.py`
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from lsn_web import charts, evidence
+    from lsn_web import charts, evidence, summary
     from lsn_web.package import array_refs, load_packages
 else:
-    from . import charts, evidence
+    from . import charts, evidence, summary
     from .package import array_refs, load_packages
 
 WEB = Path(__file__).resolve().parent.parent
@@ -48,6 +52,11 @@ def read_notice(path: Path) -> str | None:
 
 def build(packages: list[str], card: Path | None, notice: str | None, out: Path) -> list[Path]:
     sites = load_packages(packages)
+    # The folders this build owns are rewritten from scratch: a package, chart or viewer file
+    # left from an earlier build must not be published with this one.
+    for owned in ("charts", "viewer", "packages", "summary"):
+        if (out / owned).is_dir():
+            shutil.rmtree(out / owned)
     (out / "charts").mkdir(parents=True, exist_ok=True)
     written = []
 
@@ -59,13 +68,16 @@ def build(packages: list[str], card: Path | None, notice: str | None, out: Path)
         write(out / "charts" / f"horizon_panorama__{site.manifest['site']['site_id']}.svg", charts.horizon_panorama(site, notice))
     if any(site.timeline for site in sites):
         write(out / "charts" / "window_strip.svg", charts.window_strip(sites, notice))
-    write(out / "index.html", evidence.build_page(sites, card, notice, chart_links=True))
+    write(out / "evidence.html", evidence.build_page(sites, card, notice, chart_links=True))
+    write(out / "index.html", comparison_page())
+    write(out / "compare.html", comparison_page())
     write(out / ".nojekyll", "")
-    write(out / "notice.json", json.dumps({"notice": notice}) + "\n")
+    write(out / "notice.json", json.dumps({"notice": notice, "validation": summary.validation_note(card)}) + "\n")
     written += copy_viewer(out / "viewer")
     indexes = [Path(p) for p in packages if Path(p).is_file()]
     if len(indexes) == 1:
         written += copy_packages(indexes[0], out / "packages")
+        written += summary.write_summaries(out / "packages" / "index.json", out / "summary")
     return written
 
 
@@ -80,6 +92,18 @@ def copy_viewer(target: Path) -> list[Path]:
             shutil.copyfile(path, dest)
             copied.append(dest)
     return copied
+
+
+def comparison_page() -> str:
+    """Adapt the viewer comparison page for the public site root."""
+    source = (WEB / "viewer" / "compare.html").read_text(encoding="utf-8")
+    return (source
+            .replace('href="viewer.css"', 'href="viewer/viewer.css"')
+            .replace('href="index.html"', 'href="viewer/index.html"')
+            .replace('href="../index.html"', 'href="evidence.html"')
+            .replace('href="../evidence.html"', 'href="evidence.html"')
+            .replace('src="js/compare.js"', 'src="viewer/js/compare.js"')
+            .replace('"./vendor/three/three.module.js"', '"./viewer/vendor/three/three.module.js"'))
 
 
 def copy_packages(index_path: Path, target: Path) -> list[Path]:

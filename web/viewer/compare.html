@@ -4,44 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Lunar Site Navigator comparison</title>
+<title>Lunar Site Navigator: compare two landing sites</title>
 <link rel="stylesheet" href="viewer.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
 </head>
 <body>
 <main class="wide">
   <header>
-    <h1>Compare two sites</h1>
-    <p class="muted">Both sites are shown at the same moment. Every number is read from the published result packages of the science core; the browser computes none of them.
-      <a href="index.html">Single-site viewer</a> · <a href="../index.html">Evidence page</a></p>
+    <h1>Lunar Site Navigator</h1>
+    <p class="lead">Compare two lunar landing sites hour by hour over two years: when the Sun lights them, when the Earth is in view for radio contact, and when a landing would meet a stated requirement. For mission and science teams, students and anyone choosing where and when to land; every number comes from published result packages.</p>
+    <p class="vnote" id="validation-note" role="note"></p>
+    <p class="small"><a href="index.html" id="viewer-link">Single-site viewer</a> · <a href="../evidence.html">Evidence page</a></p>
     <div id="notice" class="banner" hidden></div>
     <div id="error" class="banner" hidden></div>
+    <p class="loading-status small" id="load-status" role="status" aria-live="polite">Loading the list of sites…</p>
   </header>
 
   <section class="timebar" aria-label="Shared time">
     <div class="time-row">
       <button type="button" id="play" aria-pressed="false">Play</button>
-      <label>Speed
-        <select id="speed">
-          <option value="1">1 hour per step</option>
-          <option value="6" selected>6 hours per step</option>
-          <option value="24">1 day per step</option>
-          <option value="168">1 week per step</option>
-        </select>
-      </label>
-      <label>Date (UTC) <input id="date" type="datetime-local" step="3600"></label>
       <output id="utc" class="mono"></output>
-    </div>
-    <div class="time-row">
-      <span>Pane view</span>
-      <button type="button" id="view-chart" aria-pressed="true">Horizon chart</button>
-      <button type="button" id="view-sky" aria-pressed="false">Sky panorama</button>
-      <label id="span-label" hidden>Paths for <select id="sky-span">
-        <option value="24">±1 day</option>
-        <option value="168" selected>±7 days</option>
-        <option value="360">±15 days</option>
-        <option value="720">±30 days</option>
-        <option value="all">the whole time window</option>
-      </select></label>
     </div>
     <div class="time-row">
       <button type="button" data-step="-24" title="One day earlier">−1 d</button>
@@ -50,31 +32,76 @@
       <button type="button" data-step="1" title="One sample later">+1 h</button>
       <button type="button" data-step="24" title="One day later">+1 d</button>
     </div>
+    <details class="more-controls" id="more-controls" open>
+      <summary>More controls: speed, date, landing requirement, view, export</summary>
+      <div class="time-row">
+        <label>Speed
+          <select id="speed">
+            <option value="1">1 hour per step</option>
+            <option value="6" selected>6 hours per step</option>
+            <option value="24">1 day per step</option>
+            <option value="168">1 week per step</option>
+          </select>
+        </label>
+        <label>Date (UTC) <input id="date" type="datetime-local" step="3600"></label>
+        <label>Landing requirement <select id="cal-req"><option value="">loading…</option></select></label>
+      </div>
+      <div class="time-row">
+        <span>Pane view</span>
+        <button type="button" id="view-chart" aria-pressed="true">Horizon chart</button>
+        <button type="button" id="view-sky" aria-pressed="false">Sky panorama</button>
+        <button type="button" id="view-ground" aria-pressed="false">Ground view</button>
+        <button type="button" id="view-calendar" aria-pressed="false">Opportunity calendar</button>
+        <label id="span-label" hidden>Paths for <select id="sky-span">
+          <option value="24">±1 day</option>
+          <option value="168" selected>±7 days</option>
+          <option value="360">±15 days</option>
+          <option value="720">±30 days</option>
+          <option value="all">the whole time window</option>
+        </select></label>
+        <button type="button" id="export-csv" disabled>Export CSV</button>
+      </div>
+    </details>
   </section>
 
+  <section id="calendar-section" aria-label="Opportunity calendar of both sites" hidden>
+    <h2>Opportunity calendar</h2>
+    <div id="calendar"></div>
+    <p class="muted small">Both sites on one time axis, each at the observer height selected in its pane: lunar days of <code>timeline.calendar</code> and landing opportunities of <code>timeline.opportunities</code> for the requirement chosen above, as the packages give them; nothing is recomputed in the browser.</p>
+  </section>
   <div class="split">
     <section class="pane" id="pane-a" aria-label="Site A"></section>
     <section class="pane" id="pane-b" aria-label="Site B"></section>
   </div>
+  <section id="pair-results" aria-label="Published site pair metrics"></section>
 </main>
 <template id="pane-template">
   <div class="pane-head">
-    <label>Site <select data-role="site"></select></label>
+    <label>Site <select data-role="site"><option>loading…</option></select></label>
     <label>Observer height <select data-role="height"></select></label>
   </div>
   <p class="pane-time mono" data-role="time"></p>
+  <div data-role="cards"><div class="status-cards skeleton" aria-hidden="true"><div class="status-card"></div><div class="status-card"></div><div class="status-card"></div></div></div>
+  <p class="small" data-role="terrain"></p>
   <p class="note small" data-role="note" hidden></p>
+  <p class="loading-status small" data-role="loading" role="status" aria-live="polite">Waiting for the list of sites…</p>
   <div class="chips" data-role="chips"></div>
   <div class="chart" data-role="chart"><svg data-role="horizon" role="img" aria-label="Terrain horizon with the Sun and the Earth"></svg></div>
   <div class="sky" data-role="sky" hidden></div>
+  <div class="view3d pane-ground" data-role="ground" hidden></div>
   <p class="small note-band" data-role="band" hidden></p>
-  <h2>At this time</h2>
-  <div class="table"><table data-role="readout"></table></div>
-  <h2>Over the whole time window</h2>
-  <div class="table"><table data-role="summary"></table></div>
-  <h2>Next events</h2>
-  <div class="table"><table data-role="events"></table></div>
-  <p class="muted small" data-role="footer"></p>
+  <p class="small" data-role="ground-link" hidden></p>
+  <details class="details" data-role="details">
+    <summary>Details: values at this time, whole-period metrics, events with terrain quality, package and methods</summary>
+    <h2>At this time</h2>
+    <div class="table"><table data-role="readout"></table></div>
+    <h2>Over the whole time window</h2>
+    <div class="table"><table data-role="summary"></table></div>
+    <h2>Next events</h2>
+    <div class="table"><table data-role="events"></table></div>
+    <div data-role="countdown"></div>
+    <p class="muted small" data-role="footer"></p>
+  </details>
 </template>
 <script type="module" src="js/compare.js"></script>
 </body>

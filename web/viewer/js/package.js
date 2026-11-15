@@ -57,6 +57,61 @@ export async function loadSite(base, entry) {
   return new SitePackage(dir, manifest);
 }
 
+export async function loadSitePairs(base, entry) {
+  const dir = new URL(entry.path.replace(/\/?$/, "/"), base);
+  const manifest = await fetchOk(new URL("manifest.json", dir), "json");
+  checkContract(entry.path, manifest.contract);
+  if (manifest.kind !== "site_pairs") throw new PackageError(`${entry.path}: kind is ${manifest.kind}, expected site_pairs`);
+  if (manifest.package_id !== entry.package_id) {
+    throw new PackageError(`${entry.path}: package_id ${manifest.package_id} differs from the index (${entry.package_id})`);
+  }
+  return manifest;
+}
+
+// A direction-table package (SPEC 6): Sun and Earth positions relative to the centre of the Moon.
+// Read with the same checked array reader as a site package.
+export async function loadDirectionTable(base, entry) {
+  const dir = new URL(entry.path.replace(/\/?$/, "/"), base);
+  const manifest = await fetchOk(new URL("manifest.json", dir), "json");
+  checkContract(entry.path, manifest.contract);
+  if (manifest.kind !== "direction_table") throw new PackageError(`${entry.path}: kind is ${manifest.kind}, expected direction_table`);
+  if (manifest.package_id !== entry.package_id) {
+    throw new PackageError(`${entry.path}: package_id ${manifest.package_id} differs from the index (${entry.package_id})`);
+  }
+  return new SitePackage(dir, manifest);
+}
+
+// First-screen summaries written at build time (web/lsn_web/summary.py): a catalogue of the sites
+// and, per site, manifest fields copied unchanged. A summary is used only if its SHA-256 equals
+// the catalogue's and it names the package the index lists for the site; otherwise it is ignored
+// and the page waits for the full package.
+export async function loadSummaryCatalogue(url) {
+  const absolute = new URL(url, location.href);
+  const response = await fetch(absolute).catch(() => null);
+  if (!response || !response.ok) return null; // a site without summaries still works, more slowly
+  const catalogue = await response.json();
+  if (catalogue.kind !== "lsn-web-summary") return null;
+  return { catalogue, base: new URL(".", absolute), bySite: Object.fromEntries(catalogue.sites.map((s) => [s.site_id, s])) };
+}
+
+// indexBase: the base URL of packages/index.json; the summary reads its arrays (the horizon and the
+// Sun and Earth directions) from the site package directory, checked against the references it
+// copies from the manifest.
+export async function loadSiteSummary(summaries, indexEntry, indexBase) {
+  const entry = summaries && summaries.bySite[indexEntry.site_id];
+  if (!entry || entry.package_id !== indexEntry.package_id) return null;
+  const buffer = await fetchOk(new URL(entry.file, summaries.base), "buffer");
+  const digest = await sha256Hex(buffer);
+  if (digest !== null && digest !== entry.sha256) throw new PackageError(`summary ${entry.file}: SHA-256 differs from the catalogue`);
+  const manifest = JSON.parse(new TextDecoder().decode(buffer));
+  checkContract(`summary ${entry.file}`, manifest.contract);
+  if (!manifest.summary_of || manifest.summary_of.package_id !== indexEntry.package_id) return null;
+  const site = new SitePackage(new URL(indexEntry.path.replace(/\/?$/, "/"), indexBase), manifest);
+  site.partial = true; // windows, events and opportunities of the first screen only; no arrays
+  if (digest === null) site.unverified.add(entry.file);
+  return site;
+}
+
 export class SitePackage {
   constructor(dir, manifest) {
     this.dir = dir;
