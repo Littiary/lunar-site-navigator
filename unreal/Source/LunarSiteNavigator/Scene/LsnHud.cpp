@@ -38,11 +38,6 @@ FString LsnHudText::FormatDuration(double Seconds)
 	return FString::Printf(TEXT("%lld min %02lld s"), Minutes, Secs);
 }
 
-FString LsnHudText::EarthshineLabel(bool bEarthshineOn)
-{
-	return bEarthshineOn ? FString(TEXT("Lit by earthshine, shown brighter than real")) : FString();
-}
-
 FString LsnHudText::FeasibleShareText(const FLsnOpportunity& Opportunity, double RangeStartEtS)
 {
 	// No share where the package gives none, or where no landing in the range can be judged at all
@@ -1499,14 +1494,6 @@ void ALsnHud::DrawHUD()
 			LineY += U(50.0f);
 		}
 		DrawType(Detail, White, CardX + U(16.0f), LineY, FLsnUi::Body);
-	}
-
-	// A view lit by the earthshine says so, small and faint, at the bottom of its own half above the hint line:
-	// the light on the ground is not sunlight, whatever its brightness.
-	const FString EarthshineNote = LsnHudText::EarthshineLabel(!bOverview && Scene->IsEarthshineOn());
-	if (!EarthshineNote.IsEmpty())
-	{
-		DrawType(EarthshineNote, FLinearColor(Dim.R, Dim.G, Dim.B, 0.8f), Margin, Toolbar.Top - U(46.0f) - U(26.0f), FLsnUi::Footnote);
 	}
 
 	FLsnUi::Get().EndClip();

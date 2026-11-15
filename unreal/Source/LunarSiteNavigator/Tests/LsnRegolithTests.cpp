@@ -14,6 +14,10 @@
 //     regression of f69e0ae, before the fix): the Sun's light and the earthshine have no contact
 //     shadows (screen-space shadows whose length grows with the distance darkened the sunlit
 //     ridges of distant terrain at a Sun elevation of 1 to 2 degrees), as in 0b1cb68.
+//
+// Amended on 15 November 2026, before the change, when the earthshine light was removed (see
+// LsnEarthshineTests.cpp): in R1 the zenith fill is the only light that is not the Sun's, and in R3 only
+// the Sun's light is left to check.
 
 #include "Tests/LsnTestSupport.h"
 #include "Components/DirectionalLightComponent.h"
@@ -48,13 +52,10 @@ bool FLsnRegolithSunTest::RunTest(const FString& Parameters)
 	if (TestTrue(FString::Printf(TEXT("the scene loads the sample package (%s)"), *Error), Scene->LoadPackageDirectory(LsnTest::FixturePackageDir(TEXT("site")), Error)))
 	{
 		TestNull(TEXT("the Sun's light has no light function"), Scene->GetSunLight()->LightFunctionMaterial.Get());
-		for (const UDirectionalLightComponent* Light : { Scene->GetEarthLight(), Scene->GetFillLight() })
-		{
-			TestTrue(FString::Printf(TEXT("%s carries the occlusion light function"), *Light->GetName()), LsnRegolithTest::MadeFrom(Light->LightFunctionMaterial, TEXT("M_LsnLightAO")));
-			TestEqual(FString::Printf(TEXT("%s keeps its full brightness where the function is not evaluated"), *Light->GetName()), Light->DisabledBrightness, 1.0f);
-		}
+		const UDirectionalLightComponent* Fill = Scene->GetFillLight();
+		TestTrue(TEXT("the fill carries the occlusion light function"), LsnRegolithTest::MadeFrom(Fill->LightFunctionMaterial, TEXT("M_LsnLightAO")));
+		TestEqual(TEXT("the fill keeps its full brightness where the function is not evaluated"), Fill->DisabledBrightness, 1.0f);
 		TestEqual(TEXT("the Sun's light has no contact shadows (R3)"), Scene->GetSunLight()->ContactShadowLength, 0.0f);
-		TestEqual(TEXT("the earthshine has no contact shadows (R3)"), Scene->GetEarthLight()->ContactShadowLength, 0.0f);
 	}
 	GEngine->DestroyWorldContext(World);
 	World->DestroyWorld(false);

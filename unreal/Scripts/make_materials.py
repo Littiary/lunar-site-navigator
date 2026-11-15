@@ -43,9 +43,9 @@ M_LsnSurface   lit, fully rough, no specular, two-sided (the terrain is an open 
                scalar "Ambient" (emissive share of the grey value: for the scale objects
                only, a stand-in for sunlight reflected from the ground onto their shaded
                sides; 0 for the ground).
-M_LsnLightAO   light function of the earthshine and the zenith fill: the ambient occlusion of
-               the same two textures at the same places, so that these two lights (light
-               that is not the Sun's) are darkened in the hollows of the ground. Never on
+M_LsnLightAO   light function of the zenith fill: the ambient occlusion of
+               the same two textures at the same places, so that this light (light
+               that is not the Sun's) is darkened in the hollows of the ground. Never on
                the Sun's light. Scalar "Strength" (0 switches it off).
 M_LsnEmissive  unlit, emissive = vertex colour x scalar parameter "Intensity".
                Used for the Sun disc and the highlight overlays.
@@ -440,7 +440,7 @@ def make_surface():
 
 
 def make_light_ao():
-    """Light function of the earthshine and the zenith fill: the textures' ambient occlusion where they lie."""
+    """Light function of the zenith fill: the textures' ambient occlusion where they lie."""
     material, path = _new_material("M_LsnLightAO")
     material.set_editor_property("material_domain", unreal.MaterialDomain.MD_LIGHT_FUNCTION)
     position = mel.create_material_expression(material, unreal.MaterialExpressionWorldPosition, -1200, 0)

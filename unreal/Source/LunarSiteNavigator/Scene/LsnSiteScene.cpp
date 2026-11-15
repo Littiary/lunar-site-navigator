@@ -102,24 +102,12 @@ ALsnSiteScene::ALsnSiteScene()
 	FillLight->SetCastShadows(false);
 	FillLight->SetAtmosphereSunLight(false);
 	FillLight->SetWorldRotation(FRotator(-90.0, 0.0, 0.0));
-	// Earthshine: from the Earth's direction of the package, faint and a little blue, with shadows.
-	EarthLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("EarthLight"));
-	EarthLight->SetupAttachment(Root);
-	EarthLight->SetMobility(EComponentMobility::Movable);
-	// A cold blue-grey, clearly apart from the warm white of the Sun: it must not be taken for sunlight.
-	EarthLight->SetLightColor(FLinearColor(0.55f, 0.68f, 1.0f));
-	EarthLight->SetCastShadows(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoShadows")));
-	EarthLight->SetAtmosphereSunLight(false);
-	EarthLight->DynamicShadowDistanceMovableLight = 1.0e9f;
-	EarthLight->SetVisibility(false);
 	// No contact shadows: their length is a share of the screen, so under a Sun 1 to 2 degrees high they
 	// darkened the sunlit ridges of distant terrain (f69e0ae). Shadows come from the shadow maps only.
 	SunLight->ContactShadowLength = 0.0f;
-	EarthLight->ContactShadowLength = 0.0f;
 	// The Sun is the light the engine treats as the main directional light.
 	SunLight->ForwardShadingPriority = 1;
 	FillLight->ForwardShadingPriority = 0;
-	EarthLight->ForwardShadingPriority = 0;
 }
 
 void ALsnSiteScene::SetObstacleViewEnabled(bool bEnabled)
@@ -185,22 +173,6 @@ double ALsnSiteScene::GetSunVisibleFraction() const
 	return FMath::Clamp(static_cast<double>(Sun->VisibleFraction[Flat]), 0.0, 1.0);
 }
 
-double ALsnSiteScene::GetEarthVisibleFraction() const
-{
-	const FLsnBodySeries* Earth = (bHasPackage && Package.bHasTimeline) ? Package.FindSeries(TEXT("EARTH")) : nullptr;
-	const int32 Flat = HeightIndex * Package.Time.Count + TimeIndex;
-	if (!Earth || !Earth->VisibleFraction.IsValidIndex(Flat) || FMath::IsNaN(Earth->VisibleFraction[Flat]))
-	{
-		return 0.0;
-	}
-	return FMath::Clamp(static_cast<double>(Earth->VisibleFraction[Flat]), 0.0, 1.0);
-}
-
-bool ALsnSiteScene::IsEarthshineOn() const
-{
-	return EarthLight && EarthLight->IsVisible();
-}
-
 void ALsnSiteScene::UpdateLook()
 {
 	// How the scene is drawn follows one package value: the share of the Sun's disc that is
@@ -225,24 +197,6 @@ void ALsnSiteScene::UpdateLook()
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
 	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
 	// Without a timeline there is no Sun to light the terrain: the fill keeps it readable.
-	// Earthshine while the package gives the Sun as hidden and the Earth as visible: from the Earth's
-	// direction, scaled by the lit share of the Earth's disc seen from the Moon, (1 - s.e) / 2 with s and
-	// e the package's directions of the Sun and the Earth, and by the visible share of the Earth's disc.
-	bool bEarthshine = false;
-	FLsnBodyAtTime SunForEarth, EarthForLight;
-	if (bHasPackage && SunShare <= 0.0 && SampleBody(TEXT("EARTH"), TimePosition, EarthForLight) && SampleBody(TEXT("SUN"), TimePosition, SunForEarth))
-	{
-		const double EarthShare = GetEarthVisibleFraction();
-		const FVector ToEarth = FLsnSiteFrame::AzElToUnrealDir(EarthForLight.AzimuthDeg, EarthForLight.ElevationDeg);
-		const FVector ToSunNow = FLsnSiteFrame::AzElToUnrealDir(SunForEarth.AzimuthDeg, SunForEarth.ElevationDeg);
-		const double LitShare = 0.5 * (1.0 - FVector::DotProduct(ToSunNow, ToEarth));
-		bEarthshine = EarthShare > 0.0 && LitShare > 0.01;
-		EarthLight->SetWorldRotation((-ToEarth).Rotation());
-		EarthLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread() * LsnLook::EarthshineShare.GetValueOnGameThread() * static_cast<float>(LitShare * EarthShare));
-	}
-	EarthLight->SetVisibility(bEarthshine);
-	// The zenith fill (a viewing aid) as in 0b1cb68: on while the Sun is hidden, at the same level; the
-	// earthshine is added on top of it.
 	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
 	if (RegolithMaterial)
 	{
@@ -313,7 +267,6 @@ void ALsnSiteScene::SetSceneSlot(int32 Slot)
 	const bool b0 = SceneSlot == 0, b1 = SceneSlot == 1, b2 = SceneSlot == 2;
 	SunLight->SetLightingChannels(b0, b1, b2);
 	FillLight->SetLightingChannels(b0, b1, b2);
-	EarthLight->SetLightingChannels(b0, b1, b2);
 	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get(), ScaleObjects.Get(), Mast.Get() })
 	{
 		Component->SetLightingChannels(b0, b1, b2);
@@ -425,22 +378,19 @@ bool ALsnSiteScene::LoadPackageDirectory(const FString& PackageDirectory, FStrin
 	}
 
 	RegolithMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
-	// Ambient occlusion darkens only light that is not the Sun's: the earthshine and the zenith fill get
-	// the occlusion of the detail textures as a light function; the Sun is darkened by its shadow maps only.
+	// Ambient occlusion darkens only light that is not the Sun's: the zenith fill gets the occlusion of the
+	// detail textures as a light function; the Sun is darkened by its shadow maps only.
 	if (UMaterialInterface* LightOcclusion = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Lsn/M_LsnLightAO.M_LsnLightAO")))
 	{
 		LightOcclusionMaterial = UMaterialInstanceDynamic::Create(LightOcclusion, this);
-		for (UDirectionalLightComponent* Light : { EarthLight.Get(), FillLight.Get() })
-		{
-			Light->SetLightFunctionMaterial(LightOcclusionMaterial);
-			// Where the function is not evaluated the light keeps its full brightness: it can only take light away.
-			Light->SetLightFunctionDisabledBrightness(1.0f);
-			Light->SetLightFunctionFadeDistance(1.0e5f);
-		}
+		FillLight->SetLightFunctionMaterial(LightOcclusionMaterial);
+		// Where the function is not evaluated the light keeps its full brightness: it can only take light away.
+		FillLight->SetLightFunctionDisabledBrightness(1.0f);
+		FillLight->SetLightFunctionFadeDistance(1.0e5f);
 	}
 	else
 	{
-		UE_LOG(LogLsn, Warning, TEXT("Material /Game/Lsn/M_LsnLightAO is missing; run Scripts/make_materials.py. The earthshine is drawn without ambient occlusion."));
+		UE_LOG(LogLsn, Warning, TEXT("Material /Game/Lsn/M_LsnLightAO is missing; run Scripts/make_materials.py. The zenith fill is drawn without ambient occlusion."));
 	}
 	SunLight->SetLightFunctionMaterial(nullptr);
 	EarthMaterial = UMaterialInstanceDynamic::Create(SurfaceMaterial, this);
@@ -909,7 +859,6 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	{
 		// No timeline in the package: no Sun, no Earth, no light direction to show.
 		SunLight->SetVisibility(false);
-		EarthLight->SetVisibility(false);
 		SunDisc->SetVisibility(false);
 		EarthDisc->SetVisibility(false);
 		// Nothing of a package shown before may stay: no highlight, no stars.
