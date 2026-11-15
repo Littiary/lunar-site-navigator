@@ -1,23 +1,23 @@
 {
   "contract": {
     "name": "lsn-package",
-    "version": "0.11"
+    "version": "0.12"
   },
   "kind": "index",
-  "generated_utc": "2026-11-14T19:49:31.455Z",
+  "generated_utc": "2026-11-15T04:25:00.406Z",
   "scenario_id": null,
   "packages": [
     {
       "kind": "direction_table",
-      "package_id": "dirtab-fbc51d64e42ab803",
-      "path": "direction_table/dirtab-fbc51d64e42ab803",
+      "package_id": "dirtab-f9cceaa3cc179390",
+      "path": "direction_table/dirtab-f9cceaa3cc179390",
       "synthetic": false,
       "status": "ok"
     },
     {
       "kind": "site",
-      "package_id": "site-ee13bd9a51f205fe",
-      "path": "site/apollo-11/site-ee13bd9a51f205fe",
+      "package_id": "site-4a7fe5d830021f87",
+      "path": "site/apollo-11/site-4a7fe5d830021f87",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-11",
@@ -30,8 +30,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-98524d78724d1ecc",
-      "path": "site/apollo-12/site-98524d78724d1ecc",
+      "package_id": "site-0c0ee530aa75745b",
+      "path": "site/apollo-12/site-0c0ee530aa75745b",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-12",
@@ -44,8 +44,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-5a075b21883e2a3d",
-      "path": "site/apollo-14/site-5a075b21883e2a3d",
+      "package_id": "site-b2ddd6ac355bb12a",
+      "path": "site/apollo-14/site-b2ddd6ac355bb12a",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-14",
@@ -58,8 +58,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1ca5f3ed46d7a925",
-      "path": "site/apollo-15/site-1ca5f3ed46d7a925",
+      "package_id": "site-65e16df8ac0422ff",
+      "path": "site/apollo-15/site-65e16df8ac0422ff",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-15",
@@ -72,8 +72,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-3c929886e5c92305",
-      "path": "site/apollo-16/site-3c929886e5c92305",
+      "package_id": "site-c4dcdc0ce75d08f6",
+      "path": "site/apollo-16/site-c4dcdc0ce75d08f6",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-16",
@@ -86,8 +86,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1362b9e25682b1a6",
-      "path": "site/apollo-17/site-1362b9e25682b1a6",
+      "package_id": "site-bdea4363a926e704",
+      "path": "site/apollo-17/site-bdea4363a926e704",
       "synthetic": false,
       "status": "ok",
       "site_id": "apollo-17",
@@ -100,8 +100,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-08b49335c4bf11d6",
-      "path": "site/artemis3-region-mons-mouton-representative/site-08b49335c4bf11d6",
+      "package_id": "site-a8baf2b33b2ea9af",
+      "path": "site/artemis3-region-mons-mouton-representative/site-a8baf2b33b2ea9af",
       "synthetic": false,
       "status": "ok",
       "site_id": "artemis3-region-mons-mouton-representative",
@@ -114,8 +114,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-512a61554b1acc73",
-      "path": "site/blue-ghost-1/site-512a61554b1acc73",
+      "package_id": "site-9350f9b09478f0e7",
+      "path": "site/blue-ghost-1/site-9350f9b09478f0e7",
       "synthetic": false,
       "status": "ok",
       "site_id": "blue-ghost-1",
@@ -128,8 +128,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-f905e843230e82ee",
-      "path": "site/chandrayaan-3/site-f905e843230e82ee",
+      "package_id": "site-f0387b1dac63c397",
+      "path": "site/chandrayaan-3/site-f0387b1dac63c397",
       "synthetic": false,
       "status": "ok",
       "site_id": "chandrayaan-3",
@@ -142,8 +142,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-43275b6ec92886f6",
-      "path": "site/change-3/site-43275b6ec92886f6",
+      "package_id": "site-b0ddd3cc3f8a9012",
+      "path": "site/change-3/site-b0ddd3cc3f8a9012",
       "synthetic": false,
       "status": "ok",
       "site_id": "change-3",
@@ -156,8 +156,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-fefbc660d3c9e798",
-      "path": "site/change-4/site-fefbc660d3c9e798",
+      "package_id": "site-16dd250b013bcb86",
+      "path": "site/change-4/site-16dd250b013bcb86",
       "synthetic": false,
       "status": "ok",
       "site_id": "change-4",
@@ -170,8 +170,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-3702f5f79e1c6e96",
-      "path": "site/change-5/site-3702f5f79e1c6e96",
+      "package_id": "site-001b4a7378653e76",
+      "path": "site/change-5/site-001b4a7378653e76",
       "synthetic": false,
       "status": "ok",
       "site_id": "change-5",
@@ -184,8 +184,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1b8dbb0c74478182",
-      "path": "site/change-6/site-1b8dbb0c74478182",
+      "package_id": "site-f25a1cdeec15064a",
+      "path": "site/change-6/site-f25a1cdeec15064a",
       "synthetic": false,
       "status": "ok",
       "site_id": "change-6",
@@ -198,8 +198,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-61a82bfea156b494",
-      "path": "site/de-gerlache-rim-crest/site-61a82bfea156b494",
+      "package_id": "site-9aced62d65a3bd00",
+      "path": "site/de-gerlache-rim-crest/site-9aced62d65a3bd00",
       "synthetic": false,
       "status": "ok",
       "site_id": "de-gerlache-rim-crest",
@@ -212,8 +212,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-45ae374a37859245",
-      "path": "site/im-1-odysseus/site-45ae374a37859245",
+      "package_id": "site-15c6164ef458cabb",
+      "path": "site/im-1-odysseus/site-15c6164ef458cabb",
       "synthetic": false,
       "status": "ok",
       "site_id": "im-1-odysseus",
@@ -226,8 +226,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1d181df54766007c",
-      "path": "site/im-2-athena/site-1d181df54766007c",
+      "package_id": "site-888180f798aa1e49",
+      "path": "site/im-2-athena/site-888180f798aa1e49",
       "synthetic": false,
       "status": "ok",
       "site_id": "im-2-athena",
@@ -240,8 +240,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-1c04d3ed1ebd94ec",
-      "path": "site/malapert-massif-summit/site-1c04d3ed1ebd94ec",
+      "package_id": "site-50041edd7df6588c",
+      "path": "site/malapert-massif-summit/site-50041edd7df6588c",
       "synthetic": false,
       "status": "ok",
       "site_id": "malapert-massif-summit",
@@ -254,8 +254,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-38037e9b701a7d2d",
-      "path": "site/shackleton-rim-crest/site-38037e9b701a7d2d",
+      "package_id": "site-689eb279e17d7879",
+      "path": "site/shackleton-rim-crest/site-689eb279e17d7879",
       "synthetic": false,
       "status": "ok",
       "site_id": "shackleton-rim-crest",
@@ -268,8 +268,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-c8d49af58adc3c0b",
-      "path": "site/slim/site-c8d49af58adc3c0b",
+      "package_id": "site-aa38f7a01aa095d3",
+      "path": "site/slim/site-aa38f7a01aa095d3",
       "synthetic": false,
       "status": "ok",
       "site_id": "slim",
@@ -282,8 +282,8 @@
     },
     {
       "kind": "site",
-      "package_id": "site-fe9e55a467dbfa06",
-      "path": "site/surveyor-1/site-fe9e55a467dbfa06",
+      "package_id": "site-2890aa19f4a868ff",
+      "path": "site/surveyor-1/site-2890aa19f4a868ff",
       "synthetic": false,
       "status": "ok",
       "site_id": "surveyor-1",
@@ -296,8 +296,8 @@
     },
     {
       "kind": "site_pairs",
-      "package_id": "pairs-3e732d6996294120",
-      "path": "site_pairs/pairs-3e732d6996294120",
+      "package_id": "pairs-795979a7cbb76dad",
+      "path": "site_pairs/pairs-795979a7cbb76dad",
       "synthetic": false,
       "status": "ok",
       "site_ids": [
