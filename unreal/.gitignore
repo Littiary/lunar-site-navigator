@@ -4,3 +4,5 @@ Content/Collections/
 Content/LsnPackages/
 Content/LsnTerrain/
 Content/LsnSky/*/
+# Written by Scripts/make_regolith_textures.py (fixed seeds); the imported textures are in Content/Lsn.
+Assets/regolith/
