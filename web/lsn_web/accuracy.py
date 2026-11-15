@@ -240,7 +240,7 @@ def missions_section(repo: Path) -> str:
             if stored:
                 rrows, rattrs = result_rows(stored["rows"])
                 body.append(table(RESULT_HEAD, rrows, numeric={1, 2, 3, 4}, row_attrs=rattrs))
-            out.append(f"<details><summary>{e(case['mission'])} — {e(verdict)}</summary>{''.join(body)}</details>")
+            out.append(f"<details><summary>{e(case['mission'])}: {e(verdict)}</summary>{''.join(body)}</details>")
     if not found:
         out.append(MISSING.format(what="The record of the lander cases (<code>validation/landers</code>)"))
     else:
@@ -274,7 +274,7 @@ def missions_section(repo: Path) -> str:
             body.append(f"<p>Model: {e(eclipse_results.get('core', {}).get('model'))}.</p>")
             body.append(table(RESULT_HEAD, rrows, numeric={3, 4}, row_attrs=rattrs))
         body.append(f'<p>Cases: {link("validation/eclipse/cases.json")}; stored result: {link("validation/eclipse/results/validation_table.md")}.</p>')
-        out.append(f"<details><summary>Eclipse of the Sun by the Earth, 14 March 2025, at the Blue Ghost landing point — {e(verdict)}</summary>"
+        out.append(f"<details><summary>Eclipse of the Sun by the Earth, 14 March 2025, at the Blue Ghost landing point: {e(verdict)}</summary>"
                    + "".join(body) + "</details>")
     return "\n".join(out)
 
@@ -566,7 +566,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
         nav += [("compare.html", "Compare two sites"), ("evidence.html", "Evidence page")]
     banner = ""
     if any(s.synthetic for s in sites):
-        banner = ('<div class="banner">SYNTHETIC SAMPLE DATA — the packages of this build hold invented interface-test values, '
+        banner = ('<div class="banner">SYNTHETIC SAMPLE DATA: the packages of this build hold invented interface-test values, '
                   "not results.</div>")
     if notice:
         banner += f'<div class="banner">{e(notice)}</div>'
@@ -583,7 +583,7 @@ def build_page(sites: list[SitePackage], card_path: str | Path | None = None, no
         "</head>",
         "<body><main>",
         "<header>",
-        "<h1>Lunar Site Navigator — accuracy and limits</h1>",
+        "<h1>Lunar Site Navigator: accuracy and limits</h1>",
         "<p>This page says how far the numbers of Lunar Site Navigator can be trusted: what was checked and against what, "
         "what failed, what has not been checked at all, and which assumptions sit under every result. "
         "It is written for a reader who has to decide whether to rely on a number.</p>",

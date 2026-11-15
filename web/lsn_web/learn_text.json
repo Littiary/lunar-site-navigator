@@ -2,7 +2,7 @@
   "en": {
     "language_name": "English",
     "title": "Lunar Site Navigator: how to read it",
-    "heading": "Lunar Site Navigator — how to read it",
+    "heading": "Lunar Site Navigator: how to read it",
     "lead": "Four ideas are enough to read every view of the tool: the horizon, visibility windows, the uncertainty of the terrain, and landing opportunities. Each is explained below in a few sentences, with one real example taken from a published result package.",
     "example_label": "Example from the package",
     "example_source": "Example site: {site_name}, package {package_id}, time window {start_utc} to {end_utc} UTC. The numbers are read from that package and only formatted here.",

@@ -10,7 +10,7 @@
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
 [![Tests: pytest, run locally](https://img.shields.io/badge/tests-pytest,_run_locally-lightgrey)](#how-to-run)
 
-Team **Kestro Aerospace** (Kaan Eşrefoğlu, Barkın Kocatepe) — NASA Space Apps Challenge 2026, Aachen.
+Team **Kestro Aerospace** (Kaan Eşrefoğlu, Barkın Kocatepe) · NASA Space Apps Challenge 2026, Aachen.
 Challenge: *Lunar Landing Site Navigator*.
 
 At the lunar south pole the Sun stays within a few degrees of the horizon, so a ridge a few hundred metres away can decide whether a lander has power. Lunar Site Navigator computes, for any point on the Moon, the 360° terrain horizon from NASA LOLA elevation data and the directions of the Sun and the Earth with NASA SPICE, and reports when each is visible, which terrain blocks it and how many hours that costs. Twenty sites are published as versioned result packages with checksums, read by a web viewer and an Unreal Engine planner, and every comparison with an outside source is on a validation card: 31 of 32 checks pass, and the one that fails stays on the card.
