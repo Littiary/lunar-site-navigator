@@ -57,6 +57,24 @@ python -m lsn_web.evidence <site package dir | index.json> [...] --card <validat
 
 The page loads nothing from the network: the charts are embedded as data URIs and the styles are inline. The same file is therefore the offline copy, and it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
 
+## Accuracy and limits page (`lsn_web/accuracy.py`)
+
+One self-contained HTML file (`accuracy.html` in the site build), written for a reader who has to decide whether to rely on a number. It reads stored records and formats them; nothing is recomputed:
+
+- the validation card: every check once, with its threshold, measured value and stored status. Checks against a source outside the project (card groups "Independent source", "Independent computation on terrain", "Dated image", "Published mission record") are kept apart from analytical and internal tests ("Closed form", "Internal consistency", "Independent implementation"); a group the page does not know gets its own table. Failed checks have their own section;
+- what the card lists as not validated, and its limits;
+- the real-mission cases of `validation/landers` and `validation/eclipse`: each published value as printed, its printed precision, whether the source calls it approximate, its source with the retrieval time, and the stored comparison rows;
+- terrain: for every published site the elevation product under it, pixel size, resolution class, whether its package has an uncertainty band, and package warnings; the obstacles the packages mark as near field; the stored flags of the data stream's acceptance reports (`data/checkpoints/report.json`, `llr_report.json`, `near_field_report.json`), failures included;
+- event times: the assumption sentence of the uncertainty band, the applied height errors, and example events with their earliest and latest times, all as stored in the packages;
+- the status of every method in the packages, the assumptions, and links to the source records.
+
+A record that is missing in a build is named as missing. `tests/test_accuracy.py` checks the page against the card, the case files and the reports.
+
+```
+cd web
+python -m lsn_web.accuracy <site package dir | index.json> [...] --card <validation_card.json> [--notice TEXT] --out <file.html>
+```
+
 ## Interactive viewer (`web/viewer/`)
 
 A static page that reads the packages in the browser (Tasks 7 and 8):
@@ -126,7 +144,7 @@ cd web
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `accuracy.html` (the accuracy and limits page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 

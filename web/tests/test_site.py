@@ -37,7 +37,7 @@ class SiteBuildTests(unittest.TestCase):
             out = self.build(tmp, "TEST NOTICE")
             names = sorted(str(p.relative_to(out)).replace("\\", "/") for p in out.rglob("*") if p.is_file())
             top = [n for n in names if not n.startswith(("viewer/", "packages/", "summary/"))]
-            self.assertEqual(top, [".nojekyll", "charts/horizon_panorama__synthetic-sample-site.svg",
+            self.assertEqual(top, [".nojekyll", "accuracy.html", "charts/horizon_panorama__synthetic-sample-site.svg",
                                    "charts/window_strip.svg", "compare.html", "evidence.html",
                                    "index.html", "notice.json"])
             self.assertIn("summary/index.json", names)
