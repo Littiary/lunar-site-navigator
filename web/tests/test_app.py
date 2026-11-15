@@ -185,6 +185,36 @@ class LandingGroundView(unittest.TestCase):
             self.assertIn(name, compare, name)
 
 
+class LandingClips(unittest.TestCase):
+    """The Unreal clips of the landing page: muted loops with a still, none with reduced motion."""
+
+    ASSETS = APP_SRC / "src" / "assets"
+
+    def test_loop_video_is_muted_inline_and_respects_reduced_motion(self):
+        code = (APP_SRC / "src" / "components" / "LoopVideo.tsx").read_text(encoding="utf-8")
+        self.assertIn("(prefers-reduced-motion: reduce)", code)
+        self.assertIn("const active = !reduce && !failed", code)
+        for attr in ("muted", "loop", "playsInline", "autoPlay"):
+            self.assertIn(attr, code, attr)
+        self.assertIn("<img src={still ?? poster}", code)  # the picture is there with or without the clip
+
+    def test_hero_plays_the_loop_over_the_old_still(self):
+        hero = (APP_SRC / "src" / "landing" / "Hero.tsx").read_text(encoding="utf-8")
+        self.assertIn('import hero from "../../../viewer/img/hero.jpg"', hero)
+        self.assertIn("still={hero} eager", hero)
+
+    def test_clips_are_small_and_documented(self):
+        notes = (self.ASSETS / "README.txt").read_text(encoding="utf-8")
+        for clip, limit in (("hero_loop_720p.mp4", 3_000_000), ("key_moment_ridge_720p.mp4", 2_000_000)):
+            data = (self.ASSETS / clip).read_bytes()
+            self.assertLess(len(data), limit, clip)
+            self.assertEqual(data[4:8], b"ftyp", clip)  # MP4
+            self.assertIn(clip, notes)
+            self.assertTrue((self.ASSETS / clip.replace("_720p.mp4", "_poster.jpg")).is_file(), clip)
+        self.assertIn("f_pitch_video_1080p60.mp4", notes)
+        self.assertIn("c_key_moment_near_ridge.mp4", notes)
+
+
 @unittest.skipUnless((APP_DIST / "index.html").is_file(), "web/app is not built (npm run build)")
 class BuiltAppTests(unittest.TestCase):
     def test_build_has_the_layout_the_site_build_expects(self):

@@ -26,6 +26,8 @@ cd .. && python -m lsn_web.site   # copies dist/ to the site root, next to every
 
 **3-D section of the landing page.** Right after the key figures, the landing page shows the live ground view of the planner at 2026-12-07 04:00 UTC, observer 2 m: at Shackleton rim crest the package gives the Sun as hidden behind the terrain 673 m away; a switch shows de Gerlache rim crest at the same instant. `web/viewer/js/ground-scene.js` runs the steps of a comparison pane (site package with its checks, nearest sample, `loadSiteData`, `groundData`, `groundInput`, `view3d.createView`) and returns the package values the caption prints, including the Sun blocker of `timeline.blockers` that holds that sample. The module, three.js and the packages are fetched only when the section comes within 300 px of the screen (`useInView`), so the top of the page stays light; the landing page carries the import map for three.js. "Open in the planner" opens `compare/` with both sites, 2 m and the ground view at the same sample. Without WebGL the section shows the Unreal render of the same moment and says why.
 
+**Unreal clips.** The hero plays a muted 9.8 s loop cut from the pitch video of the Unreal planner (720p, 0.8 MB, poster frame first), and the renders section plays the 9 s "key moment" clip at the ridge (0.3 MB, loaded only when it comes near the screen). Both are `components/LoopVideo.tsx`: no controls, inline, looping; with `prefers-reduced-motion: reduce`, or where the clip cannot play, only a still is shown (for the hero the earlier still `web/viewer/img/hero.jpg`). How each clip was cut is in `src/assets/README.txt`.
+
 ## Layout of the source
 
 ```
@@ -38,11 +40,11 @@ src/site/links.ts                site and repository addresses, the shared link 
 src/site/notice.ts               notice.json of the site build (banner)
 src/site/facts.ts                typed access to virtual:lsn-facts
 src/site/format.ts               rounding and units for display
-src/components/                  Shell (frame of every page), Nav, Footer, Mark, Actions, SectionHead, useInView
+src/components/                  Shell (frame of every page), Nav, Footer, Mark, Actions, SectionHead, useInView, LoopVideo
 src/landing/                     one component per landing section (Hero, KeyFigures, GroundView, Stills, HowItWorks, SiteList, Trust, Closing)
 src/compare/                     ComparePage, TimeBar, useClassicCompare
 src/styles.css, src/compare.css  palette (background #0b0d12, Sun #ffd966, Earth #9ccbf5, failure #f28b82) and layout
-src/assets/                      three Unreal renders scaled to 1600 px (originals in docs/unreal/pitch/)
+src/assets/                      Unreal renders and two clips cut from them (originals in docs/unreal/pitch/; see README.txt there and here)
 ```
 
 ## Moon globe texture

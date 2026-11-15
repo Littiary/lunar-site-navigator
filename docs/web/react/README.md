@@ -3,6 +3,7 @@
 Taken on 15 November 2026 from the site built by `python -m lsn_web.site` with the React build, served locally under `/lunar-site-navigator/`.
 
 - `landing_desktop.png`: landing page, whole page, 1440 px wide.
+- `landing_desktop_hero.png`: top of the landing page at 1440 x 900. The hero background is a looping clip of the Unreal planner; screenshot tools do not capture video frames, so these pictures show the still under it (a frame of the clip: `web/app/src/assets/hero_loop_poster.jpg`).
 - `landing_desktop_ground_view_3d.png`: the "See it in 3-D" section of the landing page at 1440 px: the live ground view of Shackleton rim crest at 2026-12-07 04:00 UTC, observer 2 m (cut from the whole-page picture).
 - `compare_desktop.png`: comparison page, default pair (Shackleton and de Gerlache crater rim crests), horizon chart, 1440 px wide.
 - `compare_desktop_ground_view.png`: the same with the ground view of both panes.
