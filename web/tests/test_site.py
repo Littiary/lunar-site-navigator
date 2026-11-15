@@ -36,9 +36,11 @@ class SiteBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, "TEST NOTICE")
             names = sorted(str(p.relative_to(out)).replace("\\", "/") for p in out.rglob("*") if p.is_file())
-            top = [n for n in names if not n.startswith(("viewer/", "packages/"))]
+            top = [n for n in names if not n.startswith(("viewer/", "packages/", "summary/"))]
             self.assertEqual(top, [".nojekyll", "charts/horizon_panorama__synthetic-sample-site.svg",
-                                   "charts/window_strip.svg", "index.html", "notice.json"])
+                                   "charts/window_strip.svg", "compare.html", "evidence.html",
+                                   "index.html", "notice.json"])
+            self.assertIn("summary/index.json", names)
             self.assertIn("viewer/index.html", names)
             self.assertIn("packages/index.json", names)
 
@@ -46,20 +48,20 @@ class SiteBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp, "TEST NOTICE\n")
             sites = package.load_index(INDEX)
-            self.assertEqual((out / "index.html").read_text(encoding="utf-8"),
+            self.assertEqual((out / "evidence.html").read_text(encoding="utf-8"),
                              evidence.build_page(sites, CARD, "TEST NOTICE", chart_links=True))
             self.assertEqual((out / "charts" / "window_strip.svg").read_text(encoding="utf-8"),
                              charts.window_strip(sites, "TEST NOTICE"))
 
     def test_page_links_the_chart_files(self):
         with tempfile.TemporaryDirectory() as tmp:
-            html = (self.build(tmp, "TEST NOTICE") / "index.html").read_text(encoding="utf-8")
+            html = (self.build(tmp, "TEST NOTICE") / "evidence.html").read_text(encoding="utf-8")
             self.assertIn('href="charts/window_strip.svg"', html)
             self.assertIn('href="charts/horizon_panorama__synthetic-sample-site.svg"', html)
 
     def test_empty_notice_file_means_no_banner(self):
         with tempfile.TemporaryDirectory() as tmp:
-            html = (self.build(tmp, "  \n") / "index.html").read_text(encoding="utf-8")
+            html = (self.build(tmp, "  \n") / "evidence.html").read_text(encoding="utf-8")
             self.assertEqual(html, evidence.build_page(package.load_index(INDEX), CARD, None, chart_links=True))
 
     def test_viewer_and_packages_are_copied_byte_for_byte(self):
@@ -89,14 +91,22 @@ class SiteBuildTests(unittest.TestCase):
 
     def test_notice_json_carries_the_notice(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
-            self.assertEqual(json.loads((self.build(a, " A  B ") / "notice.json").read_text(encoding="utf-8")), {"notice": "A B"})
-            self.assertEqual(json.loads((self.build(b, "") / "notice.json").read_text(encoding="utf-8")), {"notice": None})
+            first = json.loads((self.build(a, " A  B ") / "notice.json").read_text(encoding="utf-8"))
+            self.assertEqual(first["notice"], "A B")
+            self.assertEqual(json.loads((self.build(b, "") / "notice.json").read_text(encoding="utf-8"))["notice"], None)
+            # The validation note is the card's own counts and open items.
+            card = json.loads(CARD.read_text(encoding="utf-8"))
+            v = first["validation"]
+            self.assertEqual((v["checks"], v["passed"], v["failed"], v["failed_ids"]),
+                             (card["summary"]["checks"], card["summary"]["passed"], card["summary"]["failed"], card["summary"].get("failed_ids", [])))
+            self.assertEqual([x["item"] for x in v["not_validated"]], [x["item"] for x in card["not_validated"]])
 
     def test_page_links_the_viewer(self):
         with tempfile.TemporaryDirectory() as tmp:
             html = (self.build(tmp, "N") / "index.html").read_text(encoding="utf-8")
-            self.assertIn('href="viewer/"', html)
-            self.assertIn('href="viewer/compare.html"', html)
+            self.assertIn('src="viewer/js/compare.js"', html)
+            self.assertIn('href="evidence.html"', html)
+            self.assertEqual((self.build(tmp, "N") / "compare.html").read_text(encoding="utf-8"), html)
 
     def test_rebuild_is_identical(self):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
@@ -104,6 +114,19 @@ class SiteBuildTests(unittest.TestCase):
             for path in first.rglob("*"):
                 if path.is_file():
                     self.assertEqual(path.read_bytes(), (second / path.relative_to(first)).read_bytes(), path.name)
+
+    def test_rebuild_removes_files_of_an_earlier_build(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp, "N")
+            stale = [out / "packages" / "site" / "old-site" / "site-0000" / "manifest.json",
+                     out / "viewer" / "js" / "removed.js", out / "charts" / "old.svg"]
+            for path in stale:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("old", encoding="utf-8")
+            out = self.build(tmp, "N")
+            for path in stale:
+                self.assertFalse(path.exists(), path)
+            self.assertTrue((out / "packages" / "index.json").is_file())
 
 
 if __name__ == "__main__":

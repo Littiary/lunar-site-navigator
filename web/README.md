@@ -10,7 +10,11 @@ The reader accepts every `0.x` package (SPEC section 8: minor versions only add 
 |---|---|---|
 | `timeline.blockers` | 0.2 | "What blocks the view" table on the evidence page (SPEC 5.5) |
 | `horizon.obstacles`, `obstacle_id`, `series.<BODY>.blocker_azimuth_index`, `lit_fraction` | 0.2 | not drawn yet |
-| `timeline.calendar`, `timeline.opportunities` | 0.3 | not drawn yet (opportunity calendar is a later task) |
+| `timeline.calendar`, `timeline.opportunities` | 0.3 | Opportunity calendar of the viewer and the comparison (Task 9), landing status card |
+| `terrain.patches` | 0.7 | Ground view surface, patches chosen by spacing, not list order (0.11) |
+| `horizon.terrain_source` | 0.9 | Terrain class next to each site; a warning for every class other than fine |
+| countdown `reference`, event `terrain_quality` | 0.10 | Details of each comparison pane, with the reference instant |
+| `site.programme`, `site.category` | 0.11 | Site selectors grouped by programme, with the category |
 
 Packages can be given as directories or through an `index.json`, which lists every package under a package root.
 
@@ -80,7 +84,14 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
 - `js/view3d.js` uses trigonometry only in its marked display transform.
 - `tests/test_viewer.py` enforces these rules in the source.
 
-**Split-screen comparison (`compare.html`).** Two sites side by side on one shared timeline (Task 7, first milestone):
+- **Moon globe (Task 8 A, `js/globe.js`):** the Moon in its body-fixed frame with the NASA SVS colour map, lit along the direction table's Sun vector; site markers and labels are HTML (fixed size, hidden on the far side, clickable and reachable with the keyboard); sub-solar and sub-Earth points; a click opens the site's ground view at the same time.
+- **Real terrain in the ground view:** the surface is the package's terrain patches (`js/terrain.js`), placed node for node and checked against the package (0 m); the package horizon line stays the reference. Display settings (lighting mode, slope shading, patch outlines) change only how it looks.
+- **Opportunity calendar (Task 9, `js/calendar.js`):** lunar days of `timeline.calendar` on one UTC axis, every calendar quantity at the selected observer height, incomplete lunar days marked, landing windows and slip tolerance of `timeline.opportunities` with the requirement's label and status.
+- **CSV export (Task 11, `js/csv.js`):** the Sun and Earth series of the selected site and height, every value as stored in the package (a runtime test compares each one).
+
+**Home page: the comparison (`compare.html`).** It names the tool, says what it does, and shows a short validation note built from the validation card with a link to the evidence page. Loading is progressive (see "First-screen summaries" below): status cards first, then the horizon charts, then the details. Each pane starts with three status cards: the Sun and the Earth visible now and the time to the next published rise or set, and whether a landing now meets the chosen requirement (the shipped requirements are labelled as examples). Tables, identifiers and methods are behind a Details control. Pane views: horizon chart, sky panorama, ground view (the same renderer, `js/ground.js`), opportunity calendar. With no sites in the address it opens on the first pair of the published `site_pairs` package.
+
+Two sites side by side on one shared timeline (Task 7, first milestone):
 - **Shared controls:** play/pause, speed (1 h, 6 h, 1 day or 1 week per step), a UTC date field, a slider and ±1 h / ±1 day steps.
 - **Each pane:** chooses its own site and observer height and shows
   - status chips for the windows `sun_visible`, `earth_visible`, `earth_network_dsn` and `sun_eclipsed_by_earth`;
@@ -89,7 +100,7 @@ A static page that reads the packages in the browser (Tasks 7 and 8):
   - the package metrics for the whole window (visible shares, longest outages, DSN share, relay need, eclipses);
   - the next events.
 - **Shared time:** a sample of the time grid of the left site. Each pane shows the sample of its own package nearest to that instant, labelled with its own UTC. If the grids ever differ, the pane says so.
-- **Pane view:** one shared switch shows either the horizon chart or the sky panorama in both panes. The panorama is the same `js/sky.js` module, one instance per pane. The "Paths for" span is shared, and clicking a path in either pane moves the shared timeline.
+- **Pane view:** one shared switch shows the horizon chart, the sky panorama, the ground view or the calendar in both panes. The panorama is the same `js/sky.js` module, one instance per pane. The "Paths for" span is shared, and clicking a path in either pane moves the shared timeline.
 - **Uncertainty band:** shown only when a package has the windows `<body>_visible_uncertain` (contract 0.4 and later, SPEC 5.7). Path samples inside the band are dashed, and the package's assumption sentence is shown with it. The published packages (contract 0.1) have no band, and the pane says so.
 - **Layout:** the panes stack on narrow screens.
 - **Shareable links:** `?a=<site_id>&b=<site_id>&ha=<height index>&hb=<height index>&i=<sample>` opens a selection.
@@ -102,6 +113,10 @@ cd web && python -m lsn_web.site && python -m http.server 8000 --directory dist/
 
 Then open http://localhost:8000/viewer/. A link with `?site=<site_id>&h=<height index>&i=<sample>` opens that selection.
 
+## First-screen summaries (`lsn_web/summary.py`)
+
+The site build writes `summary/index.json` (one entry per site of the index: identity, terrain class, observer heights, the file and SHA-256 of its summary) and `summary/<site_id>.json`: the Sun and Earth windows, rise and set events, landing opportunities, requirements, countdown metrics and the array references of the horizon and the Sun and Earth directions, copied unchanged from the site manifest and naming its package id and content digest. The comparison checks each summary's SHA-256 and package id before it uses it, shows the status cards from it, fetches the chart arrays through its references (checked by SHA-256 as always), and replaces it by the full package when that arrives. Only the two selected sites are loaded; without summaries the page still works, more slowly. `tests/test_summary.py` checks that every value equals the manifest.
+
 ## Public site (`lsn_web/site.py`)
 
 One command builds the hosted site from the packages published by the core stream in `packages/`:
@@ -111,7 +126,7 @@ cd web
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` (the evidence page), `charts/*.svg` (every chart as its own file, linked from the page), `viewer/` (the interactive viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `notice.json` (the notice, for the viewer) and `.nojekyll`. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 
@@ -133,6 +148,8 @@ git add -A && git commit -m "Publish the evidence site built from packages/ at <
 ```
 
 ## Tests
+
+`tests/test_runtime.py` runs the viewer's JavaScript with Node (any recent version; the tests are skipped without it). It checks that every built page, including the copies at the site root, reads the same `packages/index.json` and `notice.json`. It also compares every value of a CSV export with the package, and exercises the planning-details block. The other viewer tests read the source.
 
 ```
 python -I -m unittest discover -s web/tests -t web

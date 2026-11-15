@@ -13,9 +13,10 @@
 <body>
 <main>
   <header>
-    <h1>Lunar Site Navigator — interactive viewer</h1>
+    <h1>Lunar Site Navigator — one site in detail</h1>
     <p class="muted">Every number on this page is read from the published result packages of the science core. The browser does not compute any of them.
-      <a href="compare.html">Compare two sites</a> · <a href="../index.html">Evidence page</a></p>
+      <a href="../compare.html" id="compare-link">Compare two sites</a> · <a href="../evidence.html">Evidence page</a></p>
+    <p class="vnote" id="validation-note" role="note"></p>
     <div id="notice" class="banner" hidden></div>
     <div id="error" class="banner" hidden></div>
   </header>
@@ -23,6 +24,8 @@
   <section class="controls" aria-label="Selection">
     <label>Site <select id="site"></select></label>
     <label>Observer height <select id="height"></select></label>
+    <span id="terrain-source" class="small"></span>
+    <button type="button" id="export-csv" disabled>Export CSV</button>
   </section>
 
   <section class="time" aria-label="Time">
@@ -45,6 +48,8 @@
     <button type="button" role="tab" id="tab-2d" aria-selected="true">Horizon and time</button>
     <button type="button" role="tab" id="tab-sky" aria-selected="false">Sky panorama</button>
     <button type="button" role="tab" id="tab-3d" aria-selected="false">3-D view</button>
+    <button type="button" role="tab" id="tab-globe" aria-selected="false">Moon globe</button>
+    <button type="button" role="tab" id="tab-calendar" aria-selected="false">Opportunity calendar</button>
   </nav>
 
   <section id="panel-2d" role="tabpanel" aria-labelledby="tab-2d">
@@ -71,11 +76,29 @@
   </section>
 
   <section id="panel-3d" role="tabpanel" aria-labelledby="tab-3d" hidden>
+    <p id="terrain-source-3d" class="small"></p>
     <div id="view3d" class="view3d"><p class="muted">Loading the 3-D view…</p></div>
-    <p class="muted small">Ground view from the site. Drag to look around, use the wheel or the buttons to zoom. The terrain is the horizon profile of the package drawn on a sphere around the observer; markers are not to scale. The horizon ring is coloured by the distance of the terrain that sets the horizon (<code>horizon.distance_m</code>):
-      <span class="swatch d1"></span>&lt; 1 km (near field) <span class="swatch d2"></span>1–10 km <span class="swatch d3"></span>10–100 km <span class="swatch d4"></span>≥ 100 km. <span id="check3d"></span></p>
+    <p class="muted small">Ground view from the site at real scale. The ground is the package's terrain patches (listed below this view, the finest where they overlap); beyond the largest, a curtain up to the package horizon. The coloured line is the package horizon profile, drawn on top as the reference, by the distance of the terrain that sets it (<code>horizon.distance_m</code>):
+      <span class="swatch d1"></span>&lt; 1 km (near field) <span class="swatch d2"></span>1–10 km <span class="swatch d3"></span>10–100 km <span class="swatch d4"></span>≥ 100 km. The Sun and the Earth are at their package directions and true angular size; the light comes from the Sun. Shading and shadows come from the drawn surface and are for orientation only: whether the Sun or the Earth is visible is the package value in the overlay. Enhanced lighting (default) raises the exposure (more when the Sun is lower) and adds a soft fill light so that ground in shadow can be read; switch it off to see the Sun alone at plain exposure. Slope shading colours the drawn surface from light grey (flat) to red-brown (30° or steeper). Dashed outlines: the edge of each patch except the largest, in the colour named in the list of patches below; the flat dark grey beyond the largest patch is the package horizon, not drawn in relief. Dashed rings mark the Sun and the Earth at a fixed screen size and are not to scale; the disc inside each ring is drawn at its true angular size. Drag to look around, use the wheel or the buttons to zoom. <span id="check3d"></span></p>
     <p class="muted small" id="missing3d"></p>
-    <div class="time-row"><button type="button" id="zoom-in">Zoom in</button><button type="button" id="zoom-out">Zoom out</button><button type="button" id="look-sun">Look at the Sun</button><button type="button" id="look-earth">Look at the Earth</button></div>
+    <div class="time-row"><button type="button" id="zoom-in">Zoom in</button><button type="button" id="zoom-out">Zoom out</button><button type="button" id="look-sun">Look at the Sun</button><button type="button" id="look-earth">Look at the Earth</button><button type="button" id="toggle-profile" aria-pressed="true">Package horizon line</button><button type="button" id="reset-view">Default view</button></div>
+    <div class="time-row"><button type="button" id="toggle-lighting" aria-pressed="true" title="Pressed: brighter exposure and soft fill light so the shape of the ground can be read. Not pressed: the Sun alone at plain exposure.">Enhanced lighting</button><button type="button" id="toggle-slope" aria-pressed="false" title="Colour the drawn surface by its steepness">Slope shading</button><button type="button" id="toggle-edges" aria-pressed="true" title="Dashed outlines where the drawn grid changes from 20 m to 80 m and from 80 m to 320 m">Patch edges</button></div>
+    <p class="muted small" id="check3d-terrain"></p>
+  </section>
+
+  <section id="panel-calendar" role="tabpanel" aria-labelledby="tab-calendar" hidden>
+    <div class="time-row"><label>Landing requirement <select id="cal-req"></select></label></div>
+    <div id="calendar"><p class="muted">Loading the calendar…</p></div>
+    <p class="muted small">Lunar days of <code>timeline.calendar</code> at the selected observer height, and the landing opportunities of <code>timeline.opportunities</code> for the chosen requirement, as the package gives them; nothing is recomputed in the browser.</p>
+  </section>
+  <section id="panel-globe" role="tabpanel" aria-labelledby="tab-globe" hidden>
+    <div class="time-row"><button type="button" id="globe-zoom-in">Zoom in</button><button type="button" id="globe-zoom-out">Zoom out</button>
+      <button type="button" id="globe-site">View the selected site</button><button type="button" id="globe-from-earth">View from the Earth</button><button type="button" id="globe-from-sun">View from the Sun</button><button type="button" id="globe-fit">Whole Moon</button></div>
+    <div id="globe" class="view3d"><p class="muted">Loading the Moon globe…</p></div>
+    <p class="muted small" id="globe-time"></p>
+    <p class="muted small">The Moon from a distance, in its body-fixed frame. It is lit along the Sun vector of the direction table (<code>positions_km</code>, from the centre of the Moon) at the selected time; the day/night boundary is the shading of that light. Red markers: the sites, at their latitude and longitude in the index and checked against <code>site.position_km</code> of the selected package (white, larger); click a marker or its label, or use Tab and Enter, to open its ground view at the same time. Markers on the far side are hidden. Orange and blue rings: where the Sun and Earth vectors meet the sphere (sub-solar and sub-Earth points), shown when they face you; the Sun and Earth tags at the edge of the disc point to each body in this view. Faint grid: latitude and longitude every 30°. Drag to turn, use the wheel or the buttons to zoom.
+      <span id="check-globe"></span></p>
+    <p class="muted small">Not available in the packages, so not shown: the latitude and longitude of the sub-solar and sub-Earth points (the contract has no such fields; the markers follow the vectors only). Surface texture: NASA Scientific Visualization Studio, CGI Moon Kit (LROC WAC colour mosaic, polar gaps filled with LOLA albedo), for orientation only.</p>
   </section>
 
   <section aria-label="Values at the selected time">
@@ -85,6 +108,10 @@
     <div class="table"><table id="windows"></table></div>
     <h2>Events around this time</h2>
     <div class="table"><table id="events"></table></div>
+  </section>
+  <section aria-label="Planning details from the package">
+    <h2>Planning details from the package</h2>
+    <div id="package06"></div>
   </section>
 
   <footer id="footer" class="muted small"></footer>
