@@ -149,6 +149,72 @@ class ComparePageRunsTheClassicModule(unittest.TestCase):
             self.assertIn(f"node_modules/{dep}", lock["packages"], dep)
 
 
+class LandingGroundView(unittest.TestCase):
+    """The "See it in 3-D" section of the landing page draws with the viewers' renderer."""
+
+    def setUp(self):
+        self.tsx = (APP_SRC / "src" / "landing" / "GroundView.tsx").read_text(encoding="utf-8")
+        self.scene = (WEB / "viewer" / "js" / "ground-scene.js").read_text(encoding="utf-8")
+
+    def test_section_follows_the_key_figures(self):
+        landing = (APP_SRC / "src" / "landing" / "Landing.tsx").read_text(encoding="utf-8")
+        self.assertLess(landing.index("<KeyFigures />"), landing.index("<GroundView />"))
+        self.assertLess(landing.index("<GroundView />"), landing.index("<Stills />"))
+
+    def test_scene_is_loaded_at_run_time_only_when_near_the_screen(self):
+        self.assertIn('at("viewer/js/ground-scene.js")', self.tsx)
+        self.assertIn("useInView(section)", self.tsx)
+        self.assertLess(self.tsx.index("if (!near"), self.tsx.index("import(/* @vite-ignore */ SCENE_MODULE)"))
+
+    def test_instant_sites_height_and_planner_link(self):
+        self.assertIn('const INSTANT = "2026-12-07T04:00:00Z"', self.tsx)
+        self.assertIn("const HEIGHT_M = 2;", self.tsx)
+        for site_id in ("shackleton-rim-crest", "de-gerlache-rim-crest"):
+            self.assertIn(f'id: "{site_id}"', self.tsx)
+        self.assertIn('a: SITES[0].id, b: SITES[1].id, ha: "2", hb: "2", view: "ground"', self.tsx)
+        self.assertIn('q.set("i", String(i))', self.tsx)
+
+    def test_scene_uses_the_steps_of_a_comparison_pane(self):
+        # Same loaders, lookups and renderer as a pane of compare.js; nothing of its own.
+        for name in ("loadIndex(", "loadSite(", "nearestSample(", "loadSiteData(", "groundData(", "groundInput(",
+                     'import("./view3d.js")', "createView("):
+            self.assertIn(name, self.scene, name)
+        self.assertIsNone(NUMERIC.search(self.scene))
+        compare = (WEB / "viewer" / "js" / "compare.js").read_text(encoding="utf-8")
+        for name in ("groundData(", "groundInput(", "createView("):
+            self.assertIn(name, compare, name)
+
+
+class LandingClips(unittest.TestCase):
+    """The Unreal clips of the landing page: muted loops with a still, none with reduced motion."""
+
+    ASSETS = APP_SRC / "src" / "assets"
+
+    def test_loop_video_is_muted_inline_and_respects_reduced_motion(self):
+        code = (APP_SRC / "src" / "components" / "LoopVideo.tsx").read_text(encoding="utf-8")
+        self.assertIn("(prefers-reduced-motion: reduce)", code)
+        self.assertIn("const active = !reduce && !failed", code)
+        for attr in ("muted", "loop", "playsInline", "autoPlay"):
+            self.assertIn(attr, code, attr)
+        self.assertIn("<img src={still ?? poster}", code)  # the picture is there with or without the clip
+
+    def test_hero_plays_the_loop_over_the_old_still(self):
+        hero = (APP_SRC / "src" / "landing" / "Hero.tsx").read_text(encoding="utf-8")
+        self.assertIn('import hero from "../../../viewer/img/hero.jpg"', hero)
+        self.assertIn("still={hero} eager", hero)
+
+    def test_clips_are_small_and_documented(self):
+        notes = (self.ASSETS / "README.txt").read_text(encoding="utf-8")
+        for clip, limit in (("hero_loop_720p.mp4", 3_000_000), ("key_moment_ridge_720p.mp4", 2_000_000)):
+            data = (self.ASSETS / clip).read_bytes()
+            self.assertLess(len(data), limit, clip)
+            self.assertEqual(data[4:8], b"ftyp", clip)  # MP4
+            self.assertIn(clip, notes)
+            self.assertTrue((self.ASSETS / clip.replace("_720p.mp4", "_poster.jpg")).is_file(), clip)
+        self.assertIn("f_pitch_video_1080p60.mp4", notes)
+        self.assertIn("c_key_moment_near_ridge.mp4", notes)
+
+
 @unittest.skipUnless((APP_DIST / "index.html").is_file(), "web/app is not built (npm run build)")
 class BuiltAppTests(unittest.TestCase):
     def test_build_has_the_layout_the_site_build_expects(self):
@@ -167,10 +233,13 @@ class BuiltAppTests(unittest.TestCase):
 
     def test_import_map_comes_before_any_module_script(self):
         # three.js of viewer/vendor is resolved through the import map, as on the classic page;
-        # a browser ignores an import map that follows a module script.
-        html = (APP_DIST / "compare" / "index.html").read_text(encoding="utf-8")
-        self.assertIn('"three": "../viewer/vendor/three/three.module.js"', html)
-        self.assertLess(html.index('type="importmap"'), html.index('type="module"'))
+        # a browser ignores an import map that follows a module script. The landing page needs
+        # it for the 3-D section.
+        for page, path in (("compare/index.html", "../viewer/vendor/three/three.module.js"),
+                           ("index.html", "./viewer/vendor/three/three.module.js")):
+            html = (APP_DIST / page).read_text(encoding="utf-8")
+            self.assertIn(f'"three": "{path}"', html, page)
+            self.assertLess(html.index('type="importmap"'), html.index('type="module"'), page)
 
     def test_compare_bundle_carries_the_classic_pane_template(self):
         classic = (WEB / "viewer" / "compare.html").read_text(encoding="utf-8")

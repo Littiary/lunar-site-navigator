@@ -1,4 +1,5 @@
 import { ReadMore, Team } from "./Closing";
+import { GroundView } from "./GroundView";
 import { Hero } from "./Hero";
 import { HowItWorks } from "./HowItWorks";
 import { KeyFigures } from "./KeyFigures";
@@ -12,6 +13,7 @@ export function Landing() {
     <main className="landing">
       <Hero />
       <KeyFigures />
+      <GroundView />
       <Stills />
       <HowItWorks />
       <SiteList />
