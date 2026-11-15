@@ -533,6 +533,35 @@
         },
         "projection": {
           "type": "string"
+        },
+        "files": {
+          "description": "Since 0.12. The data files of a product that consists of several (the tiles of a mosaic), in the order of their names. sha256 of the layer is then the SHA-256 of the lines '<name>:<sha256>\\n' of these files.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "sha256",
+              "source_url"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_url": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },

@@ -147,7 +147,7 @@ site rasters, a patch is read from the raster the science used wherever that ras
 a level with the pixel of the patch; the package names raster and level in `sources`.
 Tested: every such node within 0.05 m of that level (threshold fixed beforehand).
 
-| Patch | Shackleton record | de Gerlache record | Malapert record |
+| Patch | Shackleton record | de Gerlache record | Malapert record (on Site23, measured 14 November; that raster is no longer used, see [near_field.md](near_field.md)) |
 |---|---|---|---|
 | near, 20 m | 5 m raster, 20 m block average, all nodes | the same | the same |
 | mid, 80 m | 5 m raster 80 %, 20 m product 20 % | 86 % and 14 % | 20 m product only: this raster has levels to 40 m |

@@ -10,8 +10,8 @@ compares what follows from the horizon, sunlight at a place and time, with publi
 and images. Errors of the elevation model are not in the horizon itself; a package can
 carry a band for a stated error ([uncertainty.md](uncertainty.md), since contract 0.4 and
 0.6). What is established below is that the code finds the horizon of the surface it is
-given, from the first point of each ray outward (section 8, item 6); how well that
-surface matches the Moon is a separate question (section 8).
+given, from the site outward; how well that surface matches the Moon is a separate
+question (section 8).
 
 ## 1. What is computed
 
@@ -66,9 +66,9 @@ rebuilt so that nothing is skipped without proof:
    elevation angle is most sensitive to small relief).
 2. **Near zone.** Every lattice point out to about 2.3 km is evaluated on the finest data
    (229 lattice steps: 0.6 km for a 5 m raster, 13.6 km for the 118 m global product).
-   For observers above 0 m the ground in front of the first point is evaluated as well,
-   at eighths of its distance and then at that distance halved down to 1 cm; for an
-   observer at 0 m it is not (section 8, item 6).
+   The ground in front of the first point is evaluated as well, for every observer
+   height: at eighths of its distance and then at that distance halved down to about
+   2 cm (section 8, item 6).
 3. **Cells with a proof.** Beyond that the lattice is grouped into cells whose length
    grows with distance (0.5 deg in radians times the distance, up to 2.4 km). For each
    cell the terrain source returns an upper bound of the surface inside it, read from
@@ -104,7 +104,8 @@ proven irrelevant or walked completely.
 | Setting | Value |
 |---|---|
 | Azimuth step | 0.25 deg (1440 rays), configurable |
-| First point | one finest pixel from the site, at most 20 m. In front of it, for observers above 0 m only: 7 points at eighths of that distance and 8 more at that distance halved from 1/16 down to 1/2048 |
+| First point | the lattice starts one finest pixel from the site, at most 20 m. In front of it, for every observer height: 7 points at eighths of that distance, and more at that distance halved from 1/16 on as long as they are not closer than 1 cm (2 cm for 5 m and for 20 m pixels). Closer than that a point cannot be placed well enough: the slope of the ground at the site changes by 0.001 deg between 1 and 2 cm |
+| Map convention | off. `ground_from_first_point` leaves the points in front of the first one out for the 0 m observer only, for comparisons with pixel-based illumination maps; the method card of a package says which was used |
 | Lattice step | half a finest pixel; an eighth of a pixel within 10 pixels of the site |
 | Cell length | 0.5 deg in radians times the distance, at most 256 lattice points, and never more than the overview levels can bound |
 | Interpolation | bilinear between pixel centres (data reader), finest product that covers the point |
@@ -187,24 +188,55 @@ is recomputed independently from the data and must have the elevation the code s
 Where the code is above the reference, it found a crease or a peak between the
 reference's 1 m steps; the recomputation confirms these points are real.
 
-**The first pixel.** The reference above starts 20 m from the site, as the search did,
-so neither could see what the ground closer than that does. An independent review on
-15 November 2026 scanned from 1 m and found the horizon of a 0 m observer too low by
-0.5 to 0.8 degrees in single azimuths at two places. Repeated here with a scan that
-starts 5 cm from the site, in 5 cm steps (tolerance 0.002 deg, as above):
+**The first pixel.** The reference above starts 20 m from the site, as the search did
+until 15 November 2026, so neither could see what the ground closer than that does. Two
+independent reviews scanned from 1 m and found the horizon of a 0 m observer too low: by
+0.5 to 0.8 degrees at two places, and in the published packages by up to 0.49 degrees
+at the Shackleton record (in 24 % of the azimuths by more than 0.1) and 0.16 degrees at
+Apollo 15. Repeated here with a scan that starts 5 cm from the site, in 5 cm steps
+(tolerance 0.002 deg, as above):
 
 | Observer | Before | Now |
 |---|---|---|
-| 0 m, LOLA, five places, all 1440 azimuths | too low by up to 2.8, 0.7, 4.4, 0.03 and 2.7 deg; at the Shackleton record in 957 azimuths | unchanged, by definition: see section 8, item 6. Kept in the test suite as a strict expected failure |
-| 0 m against a scan from the first point outward | within tolerance | within tolerance |
-| 1 m to 20 m, LOLA, the same five places | nothing over the tolerance | nothing over the tolerance |
-| 1 m, synthetic rough raster with single-pixel spikes | too low by 1.69 deg at one site | within tolerance |
+| 0 m, LOLA 20 m product, five places, all 1440 azimuths | too low by up to 2.8, 0.7, 4.4, 0.03 and 2.7 deg; at the Shackleton record in 957 azimuths | nothing over the tolerance (five places in the test suite, 72 azimuths each) |
+| 1 m to 20 m, LOLA, the same places | nothing over the tolerance | nothing over the tolerance |
+| 0 m and 1 m, synthetic rough raster with single-pixel spikes | 1 m: too low by 1.69 deg at one site | nothing over the tolerance |
 
-So on LOLA data the ground within the first pixel never reached the horizon of an
-observer 1 m or more above it, but on steeper relief it can, and the search did not
-look. It does now, for every observer height above 0 m. On the 20 curated sites and
-three other places this changes no horizon value by more than 1.5e-12 deg (rounding;
-five mid-latitude sites) and none at 0 m.
+So the ground between the site and the first lattice point is terrain like any other,
+and the search looks at it now, for every observer height. Two cases of the reviews are
+tests:
+
+- A point of an LRO image (`validation/lro_images`, `row+700_along11500`) that the image
+  shows in shadow and the core had as sunlit. From 20 m outward the horizon towards the
+  Sun is at 0.00 deg; the ground at the site rises 0.11 m within the first 20 m, 0.70 deg
+  seen from the surface, and the Sun's upper limb stood at 0.62 deg. With the ground at
+  the site the horizon is 0.71 deg and the point is in shadow. Two metres up the Sun is
+  in view either way.
+- A point of the comparison with a published illumination map (`validation/pgda`,
+  `plain_or_slope_03`), a pixel centre in a shallow pit: on the 60 m product the ground
+  at the site raises the 0 m horizon in 1332 of 1440 azimuths, by 0.38 deg in the median.
+  A map of 60 m pixels has no such thing as the ground inside its pixel, so for that
+  comparison the map convention below is the like-for-like setting.
+
+What it changes (measured on the 20 curated sites, as published: two project sites on
+their 5 m raster): nothing at 2 m, to the last bit, at all 20 sites; at 1 m and above no
+horizon value by more than 1.5e-12 deg. At 0 m the horizon rises by up to 0.50 deg at
+the Shackleton record (24 % of the azimuths by more than 0.1 deg), 9.2 deg at the de
+Gerlache record (55 %), 3.0 deg at the Malapert record (63 %), 2.4 deg at Chang'e 5,
+1.0 deg at Surveyor 1 and less than 0.5 deg elsewhere. In 30 days from 14 November 2026
+the Sun is in view of the 0 m observer for 410.8 h instead of 421.0 h at the Shackleton
+record, 387.0 instead of 544.0 h at de Gerlache (the Earth 129.4 instead of 286.7 h) and
+440.0 instead of 516.6 h at Malapert.
+
+**Map convention.** `HorizonSettings.ground_from_first_point` leaves the ground in front
+of the first lattice point out for the 0 m observer, and for it only: the horizon of a
+surface element as a pixel-based illumination map has it, from one sample outward.
+Tested: every other height is untouched to the bit, the 0 m horizon agrees with the
+default wherever the default's limiting point lies beyond the first lattice point (to
+1e-5 deg; the two searches refine different candidates), and it is complete from the
+first point outward. Together with `first_sample_max_m = inf` it gives the horizon the
+core computed before 14 November, when the lattice started one pixel from the site on
+every product. It is off by default and the method card of a package states it.
 
 Self-convergence on LOLA data: repeating the six test points with a lattice four times
 finer, 16 refined maxima and six refinement rounds changes no value by more than 0.0006
@@ -238,6 +270,18 @@ Recorded here because thresholds and reference files must not be bent to make a 
   reference misses creases between its steps. That comparison was replaced by the
   independent recomputation of the reported point. The 0.002 deg tolerance on misses was
   not changed.
+- Recomputation of the reported point (15 November): since the ground at the site is
+  searched, the point that sets a 0 m horizon can lie two centimetres from the site. The
+  test placed the reported point with the classic great-circle formulas, which take an
+  arcsine of a number close to 1 near a pole and are good to about 1e-7 m; at a
+  centimetre that moved a steep line of sight by 0.001 deg and the check failed at one
+  synthetic site. The test now places that point from the unit vectors of the site,
+  written out in the test. The 1e-5 deg tolerance was not changed. For the same reason
+  the search does not go closer than 1 cm (it had gone to 2.4 mm on a 5 m raster, where
+  the check missed the tolerance by 1.4e-6 deg).
+- First-pixel tests (15 November): written first with the 0 m case as a stated limit and
+  an expected failure; rewritten the same day when the ground at the site was made part
+  of the search for 0 m as well. The 0.002 deg tolerance is the same in both versions.
 
 ## 6. Runtime
 
@@ -301,19 +345,17 @@ rebuilt.
    the DEM reference radius. The local vertical is the radial direction, not the plumb
    line; the Moon's flattening and gravity anomalies are ignored.
 6. **Observer, and the ground at its feet.** A point at height `m` above the DEM surface.
-   The lander's own structure is not modelled. For `m` above 0 the ground between the
-   site and the first lattice point is searched like all other terrain. **Height 0 is
-   different by definition:** it is the surface point itself, and its horizon is that of
-   the terrain from the first lattice point outward (one pixel, at most 20 m), which is
-   how pixel-based illumination maps treat a surface element. The slope of the ground
-   closer than that is not in it. On a slope the surface itself rises above the
-   horizontal in the uphill directions, so a scan that starts at the site finds a higher
-   horizon: by up to 4.4 deg at the Shackleton record, 2.8 and 0.7 deg at the two places
-   of the review, 2.7 deg near Mons Malapert (section 5.2). A 0 m row of a package is
-   therefore the lighting of a surface element as a map would give it, not the view of
-   an instrument lying on that slope; for an instrument, use a height above 0. The
-   interpolated surface between posts 20 m apart carries no measured slope at that scale
-   either way.
+   The lander's own structure is not modelled. The ground between the site and the first
+   lattice point is searched like all other terrain, for every height. **Height 0 is the
+   surface point itself, and the slope of the ground at the site is part of its horizon:**
+   uphill, the horizon of a 0 m observer is at least that slope (5 deg at the Shackleton
+   record, 9 deg at de Gerlache). The elevation model does not resolve the ground below
+   its pixel; that slope is the slope of the interpolated surface between posts 5 m or
+   20 m apart, and where the site sits inside its cell decides it. A 0 m row is therefore
+   the lighting of a point lying on the modelled ground, it depends on interpolation far
+   more than any row above it, and it is not what a pixel-based illumination map shows
+   (section 5.2, map convention). For an instrument on a lander, use a height above 0:
+   from 1 m up the ground at the site reached no horizon on LOLA data.
 7. **Geometry only.** No refraction (there is none to speak of), no scattering, no
    reflected light; this is line of sight to bare terrain.
 8. **Products without overviews.** The proof in section 3 needs block-maximum overview

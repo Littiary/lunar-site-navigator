@@ -184,6 +184,16 @@ the height of the band statistics, of the ellipse survey, of the terrain source 
 `layer_id`, `product_id`, `version`, `source_url`, `sha256`, `pixel_m`, `projection`) and
 `direction_table` (`package_id`, `content_sha256`, or `null`).
 
+A layer identifies the bytes it stands for, because `inputs` is part of the package id.
+A product of one data file carries the SHA-256 and the source address of that file. A
+product of several data files (the tiles of a mosaic) carries, since 0.12, `files`:
+`name`, `sha256` and `source_url` of each, in the order of their names; its own `sha256`
+is then the SHA-256 of the ASCII lines `<name>:<sha256>\n` of those files in that order,
+and its `source_url` the folder they share. `version` is the version the product states;
+a product that states none is recorded as `file of <date>`, the date its source reports
+for the data file. Before 0.12 a mosaic had `sha256: null` and an empty `source_url`,
+and a product without a version the text `None`.
+
 ### 5.2 `site`
 
 | Field | Content |
@@ -216,7 +226,7 @@ enter the package id: the same site with another label keeps its id and gets ano
 | `observer_heights_m` | `[H]` | Strictly increasing |
 | `default_height_index` | | Index of the height to show first |
 | `max_range_m` | | Search radius actually used (quantity) |
-| `elevation_deg` | `[H, A]` `<f4` | Elevation angle of the terrain horizon: the largest elevation angle, over all terrain points along the great circle of that azimuth out to `max_range_m`, of the straight line from the observer to the terrain point |
+| `elevation_deg` | `[H, A]` `<f4` | Elevation angle of the terrain horizon: the largest elevation angle, over all terrain points along the great circle of that azimuth out to `max_range_m`, of the straight line from the observer to the terrain point. "All terrain points" begins at the site: for observer height 0, the surface point itself, the slope of the ground at the site is part of the horizon (since 0.12; before, the search began one pixel from the site, at most 20 m, and a 0 m horizon could be too low by degrees). The method card states the parameter `ground_at_the_site` |
 | `distance_m` | `[H, A]` `<f4` | Distance from the site to the terrain point that sets the horizon, measured as arc length along the reference sphere |
 | `obstacle_height_m` | `[H, A]` `<f4` | Optional. Terrain height of that point above the reference sphere |
 | `obstacle_lat_deg`, `obstacle_lon_deg` | `[H, A]` `<f8` | Optional. Coordinates of that point |
@@ -639,9 +649,15 @@ Reserved: `earth_rotation` (for ground-station windows).
 Direction from a site, as the core computes it:
 
 ```
-d  = positions_km[t, body] - site.position_km - up * h / 1000      (all body-fixed, km)
+d  = positions_km[t, body] - site.position_km      (all body-fixed, km)
 az = atan2(d · east, d · north)      el = asin((d · up) / |d|)
 ```
+
+The observer height `h` is not applied: the series of a site package hold one direction
+per sample for all observer heights, seen from the ground point of the site, as the
+method card `timeline.direction` says. Subtracting `up * h / 1000` as well would change
+a direction by less than 0.01 arcsecond for heights of metres. (Until 0.12 this formula
+showed that term, which the core never applied.)
 
 Viewers use this only to place the Sun and the Earth in a scene. Rise and set times,
 margins and visible fractions are read from the site package, never recomputed.
@@ -754,7 +770,9 @@ After an independent review of the core. One field is new; two values were compu
 - Corrected: `latest_landing` is the end of the range minus the mission duration for every requirement that states a duration, as this document always said. The core applied it only to requirements with a `total_in_mission` condition; for the others `latest_landing` was the end of the range, `feasible_fraction` was divided by too long a time, and `clipped_end` and `slip_tolerance_is_lower_bound` were not set for a window that ends there.
 - Corrected: `clipped_end` and `slip_tolerance_is_lower_bound` are also set where a window ends because a `continuous_from_landing` condition can no longer be proven inside the range (5.6).
 - `planned_landing` is `null` for a planned landing that lies after what can be judged; it was reported as `feasible: false`. No new field: `null` was already allowed, `warnings` says why (5.6).
-- Horizon: for observer heights above 0 the ground in front of the first lattice point is searched as well; for 0 m the horizon is, by definition, that of the terrain from the first lattice point outward. The method card of the horizon says so; its parameter `first_point_m` now states where the search starts (it named one pixel also where the search started at 20 m).
+- Corrected: the horizon is searched from the site outward, for every observer height, as 5.3 defines it. Before, the search began one pixel from the site (at most 20 m). On LOLA data that changes nothing from 1 m up; a 0 m horizon rises by the slope of the ground at the site, by up to degrees. The method card states it (`ground_at_the_site`), and its parameter `first_point_m` now states where the lattice starts (it named one pixel also where it started at 20 m).
+- `inputs.dem.layers[]`: new optional `files` for a product of several data files, whose `sha256` and `source_url` are now filled; a product without a version of its own is recorded as `file of <date>` instead of `None` (5.1).
+- Section 6: the direction formula no longer shows the observer height, which the core does not apply (below 0.01 arcsecond).
 - Wording: `visible_certain` is not a guarantee for a height error (5.7).
 
 ### 0.11 (14 November 2026)

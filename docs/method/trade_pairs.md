@@ -47,6 +47,13 @@ Three site records of the data stream, terrain `LDEM_80S_20M` and `LDEM_60S_60M`
 part of the disc visible, Earth: centre above the horizon. Computed on 14 November 2026
 with core commit 5c0cbaa; 294 s for the three sites.
 
+*The 0 m figures below were computed before 15 November 2026, when the search began one
+pixel from the site. With the ground at the site searched they are lower (in 30 days the
+Sun is in view of a 0 m observer for 411 instead of 421 h at the Shackleton record, 387
+instead of 544 h at de Gerlache, 440 instead of 517 h at Malapert;
+[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. To be
+recomputed with the next published set.*
+
 **Sun-visible share of the 24 months, by observer height**
 
 | Site record | 0 m | 1 m | 2 m | 5 m | 10 m | 20 m | 50 m |

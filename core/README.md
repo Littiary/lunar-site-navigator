@@ -161,7 +161,7 @@ the runs, from the desktop applications that were open):
 | 26.1 N, 3.6 E (global product, 118 m; on no 5 m raster) | 9.3 s (10.3, 9.3, 10.0) | 13.5 s (13.5, 14.1, 13.9) |
 | Shackleton rim record | 10.3 s (10.3, 10.4, 10.7) | 12.5 s (12.5, 12.7, 13.6) |
 | de Gerlache rim record | 8.6 s (9.1, 8.6, 9.3) | 11.2 s (11.5, 11.2, 12.1) |
-| Mons Malapert record | 9.4 s (9.4, 9.8, 10.3) | 12.4 s (13.2, 12.4, 13.5) |
+| Mons Malapert record (near field measured on Site23, which is no longer used: the option now leaves this record on the 20 m product) | 9.4 s (9.4, 9.8, 10.3) | 12.4 s (13.2, 12.4, 13.5) |
 
 Where the time goes at the Malapert record by default: 1.2 s to start, check the kernels
 and open the terrain, 0.4 s for the direction table, 1.6 s for the horizon, 3.6 s for the

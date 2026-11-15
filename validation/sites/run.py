@@ -851,7 +851,9 @@ def write_readme(root: Path, written: list, scenarios: dict, summary: dict, comm
         layer = layers[product_id]
         tiles = [record for record in data_files.values() if str(record.get("product_id", "")).startswith(product_id + "_") and record.get("role") == "data"]
         recorded = (
-            f"sha256 `{layer['sha256']}`, {layer['source_url']}"
+            f"a mosaic of {len(layer['files'])} tiles, each with its SHA-256 and source in the packages (`inputs.dem.layers[].files`); sha256 of the set `{layer['sha256']}`, {layer['source_url']}"
+            if layer.get("sha256") and layer.get("files")
+            else f"sha256 `{layer['sha256']}`, {layer['source_url']}"
             if layer.get("sha256")
             else f"a mosaic of {len(tiles)} tiles; the packages record no checksum for it, the tiles are in `data/manifest/manifest.json` (`{product_id}_*`), each with its SHA-256 and source"
         )

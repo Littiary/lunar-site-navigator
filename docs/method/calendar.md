@@ -101,6 +101,13 @@ from landing, Earth in view for at least half of a 14-day stay.
 | de Gerlache crater rim crest | 24 | 23.1 % | 9.7 d, 8.1 d | not feasible; next window in 20.8 d | feasible; can slip 7.6 d |
 | Mons Malapert summit | 30 | 42.3 % | 22.4 d, 9.3 d | not feasible; next window in 11.2 d | not feasible; next window in 0.9 d |
 
+*The 0 m figures below were computed before 15 November 2026, when the search began one
+pixel from the site. With the ground at the site searched they are lower (in 30 days the
+Sun is in view of a 0 m observer for 411 instead of 421 h at the Shackleton record, 387
+instead of 544 h at de Gerlache, 440 instead of 517 h at Malapert;
+[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. To be
+recomputed with the next published set.*
+
 At the Malapert record the feasible share depends strongly on the observer height: 32.9 %
 on the surface, 42.3 % at 2 m, 72.6 % at 20 m. The summit's horizon is set by terrain
 within 1 km in most azimuths, so these numbers rest on a few DEM pixels.

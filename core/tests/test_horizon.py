@@ -74,6 +74,20 @@ def gc_point(lat1, lon1, azimuth_deg, gamma):
     return np.degrees(lat2), np.degrees(lon2)
 
 
+def near_point(lat1, lon1, azimuth_deg, gamma):
+    """The same point from the unit vectors of the site, written out here. The classic
+    formulas above take an arcsine of a number close to 1 near a pole and place a point
+    to about 1e-7 m; for a point a centimetre from the site that is a relative error of
+    1e-5, and a steep line of sight then moves by 0.001 degrees. This form places it to
+    about 1e-9 m."""
+    p1, l1, az = math.radians(lat1), math.radians(lon1), math.radians(azimuth_deg)
+    up = np.array([math.cos(p1) * math.cos(l1), math.cos(p1) * math.sin(l1), math.sin(p1)])
+    east = np.array([-math.sin(l1), math.cos(l1), 0.0])
+    north = np.cross(up, east)
+    x, y, z = math.cos(gamma) * up + math.sin(gamma) * (math.cos(az) * north + math.sin(az) * east)
+    return math.degrees(math.atan2(z, math.hypot(x, y))), math.degrees(math.atan2(y, x))
+
+
 def flat(lon, lat):
     return np.zeros(np.broadcast(lon, lat).shape)
 
@@ -360,7 +374,7 @@ def _assert_complete(terrain, reader, lat, lon, max_range_m, azimuths, heights=(
             if abs(lat) == 90.0:
                 plat, plon = -90.0 + math.degrees(g), lon + az
             else:
-                plat, plon = gc_point(lat, lon, az, g)
+                plat, plon = near_point(lat, lon, az, g)  # the reported point can be a centimetre from the site
             ground = float(reader.height_m(lon, lat))
             there = float(reader.height_m(plon, plat))
             recomputed = float(exact_elevation_deg(radius + ground + m, radius + there, g))
@@ -487,16 +501,22 @@ def test_order_of_the_rounds_does_not_change_the_horizon_on_lola_data():
 
 # -- the first pixel -------------------------------------------------------------------------
 #
-# The search starts one pixel from the site, never farther than 20 m, and the reference scan
-# above starts at 20 m as well, so neither can see what the ground closer than that does.
-# An independent review (15 November 2026) scanned from 1 m and found the core's horizon of
-# a 0 m observer too low by 0.5 to 0.8 degrees at two places. The scan below starts 5 cm
-# from the site, in 5 cm steps over the first 60 m. Fixed before its first run, with the
-# tolerance of the completeness tests (0.002 degrees):
-#   * from 1 m up, nothing within the first pixel reaches the horizon;
-#   * at 0 m the horizon is that of the terrain from the first point outward. Against the
-#     scan from the site it is too low: a stated limit (docs/method/horizon.md, section 8),
-#     kept visible here as a strict expected failure.
+# The search used to start one pixel from the site, never farther than 20 m, and the
+# reference scan above starts at 20 m as well, so neither could see what the ground closer
+# than that does. Two independent reviews (15 November 2026) scanned from 1 m and found the
+# horizon of a 0 m observer too low; on a synthetic spiked raster the same happened to an
+# observer at 1 m. The contract defines the horizon as the largest elevation over all
+# terrain points of the ray, so the ground at the site is searched now, for every height.
+#
+# The scan below starts 5 cm from the site, in 5 cm steps over the first 60 m. Fixed before
+# its first run, with the tolerance of the completeness tests (0.002 degrees):
+#   * for every observer height, 0 m included, the horizon is not lower than that scan;
+#   * with the map convention (ground_from_first_point) a 0 m observer gets the horizon of
+#     the terrain from the first lattice point outward, and every other height is untouched.
+# The first version of these tests, written the same day, kept the 0 m case as a stated
+# limit and an expected failure. Two concrete cases of the review changed that decision
+# and are tests here: a point of an LRO image that is in shadow, and a point of the
+# comparison with a published illumination map.
 
 def _scan_from(reader, radius, lat, lon, azimuth_deg, observer_m, start_m, stop_m=60.0, step_m=0.05):
     s = np.arange(start_m, stop_m, step_m)
@@ -506,10 +526,12 @@ def _scan_from(reader, radius, lat, lon, azimuth_deg, observer_m, start_m, stop_
     return float(np.nanmax(exact_elevation_deg(radius + ground + observer_m, radius + reader.height_m(plon, plat), g)))
 
 
-def _first_pixel_shortfall(terrain, reader, lat, lon, heights, start_m):
+def _first_pixel_shortfall(terrain, reader, lat, lon, heights, start_m, settings=None):
     """Largest amount by which the core's horizon lies below a scan of the first 60 m that
     starts at start_m, per observer height, over azimuths every 5 degrees."""
-    res = compute_horizon(terrain, lat, lon, list(heights), azimuth_step_deg=0.25, max_range_m=20_000.0)
+    from lsncore.horizon import HorizonSettings
+
+    res = compute_horizon(terrain, lat, lon, list(heights), azimuth_step_deg=0.25, max_range_m=20_000.0, settings=settings or HorizonSettings())
     worst = []
     for i, m in enumerate(heights):
         low = [
@@ -520,7 +542,11 @@ def _first_pixel_shortfall(terrain, reader, lat, lon, heights, start_m):
     return worst
 
 
-FIRST_PIXEL_POINTS = [(-88.8, -150.0), (-89.98, 0.0), (-89.80531, -154.23109)]  # two of the review, and the Shackleton record
+# two places of the first review, the Shackleton record, and the two cases of the second
+FIRST_PIXEL_POINTS = [(-88.8, -150.0), (-89.98, 0.0), (-89.80531, -154.23109), (-89.986948221772, -3.32320444742544), (-87.26745357440173, -148.8014843242459)]
+STRIP_POINT = (-89.986948221772, -3.32320444742544)  # validation/lro_images, row+700_along11500
+STRIP_SUN_AZIMUTH_DEG, STRIP_SUN_UPPER_LIMB_DEG = 98.58698248074265, 0.6174357406158483  # as stored there
+MAP_POINT = (-87.26745357440173, -148.8014843242459)  # validation/pgda, plain_or_slope_03
 
 
 @pytest.fixture(scope="module")
@@ -536,34 +562,62 @@ def lola_first_pixel():
 
 
 @pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
-def test_from_one_metre_up_nothing_within_the_first_pixel_reaches_the_horizon(lola_first_pixel, lat, lon):
+def test_nothing_between_the_site_and_the_first_point_is_missed_at_any_height(lola_first_pixel, lat, lon):
     terrain, reader = lola_first_pixel
-    worst = _first_pixel_shortfall(terrain, reader, lat, lon, (1.0, 2.0, 20.0), start_m=0.05)
+    worst = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0, 1.0, 2.0, 20.0), start_m=0.05)
     assert max(worst) <= TOL_COMPLETENESS_DEG, worst
 
 
-@pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
-def test_at_zero_metres_the_horizon_is_that_of_the_terrain_from_the_first_point_outward(lola_first_pixel, lat, lon):
-    terrain, reader = lola_first_pixel
-    (worst,) = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0,), start_m=20.0)
-    assert worst <= TOL_COMPLETENESS_DEG
-
-
-@pytest.mark.xfail(strict=True, reason="stated limit: the ground within the first pixel is not part of the horizon of a 0 m observer")
-@pytest.mark.parametrize("lat, lon", FIRST_PIXEL_POINTS)
-def test_zero_metre_observer_against_a_scan_that_starts_at_the_site(lola_first_pixel, lat, lon):
-    terrain, reader = lola_first_pixel
-    (worst,) = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0,), start_m=0.05)
-    assert worst <= TOL_COMPLETENESS_DEG
-
-
 def test_first_pixel_on_a_rough_gridded_surface(rough_raster):
-    """The same three statements on the synthetic raster with single-pixel peaks."""
+    """The same on the synthetic raster with single-pixel peaks, where an observer at 1 m
+    was 1.69 degrees too low before the ground at the site was searched."""
     from lsncore.dem import LolaTerrain
 
     terrain = LolaTerrain(rough_raster)
     for lat, lon in [(-89.7, 40.0), (-89.4, -110.0)]:
-        up = _first_pixel_shortfall(terrain, rough_raster, lat, lon, (1.0, 2.0, 20.0), start_m=0.05)
-        assert max(up) <= TOL_COMPLETENESS_DEG, (lat, lon, up)
-        (outward,) = _first_pixel_shortfall(terrain, rough_raster, lat, lon, (0.0,), start_m=20.0)
-        assert outward <= TOL_COMPLETENESS_DEG, (lat, lon, outward)
+        worst = _first_pixel_shortfall(terrain, rough_raster, lat, lon, (0.0, 1.0, 2.0, 20.0), start_m=0.05)
+        assert max(worst) <= TOL_COMPLETENESS_DEG, (lat, lon, worst)
+
+
+def test_the_image_point_in_shadow_is_in_shadow_for_an_observer_on_the_ground(lola_first_pixel):
+    """validation/lro_images, row+700_along11500: the image shows shadow. The ground rises
+    0.11 m within the first 20 m towards the Sun, 0.70 degrees seen from the surface, and the
+    upper limb of the Sun stood at 0.62 degrees. From 20 m outward the horizon there is at
+    0.00 degrees, so the point came out sunlit."""
+    from dataclasses import replace
+
+    from lsncore.horizon import HorizonSettings
+
+    terrain, _ = lola_first_pixel
+    j = int(round(STRIP_SUN_AZIMUTH_DEG / 0.25))
+    full = compute_horizon(terrain, *STRIP_POINT, [0.0, 2.0])
+    assert full.elevation_deg[0, j] > STRIP_SUN_UPPER_LIMB_DEG  # the whole disc is behind the ground at the site
+    assert full.elevation_deg[0, j] == pytest.approx(0.70, abs=0.02) and full.distance_m[0, j] < 20.0
+    maps = compute_horizon(terrain, *STRIP_POINT, [0.0, 2.0], settings=replace(HorizonSettings(), ground_from_first_point=True))
+    assert abs(maps.elevation_deg[0, j]) < 0.01 and maps.distance_m[0, j] >= 20.0  # what the package said before
+    assert full.elevation_deg[1, j] < 0.0  # two metres up the Sun is in view either way
+
+
+@pytest.mark.parametrize("lat, lon", [STRIP_POINT, MAP_POINT, (-89.80531, -154.23109)])
+def test_map_convention_leaves_the_ground_at_the_site_out_for_the_0_m_observer_only(lola_first_pixel, lat, lon):
+    from dataclasses import replace
+
+    from lsncore.horizon import HorizonSettings, _layout
+
+    terrain, reader = lola_first_pixel
+    heights = [0.0, 1.0, 2.0]
+    full = compute_horizon(terrain, lat, lon, heights, max_range_m=20_000.0)
+    maps = compute_horizon(terrain, lat, lon, heights, max_range_m=20_000.0, settings=replace(HorizonSettings(), ground_from_first_point=True))
+    first = _layout(terrain, 20_000.0, HorizonSettings())[0]
+    assert np.array_equal(full.elevation_deg[1:], maps.elevation_deg[1:]) and np.array_equal(full.distance_m[1:], maps.distance_m[1:])
+    assert (maps.distance_m[0] >= first - 1e-9).all()  # nothing in front of the first lattice point
+    # The two searches refine different candidates, so where they should agree they agree to
+    # the tolerance of a reported point, not to the bit (the first run of this test asked
+    # for the bit and found 2.5e-8 degrees at one place).
+    assert (full.elevation_deg[0] >= maps.elevation_deg[0] - TOL_REPORTED_POINT_DEG).all()
+    beyond = full.distance_m[0] >= first - 1e-9  # where the ground at the site does not set the horizon, the two agree
+    assert np.abs(full.elevation_deg[0][beyond] - maps.elevation_deg[0][beyond]).max() <= TOL_REPORTED_POINT_DEG
+    assert (~beyond).any()  # and at these places it does set it somewhere
+    # the convention is complete in its own terms: nothing from the first point outward is missed
+    (outward,) = _first_pixel_shortfall(terrain, reader, lat, lon, (0.0,), start_m=first, settings=replace(HorizonSettings(), ground_from_first_point=True))
+    assert outward <= TOL_COMPLETENESS_DEG

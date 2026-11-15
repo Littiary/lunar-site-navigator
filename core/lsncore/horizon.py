@@ -56,7 +56,8 @@ class HorizonSettings:
     first_sample_px: float = 1.0  # distance of the first point from the site ...
     first_sample_max_m: float = 20.0  # ... but never farther than this: on a coarse grid the ground next to the site counts too
     lead_eighths: int = 7  # points in front of the first one, at eighths of its distance ...
-    lead_halvings: int = 11  # ... and at its distance halved again and again (down to 1 cm for 20 m); see compute_horizon
+    lead_min_m: float = 0.01  # ... and at its distance halved again and again, as long as that is not closer than this (2 cm for 5 m and 20 m pixels): closer, a point cannot be placed well enough for its elevation to mean anything; see compute_horizon
+    ground_from_first_point: bool = False  # True: an observer at 0 m is not offered the ground in front of the first point (the convention of pixel-based illumination maps)
     fine_step_px: float = 0.5  # lattice step
     inner_zone_px: float = 10.0  # extent of the denser lattice next to the site
     inner_step_px: float = 0.125  # its step: elevation angles are most sensitive there
@@ -236,21 +237,23 @@ def compute_horizon(
     inner = first + np.arange(1, int(settings.inner_zone_px / settings.inner_step_px)) * (
         terrain.finest_pixel_m * settings.inner_step_px
     )
-    # The ground between the site and the first point. An observer above the ground can
-    # have it in the way (steep relief within a pixel), so it is searched for every height
-    # above 0. An observer at 0 m is the surface point itself: for it the horizon is that of
-    # the terrain from the first point outward, as in pixel-based illumination maps, and
-    # the points in front of it are not offered (docs/method/horizon.md, section 8).
+    # The ground between the site and the first point is terrain like any other: steep
+    # relief within a pixel can stand in the way of an observer above the ground, and for
+    # an observer at 0 m, the surface point itself, the slope of the ground at the site is
+    # its nearest horizon. It is searched for every observer height, down to about two
+    # centimetres. settings.ground_from_first_point leaves it out for the 0 m observer
+    # only: the convention of pixel-based illumination maps, for comparisons with them
+    # (docs/method/horizon.md, section 8).
     lead = np.empty(0)
     if start_m is None:
         lead = first * np.concatenate([
             np.arange(1, settings.lead_eighths + 1) / (settings.lead_eighths + 1.0),
-            0.5 ** np.arange(4, settings.lead_halvings + 1),
+            0.5 ** np.arange(4, 4 + max(0, int(math.floor(math.log2(first / settings.lead_min_m))) - 3)),
         ])
     s_near = np.unique(np.round(np.concatenate([s_near, inner[inner < s_near[-1]], lead]), 9))
     n_near = s_near.size
     n_lead = int(np.count_nonzero(s_near < first - 1e-9))  # they come first: s_near is sorted
-    on_ground = heights == 0.0
+    on_ground = (heights == 0.0) & bool(settings.ground_from_first_point)
 
     def tan_all(h_terrain, gamma):
         """tan(elevation) for every observer height; the leading axis is the height."""

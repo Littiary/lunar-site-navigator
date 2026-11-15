@@ -64,6 +64,11 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         "max_range_m": max_range_m,
         "finest_pixel_m": px,
         "first_point_m": min(px * settings.first_sample_px, settings.first_sample_max_m),
+        "ground_at_the_site": (
+            "not offered to the observer at 0 m: its horizon is that of the terrain from first_point_m outward, the convention of pixel-based illumination maps"
+            if settings.ground_from_first_point
+            else "searched for every observer height: for an observer at 0 m the slope of the ground at the site is part of its horizon"
+        ),
         "lattice_step_m": px * settings.fine_step_px,
         "inner_lattice_step_m": px * settings.inner_step_px,
         "inner_zone_m": px * settings.inner_zone_px,
@@ -80,7 +85,7 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         "Single high pixels of the DEM are taken at face value, whether they are terrain or noise.",
         "Terrain beyond the search radius or beyond the data is not seen; error_bounds.far_field_max_deg states how much it could add.",
         "The observer is a point at the given height above the DEM surface on the radial through the site; the lander body, local rocks and regolith relief are not modelled.",
-        "Observer height 0 is the surface point itself: its horizon is that of the terrain from first_point_m outward, as pixel-based illumination maps treat a surface element. The slope of the ground closer than that is not in it; on a slope a scan that starts at the site finds a horizon up to several degrees higher in the uphill directions (4.4 deg at one site record). A 0 m result is the lighting of a surface element, not the view of an instrument lying on that slope.",
+        "Observer height 0 is the surface point itself, and the slope of the ground at the site is part of its horizon: uphill, the horizon of a 0 m observer is at least that slope. The elevation model does not resolve the ground below its pixel, so this slope is that of the interpolated surface; a 0 m result depends on it far more than a result at 1 m and above, where the ground at the site reached no horizon on LOLA data.",
     ]
     status = "analytic-test-passed"
 
@@ -105,7 +110,7 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         pk.M_HORIZON: card(
             "Terrain horizon elevation",
             "For each azimuth and observer height: the largest elevation angle, above the plane perpendicular to the radial direction at the site, of the straight line from the observer to any terrain point along the great circle of that azimuth, out to the search radius. Negative when the terrain horizon lies below the horizontal.",
-            "Great-circle rays on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Each ray is covered by a lattice of points half a pixel apart; its first point is one pixel from the site and never farther than 20 m (first_point_m). For observer heights above 0 the ground in front of that point is searched as well, down to 1 cm from the site; for an observer at 0 m, the surface point itself, the horizon is that of the terrain from the first point outward. Near the site every lattice point is evaluated on the finest data. Farther out the lattice is grouped into cells; a cell is skipped only if the block maximum of the terrain over the cell proves that nothing in it can reach the horizon already found, otherwise it is walked point by point on the finest data. Crossings of the ray with the lines through pixel centres (the creases of the bilinear surface) are evaluated as well, and the leading points are refined by nested sampling. All observer heights share the same terrain evaluations.",
+            "Great-circle rays on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Each ray is covered by a lattice of points half a pixel apart; its first point is one pixel from the site and never farther than 20 m (first_point_m). The ground in front of that point is searched as well, down to about 2 cm from the site (parameter ground_at_the_site). Near the site every lattice point is evaluated on the finest data. Farther out the lattice is grouped into cells; a cell is skipped only if the block maximum of the terrain over the cell proves that nothing in it can reach the horizon already found, otherwise it is walked point by point on the finest data. Crossings of the ray with the lines through pixel centres (the creases of the bilinear surface) are evaluated as well, and the leading points are refined by nested sampling. All observer heights share the same terrain evaluations.",
             local,
             params,
         ),
