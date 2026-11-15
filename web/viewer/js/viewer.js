@@ -36,7 +36,9 @@ async function selectSite(entry, keepTime) {
   heightSelect.innerHTML = hz.observer_heights_m
     .map((v, k) => `<option value="${k}">${esc(v)} m${k === hz.default_height_index ? " (default)" : ""}</option>`)
     .join("");
-  const wantedH = Number(params.get("h"));
+  // A link without h keeps the package's default height (Number(null) would be 0, the 0 m row).
+  const hParam = params.get("h");
+  const wantedH = hParam === null || hParam === "" ? NaN : Number(hParam);
   state.h = keepTime && Number.isInteger(wantedH) && wantedH >= 0 && wantedH < hz.observer_heights_m.length ? wantedH : hz.default_height_index;
   heightSelect.value = String(state.h);
   const tl = state.site.timeline;

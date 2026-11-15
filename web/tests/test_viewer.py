@@ -27,6 +27,14 @@ def strip_comments(source: str) -> str:
     return "\n".join(line.split("//")[0] if "//" in line and "http" not in line else line for line in source.splitlines())
 
 
+class LinkDefaultsTests(unittest.TestCase):
+    def test_a_link_without_a_height_opens_the_default_height(self):
+        # Number(null) is 0, which is a valid index (the 0 m row); a missing h must not become it.
+        code = strip_comments((VIEWER / "js" / "viewer.js").read_text(encoding="utf-8"))
+        self.assertNotIn('Number(params.get("h"))', code)
+        self.assertIn('hParam === null', code)
+
+
 class NoScienceInTheBrowserTests(unittest.TestCase):
     def test_loader_and_2d_viewer_use_no_numerical_functions(self):
         for name in ("package.js", "panel.js", "viewer.js", "compare.js", "sky.js"):

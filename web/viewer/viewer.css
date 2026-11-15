@@ -164,3 +164,60 @@ details.details > summary:focus-visible { outline: 2px solid var(--accent); outl
 
 details.more-controls > summary { cursor: pointer; color: var(--accent); font-size: 0.86rem; margin: 2px 0 4px; }
 @media (max-width: 600px) { .lead { font-size: 0.92rem; } header h1 { margin-bottom: 2px; } }
+
+/* Look of 15 November 2026: one dark palette shared with the planner scene and the slides
+   (night sky, sunlight yellow, Earth blue), a header over a render of the south pole, and
+   larger status figures. Colours and layout only; every id, role and text the scripts and
+   tests use is unchanged. */
+:root, :root { --bg: #0b0d12; --surface: #151922; --ink: #f4f5f7; --muted: #a7afba; --line: #2a303b;
+        --accent: #9ccbf5; --warn: #f28b82; --warn-bg: #3a1716; --sun: #ffd966; --earth: #9ccbf5;
+        --terrain: #8b93a0; --terrain-fill: #232833; --ok: #9fe0b0; color-scheme: dark; }
+body { font: 15px/1.55 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+       background: radial-gradient(1200px 600px at 80% -10%, rgba(156, 203, 245, 0.06), transparent 60%), var(--bg); }
+main.wide { padding-top: 16px; }
+.hero { position: relative; overflow: hidden; border-radius: 18px; padding: 56px 40px 26px; margin-bottom: 14px;
+        border: 1px solid #222834;
+        min-height: 400px;
+        background: linear-gradient(90deg, rgba(11, 13, 18, 0.94) 0%, rgba(11, 13, 18, 0.72) 38%, rgba(11, 13, 18, 0.08) 72%),
+                    linear-gradient(0deg, rgba(11, 13, 18, 0.6) 0%, transparent 30%),
+                    url("img/hero.jpg") 70% 72% / cover no-repeat, #05070a; }
+.hero .kicker { margin: 0 0 6px; color: var(--sun); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.hero h1 { font-size: clamp(2rem, 4.6vw, 3.6rem); line-height: 1.05; font-weight: 700; letter-spacing: -0.015em; margin: 0 0 12px; }
+.hero .lead { color: #d6dbe2; font-size: 1.06rem; max-width: 64ch; }
+.hero-facts { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 14px 0 10px; }
+.hero-facts li { padding: 6px 12px; border-radius: 999px; font-size: 0.84rem; color: #d6dbe2;
+                 background: rgba(21, 25, 34, 0.72); border: 1px solid rgba(156, 203, 245, 0.28); backdrop-filter: blur(4px); }
+.hero-facts strong { color: var(--ink); }
+.hero .vnote { max-width: 100ch; color: #c3c9d1; background: rgba(11, 13, 18, 0.6); border-left-color: var(--warn); border-radius: 0 8px 8px 0; padding: 6px 10px; }
+.hero .links a { display: inline-block; margin: 2px 4px 0 0; padding: 6px 14px; border-radius: 999px; text-decoration: none;
+                 color: var(--accent); border: 1px solid rgba(156, 203, 245, 0.45); background: rgba(11, 13, 18, 0.55); }
+.hero .links a:hover { background: rgba(156, 203, 245, 0.12); }
+.hero .loading-status { color: #c3c9d1; }
+select, button, .timebar input[type="datetime-local"] { border-radius: 10px; background: var(--surface); border-color: var(--line); }
+button { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+button:hover:not(:disabled) { border-color: #4a5566; background: #1b202b; }
+button[aria-pressed="true"] { background: rgba(156, 203, 245, 0.12); }
+#play { min-width: 84px; font-weight: 600; color: #0b0d12; background: var(--sun); border-color: var(--sun); }
+#play:hover { background: #ffe38c; }
+#slider { accent-color: var(--sun); }
+.timebar { background: rgba(11, 13, 18, 0.88); backdrop-filter: blur(8px); border-bottom-color: var(--line); padding: 8px 0; }
+#utc { font-size: 1rem; color: var(--ink); letter-spacing: 0.02em; }
+.pane { border-radius: 16px; padding: 16px; background: linear-gradient(180deg, #131720, #0f1218); border-color: #222834; }
+.status-cards { gap: 10px; }
+.status-card { border-radius: 12px; padding: 10px 12px; background: #181c26; min-height: 104px; }
+.status-card.yes { border-color: rgba(255, 217, 102, 0.55); box-shadow: inset 4px 0 0 var(--sun); }
+.status-card.yes .status-big { color: var(--sun); }
+.status-card.no { border-color: #2f3642; box-shadow: inset 4px 0 0 #59616e; }
+.status-big { font-size: 1.45rem; letter-spacing: -0.01em; }
+.status-next { font-size: 0.9rem; }
+.status-next strong, .status-next b { font-size: 1.05rem; color: var(--ink); }
+.chip { background: #151922; }
+.chip.on { color: var(--sun); border-color: rgba(255, 217, 102, 0.6); }
+.chart, .table { border-radius: 12px; background: #0f1218; }
+th { background: #151922; }
+.view3d, .sky, .cal-scroll { border-radius: 12px; border-color: #222834; }
+@media (max-width: 700px) {
+  .hero { padding: 36px 18px 18px; border-radius: 14px; }
+  .hero .lead { font-size: 0.95rem; }
+  .status-big { font-size: 1.05rem; }
+}
