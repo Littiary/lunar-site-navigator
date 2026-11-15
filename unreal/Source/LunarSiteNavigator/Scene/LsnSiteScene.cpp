@@ -106,7 +106,8 @@ ALsnSiteScene::ALsnSiteScene()
 	EarthLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("EarthLight"));
 	EarthLight->SetupAttachment(Root);
 	EarthLight->SetMobility(EComponentMobility::Movable);
-	EarthLight->SetLightColor(FLinearColor(0.72f, 0.82f, 1.0f));
+	// A cold blue-grey, clearly apart from the warm white of the Sun: it must not be taken for sunlight.
+	EarthLight->SetLightColor(FLinearColor(0.55f, 0.68f, 1.0f));
 	EarthLight->SetCastShadows(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoShadows")));
 	EarthLight->SetAtmosphereSunLight(false);
 	EarthLight->DynamicShadowDistanceMovableLight = 1.0e9f;
