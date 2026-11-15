@@ -166,7 +166,7 @@ export function createSky(container, { onPick } = {}) {
     tip.innerHTML = `<strong>${NAMES[p.body]}</strong> · <span class="mono">${esc(sampleUtc(site, p.j))}</span><br>
       azimuth ${fixed(s.az[p.j], 3)}°, elevation ${fixed(s.el[p.j], 3)}° (centre, no terrain)<br>
       margin above terrain horizon ${fixed(s.margin[p.j], 3)}°, disc above it ${fixed(100 * s.fraction[p.j], 1)} %<br>
-      in window <code>${p.body.toLowerCase()}_visible</code>: ${inside === null ? "—" : inside ? "yes" : "no"}${unsure === null ? "" : `, in the uncertainty band: ${unsure}`} · click to go to this time`;
+      in window <code>${p.body.toLowerCase()}_visible</code>: ${inside === null ? "n/a" : inside ? "yes" : "no"}${unsure === null ? "" : `, in the uncertainty band: ${unsure}`} · click to go to this time`;
     tip.hidden = false;
     tip.style.left = `${Math.min(px + 12, size.w - tip.offsetWidth - 4)}px`;
     tip.style.top = `${Math.max(4, py - tip.offsetHeight - 12)}px`;
