@@ -35,7 +35,7 @@ python -m pytest data/tests              # tests; those that need the real data 
 | `LDEM_80N_20M`, `LDEM_60N_60M` | north-polar mirror of the two south products (whole-Moon terrain) | as the south products |
 | `LDEM_128` | global fallback of the whole-Moon terrain, independent check | 46080 x 23040, 128 px/deg (237 m), simple cylindrical |
 | `SLDEM2015_256_*` / `SLDEM2015_512_*` | 60S-60N, LOLA + Kaguya TC (only if downloaded) | 6 tiles of 118 m / 32 tiles of 59 m, float km |
-| `LOLARDR_*` (13 files of LRO_SM_06) | individual laser returns: independent check of mapping and products | binary table, LOLARDR.FMT |
+| `LOLARDR_*` (13 files of LRO_SM_06, 14 of LRO_NO_08; 14 labels of LRO_ES_100, unused) | individual laser returns: independent check of mapping and products (LRO_NO_08 for the north-polar products, where LRO_SM_06 has no valid returns) | binary table, LOLARDR.FMT |
 
 Version, reference radius, scaling and projection parameters are read from the PDS labels; the manifest
 records the product version and SHA-256 of each file.
@@ -101,8 +101,10 @@ ids, levels = t.source(lon, lat, max_pixel_m=None)   # which product and level e
 ```
 
 Rule: a south or north polar product that covers the point decides exactly as `Terrain` does (so every point of the
-default terrain gets the same value); elsewhere the finest cylindrical mosaic (`SLDEM2015_512`, `SLDEM2015_256`,
-`LDEM_128`, whichever is complete). Cylindrical tiles are read on the global grid of their resolution, so bilinear
+default terrain gets the same value); elsewhere the finest cylindrical mosaic that is complete on disk and listed in
+`data/manifest/approved_mosaics.json` (now `SLDEM2015_256`, then `LDEM_128`). `SLDEM2015_512` is complete on disk
+but not approved (data/checkpoints/sldem512_candidate_note.md), so it is reported as "present but not approved" and
+not used. Cylindrical tiles are read on the global grid of their resolution, so bilinear
 interpolation is continuous across tile edges and the 0/360 meridian. `open_terrain()` without arguments still
 returns the south-polar `Terrain`, because the core adapter (`lsncore.dem.LolaTerrain`) reads polar-grid internals.
 `Terrain.source()` (same signature) reports the product and level for the polar terrain.

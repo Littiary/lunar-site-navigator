@@ -1,0 +1,10 @@
+{
+ "note": "Near-field layers (5 m site DEMs) that open_terrain(near_field=True) and open_terrain(products='moon', near_field=True) may use. The reader opens a layer only if it is listed here AND data/checkpoints/near_field_report.json records both its comparison and its seam as passed; a layer that fails a checkpoint is not used (same rule as approved_mosaics.json). A listed layer whose report entry fails is still not opened.",
+ "approved": {
+  "LOLA5MPP_SITE04": "near_field_report.json: comparison passed, seam passed (median 2.42 m, p95 11.52 m)",
+  "LOLA5MPP_SITE11": "near_field_report.json: comparison passed, seam passed (median 2.14 m, p95 6.55 m)"
+ },
+ "not_approved": {
+  "LOLA5MPP_SITE23": "seam failed: median 3.42 m > 3.0 m (data/notes/near_field_seam_correction.md); decision B of 2026-11-15: Malapert uses the 20 m product"
+ }
+}

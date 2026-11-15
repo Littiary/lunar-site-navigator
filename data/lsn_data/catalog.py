@@ -120,8 +120,9 @@ RDR_SAMPLE = tuple(
     )
 )
 
-# 14 orbits spread over mission phase LRO_ES_100 (Jan-Feb 2021, every 27th file). The 20 m and 60 m polar products
-# use data through LRO_ES_54 (Feb 2017), so these returns are NOT in them: an independent sample of the DEM error.
+# 14 orbits spread over mission phase LRO_ES_100 (Jan-Feb 2021, every 27th file), chosen as returns not in the polar
+# products (they use data through LRO_ES_54, Feb 2017). They turned out to hold no valid ranges (LOLA altimetry ends
+# with the data used in the products; data/checkpoints/moon_notes.md), so they are NOT used by any check.
 RDR_INDEPENDENT = tuple(
     f"LOLARDR_{t}"
     for t in (
