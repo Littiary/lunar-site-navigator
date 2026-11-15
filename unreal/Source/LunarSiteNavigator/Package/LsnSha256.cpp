@@ -2,7 +2,7 @@
 
 namespace
 {
-	constexpr uint32 K[64] = {
+	constexpr uint32 Sha256K[64] = {
 		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
 		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -33,7 +33,7 @@ namespace
 		{
 			const uint32 S1 = Rotr(E, 6) ^ Rotr(E, 11) ^ Rotr(E, 25);
 			const uint32 Ch = (E & F) ^ (~E & G);
-			const uint32 T1 = Hh + S1 + Ch + K[I] + W[I];
+			const uint32 T1 = Hh + S1 + Ch + Sha256K[I] + W[I];
 			const uint32 S0 = Rotr(A, 2) ^ Rotr(A, 13) ^ Rotr(A, 22);
 			const uint32 Maj = (A & B) ^ (A & C) ^ (B & C);
 			const uint32 T2 = S0 + Maj;

@@ -113,10 +113,16 @@ slope += NS * 0.012 * medium * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.
 slope += CS * small * L.Craters(p + 11.3, 2.9, 0.10);
 slope += CS * middle * mul(float2x2(0.8829, 0.4695, -0.4695, 0.8829), L.Craters(q + 41.9, 11.0, 0.08));
 slope += CS * large * mul(float2x2(0.5446, -0.8387, 0.8387, 0.5446), L.Craters(w + 97.1, 43.0, 0.07));
+// Fine grain below the pixel of the elevation data (about 0.3 m and 0.08 m), on turned grids, fading
+// out within 12 m so that no pattern shows farther away. Shading only: no height.
+float grain = GS * saturate(1.0 - metres / 12.0);
+slope += grain * 0.030 * mul(float2x2(0.8829, -0.4695, 0.4695, 0.8829), L.Noise(p * 3.3 + 31.0).xy);
+slope += grain * 0.022 * mul(float2x2(0.5446, 0.8387, -0.8387, 0.5446), L.Noise(q * 12.5 + 57.0).xy);
 float3 n = normalize(N + S * float3(-slope.x, -slope.y, 0.0));
 // Grey variation on two large scales (about 9 m and 60 m), each on its own turned grid: the
 // ground is not one flat grey, and nothing repeats (no texture is tiled).
 float mottle = 1.0 + S * (0.09 * medium * (L.Noise(q * 0.11 + 19.0).z - 0.5) + 0.08 * pow(saturate(normalize(N).z), 6.0) * (L.Noise(w * 0.017 + 5.0).z - 0.5));  // not on steep slopes, where a pattern laid out on the map is squeezed into stripes
+mottle *= 1.0 + S * grain * 0.05 * (L.Noise(w * 6.1 + 23.0).z - 0.5);
 return float4(n, mottle);
 """
 
@@ -208,7 +214,8 @@ def make_surface():
     link(position, distance, "A")
     link(camera, distance, "B")
     strength = _scalar(material, "DetailStrength", 0.0, -2300, 700)
-    detail = _custom(material, DETAIL_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT4, ["P", "N", "D", "S", "CS", "NS"], -1900, 450)
+    detail = _custom(material, DETAIL_CODE, unreal.CustomMaterialOutputType.CMOT_FLOAT4, ["P", "N", "D", "S", "CS", "NS", "GS"], -1900, 450)
+    link(_scalar(material, "GrainStrength", 1.0, -2300, 1000), detail, "GS")
     link(_scalar(material, "CraterStrength", 1.0, -2300, 800), detail, "CS")
     link(_scalar(material, "NoiseStrength", 1.0, -2300, 900), detail, "NS")
     link(position, detail, "P")
@@ -267,9 +274,22 @@ def make_surface():
     grey = node(unreal.MaterialExpressionMultiply, -1400, 0)
     link(colour, grey, "A")
     link(mottle, grey, "B")
+    # Opposition surge (Hapke): brighter where the Sun stands behind the viewer, 1 + B0 / (1 + tan(g / 2) / h)
+    # with g the phase angle between the directions to the Sun and to the camera. Only on the regolith
+    # (scaled by RegolithShading), on top of the Lommel-Seeliger factor.
+    surge = _custom(material, "float g = acos(clamp(dot(normalize(Sun.xyz), normalize(V)), -1.0, 1.0)); return 1.0 + A * B0 / (1.0 + tan(0.5 * min(g, 3.0)) / max(H, 1e-3));",
+                    unreal.CustomMaterialOutputType.CMOT_FLOAT1, ["Sun", "V", "B0", "H", "A"], -470, 700)
+    link(sun, surge, "Sun")
+    link(view, surge, "V")
+    link(_scalar(material, "OppositionStrength", 0.0, -700, 700), surge, "B0")
+    link(_scalar(material, "OppositionWidth", 0.06, -700, 760), surge, "H")
+    link(amount, surge, "A")
+    shaded = node(unreal.MaterialExpressionMultiply, -300, 250)
+    link(blend, shaded, "A")
+    link(surge, shaded, "B")
     base = node(unreal.MaterialExpressionMultiply, -150, 100)
     link(grey, base, "A")
-    link(blend, base, "B")
+    link(shaded, base, "B")
     ambient = _scalar(material, "Ambient", 0.0, -470, 900)
     # Light thrown back by the sunlit ground: "Ambient" is the radiance a white surface facing
     # straight down would get from it; a surface gets the share of the ground it faces,

@@ -26,6 +26,10 @@ namespace LsnLook
 	TAutoConsoleVariable<float> LitFovDeg(TEXT("lsn.Cam.LitFovDeg"), 46.0f, TEXT("Camera on the lander's sunlit side: field of view."));
 	TAutoConsoleVariable<float> WideYawDeg(TEXT("lsn.Cam.WideYawDeg"), -60.0f, TEXT("Wide view: turn of the whole view from the Sun's azimuth."));
 	TAutoConsoleVariable<float> HighSunExposure(TEXT("lsn.Look.HighSunExposure"), 0.35f, TEXT("Share of the Sun's display intensity left when the Sun stands 45 degrees or more above the ground (a camera stops down for bright ground)."));
+	TAutoConsoleVariable<float> OppositionStrength(TEXT("lsn.Look.OppositionStrength"), 0.4f, TEXT("Opposition surge of the regolith: amplitude B0 (0 switches it off)."));
+	TAutoConsoleVariable<float> OppositionWidth(TEXT("lsn.Look.OppositionWidth"), 0.06f, TEXT("Opposition surge of the regolith: angular width h."));
+	TAutoConsoleVariable<float> EarthshineShare(TEXT("lsn.Look.EarthshineShare"), 0.025f, TEXT("Earthshine as shown, as a share of the Sun's display intensity, for a full Earth."));
+	TAutoConsoleVariable<float> GrainStrength(TEXT("lsn.Look.GrainStrength"), 1.0f, TEXT("Strength of the fine grain of the regolith."));
 	TAutoConsoleVariable<float> BounceScale(TEXT("lsn.Look.BounceScale"), 1.0f, TEXT("Light the sunlit ground throws back onto the scale objects, as a multiple of what the formula gives."));
 	TAutoConsoleVariable<float> WideFovDeg(TEXT("lsn.Cam.WideFovDeg"), 58.0f, TEXT("Wide view: field of view."));
 	TAutoConsoleVariable<float> NoiseStrength(TEXT("lsn.Look.NoiseStrength"), 0.6f, TEXT("Strength of the illustrative roughness in the surface shading."));

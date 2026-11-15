@@ -23,6 +23,9 @@ struct FLsnUiItem
 	bool bMedium = false;
 	FVector2D A = FVector2D::ZeroVector, B = FVector2D::ZeroVector;
 	float Thickness = 1.0f;
+	/** Drawn only inside this box (window pixels): what belongs to one half of the window stays in it. */
+	bool bClip = false;
+	FBox2D Clip = FBox2D(FVector2D::ZeroVector, FVector2D::ZeroVector);
 };
 
 /**
@@ -60,7 +63,18 @@ public:
 
 	/** Called by a HUD before it draws: a new frame begins when the frame number changes. */
 	void BeginView(uint64 Frame);
-	void Add(const FLsnUiItem& Item) { Building.Add(Item); }
+	void Add(const FLsnUiItem& Item)
+	{
+		FLsnUiItem& Added = Building.Add_GetRef(Item);
+		if (bClipping)
+		{
+			Added.bClip = true;
+			Added.Clip = ClipBox;
+		}
+	}
+	/** Everything added until EndClip is drawn only inside the box (window pixels). */
+	void BeginClip(const FBox2D& Box) { bClipping = true; ClipBox = Box; }
+	void EndClip() { bClipping = false; }
 	const TArray<FLsnUiItem>& Shown() const { return Complete; }
 
 	/** One of the four sizes for a size asked in pixels at a window height of 1080: the nearest that is not larger, never below the footnote. */
@@ -74,6 +88,8 @@ public:
 
 private:
 	TArray<FLsnUiItem> Building, Complete;
+	bool bClipping = false;
+	FBox2D ClipBox = FBox2D(FVector2D::ZeroVector, FVector2D::ZeroVector);
 	uint64 BuildingFrame = 0;
 	TSharedPtr<SWidget> Widget;
 	TWeakObjectPtr<UGameViewportClient> Viewport;
