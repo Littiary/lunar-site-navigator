@@ -92,9 +92,9 @@ Every third-party item used in this project gets one row here before it is merge
 
 The team decided what the project is and how it works: Kaan Eşrefoğlu and Barkın Kocatepe chose the problem and the scope, the NASA data sources and the methods, wrote every acceptance threshold before its comparison was run, made the design decisions, and reviewed and tested each change before it was merged.
 
-AI coding assistants were used as tools under that direction, mainly to write and refactor code, tests and documentation:
+During development the team used AI coding assistants as tools, under that direction, to help write and refactor code, tests and documentation:
 
-- Claude (Anthropic): most of the code of the science core, the validation, the web view and the Unreal planner, and much of the documentation.
+- Claude (Anthropic): coding assistant for writing and refactoring code, tests and documentation.
 - GitHub Copilot: first versions of three web components (the Moon globe, the CSV export, one panel of the viewer), later reworked.
 - ChatGPT (OpenAI): repository analysis and Git guidance.
 
