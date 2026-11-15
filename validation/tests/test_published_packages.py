@@ -21,6 +21,8 @@ REPO = Path(__file__).resolve().parents[2]
 ROOT = REPO / "packages"
 PROJECT_SITES = ("shackleton-rim-crest", "de-gerlache-rim-crest", "malapert-massif-summit")
 PROJECT_HEIGHTS_M = [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]
+# Project sites whose 5 m raster the data stream has not approved (data/manifest/approved_near_field.json): site -> raster.
+NEAR_FIELD_NOT_APPROVED = {"malapert-massif-summit": "LOLA5MPP_SITE23"}
 OTHER_HEIGHTS_M = [0.0, 2.0, 10.0]
 # The LOLA polar products: the data stream measured the terrain height error on them, so a site
 # they serve can carry the uncertainty band and terrain_quality.
@@ -203,10 +205,15 @@ def test_project_sites_carry_every_option_and_the_near_field():
         count = timeline["time"]["count"]
         assert horizon["observer_heights_m"] == PROJECT_HEIGHTS_M, site_id
 
-        # The 5 m near field: the site raster is a layer of the package and serves the site.
+        # The 5 m near field: the site raster is a layer of the package and serves the site, where the data stream has approved the raster.
         rasters = [layer for layer in manifest["inputs"]["dem"]["layers"] if layer["product_id"].startswith("LOLA5MPP")]
-        assert len(rasters) == 1 and rasters[0]["pixel_m"] == 5.0, site_id
-        assert horizon["terrain_source"]["at_site"]["product_id"] == rasters[0]["product_id"]
+        if site_id in NEAR_FIELD_NOT_APPROVED:
+            # The raster is on disk but one of its checks failed: the 20 m product serves the site and the package says so.
+            assert rasters == [] and horizon["terrain_source"]["at_site"]["product_id"] == "LDEM_80S_20M", site_id
+            assert [w for w in manifest["warnings"] if NEAR_FIELD_NOT_APPROVED[site_id] in w and "not approved" in w and "the 20 m product serves the site" in w], site_id
+        else:
+            assert len(rasters) == 1 and rasters[0]["pixel_m"] == 5.0, site_id
+            assert horizon["terrain_source"]["at_site"]["product_id"] == rasters[0]["product_id"]
         assert horizon["terrain_source"]["resolution_class"] == "fine"
 
         # Stated uncertainties: the band of the sourced height-error model and the landing-circle survey.
@@ -229,12 +236,13 @@ def test_project_sites_carry_every_option_and_the_near_field():
         metric_ids = {metric["id"] for metric in timeline["metrics"]}
         assert {"sun_visible_certain_s", "sun_visible_possible_s", "earth_visible_certain_s"} <= metric_ids
 
-        assert manifest["warnings"] == [], (site_id, manifest["warnings"])
+        assert len(manifest["warnings"]) == (1 if site_id in NEAR_FIELD_NOT_APPROVED else 0), (site_id, manifest["warnings"])
 
-        # The fourth terrain patch, 1 km wide at 5 m, read from the 5 m site raster itself; identified by its id.
+        # The fourth terrain patch, 1 km wide at 5 m, identified by its id: read from the 5 m site raster itself, or from the 20 m product where that raster is not approved.
         (site_patch,) = [patch for patch in manifest["terrain"]["patches"] if patch["id"] == "site"]
         assert (site_patch["half_width_m"], site_patch["spacing_m"], site_patch["count_east"], site_patch["count_north"]) == (500.0, 5.0, 201, 201), site_id
-        assert [(source["product_id"], source["level"], source["pixel_m"]) for source in site_patch["sources"]] == [(rasters[0]["product_id"], 0, 5.0)], site_id
+        patch_source = ("LDEM_80S_20M", 0, 20.0) if site_id in NEAR_FIELD_NOT_APPROVED else (rasters[0]["product_id"], 0, 5.0)
+        assert [(source["product_id"], source["level"], source["pixel_m"]) for source in site_patch["sources"]] == [patch_source], site_id
         assert site_patch["up_m"]["nan_count"] == 0
 
         # The planned landing and its slip report.

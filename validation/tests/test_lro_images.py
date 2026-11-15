@@ -45,7 +45,7 @@ def test_stored_result_follows_the_criteria():
     assert sum(1 for row in judged if row["image_state"] == row["state"]) == detail["agree"]
 
 
-@pytest.mark.xfail(strict=True, reason="Registered check fails: 89.3 % of the judged points agree, the criterion fixed beforehand is 90 %. "
+@pytest.mark.xfail(strict=True, reason="Registered check fails: 89.6 % of the judged points agree, the criterion fixed beforehand is 90 %. "
                    "Two causes fit the one-sided disagreement, the single brightness threshold of the image rule or a terrain horizon that is too low, and the data do not decide. "
                    "Rule and criterion are unchanged.")
 def test_nadir_strip_meets_the_registered_criterion():
@@ -101,11 +101,13 @@ def test_the_failed_check_is_described_with_two_candidate_causes():
     assert abs(extra["rank_correlation_of_brightness_with_our_centre_margin_at_the_disputed_points"]) < 0.5
 
 
-def test_ground_inside_the_first_sample_of_the_horizon_search_explains_one_disputed_point():
-    """A limit of the core that this strip shows. The horizon search starts one pixel from the point (at most 20 m),
-    so ground that rises inside that distance is not in the horizon of an observer at 0 m. Here the interpolated
-    ground is sampled along the Sun's azimuth between 0.5 m and 19.5 m at every strip point, and the state is judged
-    against the higher of that and the stored horizon. The stored result is not changed by this."""
+def test_ground_in_front_of_the_first_pixel_is_in_the_horizon_of_the_core():
+    """History of one strip point. In the first run (contract 0.11) the horizon search began one pixel from the site,
+    and at ``row+700_along11500`` the ground that rises inside that pixel was not in the horizon: the core called the
+    point sunlit, the image reads shadow. The point was examined, and the core was then changed (contract 0.12): the
+    ground between the site and the first pixel is in the horizon of an observer at 0 m. For that point the comparison
+    is therefore not blind. Here the interpolated ground is sampled independently along the Sun's azimuth between
+    0.5 m and 19.5 m at every strip point: judged against the higher of that and the stored horizon, no state changes."""
     import numpy as np
 
     pytest.importorskip("lsn_data")
@@ -131,10 +133,9 @@ def test_ground_inside_the_first_sample_of_the_horizon_search_explains_one_dispu
             changed.append((row["id"], row["state"], state, near))
         if row["image_state"] in ("sunlit", "shadow"):
             judged += 1
-            agree += state == row["image_state"]
-    assert [item[:3] for item in changed] == [("row+700_along11500", "sunlit", "shadow")]
+            agree += row["state"] == row["image_state"]
+    assert changed == []
     point = next(row for row in rows if row["id"] == "row+700_along11500")
-    assert point["image_state"] == "shadow" and point["visible_fraction"] > 0.999 and point["obstacle_distance_m"] == 20.0
-    upper_limb = point["horizon_elevation_at_sun_azimuth_deg"] + point["upper_limb_margin_deg"]
-    assert changed[0][3] > upper_limb > point["sun_elevation_deg"]  # the near ground hides the whole disc
-    assert (agree, judged) == (267, 298)  # one point more than the registered result; still below 90 %
+    assert point["state"] == point["image_state"] == "shadow" and point["obstacle_distance_m"] < 1.0
+    assert point["horizon_elevation_at_sun_azimuth_deg"] > point["sun_elevation_deg"] + 0.26  # the near ground hides the whole disc
+    assert (agree, judged) == (267, 298)  # one point more than in the first run; still below 90 %

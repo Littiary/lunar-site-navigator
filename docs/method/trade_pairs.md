@@ -47,28 +47,28 @@ Three site records of the data stream, terrain `LDEM_80S_20M` and `LDEM_60S_60M`
 part of the disc visible, Earth: centre above the horizon. Computed on 14 November 2026
 with core commit 5c0cbaa; 294 s for the three sites.
 
-*The 0 m figures below were computed before 15 November 2026, when the search began one
-pixel from the site. With the ground at the site searched they are lower (in 30 days the
-Sun is in view of a 0 m observer for 411 instead of 421 h at the Shackleton record, 387
-instead of 544 h at de Gerlache, 440 instead of 517 h at Malapert;
-[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. To be
-recomputed with the next published set.*
+*The 0 m figures below are those of the set published on 15 November 2026 (contract
+0.12), in which the ground at the site is searched ([horizon.md](horizon.md), section
+5.2). In that set the Shackleton and de Gerlache records are served by the 5 m near field
+and the Malapert record by the 20 m product; on the 20 m product alone the Sun-visible
+share at 0 m is 49.6 % at the Shackleton record and 43.8 % at de Gerlache. The figures
+for 1 m and above are the earlier ones on the 20 m product and are not affected.*
 
 **Sun-visible share of the 24 months, by observer height**
 
 | Site record | 0 m | 1 m | 2 m | 5 m | 10 m | 20 m | 50 m |
 |---|---|---|---|---|---|---|---|
-| Shackleton crater rim crest | 66.9 % | 76.1 % | 78.0 % | 80.6 % | 83.2 % | 86.3 % | 91.2 % |
-| de Gerlache crater rim crest | 82.1 % | 83.7 % | 84.7 % | 86.3 % | 88.2 % | 88.5 % | 88.8 % |
-| Mons Malapert summit | 60.8 % | 67.6 % | 72.5 % | 79.7 % | 84.8 % | 86.2 % | 88.7 % |
+| Shackleton crater rim crest | 46.7 % | 76.1 % | 78.0 % | 80.6 % | 83.2 % | 86.3 % | 91.2 % |
+| de Gerlache crater rim crest | 50.0 % | 83.7 % | 84.7 % | 86.3 % | 88.2 % | 88.5 % | 88.8 % |
+| Mons Malapert summit | 56.3 % | 67.6 % | 72.5 % | 79.7 % | 84.8 % | 86.2 % | 88.7 % |
 
 **Longest continuous time without the Sun, by observer height**
 
 | Site record | 0 m | 2 m | 5 m | 10 m | 20 m | 50 m |
 |---|---|---|---|---|---|---|
-| Shackleton crater rim crest | 276 h | 188 h | 168 h | 134 h | 126 h | 61 h |
-| de Gerlache crater rim crest | 264 h | 257 h | 257 h | 135 h | 135 h | 134 h |
-| Mons Malapert summit | 370 h | 330 h | 307 h | 268 h | 261 h | 260 h |
+| Shackleton crater rim crest | 420 h | 188 h | 168 h | 134 h | 126 h | 61 h |
+| de Gerlache crater rim crest | 392 h | 257 h | 257 h | 135 h | 135 h | 134 h |
+| Mons Malapert summit | 391 h | 330 h | 307 h | 268 h | 261 h | 260 h |
 
 The curves are not smooth: at the de Gerlache record the longest darkness stays at 257 h
 from 1 m to 5 m, is 177 h at 8 m and 135 h from 10 m up. At the Malapert
