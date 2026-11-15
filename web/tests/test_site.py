@@ -40,7 +40,8 @@ class SiteBuildTests(unittest.TestCase):
             top = [n for n in names if not n.startswith(("viewer/", "packages/", "summary/"))]
             self.assertEqual(top, [".nojekyll", "accuracy.html", "charts/horizon_panorama__synthetic-sample-site.svg",
                                    "charts/window_strip.svg", "charts/window_strip__synthetic-sample-site.svg", "compare.html", "evidence.html",
-                                   "index.html", "learn.html", "notice.json"])
+                                   "index.html", "learn.html", "notice.json",
+                                   "submission/Lunar_Site_Navigator_backup_slides.pdf"])
             self.assertIn("summary/index.json", names)
             self.assertIn("viewer/index.html", names)
             self.assertIn("packages/index.json", names)

@@ -82,6 +82,12 @@ def build(packages: list[str], card: Path | None, notice: str | None, out: Path)
     write(out / ".nojekyll", "")
     write(out / "notice.json", json.dumps({"notice": notice, "validation": summary.validation_note(card)}) + "\n")
     written += copy_viewer(out / "viewer")
+    # The submitted slide deck has a stable public address on the site (submission/<name>.pdf),
+    # so the link given in the project submission keeps working after every rebuild.
+    for pdf in sorted((REPO / "docs" / "submission").glob("*.pdf")):
+        (out / "submission").mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(pdf, out / "submission" / pdf.name)
+        written.append(out / "submission" / pdf.name)
     indexes = [Path(p) for p in packages if Path(p).is_file()]
     if len(indexes) == 1:
         written += copy_packages(indexes[0], out / "packages")
