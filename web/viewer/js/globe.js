@@ -20,6 +20,7 @@
 
 import * as THREE from "three";
 import { webglAvailable } from "./view3d.js";
+import { enableViewportResize } from "./viewport-resize.js";
 
 const TEXTURE = new URL("../vendor/moon/lroc_color_2k.jpg", import.meta.url).href;
 const FOV = 35;
@@ -249,7 +250,8 @@ export function createGlobe(container, { onPickSite } = {}) {
   function draw() {
     pending = false;
     const w = container.clientWidth, h = container.clientHeight;
-    if (renderer.domElement.width !== Math.floor(w * renderer.getPixelRatio())) renderer.setSize(w, h, false);
+    const ratio = renderer.getPixelRatio();
+    if (renderer.domElement.width !== Math.floor(w * ratio) || renderer.domElement.height !== Math.floor(h * ratio)) renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
     if (!fitted && w > 0) { orbit.dist = fitDistance(1.32, FOV, camera.aspect); fitted = true; }
@@ -328,6 +330,7 @@ export function createGlobe(container, { onPickSite } = {}) {
   canvas.addEventListener("wheel", (ev) => { ev.preventDefault(); zoom(ev.deltaY > 0 ? 1.12 : 1 / 1.12); }, { passive: false });
   function zoom(f) { fitted = true; orbit.dist = Math.max(1.35, Math.min(12, orbit.dist * f)); requestDraw(); }
   new ResizeObserver(() => { if (!input) fitted = false; requestDraw(); }).observe(container);
+  enableViewportResize(container);
 
   return {
     // sites: [{site_id, name, lat_deg, lon_deg}] from the index (markers on the unit sphere),

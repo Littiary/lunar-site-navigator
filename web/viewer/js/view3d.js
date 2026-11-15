@@ -22,6 +22,7 @@
 // Trigonometry only in the marked display transform.
 
 import * as THREE from "three";
+import { enableViewportResize } from "./viewport-resize.js";
 import { terrainGeometry, groundAtSite, patchesFinestFirst } from "./terrain.js";
 
 const PROFILE_R = 60000;   // m: curtain of the package profile, beyond the largest patch (45 km corner)
@@ -416,7 +417,8 @@ export function createView(container, { onCheck } = {}) {
   function draw() {
     pending = false;
     const w = container.clientWidth, h = container.clientHeight;
-    if (renderer.domElement.width !== Math.floor(w * renderer.getPixelRatio())) renderer.setSize(w, h, false);
+    const ratio = renderer.getPixelRatio();
+    if (renderer.domElement.width !== Math.floor(w * ratio) || renderer.domElement.height !== Math.floor(h * ratio)) renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
     camera.position.set(0, eyeY, 0);
@@ -449,6 +451,7 @@ export function createView(container, { onCheck } = {}) {
   el.addEventListener("wheel", (ev) => { ev.preventDefault(); zoom(ev.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });
   function zoom(f) { camera.fov = Math.max(2, Math.min(90, camera.fov * f)); requestDraw(); }
   new ResizeObserver(() => { showHud(); requestDraw(); }).observe(container);
+  if (container.classList.contains("pane-ground")) enableViewportResize(container);
 
   // Default view: toward the Sun, a little below it, so the near ground fills the lower half.
   function lookAtSun(next) {
