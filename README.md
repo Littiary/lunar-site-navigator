@@ -32,7 +32,7 @@ One science core in Python (`core/`) computes everything and writes versioned re
 
 - The horizon is traced on the sphere out to 300 km in every direction.
 - The Sun is a disc, so a partial sunrise counts as sunlight.
-- Terrain: LOLA 5 m site models at the three project sites, the LOLA 20 m and 60 m polar products near the poles, and SLDEM2015 at 118 m per pixel elsewhere (LOLA merged with Kaguya Terrain Camera data).
+- Terrain: LOLA 5 m site models at two of the three project sites (Shackleton rim and de Gerlache rim; at Malapert the 5 m model failed its seam check against the 20 m product, so the 20 m product is used), the LOLA 20 m and 60 m polar products near the poles, and SLDEM2015 at 118 m per pixel elsewhere (LOLA merged with Kaguya Terrain Camera data).
 - Directions of the Sun and the Earth: SPICE with the DE440 ephemeris, light time and stellar aberration included.
 
 Method notes: [docs/method/](docs/method/).
