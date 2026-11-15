@@ -131,6 +131,15 @@ public:
 	/** Applies the display choices (lsn.Look.*) again; called every frame so that they can be tried while the scene runs. */
 	void RefreshLook() { UpdateLook(); }
 
+	/**
+	 * The zenith fill comes and goes over about 1.5 s of real time (an ease-in-out), whatever the frame rate,
+	 * so that it does not switch in one frame when the package's Sun goes hidden or rises, or after a jump
+	 * in time. Instant (the target at once) under -LsnShot, -LsnBench and the automation tests, unless set here.
+	 */
+	void AdvanceFillTransition(float DeltaSeconds);
+	void SetFillTransitionInstant(bool bInstant) { FillInstantOverride = bInstant ? 1 : 0; UpdateLook(); }
+	virtual void Tick(float DeltaSeconds) override;
+
 	/** The fill light on whatever the Sun does: for overview stills, labelled as a viewing aid. */
 	bool IsFillForced() const { return bForceFill; }
 
@@ -286,6 +295,13 @@ private:
 	bool bObstacleViewEnabled = true;
 	bool bFillLightWanted = true;
 	bool bForceFill = false;
+	/** Where the fill's transition stands, 0 (off) to 1 (FillLux), and where it goes. */
+	double FillProgress = 0.0;
+	bool bFillTarget = false;
+	/** -1: instant under -LsnShot, -LsnBench and the automation tests; 0 or 1 when set. */
+	int8 FillInstantOverride = -1;
+	bool IsFillTransitionInstant() const;
+	void ApplyFill();
 	double NearGroundShadeShare = 0.0;
 	bool bHasLander = false;
 	FVector LanderRelative = FVector::ZeroVector;

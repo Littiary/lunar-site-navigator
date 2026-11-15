@@ -53,7 +53,9 @@ namespace
 
 ALsnSiteScene::ALsnSiteScene()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	// Ticks only for the fill light's transition (AdvanceFillTransition).
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	Root->SetMobility(EComponentMobility::Movable);
@@ -173,6 +175,49 @@ double ALsnSiteScene::GetSunVisibleFraction() const
 	return FMath::Clamp(static_cast<double>(Sun->VisibleFraction[Flat]), 0.0, 1.0);
 }
 
+bool ALsnSiteScene::IsFillTransitionInstant() const
+{
+	if (FillInstantOverride >= 0)
+	{
+		return FillInstantOverride > 0;
+	}
+	FString Ignored;
+	static const bool bStill = FParse::Value(FCommandLine::Get(), TEXT("LsnShot="), Ignored) || FParse::Value(FCommandLine::Get(), TEXT("LsnBench="), Ignored);
+	return bStill || GIsAutomationTesting;
+}
+
+void ALsnSiteScene::ApplyFill()
+{
+	// Ease-in-out of the transition's progress: the level of 0b1cb68 (lsn.Look.FillLux) at its end.
+	const float Share = FMath::SmoothStep(0.0f, 1.0f, static_cast<float>(FillProgress));
+	FillLight->SetIntensity(LsnLook::FillLux.GetValueOnGameThread() * Share);
+	FillLight->SetVisibility(FillProgress > 0.0);
+}
+
+void ALsnSiteScene::AdvanceFillTransition(float DeltaSeconds)
+{
+	const double Target = bFillTarget ? 1.0 : 0.0;
+	if (IsFillTransitionInstant())
+	{
+		FillProgress = Target;
+	}
+	else
+	{
+		constexpr double Seconds = 1.5;
+		FillProgress = FMath::FInterpConstantTo(FillProgress, Target, static_cast<double>(DeltaSeconds), 1.0 / Seconds);
+	}
+	ApplyFill();
+}
+
+void ALsnSiteScene::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if (FillProgress != (bFillTarget ? 1.0 : 0.0))
+	{
+		AdvanceFillTransition(DeltaSeconds);
+	}
+}
+
 void ALsnSiteScene::UpdateLook()
 {
 	// How the scene is drawn follows one package value: the share of the Sun's disc that is
@@ -188,7 +233,6 @@ void ALsnSiteScene::UpdateLook()
 		HighSun = FMath::Lerp(1.0f, LsnLook::HighSunExposure.GetValueOnGameThread(), FMath::SmoothStep(5.0f, 45.0f, static_cast<float>(SunForExposure.ElevationDeg)));
 	}
 	SunLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread() * HighSun);
-	FillLight->SetIntensity(LsnLook::FillLux.GetValueOnGameThread());
 	if (RegolithMaterial)
 	{
 		RegolithMaterial->SetScalarParameterValue(TEXT("CraterStrength"), LsnLook::CraterStrength.GetValueOnGameThread());
@@ -197,7 +241,13 @@ void ALsnSiteScene::UpdateLook()
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
 	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
 	// Without a timeline there is no Sun to light the terrain: the fill keeps it readable.
-	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
+	// The rule of 0b1cb68 gives the target; the fill goes there over about 1.5 s (AdvanceFillTransition).
+	bFillTarget = bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0));
+	if (IsFillTransitionInstant())
+	{
+		FillProgress = bFillTarget ? 1.0 : 0.0;
+	}
+	ApplyFill();
 	if (RegolithMaterial)
 	{
 		// The opposition surge belongs to sunlight: none while the Sun is hidden.
