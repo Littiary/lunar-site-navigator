@@ -41,9 +41,6 @@ def test_comparison_repeats_from_the_downloaded_maps():
 RECOMPUTED = ("ridge_or_rim_01", "plain_or_slope_03", "floor_01", "site_shackleton_rim_crest")
 
 
-@pytest.mark.xfail(strict=True, reason="results/our_shares.json was computed on 14 November 2026 at 12:34Z, before core commit 18e0107 moved the first sample of the horizon "
-                   "search from one pixel to at most 20 m: on the 60 m product of run A the horizon of an observer at 0 m changes (validation/README.md, pgda, "
-                   "'State of the stored result'). The file is recomputed with the packages at the final publish; this marker is removed then.")
 def test_stored_shares_are_what_the_current_code_gives_at_a_few_points():
     """Recomputes four of the hundred points, horizon and shares, with the code and the settings as they are now."""
     pytest.importorskip("lsn_data")

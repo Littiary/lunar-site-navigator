@@ -299,6 +299,9 @@ def build() -> dict:
     strip = lro_checks["nadir_2010_agreement"]
     strip_cause, strip_limit = [], "One lossy browse image georeferenced from four corners printed to 300 m: it tests broad sunlit and shadowed areas, not the position of a shadow edge."
     disputed = lro["exploratory_after_the_result"]["image_shadow_ours_sunlit"]
+    strip_not_blind = ("The horizon of the core was changed after this check had first failed (266 of 298 judged points, 89.3 %) and after the strip point row+700_along11500 had been examined: "
+                       "since contract 0.12 the ground between the site and the first pixel is in the horizon of an observer at 0 m. For that point the comparison is therefore no longer blind. "
+                       "It is the one strip point whose state changed with the new horizon (sunlit to shadow); the reading rule and the criterion are unchanged.")
     if strip["status"] == "FAIL" and disputed:
         low, _, high = disputed["our_centre_margin_deg_min_median_max"]
         strip_limit = (f"Fails as registered ({100 * strip['computed']:.1f} % against 90 %): all {disputed['points']} disagreements are ground the core calls sunlit with the centre of the Sun only {low:.2f} to {high:.2f} deg above the terrain horizon and the image rule reads as shadow, "
@@ -364,7 +367,7 @@ def build() -> dict:
                "LROC NAC image M146846913L, calibrated browse product (https://pds.lroc.im-ldi.com/), retrieved 2026-11-14",
                strip_threshold, "share of points", lro_how, lro_where, strip["computed"], lro_evidence,
                f"{strip['detail']['judged']} judged points of {strip['detail']['points']} along the strip ({strip['detail']['mixed_or_outside']} near a shadow edge or outside were not judged)",
-               ["Corner-based georeferencing (corners printed to 300 m) of a lossy browse image: it tests broad sunlit and shadowed areas, not the position of a shadow edge.", "One image, near Shackleton crater."] + strip_cause, comparison=">="),
+               ["Corner-based georeferencing (corners printed to 300 m) of a lossy browse image: it tests broad sunlit and shadowed areas, not the position of a shadow edge.", "One image, near Shackleton crater."] + strip_cause + [strip_not_blind], comparison=">="),
     ] if strip["status"] in ("PASS", "FAIL") else []) + [
         _check("image_sub_solar_points", "Dated image", "Sub-solar latitude and longitude at the two image times against the values printed on the LROC data pages (largest difference)",
                "LROC data pages of NAC images M1407524099LE and M146846913LE, retrieved 2026-11-14",

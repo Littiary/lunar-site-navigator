@@ -105,8 +105,11 @@ from landing, Earth in view for at least half of a 14-day stay.
 pixel from the site. With the ground at the site searched they are lower (in 30 days the
 Sun is in view of a 0 m observer for 411 instead of 421 h at the Shackleton record, 387
 instead of 544 h at de Gerlache, 440 instead of 517 h at Malapert;
-[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. To be
-recomputed with the next published set.*
+[horizon.md](horizon.md), section 5.2). Figures for 1 m and above are not affected. The 0 m
+figure below was not recomputed from the set published on 15 November 2026 (contract
+0.12), because that set does not state this requirement: with its `example-standard`
+requirement the feasible share at the Malapert record is 18.9 % on the surface, 32.5 % at
+2 m and 65.0 % at 20 m.*
 
 At the Malapert record the feasible share depends strongly on the observer height: 32.9 %
 on the surface, 42.3 % at 2 m, 72.6 % at 20 m. The summit's horizon is set by terrain

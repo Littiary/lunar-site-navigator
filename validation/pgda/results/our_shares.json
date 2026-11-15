@@ -1,5 +1,9 @@
 {
- "generated_utc": "2026-11-14T12:34:39Z",
+ "generated_utc": "2026-11-15T04:57:47Z",
+ "code": {
+  "git_commit": "f6cdde3",
+  "uncommitted_changes": false
+ },
  "settings": {
   "period_start_utc": "2020-01-01T00:00:00",
   "second_period_start_utc": "2000-01-01T00:00:00",
@@ -15,24 +19,74 @@
   "aberration_correction": "LT+S",
   "kernel_set_id": "bfe870fccfa5"
  },
+ "horizon_settings": {
+  "first_sample_px": 1.0,
+  "first_sample_max_m": 20.0,
+  "lead_eighths": 7,
+  "lead_min_m": 0.01,
+  "ground_from_first_point": false,
+  "fine_step_px": 0.5,
+  "inner_zone_px": 10.0,
+  "inner_step_px": 0.125,
+  "cell_growth": 0.008726646259971648,
+  "max_cell_points": 256,
+  "refine_candidates": 4,
+  "refine_rounds": 4,
+  "refine_points": 9,
+  "chunk_points": 3000000,
+  "walk_growth": 2
+ },
  "terrain": {
   "run_A_60m": "lola:LDEM_60S_60M@V2.0",
   "run_B_production": "lola:LDEM_80S_20M@V2.0+LDEM_60S_60M@V2.0"
  },
- "run_time_s": 407.6803846999828,
+ "terrain_layers": {
+  "run_A_60m": [
+   {
+    "layer_id": "LDEM_60S_60M",
+    "product_id": "LDEM_60S_60M",
+    "version": "V2.0",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+    "sha256": "e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c",
+    "pixel_m": 60.0,
+    "projection": "polar stereographic on a sphere, true scale at the pole"
+   }
+  ],
+  "run_B_production": [
+   {
+    "layer_id": "LDEM_80S_20M",
+    "product_id": "LDEM_80S_20M",
+    "version": "V2.0",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_80S_20M.IMG",
+    "sha256": "db44c3b2444acff1af528301c8a6988934b490249aceff0ac55668bdf3eab365",
+    "pixel_m": 20.0,
+    "projection": "polar stereographic on a sphere, true scale at the pole"
+   },
+   {
+    "layer_id": "LDEM_60S_60M",
+    "product_id": "LDEM_60S_60M",
+    "version": "V2.0",
+    "source_url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+    "sha256": "e15e1a8da0f0970c5554c0c20f115bdb44ebaee64dcc7c6f46d1fd7ed81cd44c",
+    "pixel_m": 60.0,
+    "projection": "polar stereographic on a sphere, true scale at the pole"
+   }
+  ]
+ },
+ "run_time_s": 1425.6024592999893,
  "points": [
   {
    "id": "ridge_or_rim_01",
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 278.00000000004366,
-    "horizon_min_deg": -1.8564241483914479,
-    "horizon_max_deg": 16.256132889910447,
-    "share_of_horizon_set_closer_than_1km": 0.49027777777777776,
+    "horizon_min_deg": -1.85642414839166,
+    "horizon_max_deg": 16.256132890790028,
+    "share_of_horizon_set_closer_than_1km": 0.49375,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.4188500928530715,
+      "sun": 0.4168765820263421,
       "earth": 0.4966566765342208
      },
      "2m": {
@@ -42,7 +96,7 @@
     },
     "shares_second_cycle": {
      "0m": {
-      "sun": 0.4178510796084849,
+      "sun": 0.41586531095053353,
       "earth": 0.49732472833581554
      },
      "2m": {
@@ -59,7 +113,7 @@
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.4208848928359105,
+      "sun": 0.4187888036969619,
       "earth": 0.49666893436544274
      },
      "2m": {
@@ -74,9 +128,9 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -2908.999999999998,
-    "horizon_min_deg": 3.841450997633005,
-    "horizon_max_deg": 11.850186267432372,
-    "share_of_horizon_set_closer_than_1km": 0.24583333333333332,
+    "horizon_min_deg": 3.8414509976264903,
+    "horizon_max_deg": 11.85018626756638,
+    "share_of_horizon_set_closer_than_1km": 0.2465277777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -122,14 +176,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 462.99999999999727,
-    "horizon_min_deg": -2.4070528083028364,
-    "horizon_max_deg": 8.104549953430666,
-    "share_of_horizon_set_closer_than_1km": 0.5326388888888889,
+    "horizon_min_deg": -2.4070528084045497,
+    "horizon_max_deg": 8.104549953442598,
+    "share_of_horizon_set_closer_than_1km": 0.5451388888888888,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.21144758857815288,
-      "earth": 0.4749480574401971
+      "sun": 0.21097566207610888,
+      "earth": 0.4749296706933642
      },
      "2m": {
       "sun": 0.23740967510618347,
@@ -138,8 +192,8 @@
     },
     "shares_second_cycle": {
      "0m": {
-      "sun": 0.21171726086503515,
-      "earth": 0.47603900441894814
+      "sun": 0.2113004946034898,
+      "earth": 0.47602674658772626
      },
      "2m": {
       "sun": 0.23727483896274232,
@@ -150,13 +204,13 @@
    "run_B_production": {
     "surface_height_m": 463.9999999999982,
     "horizon_min_deg": -2.39273840736906,
-    "horizon_max_deg": 8.106141347343783,
+    "horizon_max_deg": 8.106141347342955,
     "share_of_horizon_set_closer_than_1km": 0.5395833333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.20555157176040842,
-      "earth": 0.44234222638988485
+      "sun": 0.20253001636420467,
+      "earth": 0.43473624211668227
      },
      "2m": {
       "sun": 0.24271731602527566,
@@ -170,13 +224,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1265.5,
-    "horizon_min_deg": -1.8015306510272033,
-    "horizon_max_deg": 10.657695871056836,
+    "horizon_min_deg": -1.8015306510321236,
+    "horizon_max_deg": 10.657695871084822,
     "share_of_horizon_set_closer_than_1km": 0.4527777777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.31761879370682944,
+      "sun": 0.31734299250433623,
       "earth": 0.38919227021163144
      },
      "2m": {
@@ -188,13 +242,13 @@
    "run_B_production": {
     "surface_height_m": -1266.5,
     "horizon_min_deg": -1.800736985590998,
-    "horizon_max_deg": 16.711073177988315,
-    "share_of_horizon_set_closer_than_1km": 0.5875,
+    "horizon_max_deg": 16.934281770381286,
+    "share_of_horizon_set_closer_than_1km": 0.5916666666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.30025557578097706,
-      "earth": 0.3872494039629568
+      "sun": 0.2997346179540454,
+      "earth": 0.38126758232665897
      },
      "2m": {
       "sun": 0.3191510226095697,
@@ -208,13 +262,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 4468.500000000042,
-    "horizon_min_deg": -3.7111137637318534,
-    "horizon_max_deg": 17.602171409595012,
-    "share_of_horizon_set_closer_than_1km": 0.5763888888888888,
+    "horizon_min_deg": -3.687329368181864,
+    "horizon_max_deg": 17.810048968494463,
+    "share_of_horizon_set_closer_than_1km": 0.5798611111111112,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.46292312501149174,
+      "sun": 0.45862062625259714,
       "earth": 1.0
      },
      "2m": {
@@ -225,13 +279,13 @@
    },
    "run_B_production": {
     "surface_height_m": 4468.500000000036,
-    "horizon_min_deg": -3.3690522291828437,
+    "horizon_min_deg": -3.36905222918095,
     "horizon_max_deg": 17.371453333141243,
-    "share_of_horizon_set_closer_than_1km": 0.6180555555555556,
+    "share_of_horizon_set_closer_than_1km": 0.6333333333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.44145966254190644,
+      "sun": 0.43075857588516864,
       "earth": 1.0
      },
      "2m": {
@@ -246,9 +300,9 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1512.4999999998936,
-    "horizon_min_deg": 0.12540086771389836,
-    "horizon_max_deg": 16.63902442631676,
-    "share_of_horizon_set_closer_than_1km": 0.2611111111111111,
+    "horizon_min_deg": 0.12540086683063945,
+    "horizon_max_deg": 16.639024426296697,
+    "share_of_horizon_set_closer_than_1km": 0.2777777777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -264,8 +318,8 @@
    "run_B_production": {
     "surface_height_m": -1512.9999999999045,
     "horizon_min_deg": 0.12673341919151626,
-    "horizon_max_deg": 16.64492368874099,
-    "share_of_horizon_set_closer_than_1km": 0.2881944444444444,
+    "horizon_max_deg": 16.644923688814327,
+    "share_of_horizon_set_closer_than_1km": 0.30694444444444446,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -284,9 +338,9 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -2135.5,
-    "horizon_min_deg": 0.10659996811930082,
-    "horizon_max_deg": 6.5617907042776675,
-    "share_of_horizon_set_closer_than_1km": 0.3125,
+    "horizon_min_deg": 0.1065999681191259,
+    "horizon_max_deg": 6.5617907042717585,
+    "share_of_horizon_set_closer_than_1km": 0.3236111111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -302,12 +356,12 @@
    "run_B_production": {
     "surface_height_m": -2135.500000000009,
     "horizon_min_deg": 0.10907254421036126,
-    "horizon_max_deg": 7.131868960344017,
-    "share_of_horizon_set_closer_than_1km": 0.38819444444444445,
+    "horizon_max_deg": 7.138783381791115,
+    "share_of_horizon_set_closer_than_1km": 0.39166666666666666,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.0938459558350341,
+      "sun": 0.08446871495026385,
       "earth": 0.3466330802091186
      },
      "2m": {
@@ -322,8 +376,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1753.4999999999582,
-    "horizon_min_deg": -0.9783208361224881,
-    "horizon_max_deg": 10.965838745261054,
+    "horizon_min_deg": -0.9783208358256898,
+    "horizon_max_deg": 10.965838745258122,
     "share_of_horizon_set_closer_than_1km": 0.1840277777777778,
     "coverage_complete": true,
     "shares": {
@@ -341,11 +395,11 @@
     "surface_height_m": -1753.9999999999482,
     "horizon_min_deg": -0.9773572409599907,
     "horizon_max_deg": 10.968308274133515,
-    "share_of_horizon_set_closer_than_1km": 0.2611111111111111,
+    "share_of_horizon_set_closer_than_1km": 0.30833333333333335,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3601166945532327,
+      "sun": 0.35122363800172834,
       "earth": 0.5962760708747801
      },
      "2m": {
@@ -360,13 +414,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 322.4999999999982,
-    "horizon_min_deg": -1.317215885372294,
-    "horizon_max_deg": 16.082206759474687,
-    "share_of_horizon_set_closer_than_1km": 0.5145833333333333,
+    "horizon_min_deg": -0.8707392595785318,
+    "horizon_max_deg": 16.08220675955681,
+    "share_of_horizon_set_closer_than_1km": 0.5222222222222223,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.0194470492335791,
+      "sun": 0.014341662529648629,
       "earth": 0.0
      },
      "2m": {
@@ -377,13 +431,13 @@
    },
    "run_B_production": {
     "surface_height_m": 322.50000000002365,
-    "horizon_min_deg": -0.35466716801232406,
-    "horizon_max_deg": 17.99982422457974,
-    "share_of_horizon_set_closer_than_1km": 0.5368055555555555,
+    "horizon_min_deg": -0.10370415992664792,
+    "horizon_max_deg": 18.777027376442803,
+    "share_of_horizon_set_closer_than_1km": 0.5395833333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.005718278265026569,
+      "sun": 0.0035547710543573524,
       "earth": 0.0
      },
      "2m": {
@@ -398,8 +452,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -3858.5,
-    "horizon_min_deg": 1.9005922417637604,
-    "horizon_max_deg": 7.636435167949136,
+    "horizon_min_deg": 1.9005922417592627,
+    "horizon_max_deg": 7.636435167988651,
     "share_of_horizon_set_closer_than_1km": 0.052083333333333336,
     "coverage_complete": true,
     "shares": {
@@ -417,11 +471,11 @@
     "surface_height_m": -3858.499999999998,
     "horizon_min_deg": 2.479640643431069,
     "horizon_max_deg": 7.637165662144782,
-    "share_of_horizon_set_closer_than_1km": 0.23958333333333334,
+    "share_of_horizon_set_closer_than_1km": 0.2777777777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.14230729157090236,
+      "sun": 0.1386912313604354,
       "earth": 0.43292208309583785
      },
      "2m": {
@@ -436,8 +490,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -3699.0000000000073,
-    "horizon_min_deg": 1.1324740378826277,
-    "horizon_max_deg": 10.242514885530307,
+    "horizon_min_deg": 1.1324740378740459,
+    "horizon_max_deg": 10.242514885533408,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -474,8 +528,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1495.0000000000146,
-    "horizon_min_deg": -1.1216164149947547,
-    "horizon_max_deg": 5.96105869619895,
+    "horizon_min_deg": -1.1216164149947514,
+    "horizon_max_deg": 5.961058696257557,
     "share_of_horizon_set_closer_than_1km": 0.3229166666666667,
     "coverage_complete": true,
     "shares": {
@@ -492,7 +546,7 @@
    "run_B_production": {
     "surface_height_m": -1496.000000000009,
     "horizon_min_deg": -1.119395352461882,
-    "horizon_max_deg": 8.303728702728149,
+    "horizon_max_deg": 8.30372870272815,
     "share_of_horizon_set_closer_than_1km": 0.34652777777777777,
     "coverage_complete": true,
     "shares": {
@@ -512,8 +566,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 2789.9999999999454,
-    "horizon_min_deg": -3.6980938080194345,
-    "horizon_max_deg": 27.368234061921587,
+    "horizon_min_deg": -3.698093808036766,
+    "horizon_max_deg": 27.36823406184845,
     "share_of_horizon_set_closer_than_1km": 0.3888888888888889,
     "coverage_complete": true,
     "shares": {
@@ -550,8 +604,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1237.99999999996,
-    "horizon_min_deg": 3.0360542675501496,
-    "horizon_max_deg": 11.4032690907537,
+    "horizon_min_deg": 3.0360542675364526,
+    "horizon_max_deg": 11.403269090462583,
     "share_of_horizon_set_closer_than_1km": 0.31805555555555554,
     "coverage_complete": true,
     "shares": {
@@ -568,7 +622,7 @@
    "run_B_production": {
     "surface_height_m": -1236.9999999999682,
     "horizon_min_deg": 3.032851651069194,
-    "horizon_max_deg": 11.317943051970598,
+    "horizon_max_deg": 11.317943051964987,
     "share_of_horizon_set_closer_than_1km": 0.3159722222222222,
     "coverage_complete": true,
     "shares": {
@@ -588,14 +642,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 702.5000000000055,
-    "horizon_min_deg": -3.217039181260986,
-    "horizon_max_deg": 7.1372665975899565,
+    "horizon_min_deg": -3.2170391811293024,
+    "horizon_max_deg": 7.137266597046583,
     "share_of_horizon_set_closer_than_1km": 0.5243055555555556,
     "coverage_complete": true,
     "shares": {
      "0m": {
       "sun": 0.5447747929958753,
-      "earth": 0.36248858489467456
+      "earth": 0.36248245597906364
      },
      "2m": {
       "sun": 0.5658766494444138,
@@ -607,12 +661,12 @@
     "surface_height_m": 703.5000000000073,
     "horizon_min_deg": -3.2173107427878267,
     "horizon_max_deg": 7.093835773065257,
-    "share_of_horizon_set_closer_than_1km": 0.4798611111111111,
+    "share_of_horizon_set_closer_than_1km": 0.5138888888888888,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.551878206188979,
-      "earth": 0.3690036221891261
+      "sun": 0.5475266761051967,
+      "earth": 0.36364082102953527
      },
      "2m": {
       "sun": 0.5671453349758827,
@@ -626,9 +680,9 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1047.49999999997,
-    "horizon_min_deg": -0.7207978149824964,
-    "horizon_max_deg": 12.069677576151971,
-    "share_of_horizon_set_closer_than_1km": 0.36736111111111114,
+    "horizon_min_deg": -0.7207978149836057,
+    "horizon_max_deg": 12.658357830610651,
+    "share_of_horizon_set_closer_than_1km": 0.39166666666666666,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -644,8 +698,8 @@
    "run_B_production": {
     "surface_height_m": -1047.999999999969,
     "horizon_min_deg": -0.7200275015417529,
-    "horizon_max_deg": 15.781407929888315,
-    "share_of_horizon_set_closer_than_1km": 0.45555555555555555,
+    "horizon_max_deg": 16.98465049330158,
+    "share_of_horizon_set_closer_than_1km": 0.4708333333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -664,13 +718,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 5076.0,
-    "horizon_min_deg": -4.745267858281056,
-    "horizon_max_deg": 10.832401621395913,
-    "share_of_horizon_set_closer_than_1km": 0.4305555555555556,
+    "horizon_min_deg": -4.745267858282698,
+    "horizon_max_deg": 10.83240162075481,
+    "share_of_horizon_set_closer_than_1km": 0.45625,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.38200918111558524,
+      "sun": 0.37596607032317775,
       "earth": 0.5837975986908637
      },
      "2m": {
@@ -683,11 +737,11 @@
     "surface_height_m": 5075.499999999998,
     "horizon_min_deg": -4.74423777617146,
     "horizon_max_deg": 11.885870743763215,
-    "share_of_horizon_set_closer_than_1km": 0.4666666666666667,
+    "share_of_horizon_set_closer_than_1km": 0.4895833333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3780866751245702,
+      "sun": 0.37176776312966947,
       "earth": 0.5833379300200415
      },
      "2m": {
@@ -702,13 +756,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 225.50000000001455,
-    "horizon_min_deg": 0.3677750388601206,
-    "horizon_max_deg": 25.244821494666553,
+    "horizon_min_deg": 0.36777368540096156,
+    "horizon_max_deg": 25.8909999256981,
     "share_of_horizon_set_closer_than_1km": 0.48541666666666666,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.0962791353325856,
+      "sun": 0.0953843136533853,
       "earth": 0.2325678317735243
      },
      "2m": {
@@ -740,9 +794,9 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -2125.499999999998,
-    "horizon_min_deg": -0.11559057357296088,
-    "horizon_max_deg": 6.687455336271376,
-    "share_of_horizon_set_closer_than_1km": 0.37777777777777777,
+    "horizon_min_deg": -0.1155905736449397,
+    "horizon_max_deg": 6.738666325516888,
+    "share_of_horizon_set_closer_than_1km": 0.3784722222222222,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -778,13 +832,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 1791.9999999999063,
-    "horizon_min_deg": -3.236621050143652,
-    "horizon_max_deg": 18.723611120748263,
-    "share_of_horizon_set_closer_than_1km": 0.4486111111111111,
+    "horizon_min_deg": -3.236621050945191,
+    "horizon_max_deg": 20.674714917976686,
+    "share_of_horizon_set_closer_than_1km": 0.45208333333333334,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3276702153088054,
+      "sun": 0.3266221707393311,
       "earth": 0.346884365749168
      },
      "2m": {
@@ -796,8 +850,8 @@
    "run_B_production": {
     "surface_height_m": 1790.9999999999336,
     "horizon_min_deg": -2.9844131023718665,
-    "horizon_max_deg": 20.940891790936575,
-    "share_of_horizon_set_closer_than_1km": 0.49444444444444446,
+    "horizon_max_deg": 21.571124901782948,
+    "share_of_horizon_set_closer_than_1km": 0.5006944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -816,8 +870,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -3251.5,
-    "horizon_min_deg": 0.8908736172258371,
-    "horizon_max_deg": 11.76547899452962,
+    "horizon_min_deg": 0.890873617169754,
+    "horizon_max_deg": 11.765478993853886,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -834,7 +888,7 @@
    "run_B_production": {
     "surface_height_m": -3251.0,
     "horizon_min_deg": 0.8913030297279194,
-    "horizon_max_deg": 11.797875056249252,
+    "horizon_max_deg": 11.797875056340372,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -854,13 +908,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 882.4999999999654,
-    "horizon_min_deg": -2.404280275230459,
-    "horizon_max_deg": 11.587587097500094,
+    "horizon_min_deg": -2.404280275230935,
+    "horizon_max_deg": 11.588611467042181,
     "share_of_horizon_set_closer_than_1km": 0.41388888888888886,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.19984555132660378,
+      "sun": 0.1975655947193263,
       "earth": 0.49481187293532153
      },
      "2m": {
@@ -872,12 +926,12 @@
    "run_B_production": {
     "surface_height_m": 877.9999999999854,
     "horizon_min_deg": -2.401236176170722,
-    "horizon_max_deg": 18.61415944219715,
-    "share_of_horizon_set_closer_than_1km": 0.6395833333333333,
+    "horizon_max_deg": 19.160050985526762,
+    "share_of_horizon_set_closer_than_1km": 0.6631944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.08301003303485514,
+      "sun": 0.08067491618707902,
       "earth": 0.4946831657074914
      },
      "2m": {
@@ -892,14 +946,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 2990.0,
-    "horizon_min_deg": -1.3310037962381602,
-    "horizon_max_deg": 2.9183209052108894,
-    "share_of_horizon_set_closer_than_1km": 0.5104166666666666,
+    "horizon_min_deg": -1.3310037964133818,
+    "horizon_max_deg": 2.918320905026118,
+    "share_of_horizon_set_closer_than_1km": 0.5145833333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3954560219660336,
-      "earth": 0.4354900987368305
+      "sun": 0.39442023522778114,
+      "earth": 0.43538590717144415
      },
      "2m": {
       "sun": 0.4252241650884709,
@@ -909,7 +963,7 @@
    },
    "run_B_production": {
     "surface_height_m": 2989.9999999999945,
-    "horizon_min_deg": -1.3282416450046177,
+    "horizon_min_deg": -1.3282416450041081,
     "horizon_max_deg": 3.217919347356514,
     "share_of_horizon_set_closer_than_1km": 0.5159722222222223,
     "coverage_complete": true,
@@ -930,14 +984,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 1963.499999999971,
-    "horizon_min_deg": -4.188801850920262,
-    "horizon_max_deg": 25.794591153772163,
-    "share_of_horizon_set_closer_than_1km": 0.5701388888888889,
+    "horizon_min_deg": -4.188801850917818,
+    "horizon_max_deg": 26.010987984506993,
+    "share_of_horizon_set_closer_than_1km": 0.5756944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2856197253020023,
-      "earth": 0.22303123908286906
+      "sun": 0.2788105000582247,
+      "earth": 0.20776411029596534
      },
      "2m": {
       "sun": 0.2999736456628729,
@@ -948,7 +1002,7 @@
    "run_B_production": {
     "surface_height_m": 1964.9999999999527,
     "horizon_min_deg": -4.164707910060344,
-    "horizon_max_deg": 24.26318195947236,
+    "horizon_max_deg": 24.362196527760766,
     "share_of_horizon_set_closer_than_1km": 0.5875,
     "coverage_complete": true,
     "shares": {
@@ -968,8 +1022,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1612.499999999971,
-    "horizon_min_deg": -1.3396991915741114,
-    "horizon_max_deg": 15.041588624483362,
+    "horizon_min_deg": -1.3396991915837186,
+    "horizon_max_deg": 15.041588617402061,
     "share_of_horizon_set_closer_than_1km": 0.4375,
     "coverage_complete": true,
     "shares": {
@@ -986,12 +1040,12 @@
    "run_B_production": {
     "surface_height_m": -1613.499999999981,
     "horizon_min_deg": -1.3371441270448814,
-    "horizon_max_deg": 16.12822181707288,
-    "share_of_horizon_set_closer_than_1km": 0.48333333333333334,
+    "horizon_max_deg": 16.783058596418087,
+    "share_of_horizon_set_closer_than_1km": 0.49027777777777776,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3500101127107581,
+      "sun": 0.3483124030865219,
       "earth": 0.0
      },
      "2m": {
@@ -1006,8 +1060,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 60.999999999989086,
-    "horizon_min_deg": -0.7650895285201794,
-    "horizon_max_deg": 7.046593973447301,
+    "horizon_min_deg": -0.7650895292539258,
+    "horizon_max_deg": 7.046593973459028,
     "share_of_horizon_set_closer_than_1km": 0.41388888888888886,
     "coverage_complete": true,
     "shares": {
@@ -1024,12 +1078,12 @@
    "run_B_production": {
     "surface_height_m": 60.99999999998636,
     "horizon_min_deg": -0.7653909954451531,
-    "horizon_max_deg": 7.12221897544689,
-    "share_of_horizon_set_closer_than_1km": 0.48680555555555555,
+    "horizon_max_deg": 7.125695384559639,
+    "share_of_horizon_set_closer_than_1km": 0.5083333333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.36698108003750896,
+      "sun": 0.3637450125949216,
       "earth": 0.37098326193146647
      },
      "2m": {
@@ -1044,13 +1098,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -2284.5000000000637,
-    "horizon_min_deg": -0.8092183886923723,
-    "horizon_max_deg": 7.746255023085017,
-    "share_of_horizon_set_closer_than_1km": 0.44305555555555554,
+    "horizon_min_deg": -0.7160027456349043,
+    "horizon_max_deg": 7.746255022706042,
+    "share_of_horizon_set_closer_than_1km": 0.4618055555555556,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.18366521411366687,
+      "sun": 0.16915194194691133,
       "earth": 0.26616654715281224
      },
      "2m": {
@@ -1061,14 +1115,14 @@
    },
    "run_B_production": {
     "surface_height_m": -2284.5000000000073,
-    "horizon_min_deg": -0.10663819374085261,
+    "horizon_min_deg": 0.6648616714640266,
     "horizon_max_deg": 8.920429202006401,
-    "share_of_horizon_set_closer_than_1km": 0.5152777777777777,
+    "share_of_horizon_set_closer_than_1km": 0.55,
     "coverage_complete": true,
     "shares": {
      "0m": {
       "sun": 0.15769086975441435,
-      "earth": 0.26557817125416
+      "earth": 0.26342079295910176
      },
      "2m": {
       "sun": 0.20642800669277583,
@@ -1082,14 +1136,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 416.50000000007367,
-    "horizon_min_deg": -1.4998005294576244,
-    "horizon_max_deg": 19.852299027146493,
-    "share_of_horizon_set_closer_than_1km": 0.4305555555555556,
+    "horizon_min_deg": -1.4998005294573655,
+    "horizon_max_deg": 19.852299026896745,
+    "share_of_horizon_set_closer_than_1km": 0.4548611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
       "sun": 0.12544051580953783,
-      "earth": 0.31468917204479013
+      "earth": 0.3146769142135682
      },
      "2m": {
       "sun": 0.1262617905014066,
@@ -1099,18 +1153,18 @@
    },
    "run_B_production": {
     "surface_height_m": 412.00000000018736,
-    "horizon_min_deg": -1.468611836152799,
+    "horizon_min_deg": -1.4328541746540535,
     "horizon_max_deg": 29.734606992933863,
-    "share_of_horizon_set_closer_than_1km": 0.5958333333333333,
+    "share_of_horizon_set_closer_than_1km": 0.5993055555555555,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.10539283284608454,
+      "sun": 0.10319255214174956,
       "earth": 0.0
      },
      "2m": {
       "sun": 0.12356506763258376,
-      "earth": 0.11703164359129939
+      "earth": 0.11702551467568843
      }
     }
    }
@@ -1120,14 +1174,14 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -551.0000000000109,
-    "horizon_min_deg": -0.335491591749943,
-    "horizon_max_deg": 7.596599046506814,
-    "share_of_horizon_set_closer_than_1km": 0.44722222222222224,
+    "horizon_min_deg": -0.3354915917498085,
+    "horizon_max_deg": 7.612478731029633,
+    "share_of_horizon_set_closer_than_1km": 0.4479166666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.06937932471607798,
-      "earth": 0.1658791010106582
+      "sun": 0.06907900785114089,
+      "earth": 0.16427945403619737
      },
      "2m": {
       "sun": 0.094176917278026,
@@ -1138,12 +1192,12 @@
    "run_B_production": {
     "surface_height_m": -551.5000000000064,
     "horizon_min_deg": -0.3345423448915432,
-    "horizon_max_deg": 10.028834067278487,
-    "share_of_horizon_set_closer_than_1km": 0.5402777777777777,
+    "horizon_max_deg": 10.028985823433223,
+    "share_of_horizon_set_closer_than_1km": 0.5444444444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.03604415270806136,
+      "sun": 0.03470192018926092,
       "earth": 0.0
      },
      "2m": {
@@ -1158,8 +1212,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 3298.500000000069,
-    "horizon_min_deg": -4.044535798640765,
-    "horizon_max_deg": 20.123587287879502,
+    "horizon_min_deg": -4.0445357986599975,
+    "horizon_max_deg": 20.296756967781057,
     "share_of_horizon_set_closer_than_1km": 0.4166666666666667,
     "coverage_complete": true,
     "shares": {
@@ -1176,12 +1230,12 @@
    "run_B_production": {
     "surface_height_m": 3293.0000000000273,
     "horizon_min_deg": -2.6830918847379848,
-    "horizon_max_deg": 27.924198107972895,
-    "share_of_horizon_set_closer_than_1km": 0.8201388888888889,
+    "horizon_max_deg": 28.720830660250787,
+    "share_of_horizon_set_closer_than_1km": 0.8284722222222223,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2603195616599555,
+      "sun": 0.25541030025557576,
       "earth": 0.6710978726533914
      },
      "2m": {
@@ -1196,8 +1250,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": 3230.5,
-    "horizon_min_deg": -4.011741750837648,
-    "horizon_max_deg": 15.811157398828263,
+    "horizon_min_deg": -4.011741750825507,
+    "horizon_max_deg": 16.038511578608368,
     "share_of_horizon_set_closer_than_1km": 0.5701388888888889,
     "coverage_complete": true,
     "shares": {
@@ -1215,11 +1269,11 @@
     "surface_height_m": 3230.0000000000127,
     "horizon_min_deg": -4.011015921386594,
     "horizon_max_deg": 16.63310637060088,
-    "share_of_horizon_set_closer_than_1km": 0.5833333333333334,
+    "share_of_horizon_set_closer_than_1km": 0.6145833333333334,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.37991922089224756,
+      "sun": 0.3678881595479312,
       "earth": 0.0
      },
      "2m": {
@@ -1234,13 +1288,13 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -1339.0,
-    "horizon_min_deg": -1.5594888859197098,
-    "horizon_max_deg": 9.062413162804264,
+    "horizon_min_deg": -1.5594888858452671,
+    "horizon_max_deg": 9.063421941046677,
     "share_of_horizon_set_closer_than_1km": 0.5270833333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.16359914440338072,
+      "sun": 0.1635684998253259,
       "earth": 0.20682025729187734
      },
      "2m": {
@@ -1257,7 +1311,7 @@
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.1516722746244507,
+      "sun": 0.15166614570883974,
       "earth": 0.2069060621104308
      },
      "2m": {
@@ -1272,8 +1326,8 @@
    "stratum": "ridge_or_rim",
    "run_A_60m": {
     "surface_height_m": -2305.00000000006,
-    "horizon_min_deg": 3.8424202534962126,
-    "horizon_max_deg": 15.106987966907518,
+    "horizon_min_deg": 3.8424202534953023,
+    "horizon_max_deg": 15.106987968380805,
     "share_of_horizon_set_closer_than_1km": 0.3784722222222222,
     "coverage_complete": true,
     "shares": {
@@ -1310,8 +1364,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2144.5,
-    "horizon_min_deg": 0.8000655426057557,
-    "horizon_max_deg": 16.214291128954837,
+    "horizon_min_deg": 0.8000655423666625,
+    "horizon_max_deg": 16.2142911287565,
     "share_of_horizon_set_closer_than_1km": 0.12708333333333333,
     "coverage_complete": true,
     "shares": {
@@ -1338,7 +1392,7 @@
    "run_B_production": {
     "surface_height_m": -2145.4999999999945,
     "horizon_min_deg": 0.8188324380559833,
-    "horizon_max_deg": 16.256084528476936,
+    "horizon_max_deg": 16.256084528504964,
     "share_of_horizon_set_closer_than_1km": 0.125,
     "coverage_complete": true,
     "shares": {
@@ -1358,8 +1412,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -23.5,
-    "horizon_min_deg": -1.8359883230075353,
-    "horizon_max_deg": 20.962110258129975,
+    "horizon_min_deg": -1.8359883230071088,
+    "horizon_max_deg": 20.962110257544058,
     "share_of_horizon_set_closer_than_1km": 0.07361111111111111,
     "coverage_complete": true,
     "shares": {
@@ -1387,7 +1441,7 @@
     "surface_height_m": -23.99999999997999,
     "horizon_min_deg": -1.8353421608216343,
     "horizon_max_deg": 21.24253482689576,
-    "share_of_horizon_set_closer_than_1km": 0.10972222222222222,
+    "share_of_horizon_set_closer_than_1km": 0.1673611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1406,8 +1460,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2414.0000000000136,
-    "horizon_min_deg": 3.0386602745799216,
-    "horizon_max_deg": 10.530827920777257,
+    "horizon_min_deg": 3.0386602849539037,
+    "horizon_max_deg": 10.53082792072089,
     "share_of_horizon_set_closer_than_1km": 0.4479166666666667,
     "coverage_complete": true,
     "shares": {
@@ -1454,8 +1508,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2266.499999999938,
-    "horizon_min_deg": 2.623581039474063,
-    "horizon_max_deg": 19.54280668002352,
+    "horizon_min_deg": 2.6235810395187436,
+    "horizon_max_deg": 19.542806679090003,
     "share_of_horizon_set_closer_than_1km": 0.014583333333333334,
     "coverage_complete": true,
     "shares": {
@@ -1471,7 +1525,7 @@
    },
    "run_B_production": {
     "surface_height_m": -2267.4999999999636,
-    "horizon_min_deg": 2.6264558042111674,
+    "horizon_min_deg": 2.6264558042109307,
     "horizon_max_deg": 19.611986304738608,
     "share_of_horizon_set_closer_than_1km": 0.003472222222222222,
     "coverage_complete": true,
@@ -1492,9 +1546,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1954.4999999999782,
-    "horizon_min_deg": -1.2592701398968698,
-    "horizon_max_deg": 17.13341859993727,
-    "share_of_horizon_set_closer_than_1km": 0.5770833333333333,
+    "horizon_min_deg": -1.2592701398891073,
+    "horizon_max_deg": 17.46162087372423,
+    "share_of_horizon_set_closer_than_1km": 0.5916666666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1510,7 +1564,7 @@
    "run_B_production": {
     "surface_height_m": -1954.000000000049,
     "horizon_min_deg": -1.258714132694734,
-    "horizon_max_deg": 18.248997802187002,
+    "horizon_max_deg": 18.249165657355455,
     "share_of_horizon_set_closer_than_1km": 0.5645833333333333,
     "coverage_complete": true,
     "shares": {
@@ -1530,8 +1584,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 390.4999999999891,
-    "horizon_min_deg": -0.7226175033003194,
-    "horizon_max_deg": 13.665347756148911,
+    "horizon_min_deg": -0.7226175032445326,
+    "horizon_max_deg": 13.665347756154178,
     "share_of_horizon_set_closer_than_1km": 0.34930555555555554,
     "coverage_complete": true,
     "shares": {
@@ -1568,9 +1622,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 58.5,
-    "horizon_min_deg": -0.875193068041931,
-    "horizon_max_deg": 22.30262231593304,
-    "share_of_horizon_set_closer_than_1km": 0.0,
+    "horizon_min_deg": -0.8751930680346125,
+    "horizon_max_deg": 22.302622315961486,
+    "share_of_horizon_set_closer_than_1km": 0.1076388888888889,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1585,13 +1639,13 @@
    },
    "run_B_production": {
     "surface_height_m": 57.0,
-    "horizon_min_deg": -0.8709710952806953,
+    "horizon_min_deg": -0.870971095281461,
     "horizon_max_deg": 22.345187354709058,
-    "share_of_horizon_set_closer_than_1km": 0.28541666666666665,
+    "share_of_horizon_set_closer_than_1km": 0.28958333333333336,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2018864802250538,
+      "sun": 0.19922653084989672,
       "earth": 0.0
      },
      "2m": {
@@ -1606,9 +1660,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 975.0,
-    "horizon_min_deg": -2.5575556615014747,
-    "horizon_max_deg": 19.171502786883632,
-    "share_of_horizon_set_closer_than_1km": 0.35208333333333336,
+    "horizon_min_deg": -2.5575556615006643,
+    "horizon_max_deg": 19.532323568707238,
+    "share_of_horizon_set_closer_than_1km": 0.35694444444444445,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1625,7 +1679,7 @@
     "surface_height_m": 977.5,
     "horizon_min_deg": -2.5585398636846866,
     "horizon_max_deg": 18.24222581854954,
-    "share_of_horizon_set_closer_than_1km": 0.3125,
+    "share_of_horizon_set_closer_than_1km": 0.32222222222222224,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1644,8 +1698,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1842.0,
-    "horizon_min_deg": 0.6013869253956444,
-    "horizon_max_deg": 17.083207451878177,
+    "horizon_min_deg": 0.6013869253945525,
+    "horizon_max_deg": 17.083207451935415,
     "share_of_horizon_set_closer_than_1km": 0.17152777777777778,
     "coverage_complete": true,
     "shares": {
@@ -1661,8 +1715,8 @@
    },
    "run_B_production": {
     "surface_height_m": -1851.4999999999163,
-    "horizon_min_deg": 9.350551756342371,
-    "horizon_max_deg": 37.055597489443564,
+    "horizon_min_deg": 9.970109354646626,
+    "horizon_max_deg": 40.404657522151815,
     "share_of_horizon_set_closer_than_1km": 1.0,
     "coverage_complete": true,
     "shares": {
@@ -1682,14 +1736,14 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2690.000000000009,
-    "horizon_min_deg": 0.5821811621513798,
-    "horizon_max_deg": 9.779644617584772,
-    "share_of_horizon_set_closer_than_1km": 0.24930555555555556,
+    "horizon_min_deg": 0.5821811621226662,
+    "horizon_max_deg": 9.77964461736949,
+    "share_of_horizon_set_closer_than_1km": 0.3506944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.12925270131955552,
-      "earth": 0.42154681572189434
+      "sun": 0.1137036424145476,
+      "earth": 0.42076231452369134
      },
      "2m": {
       "sun": 0.1345603422386477,
@@ -1720,9 +1774,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -218.5,
-    "horizon_min_deg": 0.31091108180899674,
-    "horizon_max_deg": 10.372301010115043,
-    "share_of_horizon_set_closer_than_1km": 0.33958333333333335,
+    "horizon_min_deg": 0.31091108192796896,
+    "horizon_max_deg": 10.372301011812398,
+    "share_of_horizon_set_closer_than_1km": 0.35833333333333334,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1739,7 +1793,7 @@
     "surface_height_m": -219.00000000000455,
     "horizon_min_deg": 0.31196076331883016,
     "horizon_max_deg": 10.344113317491356,
-    "share_of_horizon_set_closer_than_1km": 0.3888888888888889,
+    "share_of_horizon_set_closer_than_1km": 0.39652777777777776,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1758,8 +1812,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1138.5,
-    "horizon_min_deg": 1.9316159582998806,
-    "horizon_max_deg": 17.19243199611875,
+    "horizon_min_deg": 1.9316159616164852,
+    "horizon_max_deg": 17.192431995270454,
     "share_of_horizon_set_closer_than_1km": 0.29305555555555557,
     "coverage_complete": true,
     "shares": {
@@ -1776,7 +1830,7 @@
    "run_B_production": {
     "surface_height_m": -1138.0,
     "horizon_min_deg": 1.8934503095717687,
-    "horizon_max_deg": 17.241646454734926,
+    "horizon_max_deg": 17.241646454989244,
     "share_of_horizon_set_closer_than_1km": 0.29583333333333334,
     "coverage_complete": true,
     "shares": {
@@ -1796,9 +1850,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 1130.5000000000118,
-    "horizon_min_deg": -3.521238307106168,
-    "horizon_max_deg": 22.387875873441388,
-    "share_of_horizon_set_closer_than_1km": 0.04513888888888889,
+    "horizon_min_deg": -3.521238307036848,
+    "horizon_max_deg": 22.387875872652543,
+    "share_of_horizon_set_closer_than_1km": 0.05347222222222222,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1834,8 +1888,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2750.0,
-    "horizon_min_deg": -0.4872181790919358,
-    "horizon_max_deg": 12.84686213190957,
+    "horizon_min_deg": -0.48721817917502663,
+    "horizon_max_deg": 12.846862132179073,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -1872,13 +1926,13 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 442.0,
-    "horizon_min_deg": -2.463180661816334,
-    "horizon_max_deg": 14.807933050203477,
-    "share_of_horizon_set_closer_than_1km": 0.4375,
+    "horizon_min_deg": -2.463180666592221,
+    "horizon_max_deg": 14.807933050204454,
+    "share_of_horizon_set_closer_than_1km": 0.4548611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3016161950466104,
+      "sun": 0.29781626736781464,
       "earth": 0.0
      },
      "2m": {
@@ -1890,7 +1944,7 @@
    "run_B_production": {
     "surface_height_m": 441.0,
     "horizon_min_deg": -2.458548274542578,
-    "horizon_max_deg": 15.01353756114721,
+    "horizon_max_deg": 16.74849335846932,
     "share_of_horizon_set_closer_than_1km": 0.51875,
     "coverage_complete": true,
     "shares": {
@@ -1910,9 +1964,9 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1942.5,
-    "horizon_min_deg": -0.26917105471861225,
-    "horizon_max_deg": 16.33181272704721,
-    "share_of_horizon_set_closer_than_1km": 0.04861111111111111,
+    "horizon_min_deg": -0.2691710554338912,
+    "horizon_max_deg": 16.331812727507305,
+    "share_of_horizon_set_closer_than_1km": 0.058333333333333334,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -1948,8 +2002,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -4112.5,
-    "horizon_min_deg": 14.321884776297562,
-    "horizon_max_deg": 26.97884825380597,
+    "horizon_min_deg": 14.321884776299104,
+    "horizon_max_deg": 26.978848253833927,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -1986,8 +2040,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1838.5000000000327,
-    "horizon_min_deg": 0.9842814459094116,
-    "horizon_max_deg": 20.20386822311005,
+    "horizon_min_deg": 0.9842814504967687,
+    "horizon_max_deg": 20.975890975331925,
     "share_of_horizon_set_closer_than_1km": 0.4673611111111111,
     "coverage_complete": true,
     "shares": {
@@ -2024,8 +2078,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1502.4999999999927,
-    "horizon_min_deg": 2.397624177308286,
-    "horizon_max_deg": 10.780987751904412,
+    "horizon_min_deg": 2.3976241783155343,
+    "horizon_max_deg": 10.780987751450658,
     "share_of_horizon_set_closer_than_1km": 0.4048611111111111,
     "coverage_complete": true,
     "shares": {
@@ -2041,9 +2095,9 @@
    },
    "run_B_production": {
     "surface_height_m": -1503.9999999999745,
-    "horizon_min_deg": 2.408139225293463,
-    "horizon_max_deg": 16.7147925963127,
-    "share_of_horizon_set_closer_than_1km": 0.4215277777777778,
+    "horizon_min_deg": 2.4081392252280747,
+    "horizon_max_deg": 16.934470016797327,
+    "share_of_horizon_set_closer_than_1km": 0.43125,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2062,8 +2116,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2387.500000000009,
-    "horizon_min_deg": -0.11091142030164049,
-    "horizon_max_deg": 14.707705779094658,
+    "horizon_min_deg": -0.11091142031288612,
+    "horizon_max_deg": 14.707705778330388,
     "share_of_horizon_set_closer_than_1km": 0.14930555555555555,
     "coverage_complete": true,
     "shares": {
@@ -2100,8 +2154,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1018.0000000000182,
-    "horizon_min_deg": 2.5630534348849117,
-    "horizon_max_deg": 22.49679202575972,
+    "horizon_min_deg": 2.56305343487166,
+    "horizon_max_deg": 22.496792025635283,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -2117,7 +2171,7 @@
    },
    "run_B_production": {
     "surface_height_m": -1018.5000000000346,
-    "horizon_min_deg": 2.56800964517144,
+    "horizon_min_deg": 2.5680096451723515,
     "horizon_max_deg": 22.602607781844615,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
@@ -2138,13 +2192,13 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -443.5000000000218,
-    "horizon_min_deg": -1.8941520771894607,
-    "horizon_max_deg": 22.704376540140522,
-    "share_of_horizon_set_closer_than_1km": 0.001388888888888889,
+    "horizon_min_deg": -1.8941520771993237,
+    "horizon_max_deg": 22.704376538204148,
+    "share_of_horizon_set_closer_than_1km": 0.008333333333333333,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3891983991272424,
+      "sun": 0.3889777581652478,
       "earth": 0.004707007189218012
      },
      "2m": {
@@ -2156,7 +2210,7 @@
    "run_B_production": {
     "surface_height_m": -442.50000000001455,
     "horizon_min_deg": -1.894612982553939,
-    "horizon_max_deg": 22.677825830252424,
+    "horizon_max_deg": 22.677825830304112,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -2176,8 +2230,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -3661.5,
-    "horizon_min_deg": 1.245067725201591,
-    "horizon_max_deg": 14.29656619129004,
+    "horizon_min_deg": 1.2450677250051818,
+    "horizon_max_deg": 14.296566194973652,
     "share_of_horizon_set_closer_than_1km": 0.08125,
     "coverage_complete": true,
     "shares": {
@@ -2214,8 +2268,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1141.0,
-    "horizon_min_deg": -0.23695568103069936,
-    "horizon_max_deg": 14.808205393110514,
+    "horizon_min_deg": -0.23695567798094658,
+    "horizon_max_deg": 14.808205392614394,
     "share_of_horizon_set_closer_than_1km": 0.33402777777777776,
     "coverage_complete": true,
     "shares": {
@@ -2232,8 +2286,8 @@
    "run_B_production": {
     "surface_height_m": -1142.5,
     "horizon_min_deg": -0.18847484337635848,
-    "horizon_max_deg": 18.011109045831052,
-    "share_of_horizon_set_closer_than_1km": 0.51875,
+    "horizon_max_deg": 21.587675322855326,
+    "share_of_horizon_set_closer_than_1km": 0.5534722222222223,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2252,8 +2306,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1845.5,
-    "horizon_min_deg": -1.3421496223136222,
-    "horizon_max_deg": 14.687143664870701,
+    "horizon_min_deg": -1.342149622308879,
+    "horizon_max_deg": 14.68714366493415,
     "share_of_horizon_set_closer_than_1km": 0.24097222222222223,
     "coverage_complete": true,
     "shares": {
@@ -2290,8 +2344,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": 219.00000000003456,
-    "horizon_min_deg": 4.8507562706431315,
-    "horizon_max_deg": 15.149714162852842,
+    "horizon_min_deg": 4.850756271863799,
+    "horizon_max_deg": 15.149714162993645,
     "share_of_horizon_set_closer_than_1km": 0.9708333333333333,
     "coverage_complete": true,
     "shares": {
@@ -2328,8 +2382,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2363.499999999991,
-    "horizon_min_deg": 0.2361400519600817,
-    "horizon_max_deg": 9.07535571735444,
+    "horizon_min_deg": 0.2361400518487092,
+    "horizon_max_deg": 9.075355717401992,
     "share_of_horizon_set_closer_than_1km": 0.02361111111111111,
     "coverage_complete": true,
     "shares": {
@@ -2366,8 +2420,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -85.9999999999809,
-    "horizon_min_deg": -0.5421098979279131,
-    "horizon_max_deg": 21.046944511086163,
+    "horizon_min_deg": -0.5421098979390158,
+    "horizon_max_deg": 21.04694451106343,
     "share_of_horizon_set_closer_than_1km": 0.05277777777777778,
     "coverage_complete": true,
     "shares": {
@@ -2404,8 +2458,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2314.0000000000346,
-    "horizon_min_deg": 5.737240348701265,
-    "horizon_max_deg": 27.98861105723962,
+    "horizon_min_deg": 5.737240348737519,
+    "horizon_max_deg": 27.98861105719,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -2421,7 +2475,7 @@
    },
    "run_B_production": {
     "surface_height_m": -2313.0000000000236,
-    "horizon_min_deg": 5.7270081372605,
+    "horizon_min_deg": 5.727008137259348,
     "horizon_max_deg": 28.074409692485478,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
@@ -2442,8 +2496,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -811.5,
-    "horizon_min_deg": 11.852318436394748,
-    "horizon_max_deg": 27.505622957053955,
+    "horizon_min_deg": 11.852318436395153,
+    "horizon_max_deg": 27.505622957876316,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -2480,8 +2534,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2917.0,
-    "horizon_min_deg": 5.4021501550410145,
-    "horizon_max_deg": 13.696561508848275,
+    "horizon_min_deg": 5.402150154880166,
+    "horizon_max_deg": 13.696561508633161,
     "share_of_horizon_set_closer_than_1km": 0.8243055555555555,
     "coverage_complete": true,
     "shares": {
@@ -2518,8 +2572,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -2839.999999999887,
-    "horizon_min_deg": 0.034021871931288965,
-    "horizon_max_deg": 15.736853529465051,
+    "horizon_min_deg": 0.034021871930350354,
+    "horizon_max_deg": 16.257401042117884,
     "share_of_horizon_set_closer_than_1km": 0.4326388888888889,
     "coverage_complete": true,
     "shares": {
@@ -2536,7 +2590,7 @@
    "run_B_production": {
     "surface_height_m": -2838.9999999999,
     "horizon_min_deg": 0.030045848153425318,
-    "horizon_max_deg": 15.729779605260099,
+    "horizon_max_deg": 16.301209742077653,
     "share_of_horizon_set_closer_than_1km": 0.4340277777777778,
     "coverage_complete": true,
     "shares": {
@@ -2556,8 +2610,8 @@
    "stratum": "floor",
    "run_A_60m": {
     "surface_height_m": -1187.0,
-    "horizon_min_deg": -1.6538122832023374,
-    "horizon_max_deg": 19.905742748222263,
+    "horizon_min_deg": -1.6538122832198667,
+    "horizon_max_deg": 19.905742748193557,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -2574,8 +2628,8 @@
    "run_B_production": {
     "surface_height_m": -1186.499999999991,
     "horizon_min_deg": -1.6538557677536985,
-    "horizon_max_deg": 19.89529757456886,
-    "share_of_horizon_set_closer_than_1km": 0.014583333333333334,
+    "horizon_max_deg": 19.895297574599837,
+    "share_of_horizon_set_closer_than_1km": 0.02361111111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2594,8 +2648,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2227.5,
-    "horizon_min_deg": -1.0845656902975538,
-    "horizon_max_deg": 6.6031535437391575,
+    "horizon_min_deg": -1.084565690276503,
+    "horizon_max_deg": 6.60315354371257,
     "share_of_horizon_set_closer_than_1km": 0.45555555555555555,
     "coverage_complete": true,
     "shares": {
@@ -2642,13 +2696,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2757.0,
-    "horizon_min_deg": 0.6678754570527213,
-    "horizon_max_deg": 5.823019931544859,
-    "share_of_horizon_set_closer_than_1km": 0.2520833333333333,
+    "horizon_min_deg": 0.6678754570440478,
+    "horizon_max_deg": 5.823019931639285,
+    "share_of_horizon_set_closer_than_1km": 0.25972222222222224,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.12111963030381034,
+      "sun": 0.12039028934610599,
       "earth": 0.17607148767168626
      },
      "2m": {
@@ -2658,7 +2712,7 @@
     },
     "shares_second_cycle": {
      "0m": {
-      "sun": 0.12102156765403498,
+      "sun": 0.12029835561194158,
       "earth": 0.17791016235497453
      },
      "2m": {
@@ -2670,12 +2724,12 @@
    "run_B_production": {
     "surface_height_m": -2756.4999999999927,
     "horizon_min_deg": 0.6709038618478241,
-    "horizon_max_deg": 6.656811711340742,
-    "share_of_horizon_set_closer_than_1km": 0.3958333333333333,
+    "horizon_max_deg": 8.070136783627209,
+    "share_of_horizon_set_closer_than_1km": 0.4048611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.09287145825289131,
+      "sun": 0.0928592004216694,
       "earth": 0.17600406959996567
      },
      "2m": {
@@ -2690,24 +2744,24 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1689.4999999999382,
-    "horizon_min_deg": 3.818606438626595,
-    "horizon_max_deg": 6.833457622429601,
-    "share_of_horizon_set_closer_than_1km": 0.9027777777777778,
+    "horizon_min_deg": 3.824216426192744,
+    "horizon_max_deg": 8.170917013486541,
+    "share_of_horizon_set_closer_than_1km": 0.9340277777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.003744767438297142,
-      "earth": 0.0622820404385852
+      "sun": 0.0,
+      "earth": 0.0361789888515025
      },
      "2m": {
       "sun": 0.11640036528337042,
-      "earth": 0.25563094121757035
+      "earth": 0.25562481230195944
      }
     },
     "shares_second_cycle": {
      "0m": {
-      "sun": 0.00373250960707522,
-      "earth": 0.0597078958819816
+      "sun": 0.0,
+      "earth": 0.03402773947205521
      },
      "2m": {
       "sun": 0.1168110026293048,
@@ -2717,7 +2771,7 @@
    },
    "run_B_production": {
     "surface_height_m": -1689.999999999951,
-    "horizon_min_deg": 4.094796226852551,
+    "horizon_min_deg": 4.297025362750526,
     "horizon_max_deg": 8.554257141048142,
     "share_of_horizon_set_closer_than_1km": 0.8916666666666667,
     "coverage_complete": true,
@@ -2738,13 +2792,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -583.5000000000218,
-    "horizon_min_deg": -0.5751886113964944,
-    "horizon_max_deg": 11.104676940159226,
-    "share_of_horizon_set_closer_than_1km": 0.5368055555555555,
+    "horizon_min_deg": -0.5751886112736082,
+    "horizon_max_deg": 12.15507066357189,
+    "share_of_horizon_set_closer_than_1km": 0.55,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3502920428288623,
+      "sun": 0.3479017657405875,
       "earth": 0.4357781577705457
      },
      "2m": {
@@ -2776,9 +2830,9 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2756.0000000000737,
-    "horizon_min_deg": 1.4995621736617673,
-    "horizon_max_deg": 18.041255292329627,
-    "share_of_horizon_set_closer_than_1km": 0.29791666666666666,
+    "horizon_min_deg": 1.4995621736661289,
+    "horizon_max_deg": 18.08662241652813,
+    "share_of_horizon_set_closer_than_1km": 0.3111111111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2795,7 +2849,7 @@
     "surface_height_m": -2757.500000000042,
     "horizon_min_deg": 1.5022223522163503,
     "horizon_max_deg": 24.564403908309345,
-    "share_of_horizon_set_closer_than_1km": 0.4111111111111111,
+    "share_of_horizon_set_closer_than_1km": 0.4173611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2814,9 +2868,9 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -3150.5,
-    "horizon_min_deg": 2.4583666696289943,
-    "horizon_max_deg": 16.57812392609774,
-    "share_of_horizon_set_closer_than_1km": 0.18680555555555556,
+    "horizon_min_deg": 2.4583666697684734,
+    "horizon_max_deg": 16.5781239262694,
+    "share_of_horizon_set_closer_than_1km": 0.21180555555555555,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -2852,13 +2906,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1452.499999999991,
-    "horizon_min_deg": -0.5195606066421002,
-    "horizon_max_deg": 8.034088278158988,
-    "share_of_horizon_set_closer_than_1km": 0.25763888888888886,
+    "horizon_min_deg": -0.519560606667996,
+    "horizon_max_deg": 8.034088278954224,
+    "share_of_horizon_set_closer_than_1km": 0.2604166666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.1422214867523489,
+      "sun": 0.14049926146566888,
       "earth": 0.5459454158775687
      },
      "2m": {
@@ -2875,7 +2929,7 @@
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.14073828917449635,
+      "sun": 0.1406708711027758,
       "earth": 0.5459454158775687
      },
      "2m": {
@@ -2890,13 +2944,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2238.500000000009,
-    "horizon_min_deg": -0.5290087507584609,
-    "horizon_max_deg": 5.19178390387763,
-    "share_of_horizon_set_closer_than_1km": 0.47708333333333336,
+    "horizon_min_deg": -0.5289906896564087,
+    "horizon_max_deg": 5.191783903659927,
+    "share_of_horizon_set_closer_than_1km": 0.4909722222222222,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2313297908201102,
+      "sun": 0.19226408271584508,
       "earth": 0.27100226156986046
      },
      "2m": {
@@ -2907,13 +2961,13 @@
    },
    "run_B_production": {
     "surface_height_m": -2239.000000000002,
-    "horizon_min_deg": -0.3847899088054427,
-    "horizon_max_deg": 7.140799303231724,
-    "share_of_horizon_set_closer_than_1km": 0.5145833333333333,
+    "horizon_min_deg": 0.11012927884259498,
+    "horizon_max_deg": 7.282584896059047,
+    "share_of_horizon_set_closer_than_1km": 0.5402777777777777,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.08035621257530905,
+      "sun": 0.06375298018521583,
       "earth": 0.2701442133843259
      },
      "2m": {
@@ -2928,14 +2982,14 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -3126.5,
-    "horizon_min_deg": -0.4294049986821992,
-    "horizon_max_deg": 3.525064640732442,
-    "share_of_horizon_set_closer_than_1km": 0.25625,
+    "horizon_min_deg": -0.4294049939223491,
+    "horizon_max_deg": 3.525064640738721,
+    "share_of_horizon_set_closer_than_1km": 0.27152777777777776,
     "coverage_complete": true,
     "shares": {
      "0m": {
       "sun": 0.42390031931650335,
-      "earth": 0.2633595038029921
+      "earth": 0.2608037459932214
      },
      "2m": {
       "sun": 0.42848474819350213,
@@ -2945,13 +2999,13 @@
    },
    "run_B_production": {
     "surface_height_m": -3126.5,
-    "horizon_min_deg": -0.3927830566826571,
+    "horizon_min_deg": -0.000245488110415774,
     "horizon_max_deg": 3.5865621770252143,
-    "share_of_horizon_set_closer_than_1km": 0.34097222222222223,
+    "share_of_horizon_set_closer_than_1km": 0.4875,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.4202965169372583,
+      "sun": 0.39492893522349093,
       "earth": 0.21940292104118017
      },
      "2m": {
@@ -2966,8 +3020,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -424.0,
-    "horizon_min_deg": -0.9064780452745205,
-    "horizon_max_deg": 11.134974847387285,
+    "horizon_min_deg": -0.9064780452827523,
+    "horizon_max_deg": 11.134974847322814,
     "share_of_horizon_set_closer_than_1km": 0.34305555555555556,
     "coverage_complete": true,
     "shares": {
@@ -2984,7 +3038,7 @@
    "run_B_production": {
     "surface_height_m": -422.99999999999636,
     "horizon_min_deg": -0.9067696274222073,
-    "horizon_max_deg": 11.140581872835165,
+    "horizon_max_deg": 11.140581872834906,
     "share_of_horizon_set_closer_than_1km": 0.3402777777777778,
     "coverage_complete": true,
     "shares": {
@@ -3004,8 +3058,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -435.0,
-    "horizon_min_deg": 0.22240011341225036,
-    "horizon_max_deg": 9.458801366408688,
+    "horizon_min_deg": 0.22240011503644344,
+    "horizon_max_deg": 9.458801366657385,
     "share_of_horizon_set_closer_than_1km": 0.003472222222222222,
     "coverage_complete": true,
     "shares": {
@@ -3021,7 +3075,7 @@
    },
    "run_B_production": {
     "surface_height_m": -436.0000000000018,
-    "horizon_min_deg": 0.2327267519243047,
+    "horizon_min_deg": 0.2327267519188845,
     "horizon_max_deg": 9.52628966908606,
     "share_of_horizon_set_closer_than_1km": 0.14583333333333334,
     "coverage_complete": true,
@@ -3042,8 +3096,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1488.0,
-    "horizon_min_deg": -2.371735523299145,
-    "horizon_max_deg": 7.588904772432196,
+    "horizon_min_deg": -2.3717355394888764,
+    "horizon_max_deg": 7.588904769912863,
     "share_of_horizon_set_closer_than_1km": 0.48819444444444443,
     "coverage_complete": true,
     "shares": {
@@ -3080,17 +3134,17 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2358.5000000000055,
-    "horizon_min_deg": 0.5062925098886442,
-    "horizon_max_deg": 12.457266196342578,
-    "share_of_horizon_set_closer_than_1km": 0.55625,
+    "horizon_min_deg": 0.5062925099149126,
+    "horizon_max_deg": 12.457266196523989,
+    "share_of_horizon_set_closer_than_1km": 0.56875,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.06416361753115021,
+      "sun": 0.04726619719173087,
       "earth": 0.4500278865660299
      },
      "2m": {
-      "sun": 0.15590735531162472,
+      "sun": 0.15589509748040278,
       "earth": 0.4591538419107507
      }
     }
@@ -3099,7 +3153,7 @@
     "surface_height_m": -2359.0000000000136,
     "horizon_min_deg": 0.6186671082664063,
     "horizon_max_deg": 12.466653859686579,
-    "share_of_horizon_set_closer_than_1km": 0.64375,
+    "share_of_horizon_set_closer_than_1km": 0.6479166666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -3118,8 +3172,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -3363.4999999999636,
-    "horizon_min_deg": 0.17221131125991535,
-    "horizon_max_deg": 12.96779579179403,
+    "horizon_min_deg": 0.17221131126019273,
+    "horizon_max_deg": 12.967795791634657,
     "share_of_horizon_set_closer_than_1km": 0.0,
     "coverage_complete": true,
     "shares": {
@@ -3137,7 +3191,7 @@
     "surface_height_m": -3363.9999999999654,
     "horizon_min_deg": 0.17356628996505705,
     "horizon_max_deg": 12.977041321439126,
-    "share_of_horizon_set_closer_than_1km": 0.12916666666666668,
+    "share_of_horizon_set_closer_than_1km": 0.18194444444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -3156,8 +3210,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -784.4999999999682,
-    "horizon_min_deg": -1.959892638446657,
-    "horizon_max_deg": 16.648869394270335,
+    "horizon_min_deg": -1.959892638450646,
+    "horizon_max_deg": 16.648869394303418,
     "share_of_horizon_set_closer_than_1km": 0.3548611111111111,
     "coverage_complete": true,
     "shares": {
@@ -3194,8 +3248,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1029.4999999999363,
-    "horizon_min_deg": -1.2932077894904224,
-    "horizon_max_deg": 11.33955222716135,
+    "horizon_min_deg": -1.2932077893950134,
+    "horizon_max_deg": 11.777457626034922,
     "share_of_horizon_set_closer_than_1km": 0.41041666666666665,
     "coverage_complete": true,
     "shares": {
@@ -3212,7 +3266,7 @@
    "run_B_production": {
     "surface_height_m": -1028.9999999999236,
     "horizon_min_deg": -1.293994919511405,
-    "horizon_max_deg": 13.23372535998788,
+    "horizon_max_deg": 13.91085116070057,
     "share_of_horizon_set_closer_than_1km": 0.43194444444444446,
     "coverage_complete": true,
     "shares": {
@@ -3232,8 +3286,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": 4779.999999999976,
-    "horizon_min_deg": -4.842907230765883,
-    "horizon_max_deg": 11.78536547869475,
+    "horizon_min_deg": -4.842907230761298,
+    "horizon_max_deg": 11.785365479056617,
     "share_of_horizon_set_closer_than_1km": 0.5819444444444445,
     "coverage_complete": true,
     "shares": {
@@ -3270,8 +3324,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -987.0000000000146,
-    "horizon_min_deg": -0.005127611864380225,
-    "horizon_max_deg": 15.692442468275177,
+    "horizon_min_deg": -0.005127611906894917,
+    "horizon_max_deg": 15.692442468283485,
     "share_of_horizon_set_closer_than_1km": 0.2798611111111111,
     "coverage_complete": true,
     "shares": {
@@ -3308,9 +3362,9 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -376.49999999992906,
-    "horizon_min_deg": -0.8973430968924524,
-    "horizon_max_deg": 21.69438622393101,
-    "share_of_horizon_set_closer_than_1km": 0.43333333333333335,
+    "horizon_min_deg": -0.8973430968891045,
+    "horizon_max_deg": 22.314199902731765,
+    "share_of_horizon_set_closer_than_1km": 0.4423611111111111,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -3326,8 +3380,8 @@
    "run_B_production": {
     "surface_height_m": -374.99999999998545,
     "horizon_min_deg": -0.8988492904596365,
-    "horizon_max_deg": 22.0840778821674,
-    "share_of_horizon_set_closer_than_1km": 0.4083333333333333,
+    "horizon_max_deg": 23.044407335777063,
+    "share_of_horizon_set_closer_than_1km": 0.42916666666666664,
     "coverage_complete": true,
     "shares": {
      "0m": {
@@ -3346,8 +3400,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1363.0000000000055,
-    "horizon_min_deg": -0.2529967753442437,
-    "horizon_max_deg": 8.963428504080007,
+    "horizon_min_deg": -0.2529967759236431,
+    "horizon_max_deg": 8.963428503445906,
     "share_of_horizon_set_closer_than_1km": 0.08819444444444445,
     "coverage_complete": true,
     "shares": {
@@ -3384,8 +3438,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2841.4999999999836,
-    "horizon_min_deg": 0.2324442682412654,
-    "horizon_max_deg": 3.942467969764336,
+    "horizon_min_deg": 0.23244426820755174,
+    "horizon_max_deg": 3.942467968788554,
     "share_of_horizon_set_closer_than_1km": 0.4625,
     "coverage_complete": true,
     "shares": {
@@ -3402,7 +3456,7 @@
    "run_B_production": {
     "surface_height_m": -2840.4999999999927,
     "horizon_min_deg": 0.20476334417779213,
-    "horizon_max_deg": 4.302337384837022,
+    "horizon_max_deg": 4.302337890477608,
     "share_of_horizon_set_closer_than_1km": 0.4527777777777778,
     "coverage_complete": true,
     "shares": {
@@ -3422,13 +3476,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2870.9999999999945,
-    "horizon_min_deg": 0.8881247863744538,
-    "horizon_max_deg": 5.0312593227833675,
-    "share_of_horizon_set_closer_than_1km": 0.2798611111111111,
+    "horizon_min_deg": 0.9148408226306809,
+    "horizon_max_deg": 5.0312593227540034,
+    "share_of_horizon_set_closer_than_1km": 0.2881944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.3083825178811113,
+      "sun": 0.30821703715961535,
       "earth": 0.038238304496785384
      },
      "2m": {
@@ -3460,8 +3514,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1750.0,
-    "horizon_min_deg": 0.13739777051263483,
-    "horizon_max_deg": 12.386068227725403,
+    "horizon_min_deg": 0.1373977676928757,
+    "horizon_max_deg": 12.387071245955665,
     "share_of_horizon_set_closer_than_1km": 0.5847222222222223,
     "coverage_complete": true,
     "shares": {
@@ -3478,7 +3532,7 @@
    "run_B_production": {
     "surface_height_m": -1749.0,
     "horizon_min_deg": 0.09207066726691146,
-    "horizon_max_deg": 14.061267383751398,
+    "horizon_max_deg": 14.061618278546392,
     "share_of_horizon_set_closer_than_1km": 0.5895833333333333,
     "coverage_complete": true,
     "shares": {
@@ -3498,8 +3552,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": 186.50000000001182,
-    "horizon_min_deg": -1.4960345633989347,
-    "horizon_max_deg": 7.785739489829911,
+    "horizon_min_deg": -1.496034563398546,
+    "horizon_max_deg": 7.785739489543623,
     "share_of_horizon_set_closer_than_1km": 0.36944444444444446,
     "coverage_complete": true,
     "shares": {
@@ -3536,18 +3590,18 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": 1633.4999999999127,
-    "horizon_min_deg": -2.879057393754746,
-    "horizon_max_deg": 22.313551586248078,
-    "share_of_horizon_set_closer_than_1km": 0.5256944444444445,
+    "horizon_min_deg": -2.8790573937547794,
+    "horizon_max_deg": 22.31355158578168,
+    "share_of_horizon_set_closer_than_1km": 0.5284722222222222,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.23301524261312445,
-      "earth": 0.2297791751705371
+      "sun": 0.2323655775583626,
+      "earth": 0.21399721747231262
      },
      "2m": {
       "sun": 0.24158346663724786,
-      "earth": 0.34374636095635597
+      "earth": 0.3437034585470793
      }
     }
    },
@@ -3574,13 +3628,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2688.5,
-    "horizon_min_deg": 0.22356836645860856,
-    "horizon_max_deg": 12.835159835461246,
-    "share_of_horizon_set_closer_than_1km": 0.23541666666666666,
+    "horizon_min_deg": 0.22356836645092476,
+    "horizon_max_deg": 12.83515983435251,
+    "share_of_horizon_set_closer_than_1km": 0.2375,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2842345903739251,
+      "sun": 0.2812130349777214,
       "earth": 0.5366846243894068
      },
      "2m": {
@@ -3592,12 +3646,12 @@
    "run_B_production": {
     "surface_height_m": -2689.999999999979,
     "horizon_min_deg": 0.22470247594633697,
-    "horizon_max_deg": 18.25346426378048,
-    "share_of_horizon_set_closer_than_1km": 0.5118055555555555,
+    "horizon_max_deg": 19.24439438375577,
+    "share_of_horizon_set_closer_than_1km": 0.5381944444444444,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.2341552209167632,
+      "sun": 0.22686181133971967,
       "earth": 0.5366294641489081
      },
      "2m": {
@@ -3612,8 +3666,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -3215.0000000000236,
-    "horizon_min_deg": -0.16244643950952578,
-    "horizon_max_deg": 4.933212940076208,
+    "horizon_min_deg": -0.16244643855175853,
+    "horizon_max_deg": 4.93321294012091,
     "share_of_horizon_set_closer_than_1km": 0.005555555555555556,
     "coverage_complete": true,
     "shares": {
@@ -3650,8 +3704,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -1062.4999999999955,
-    "horizon_min_deg": 0.6196289154511541,
-    "horizon_max_deg": 8.169412711378392,
+    "horizon_min_deg": 0.619628915491353,
+    "horizon_max_deg": 8.169412711370867,
     "share_of_horizon_set_closer_than_1km": 0.1909722222222222,
     "coverage_complete": true,
     "shares": {
@@ -3688,8 +3742,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -27.00000000008913,
-    "horizon_min_deg": 2.6599272578043727,
-    "horizon_max_deg": 22.69935190789963,
+    "horizon_min_deg": 2.6599272580055455,
+    "horizon_max_deg": 22.83342043857852,
     "share_of_horizon_set_closer_than_1km": 0.39444444444444443,
     "coverage_complete": true,
     "shares": {
@@ -3726,13 +3780,13 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -457.50000000001546,
-    "horizon_min_deg": -0.340116717333287,
-    "horizon_max_deg": 8.837046728488813,
-    "share_of_horizon_set_closer_than_1km": 0.27569444444444446,
+    "horizon_min_deg": -0.3401167173185083,
+    "horizon_max_deg": 8.83704672846308,
+    "share_of_horizon_set_closer_than_1km": 0.3076388888888889,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.23414296308554128,
+      "sun": 0.23185687756265283,
       "earth": 0.0
      },
      "2m": {
@@ -3744,12 +3798,12 @@
    "run_B_production": {
     "surface_height_m": -455.50000000001273,
     "horizon_min_deg": -0.3442649689025863,
-    "horizon_max_deg": 10.897791448355003,
-    "share_of_horizon_set_closer_than_1km": 0.38263888888888886,
+    "horizon_max_deg": 12.139657668221409,
+    "share_of_horizon_set_closer_than_1km": 0.3902777777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.21161919821525976,
+      "sun": 0.20916150305526443,
       "earth": 0.0
      },
      "2m": {
@@ -3764,8 +3818,8 @@
    "stratum": "plain_or_slope",
    "run_A_60m": {
     "surface_height_m": -2362.0,
-    "horizon_min_deg": 0.7036547651609613,
-    "horizon_max_deg": 9.717046099805364,
+    "horizon_min_deg": 0.7036547651383565,
+    "horizon_max_deg": 9.717046099782383,
     "share_of_horizon_set_closer_than_1km": 0.07708333333333334,
     "coverage_complete": true,
     "shares": {
@@ -3782,7 +3836,7 @@
    "run_B_production": {
     "surface_height_m": -2362.0000000000036,
     "horizon_min_deg": 0.7086332761645225,
-    "horizon_max_deg": 9.716355358209901,
+    "horizon_max_deg": 9.71635535821128,
     "share_of_horizon_set_closer_than_1km": 0.15208333333333332,
     "coverage_complete": true,
     "shares": {
@@ -3802,13 +3856,13 @@
    "stratum": "site_record",
    "run_A_60m": {
     "surface_height_m": 1701.0,
-    "horizon_min_deg": -2.6318232393394796,
-    "horizon_max_deg": 3.1597635271152136,
-    "share_of_horizon_set_closer_than_1km": 0.23125,
+    "horizon_min_deg": -2.631823239347493,
+    "horizon_max_deg": 3.15976352711753,
+    "share_of_horizon_set_closer_than_1km": 0.27361111111111114,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.781982213886897,
+      "sun": 0.7674199103952538,
       "earth": 0.5670104988324416
      },
      "2m": {
@@ -3818,7 +3872,7 @@
     },
     "shares_second_cycle": {
      "0m": {
-      "sun": 0.7812896464228584,
+      "sun": 0.766764116424881,
       "earth": 0.5673598470222664
      },
      "2m": {
@@ -3829,13 +3883,13 @@
    },
    "run_B_production": {
     "surface_height_m": 1700.5,
-    "horizon_min_deg": -2.63131251978753,
+    "horizon_min_deg": -2.4485313068663337,
     "horizon_max_deg": 4.040285604393171,
-    "share_of_horizon_set_closer_than_1km": 0.43680555555555556,
+    "share_of_horizon_set_closer_than_1km": 0.4979166666666667,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.6526988679892867,
+      "sun": 0.6424819656658147,
       "earth": 0.5669614675075539
      },
      "2m": {
@@ -3850,8 +3904,8 @@
    "stratum": "site_record",
    "run_A_60m": {
     "surface_height_m": 1815.0,
-    "horizon_min_deg": -3.703042294505977,
-    "horizon_max_deg": -0.21428068939384057,
+    "horizon_min_deg": -3.703042294509711,
+    "horizon_max_deg": -0.21428068949028817,
     "share_of_horizon_set_closer_than_1km": 0.1909722222222222,
     "coverage_complete": true,
     "shares": {
@@ -3868,13 +3922,13 @@
    "run_B_production": {
     "surface_height_m": 1814.9999999999964,
     "horizon_min_deg": -2.854536357182929,
-    "horizon_max_deg": 1.4211135417272454,
-    "share_of_horizon_set_closer_than_1km": 0.5847222222222223,
+    "horizon_max_deg": 1.428183871684662,
+    "share_of_horizon_set_closer_than_1km": 0.6527777777777778,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.7841395921819553,
-      "earth": 0.6144850791549451
+      "sun": 0.7496766997015218,
+      "earth": 0.6127076936277664
      },
      "2m": {
       "sun": 0.8438413591483259,
@@ -3888,14 +3942,14 @@
    "stratum": "site_record",
    "run_A_60m": {
     "surface_height_m": 5171.999999999996,
-    "horizon_min_deg": -2.227651177423588,
-    "horizon_max_deg": 0.33478277077650115,
-    "share_of_horizon_set_closer_than_1km": 0.9673611111111111,
+    "horizon_min_deg": -2.019792426512837,
+    "horizon_max_deg": 0.33478277076923446,
+    "share_of_horizon_set_closer_than_1km": 0.9784722222222222,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.5856424022897628,
-      "earth": 0.875215278160835
+      "sun": 0.5842817830241296,
+      "earth": 0.8729230637223356
      },
      "2m": {
       "sun": 0.6581352161362091,
@@ -3905,14 +3959,14 @@
    },
    "run_B_production": {
     "surface_height_m": 5172.00000000001,
-    "horizon_min_deg": -2.0145922824893323,
-    "horizon_max_deg": 3.1937000884399818,
+    "horizon_min_deg": -2.014262058898068,
+    "horizon_max_deg": 3.1940308738943686,
     "share_of_horizon_set_closer_than_1km": 1.0,
     "coverage_complete": true,
     "shares": {
      "0m": {
-      "sun": 0.4805989176335031,
-      "earth": 0.8477883808017848
+      "sun": 0.4726864875797525,
+      "earth": 0.8477822518861737
      },
      "2m": {
       "sun": 0.635850478974755,
