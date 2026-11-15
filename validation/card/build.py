@@ -215,6 +215,19 @@ def _measure_scan_completeness() -> dict:
 # --------------------------------------------------------------------------- card
 
 
+def sub_solar_differences() -> list:
+    """Sub-solar latitude and longitude at the two image times of validation/lro_images/cases.json, minus the values printed
+    on the LROC data pages. Computed here from the ephemeris, so that row 15 follows the code and not a stored table."""
+    cases = {case["id"]: case for case in json.loads((REPO / "validation" / "lro_images" / "cases.json").read_text(encoding="utf-8"))["cases"]}
+    out = []
+    for case_id in ("pole_in_shadow_2022", "nadir_strip_2010"):
+        published = cases[case_id]["published"]
+        et = 0.5 * (float(d.utc_to_et(published["start_time_utc"])) + float(d.utc_to_et(published["stop_time_utc"])))
+        lon, lat = landers.sub_point(et, "SUN")
+        out += [lat - published["sub_solar_latitude_deg"], (lon - published["sub_solar_longitude_deg"] + 180.0) % 360.0 - 180.0]
+    return out
+
+
 def build() -> dict:
     kernels.load()
     t_dir = _load("core/tests/ephem/test_directions.py")
@@ -293,6 +306,7 @@ def build() -> dict:
     if len(sub_solar_thresholds) != 1:
         raise ValueError(f"the two sub-solar criteria state different thresholds: {sorted(sub_solar_thresholds)}")
     sub_solar_threshold = sub_solar_thresholds.pop()
+    sub_solar_measured = max(abs(value) for value in sub_solar_differences())
     lro_where = "validation/lro_images/cases.json (commit fb05da0)"
     lro_how = "committed on its own before any computation for these cases and before the image was downloaded"
     lro_evidence = "validation/lro_images/results/validation_table.md; test validation/tests/test_lro_images.py (stored result; recomputed by validation/lro_images/compare.py)"
@@ -330,10 +344,12 @@ def build() -> dict:
         _check("range", "Independent source", "Distance from the site to the Sun and to the Earth", hz_source,
                hz_limit["range_km_max"], "km", SEPARATE_COMMIT, hz_where,
                max(r["exact"]["range_km_max_abs"] for r in hz_cases), hz_evidence, hz_cases_text, []),
-        _check("tdb_minus_utc", "Independent source", "Time scales: TDB minus UTC", hz_source,
+        _check("tdb_minus_utc", "Independent source", "Time scales: TDB minus UTC from the core's own conversion of the UTC time tags, against the TDB minus UT that Horizons prints for the same rows", hz_source,
                hz_limit["tdb_minus_ut_seconds_max"], "s", SEPARATE_COMMIT, hz_where,
                max(r["tdb_minus_ut_seconds_max_abs"] for r in hz_cases), hz_evidence, hz_cases_text,
-               ["For dates after the last announced leap second both sides assume that no further leap second is introduced."]),
+               ["The ET that the core gives for each row, minus the calendar seconds of its UTC tag, is compared: an error of the conversion shows in full (a shift of 1 s gives 1 s).",
+                f"The leap-second kernel alone (SPICE deltet) agrees with Horizons to {max(r['leap_second_kernel_tdb_minus_ut_seconds_max_abs'] for r in hz_cases):.1e} s.",
+                "For dates after the last announced leap second both sides assume that no further leap second is introduced."]),
         _check("sun_rise_set_time", "Independent source", "Sunrise and sunset times on a smooth sphere (upper limb, with the dip of the horizon)", rts_source,
                rts["thresholds"]["event_time_seconds_max"], "s", SEPARATE_COMMIT, rts_where,
                max(rts_diffs), "validation/horizons_rts/results/validation_table.md; test validation/tests/test_horizons_rts.py", rts_cases_text,
@@ -371,7 +387,7 @@ def build() -> dict:
     ] if strip["status"] in ("PASS", "FAIL") else []) + [
         _check("image_sub_solar_points", "Dated image", "Sub-solar latitude and longitude at the two image times against the values printed on the LROC data pages (largest difference)",
                "LROC data pages of NAC images M1407524099LE and M146846913LE, retrieved 2026-11-14",
-               sub_solar_threshold, "deg", lro_how, lro_where, max(abs(v) for key in ("pole_2022_sub_solar_point", "nadir_2010_sub_solar_point") for v in lro_checks[key]["difference_deg"]), lro_evidence, "2 images, 4 angles printed to 0.01 deg",
+               sub_solar_threshold, "deg", lro_how, lro_where, sub_solar_measured, lro_evidence, "2 images, 4 angles printed to 0.01 deg",
                ["An ephemeris check, independent of terrain."]),
         _check("station_earth_end", "Independent source", "Earth end of a direct link: direction of a lunar site seen from a ground station (observer at the station)", stn_source,
                stn_limit["earth_end_direction_arcsec_max"], "arcsec", SEPARATE_COMMIT, stn_where, stn_sum["earth_end_exact_arcsec_max"], stn_evidence, stn_cases, stn_limits),
@@ -446,7 +462,8 @@ def build() -> dict:
                0, "events", "stated limit of the finder (two crossings closer than the scan step can be missed), written in the module before the test", "core/lsncore/events/finder.py (commit 5a14bcb); test added in commit d93504e",
                scan["unexplained"], "test core/tests/events/test_events.py::test_scan_step_does_not_lose_events_on_a_rough_polar_horizon",
                f"{scan['events']} events on an invented rough polar horizon, 30 days; {scan['short_pairs']} pair(s) closer than 60 s were not reported by the default scan",
-               ["Invented profile, not terrain.", "Pairs of crossings closer than 60 s are not reported by the default scan."], comparison="<="),
+               ["Invented profile, not terrain.", "Pairs of crossings closer than 60 s are not reported by the default scan.",
+                "Both scans are the same finder: an error common to the 5 s and the 60 s scan would leave this row at zero. The independent check at the level of seconds is row 31."], comparison="<="),
     ]
 
     same_family = "Both sides use JPL ephemerides of the same family (DE440 and DE441) and neither has terrain, so an error common to both would not show."
@@ -466,7 +483,7 @@ def build() -> dict:
         "terrain_permanent_shadow": f"One nodal cycle at hourly steps, so a point lit for less than an hour in 18.6 years counts as never lit; {pgda['permanent_shadow']['points_left_out_as_boundary']} points on a boundary of the published map were left out.",
         "image_pole_state": f"One point in one image, read by the camera team and not by us, where the terrain that hides the Sun is only {lro_checks['pole_2022_state']['detail']['obstacle_distance_m'] / 1000.0:.2f} km away, so the state depends on the pole's position on the 20 m elevation grid.",
         "image_strip_agreement": strip_limit,
-        "image_sub_solar_points": "An ephemeris check against values printed to 0.01 deg; it does not involve terrain.",
+        "image_sub_solar_points": "An ephemeris check against values printed to 0.01 deg, recomputed at every build from the two image times; it does not involve terrain.",
         "station_earth_end": station_limit,
         "station_moon_end": station_limit,
         "station_fast_path_earth_end": "As for the station rows above; in addition the fast path evaluates both ends of the link at one instant.",
@@ -483,7 +500,7 @@ def build() -> dict:
         "visible_fraction": "A uniform disc without limb darkening, cut by a straight horizon.",
         "event_time_analytic": "Numerical accuracy for a given horizon profile, not the physical accuracy of an event time on real terrain.",
         "event_time_sphere": "Internal and without terrain.",
-        "scan_completeness": "An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan.",
+        "scan_completeness": "An invented horizon profile, not terrain; pairs of crossings closer than 60 s are not reported by the default scan, and an error common to the 5 s and the 60 s scan would leave this row at zero (the independent check at the level of seconds is row 31).",
     }
     for check in checks:
         check["limit"] = one_sentence[check["id"]]

@@ -27,6 +27,7 @@ from .fetch import HERE, RAW, iter_cases, load_cases
 RESULTS = HERE / "results"
 AU_KM = 149597870.7
 ARCSEC_PER_DEG = 3600.0
+J2000 = dt.datetime(2000, 1, 1, 12, 0, 0)  # the epoch of ET, as a calendar date
 MONTHS = {m: i + 1 for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())}
 
 
@@ -81,8 +82,13 @@ def compare_case(site_def: dict, body: str, ref: dict) -> dict:
             "range_km_max_abs": float(np.abs(ours.range_km - ref["range_km"]).max()),
             "worst_row_utc": ref["utc"][int(sep.argmax())],
         }
-    ours_tdb_utc = np.array([spice.deltet(float(t), "ET") for t in et])
-    out["tdb_minus_ut_seconds_max_abs"] = float(np.abs(ours_tdb_utc - ref["tdb_minus_ut_s"]).max())
+    # TDB - UTC as the core's own conversion gives it: its ET of the row minus the calendar seconds of the UTC tag,
+    # counted without leap seconds. A conversion that is off by a second shows here as a second.
+    calendar_s = np.array([(dt.datetime.fromisoformat(tag) - J2000).total_seconds() for tag in ref["utc"]])
+    out["tdb_minus_ut_seconds_max_abs"] = float(np.abs((np.asarray(et, dtype=np.float64) - calendar_s) - ref["tdb_minus_ut_s"]).max())
+    # The same from the leap-second kernel alone: it tests the kernel, whatever the conversion of the core does.
+    kernel_tdb_utc = np.array([spice.deltet(float(t), "ET") for t in et])
+    out["leap_second_kernel_tdb_minus_ut_seconds_max_abs"] = float(np.abs(kernel_tdb_utc - ref["tdb_minus_ut_s"]).max())
     out["elevation_range_deg"] = [float(ref["el_deg"].min()), float(ref["el_deg"].max())]
     return out
 

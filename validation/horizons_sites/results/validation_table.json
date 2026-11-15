@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-15T01:41:44Z",
+  "generated_utc": "2026-11-15T06:20:51Z",
   "thresholds": {
     "direction_arcsec_max": 1.0,
     "angular_diameter_arcsec_max": 0.1,
@@ -59,7 +59,8 @@
         "range_km_max_abs": 0.0008753836154937744,
         "worst_row_utc": "2026-11-15T10:50:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         1.509663,
         1.593239
@@ -103,7 +104,8 @@
         "range_km_max_abs": 0.0019364694599062204,
         "worst_row_utc": "2026-11-15T23:50:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -4.821915,
         -2.48049
@@ -147,7 +149,8 @@
         "range_km_max_abs": 0.002104252576828003,
         "worst_row_utc": "2026-11-15T16:20:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         0.220246,
         0.266372
@@ -191,7 +194,8 @@
         "range_km_max_abs": 0.0032223568996414542,
         "worst_row_utc": "2026-11-15T22:50:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -4.129668,
         -1.73463
@@ -235,7 +239,8 @@
         "range_km_max_abs": 0.013401716947555542,
         "worst_row_utc": "2026-11-14T15:30:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -0.720624,
         0.84203
@@ -279,7 +284,8 @@
         "range_km_max_abs": 0.014477601915132254,
         "worst_row_utc": "2026-11-15T21:20:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -0.644307,
         1.677748
@@ -323,7 +329,8 @@
         "range_km_max_abs": 0.006808340549468994,
         "worst_row_utc": "2027-01-10T07:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -1.721151,
         1.711982
@@ -367,7 +374,8 @@
         "range_km_max_abs": 0.009888043336104602,
         "worst_row_utc": "2027-10-22T17:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -7.278088,
         6.407289
@@ -411,7 +419,8 @@
         "range_km_max_abs": 0.010772526264190674,
         "worst_row_utc": "2027-07-11T14:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -2.839712,
         2.841371
@@ -455,7 +464,8 @@
         "range_km_max_abs": 0.010805901896674186,
         "worst_row_utc": "2027-03-15T21:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -6.770209,
         7.218741
@@ -499,7 +509,8 @@
         "range_km_max_abs": 0.019208282232284546,
         "worst_row_utc": "2027-04-27T14:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -5.536453,
         5.531074
@@ -543,7 +554,8 @@
         "range_km_max_abs": 0.020015037094708532,
         "worst_row_utc": "2027-10-22T17:00:00"
       },
-      "tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
       "elevation_range_deg": [
         -3.102299,
         10.52796

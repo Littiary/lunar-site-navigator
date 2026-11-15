@@ -1,6 +1,6 @@
 # Validation table: Sun and Earth directions at the three site records versus JPL Horizons
 
-Generated 2026-11-15T01:41:44Z by `validation/horizons_sites/compare.py` from the stored raw responses. Do not edit by hand.
+Generated 2026-11-15T06:20:51Z by `validation/horizons_sites/compare.py` from the stored raw responses. Do not edit by hand.
 
 **12 of 12 queries inside the thresholds, 3840 rows.** Largest direction difference: 0.0039 arcsec with the observer at the site, 0.0972 arcsec through the direction table that the packages use.
 
