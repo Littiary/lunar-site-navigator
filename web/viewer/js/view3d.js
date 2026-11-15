@@ -18,12 +18,17 @@
 // Display settings (lighting mode, exposure, fill lights, slope colours, patch outlines,
 // labels and markers) change how the scene looks, never the geometry or a package value.
 // There is no haze or fog: the Moon has no atmosphere.
+// The look (tone mapping, bloom of the Sun's disc, the Earth's map and rim, the regolith
+// shading, the decorative stars) is in js/look3d.js. It shades pixels only: the package horizon
+// line and the patch outlines are drawn after it, outside the tone mapping, and every position,
+// size and visibility state is set here from the package, the same with or without it.
 //
 // Trigonometry only in the marked display transform.
 
 import * as THREE from "three";
 import { enableViewportResize } from "./viewport-resize.js";
 import { terrainGeometry, groundAtSite, patchesFinestFirst } from "./terrain.js";
+import { chooseQuality, QUALITY, createPipeline, sunMaterial, earthMaterial, earthHaloMaterial, groundMaterial, starField, loadEarthMap, coronaMesh, SUN_RADIANCE } from "./look3d.js";
 
 const PROFILE_R = 60000;   // m: curtain of the package profile, beyond the largest patch (45 km corner)
 const SKY_R = 400000;      // m: Sun and Earth
@@ -59,6 +64,20 @@ export function earthPole(gBody, latDeg, angleDeg, flattening, enu) {
   const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
   return new THREE.Vector3(dot(pole, enu.east), dot(pole, enu.up), -dot(pole, enu.north));
 }
+// Orientation of the Earth's globe for its map (drawing only): the local axes of the sphere
+// (+y north pole, +x longitude 0, -z longitude 90 E, as three.js maps an equirectangular
+// texture) turned so that +y is the package pole and the sub-lunar longitude faces the
+// observer. pole: scene direction of the north pole; toObserver: scene direction from the
+// Earth to the observer; lonDeg: sub-lunar longitude (east positive) of the earth_view record.
+export function earthFrame(pole, toObserver, lonDeg) {
+  const p = pole.clone().normalize();
+  const m = toObserver.clone().sub(p.clone().multiplyScalar(toObserver.dot(p))).normalize();
+  const e = p.clone().cross(m);
+  const c = Math.cos(lonDeg * RAD), s = Math.sin(lonDeg * RAD);
+  const x = m.clone().multiplyScalar(c).sub(e.clone().multiplyScalar(s));
+  const z = m.clone().multiplyScalar(-s).sub(e.clone().multiplyScalar(c));
+  return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, p, z));
+}
 // display-transform:end
 
 // Distance classes of the horizon line, in metres (comparison only). Below 1 km the horizon
@@ -86,10 +105,10 @@ export function webglAvailable() {
 //   enhanced: the same Sun light, a brighter exposure, and a soft fill from the sky and from
 //             the side away from the Sun, so the shape of the ground in shadow can be read.
 const LIGHTING = {
-  physical: { exposure: () => 1.0, sky: 0.035, fill: 0 },
+  physical: { exposure: () => 1.0, sky: 0.012, fill: 0 },
   // Exposure follows the height of the Sun (sunUp: the up component of the unit vector to it),
   // so that sunlit flat ground reads at about the same brightness at 1 and at 6 degrees.
-  enhanced: { exposure: (sunUp) => Math.max(0.8, Math.min(1.6, 0.04 / Math.max(0.005, sunUp))), sky: 0.12, fill: 1.1 },
+  enhanced: { exposure: (sunUp) => Math.max(0.6, Math.min(1.15, 0.04 / Math.max(0.005, sunUp))), sky: 0.05, fill: 0.28 },
 };
 const GROUND = 0x9a968e;
 // Slope shading: the steepness of the drawn surface, from its vertex normals (1 - normal.y is
@@ -107,7 +126,9 @@ function slopeColor(t) {
 // Colours of the patch edges, finest patch first (where the drawn grid changes to the next
 // coarser patch). Named for the legend; the largest patch has no outline.
 export const EDGE_COLORS = [[0x7ee0c3, "green"], [0xd6b36a, "amber"], [0xc39bd3, "violet"], [0x8fb8ff, "blue"]];
-const MARKER_PX = 22;   // diameter of the Sun and Earth markers on screen (not to scale)
+const MARKER_PX = 22;
+// Curtain shade (linear RGB) at the package profile and at its lower edge.
+const CURTAIN_TOP = [0.034, 0.035, 0.038], CURTAIN_BOTTOM = [0.012, 0.012, 0.014];   // diameter of the Sun and Earth markers on screen (not to scale)
 
 function disposeObject(o) {
   o.traverse((x) => {
@@ -164,14 +185,21 @@ function labelLayer(container) {
   return { add, place, items };
 }
 
-export function createView(container, { onCheck } = {}) {
+export function createView(container, options = {}) {
+  const { onCheck } = options;
   if (!webglAvailable()) throw new Error("WebGL is not available in this browser or on this device");
   container.innerHTML = "";
+  const quality = (options.quality === "low" || options.quality === "high") ? options.quality : chooseQuality(container);
+  const Q = QUALITY[quality];
   const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.setPixelRatio(Math.min(Q.maxPixelRatio, window.devicePixelRatio || 1));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // The shadow map depends on the Sun and the terrain only, not on where the reader looks:
+  // it is drawn again when either changes (placeBodies), not every frame.
+  renderer.shadowMap.autoUpdate = false;
   container.appendChild(renderer.domElement);
   const labels = labelLayer(container);
   // Overlay with the package values. It folds to one line (the shares of the discs above the
@@ -207,7 +235,10 @@ export function createView(container, { onCheck } = {}) {
   hudToggle.addEventListener("click", () => { hudOpen = !hudOpen; showHud(); requestDraw(); });
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x020306);
+  scene.background = new THREE.Color(0x000000);
+  // Drawn after the tone-mapped scene: the package horizon line and the patch outlines.
+  const overlay = new THREE.Scene();
+  const depthScene = new THREE.Scene();
   const DEFAULT_FOV = 40;
   const camera = new THREE.PerspectiveCamera(DEFAULT_FOV, 16 / 9, 0.5, 2 * SKY_R);
   const look = { az: 180, el: -5 };
@@ -219,23 +250,36 @@ export function createView(container, { onCheck } = {}) {
   // no shadows): the sky, and a light from the side away from the Sun.
   const sun = new THREE.DirectionalLight(0xffffff, 3.2);
   sun.castShadow = true;
-  const mapSize = container.clientWidth < 700 ? 2048 : 4096;
+  const mapSize = Q.shadowMap;
   sun.shadow.mapSize.set(mapSize, mapSize);
   Object.assign(sun.shadow.camera, { left: -33000, right: 33000, top: 33000, bottom: -33000, near: 100, far: 140000 });
-  sun.shadow.bias = -0.002;   // with normalBias: no shadow streaks on grazing slopes
-  sun.shadow.normalBias = 80;
+  sun.shadow.bias = -0.0005;   // with normalBias: no shadow streaks on grazing slopes
+  sun.shadow.normalBias = 40;
   const sky = new THREE.HemisphereLight(0xdfe3ea, 0x2a2826, 0.035);
   const fill = new THREE.DirectionalLight(0xd8dde6, 0);
   scene.add(sun, sun.target, sky, fill, fill.target);
+  // Extent of the drawn terrain (scene axes), for fitting the shadow camera to it.
+  const terrainBox = new THREE.Box3();
 
-  const ground = new THREE.MeshStandardMaterial({ color: GROUND, roughness: 1, metalness: 0, side: THREE.DoubleSide });
+  const ground = groundMaterial(GROUND);
+  // Depth-only copies of the terrain: the patch outlines are hidden behind the drawn ground.
+  const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide });
   let terrain = null, edges = null, curtain = null, line = null, dots = null, key = null, input = null, pending = false, lastCheck = null;
 
-  const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({ color: 0xfff4dc, toneMapped: false }));
-  const earthGlobe = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24), new THREE.MeshStandardMaterial({ color: 0x6f95d6, roughness: 0.8 }));
-  const earthAxis = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -1.5, 0), new THREE.Vector3(0, 1.5, 0)]), new THREE.LineBasicMaterial({ color: 0xffffff, toneMapped: false }));
+  const pipeline = createPipeline(renderer, scene, overlay, depthScene, camera, quality);
+  const sunLook = sunMaterial();
+  const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), sunLook);
+  const corona = coronaMesh();
+  sunDisc.add(corona);
+  const earthLook = earthMaterial(loadEarthMap(() => { earthLook.uniforms.hasMap.value = 1; requestDraw(); }));
+  const haloLook = earthHaloMaterial();
+  const earthGlobe = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), earthLook);
+  // Atmosphere shell, 1.6 % above the surface (display only; the disc keeps the package size).
+  earthGlobe.add(new THREE.Mesh(new THREE.SphereGeometry(1.016, 64, 32), haloLook));
+  const earthAxis = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -1.5, 0), new THREE.Vector3(0, 1.5, 0)]), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }));
   earthGlobe.add(earthAxis);
-  scene.add(sunDisc, earthGlobe);
+  const stars = starField(Q.stars, 1.8 * SKY_R);
+  scene.add(stars, sunDisc, earthGlobe);
   const sunMark = labels.add("Sun", "sun", { marker: true, priority: 3 });
   const earthMark = labels.add("Earth", "earth", { marker: true, priority: 2 });
   const compass = [["N", 0], ["E", 90], ["S", 180], ["W", 270]].map(([t, az]) => Object.assign(labels.add(t, "compass", { priority: 1 }), { az }));
@@ -278,7 +322,9 @@ export function createView(container, { onCheck } = {}) {
   }
 
   function buildScene(next) {
-    for (const o of [terrain, edges, curtain, line, dots]) if (o) { scene.remove(o); disposeObject(o); }
+    for (const o of [terrain, edges, curtain, line, dots]) if (o) { scene.remove(o); overlay.remove(o); disposeObject(o); }
+    depthScene.clear();
+    terrainBox.makeEmpty();
     terrain = new THREE.Group();
     edges = new THREE.Group();
     const patches = next.terrain ? patchesFinestFirst(next.terrain) : [];
@@ -293,22 +339,34 @@ export function createView(container, { onCheck } = {}) {
         mesh.castShadow = mesh.receiveShadow = true;
         mesh.userData.patch = g.id;
         terrain.add(mesh);
+        depthScene.add(new THREE.Mesh(geom, depthOnly));
       });
+      // Extent of the drawn patches, from the package nodes (for the shadow camera only).
+      for (const p of patches) {
+        const up = next.up[p.id];
+        let lo = Infinity, hi = -Infinity;
+        for (const h of up) if (Number.isFinite(h)) { lo = Math.min(lo, h); hi = Math.max(hi, h); }
+        if (lo > hi) continue;
+        terrainBox.expandByPoint(new THREE.Vector3(p.east_min_m, lo, -p.north_min_m));
+        terrainBox.expandByPoint(new THREE.Vector3(p.east_min_m + (p.count_east - 1) * p.spacing_m, hi, -(p.north_min_m + (p.count_north - 1) * p.spacing_m)));
+      }
       patches.slice(0, -1).forEach((p, k) => edges.add(patchEdge(p, next.up[p.id], EDGE_COLORS[k % EDGE_COLORS.length][0])));
       eyeY = groundAtSite(patches[0], next.up[patches[0].id]) + next.observerHeight;
     } else {
       eyeY = next.observerHeight;
     }
-    scene.add(terrain, edges);
+    scene.add(terrain);
+    overlay.add(edges);
 
     // Package horizon: curtain (terrain beyond the patches) and the authoritative line.
     const az = next.azimuth, n = az.count, eye = new THREE.Vector3(0, eyeY, 0);
-    const pos = [], idx = [], edge = [], edgeCol = [];
+    const pos = [], idx = [], edge = [], edgeCol = [], shade = [];
     for (let k = 0; k <= n; k++) {
       const a = az.start_deg + k * az.step_deg, e = next.horizon[k % n];
       const top = direction(a, e).multiplyScalar(PROFILE_R).add(eye);
       const bottom = direction(a, BOTTOM_DEG).multiplyScalar(PROFILE_R).add(eye);
       pos.push(top.x, top.y, top.z, bottom.x, bottom.y, bottom.z);
+      shade.push(...CURTAIN_TOP, ...CURTAIN_BOTTOM);
       edge.push(direction(a, e).multiplyScalar(PROFILE_R * 0.98).add(eye));
       edgeCol.push(...distanceColor(next.distance ? next.distance[k % n] : NaN));
       if (k < n) idx.push(2 * k, 2 * k + 1, 2 * k + 2, 2 * k + 1, 2 * k + 3, 2 * k + 2);
@@ -316,8 +374,10 @@ export function createView(container, { onCheck } = {}) {
     const cg = new THREE.BufferGeometry();
     cg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
     cg.setIndex(idx);
-    // A flat dark grey, set apart from the sky: terrain beyond the patches, not drawn in relief.
-    curtain = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x2b2d31, side: THREE.DoubleSide, toneMapped: false }));
+    cg.setAttribute("color", new THREE.Float32BufferAttribute(shade, 3));
+    // A dark grey, set apart from the sky: terrain beyond the patches, not drawn in relief. It
+    // fades a little toward its lower edge (colour only; the top edge is the package profile).
+    curtain = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     const lg = new THREE.BufferGeometry().setFromPoints(edge);
     lg.setAttribute("color", new THREE.Float32BufferAttribute(edgeCol, 3));
     const lineMaterial = { vertexColors: true, depthTest: false, transparent: true, opacity: 0.9, toneMapped: false };
@@ -325,7 +385,9 @@ export function createView(container, { onCheck } = {}) {
     dots = new THREE.Points(lg, new THREE.PointsMaterial({ ...lineMaterial, size: 2.5, sizeAttenuation: false }));
     line.renderOrder = dots.renderOrder = 10;
     line.visible = dots.visible = next.showProfile !== false;
-    scene.add(curtain, line, dots);
+    scene.add(curtain);
+    overlay.add(line, dots);
+    fitShadow();
     applyDisplay();
     if (onCheck) onCheck(horizonCheck(next));
   }
@@ -370,11 +432,28 @@ export function createView(container, { onCheck } = {}) {
     const ds = place(sunDisc, sunMark, next.sun, "Sun");
     place(earthGlobe, earthMark, next.earth, "Earth");
     earthAxis.visible = Boolean(next.earthPole);
-    if (next.earthPole) earthAxis.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), next.earthPole.clone().normalize());
+    // The globe turns about its centre only: its position and size stay as placed above.
+    earthGlobe.quaternion.identity();
+    if (next.earthPole) {
+      const lon = next.subLunar ? next.subLunar.lon : NaN;
+      if (earthGlobe.visible && Number.isFinite(lon)) earthGlobe.quaternion.copy(earthFrame(next.earthPole, eye.clone().sub(earthGlobe.position), lon));
+      else earthGlobe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), next.earthPole.clone().normalize());
+    }
+    // No glow from a Sun the package puts wholly below the horizon (its disc is drawn behind the
+    // profile curtain either way).
+    renderer.shadowMap.needsUpdate = true;
+    const sunHidden = Boolean(next.sun) && next.sun.fraction === 0;
+    sunLook.uniforms.radiance.value = sunHidden ? 1 : SUN_RADIANCE;
+    corona.visible = !sunHidden;
+    sunDisc.updateMatrixWorld();
+    corona.lookAt(eye);
     if (ds) {
       sun.position.copy(ds).multiplyScalar(60000);
       sun.target.position.set(0, 0, 0);
       sun.intensity = 3.2;
+      earthLook.uniforms.sunDir.value.copy(ds);
+      haloLook.uniforms.sunDir.value.copy(ds);
+      fitShadow();
       sunUp = ds.y;
       applyDisplay();
       // Fill from the opposite azimuth, 25 degrees up: shows relief on slopes facing away.
@@ -385,6 +464,34 @@ export function createView(container, { onCheck } = {}) {
       c.on = true;
       c.world.copy(direction(c.az, profileAt(next, c.az) + 1.2)).multiplyScalar(PROFILE_R).add(eye);
     }
+  }
+
+  // Shadow camera fitted to the drawn terrain as seen from the Sun: the box of the patches is
+  // taken into the light's view and the orthographic frustum set to its bounds. The light's
+  // direction is kept; only the shadow map's coverage changes.
+  const shadowProbe = new THREE.OrthographicCamera();
+  function fitShadow() {
+    if (terrainBox.isEmpty()) return;
+    const dir = sun.position.clone().sub(sun.target.position).normalize();
+    const center = terrainBox.getCenter(new THREE.Vector3());
+    const reach = terrainBox.getSize(new THREE.Vector3()).length();
+    sun.target.position.copy(center);
+    sun.position.copy(center).add(dir.multiplyScalar(reach));
+    sun.target.updateMatrixWorld();
+    sun.updateMatrixWorld();
+    shadowProbe.position.copy(sun.position);
+    shadowProbe.lookAt(center);
+    shadowProbe.updateMatrixWorld();
+    const lo = new THREE.Vector3(Infinity, Infinity, Infinity), hi = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+    for (let k = 0; k < 8; k++) {
+      const c = new THREE.Vector3(k & 1 ? terrainBox.max.x : terrainBox.min.x, k & 2 ? terrainBox.max.y : terrainBox.min.y, k & 4 ? terrainBox.max.z : terrainBox.min.z);
+      c.applyMatrix4(shadowProbe.matrixWorldInverse);
+      lo.min(c); hi.max(c);
+    }
+    const pad = 0.01 * (hi.x - lo.x);
+    Object.assign(sun.shadow.camera, { left: lo.x - pad, right: hi.x + pad, bottom: lo.y - pad, top: hi.y + pad, near: -hi.z - 500, far: -lo.z + 500 });
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.needsUpdate = true;
   }
 
   // The overlay sits in a corner of the view. If it would cover the Sun or the Earth, it moves
@@ -417,14 +524,15 @@ export function createView(container, { onCheck } = {}) {
   function draw() {
     pending = false;
     const w = container.clientWidth, h = container.clientHeight;
-    const ratio = renderer.getPixelRatio();
-    if (renderer.domElement.width !== Math.floor(w * ratio) || renderer.domElement.height !== Math.floor(h * ratio)) renderer.setSize(w, h, false);
+    pipeline.setSize(w, h);
     camera.aspect = w / Math.max(1, h);
     camera.updateProjectionMatrix();
     camera.position.set(0, eyeY, 0);
     camera.lookAt(direction(look.az, look.el).add(camera.position));
     camera.updateMatrixWorld();
-    renderer.render(scene, camera);
+    stars.position.copy(camera.position);
+    stars.material.uniforms.pixelRatio.value = renderer.getPixelRatio();
+    pipeline.render();
     for (const [mark, mesh] of [[sunMark, sunDisc], [earthMark, earthGlobe]]) {
       mark.radiusPx = discPixels(mesh, h);
       mark.hideRing = mark.radiusPx * 2 > MARKER_PX - 6;
@@ -488,6 +596,11 @@ export function createView(container, { onCheck } = {}) {
       return null;
     },
     display: () => ({ ...display, exposure: renderer.toneMappingExposure, fov: camera.fov, look: { ...look } }),
+    // The render path in use (for tests and the page's notes).
+    look: () => ({ quality, bloom: pipeline.bloom, toneMapping: "ACESFilmic", shadowMapSize: sun.shadow.mapSize.x, pixelRatio: renderer.getPixelRatio() }),
+    // Where the Sun and the Earth are drawn: scene position, scale and visibility of each disc,
+    // as placed from the package. Compared between render paths by web/tests.
+    bodies: () => [["sun", sunDisc], ["earth", earthGlobe]].map(([name, m]) => ({ name, visible: m.visible, position: m.position.toArray(), radius: m.scale.x })),
     resize: requestDraw,
     check: () => lastCheck,
     // Drawn terrain read back: largest difference between a mesh vertex and the package node.
