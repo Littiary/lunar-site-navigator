@@ -83,7 +83,7 @@ The tool returned a plot of Sun azimuth (about 225° falling to about 213°) and
 
 ## 5. Screenshots
 
-All taken on 2026-11-15 (UTC). The QuickMap and Moon Trek captures are 800 × 500 pixel views of a 1280 × 800 viewport. The two Moon Trek captures of the Sun Angle tool are cropped by 22 pixels at the bottom edge, which removes the portal's logo strip; nothing else was edited.
+All taken on 2026-11-15 (UTC). QuickMap screenshots: NASA/GSFC/Arizona State University (LROC imagery, as the LROC terms ask; QuickMap by LROC and Applied Coherent Technology). Moon Trek screenshots: NASA/JPL-Caltech (Solar System Treks). The QuickMap and Moon Trek captures are 800 × 500 pixel views of a 1280 × 800 viewport. The two Moon Trek captures of the Sun Angle tool are cropped by 22 pixels at the bottom edge, which removes the portal's logo strip; nothing else was edited.
 
 | File (`screenshots/`) | Shows |
 |---|---|

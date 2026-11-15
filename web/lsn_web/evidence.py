@@ -119,6 +119,15 @@ def svg_data_uri(svg: str) -> str:
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
 
 
+def chart_img(draw, filename: str, alt: str, chart_links: bool) -> str:
+    """A chart on the page. In the site build (``chart_links``) it is the file ``charts/<filename>``
+    that lsn_web.site writes next to the page, so the page does not carry every chart of every
+    site a second time; on its own the page embeds the chart (``draw()``) and stays one file."""
+    if chart_links:
+        return f'<img src="charts/{e(filename)}" loading="lazy" alt="{e(alt)}">'
+    return f'<img src="{svg_data_uri(draw())}" alt="{e(alt)}">'
+
+
 def metric_value(metric: dict) -> str:
     value, unit = metric.get("value"), metric.get("unit")
     if value is None:
@@ -180,13 +189,15 @@ def site_section(site: SitePackage, notice: str | None = None, chart_links: bool
                                      f"(grid {e(t['scale'])}, step {charts.num(t['step_s'])} s, {t['count']} samples)"))
     out.append(facts(pairs))
 
-    panorama = charts.horizon_panorama(site, notice)
+    panorama_file = "horizon_panorama__" + s["site_id"] + ".svg"
+    panorama = chart_img(lambda: charts.horizon_panorama(site, notice), panorama_file,
+                         "Terrain horizon panorama of " + s["name"], chart_links)
     out.append(
-        f'<figure><div class="chart"><img src="{svg_data_uri(panorama)}" alt="{e("Terrain horizon panorama of " + s["name"])}"></div>'
+        f'<figure><div class="chart">{panorama}</div>'
         "<figcaption>Terrain horizon at the observer height shown, with the paths of the Sun and Earth disc "
         "centres. Drawn from the package arrays without recomputation. On a narrow screen, swipe the chart "
         "sideways."
-        + (f' <a href="charts/horizon_panorama__{e(s["site_id"])}.svg">Open the chart on its own (SVG)</a>.'
+        + (f' <a href="charts/{e(panorama_file)}">Open the chart on its own (SVG)</a>.'
            if chart_links else "")
         + "</figcaption></figure>"
     )
@@ -194,11 +205,14 @@ def site_section(site: SitePackage, notice: str | None = None, chart_links: bool
         out.append('<p class="muted">This package has no time window, so windows, events and metrics are not shown.</p>')
         return "\n".join(out)
 
-    strip = charts.window_strip([site], notice)
+    strip_file = "window_strip__" + s["site_id"] + ".svg"
+    strip = chart_img(lambda: charts.window_strip([site], notice), strip_file,
+                      "Lighting and direct-to-Earth windows of " + s["name"], chart_links)
     out.append(
-        f'<figure><div class="chart"><img src="{svg_data_uri(strip)}" alt="{e("Lighting and direct-to-Earth windows of " + s["name"])}"></div>'
+        f'<figure><div class="chart">{strip}</div>'
         "<figcaption>Visibility windows from the package (<code>timeline.windows</code>)."
-        + (' <a href="charts/window_strip.svg">Open the windows of all sites on one axis (SVG)</a>.' if chart_links else "")
+        + (f' <a href="charts/{e(strip_file)}">Open the chart on its own (SVG)</a>; '
+           '<a href="charts/window_strip.svg">the windows of all sites on one axis (SVG)</a>.' if chart_links else "")
         + "</figcaption></figure>"
     )
 
@@ -389,8 +403,10 @@ def validation_section(card: dict) -> str:
 
 def build_page(sites: list[SitePackage], card_path: str | Path | None = None, notice: str | None = None,
                chart_links: bool = False) -> str:
-    """The evidence page. ``chart_links`` adds links to chart files in a ``charts/`` folder next to
-    the page (as written by ``lsn_web.site``); the page itself stays self-contained."""
+    """The evidence page. Without ``chart_links`` it is one self-contained file with every chart
+    embedded. With ``chart_links`` (the site build) it shows and links the chart files in a
+    ``charts/`` folder next to the page, as written by ``lsn_web.site``; page and folder together
+    work offline."""
     card = json.loads(Path(card_path).read_text(encoding="utf-8")) if card_path else None
     nav = [(f"#site-{slug(s.manifest['site']['site_id'])}", s.manifest["site"]["name"]) for s in sites]
     nav += [("#methods", "Methods"), ("#data", "Data")]

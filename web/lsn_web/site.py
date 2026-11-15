@@ -4,10 +4,10 @@ Output folder (default ``web/dist/site``)::
 
     index.html          the split-screen comparison viewer
     compare.html        the split-screen comparison viewer
-    evidence.html       the evidence page (self-contained; charts embedded)
+    evidence.html       the evidence page; it shows the chart files of charts/
+    charts/*.svg        per site its horizon panorama and window strip, and the windows of all sites
     accuracy.html       the accuracy and limits page (self-contained)
     learn.html          the education page (self-contained; learn.<code>.html for further languages)
-    charts/*.svg        the same charts as separate files, linked from the page
     viewer/             the interactive viewer (copied from web/viewer)
     packages/           the packages the viewer reads: index.json and exactly the files it lists
     notice.json         the notice and the validation summary of the card, for the viewer
@@ -67,7 +67,10 @@ def build(packages: list[str], card: Path | None, notice: str | None, out: Path)
         written.append(path)
 
     for site in sites:
-        write(out / "charts" / f"horizon_panorama__{site.manifest['site']['site_id']}.svg", charts.horizon_panorama(site, notice))
+        site_id = site.manifest["site"]["site_id"]
+        write(out / "charts" / f"horizon_panorama__{site_id}.svg", charts.horizon_panorama(site, notice))
+        if site.timeline:
+            write(out / "charts" / f"window_strip__{site_id}.svg", charts.window_strip([site], notice))
     if any(site.timeline for site in sites):
         write(out / "charts" / "window_strip.svg", charts.window_strip(sites, notice))
     write(out / "evidence.html", evidence.build_page(sites, card, notice, chart_links=True))

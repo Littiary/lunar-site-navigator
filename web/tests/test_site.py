@@ -10,6 +10,7 @@ Run from the repository root:  python -I -m unittest discover -s web/tests -t we
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,7 +39,7 @@ class SiteBuildTests(unittest.TestCase):
             names = sorted(str(p.relative_to(out)).replace("\\", "/") for p in out.rglob("*") if p.is_file())
             top = [n for n in names if not n.startswith(("viewer/", "packages/", "summary/"))]
             self.assertEqual(top, [".nojekyll", "accuracy.html", "charts/horizon_panorama__synthetic-sample-site.svg",
-                                   "charts/window_strip.svg", "compare.html", "evidence.html",
+                                   "charts/window_strip.svg", "charts/window_strip__synthetic-sample-site.svg", "compare.html", "evidence.html",
                                    "index.html", "learn.html", "notice.json"])
             self.assertIn("summary/index.json", names)
             self.assertIn("viewer/index.html", names)
@@ -58,6 +59,24 @@ class SiteBuildTests(unittest.TestCase):
             html = (self.build(tmp, "TEST NOTICE") / "evidence.html").read_text(encoding="utf-8")
             self.assertIn('href="charts/window_strip.svg"', html)
             self.assertIn('href="charts/horizon_panorama__synthetic-sample-site.svg"', html)
+
+    def test_evidence_page_references_chart_files_instead_of_embedding_them(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(tmp, "TEST NOTICE")
+            html = (out / "evidence.html").read_text(encoding="utf-8")
+            self.assertNotIn("data:image", html)
+            sources = re.findall(r'<img src="([^"]+)"', html)
+            sites = package.load_index(INDEX)
+            self.assertEqual(len(sources), 2 * sum(1 for s in sites if s.timeline) + sum(1 for s in sites if not s.timeline))
+            for src in sources:
+                self.assertTrue(src.startswith("charts/") and (out / src).is_file(), src)
+            for s in sites:
+                site_id = s.manifest["site"]["site_id"]
+                self.assertEqual((out / "charts" / f"horizon_panorama__{site_id}.svg").read_text(encoding="utf-8"),
+                                 charts.horizon_panorama(s, "TEST NOTICE"))
+                if s.timeline:
+                    self.assertEqual((out / "charts" / f"window_strip__{site_id}.svg").read_text(encoding="utf-8"),
+                                     charts.window_strip([s], "TEST NOTICE"))
 
     def test_empty_notice_file_means_no_banner(self):
         with tempfile.TemporaryDirectory() as tmp:

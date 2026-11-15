@@ -15,6 +15,7 @@ The reader accepts every `0.x` package (SPEC section 8: minor versions only add 
 | `horizon.terrain_source` | 0.9 | Terrain class next to each site; a warning for every class other than fine |
 | countdown `reference`, event `terrain_quality` | 0.10 | Details of each comparison pane, with the reference instant |
 | `site.programme`, `site.category` | 0.11 | Site selectors grouped by programme, with the category |
+| `request.default_height_m` | 0.12 | Not shown as such; the default height is marked from `horizon.default_height_index`, as before. The values that 0.12 corrects (`latest_landing`, `clipped_end`, `slip_tolerance_is_lower_bound`, `planned_landing` of `null`) are shown as the package gives them |
 
 Packages can be given as directories or through an `index.json`, which lists every package under a package root.
 
@@ -40,7 +41,7 @@ Time-axis labels: dates at 00:00 UTC are placed as `start_utc` + elapsed seconds
 
 ## Evidence page (`lsn_web/evidence.py`)
 
-One self-contained HTML file per build. For each site package it shows:
+One HTML file. For each site package it shows:
 
 - the two charts;
 - the site, frame, sphere radius and time window;
@@ -55,7 +56,7 @@ cd web
 python -m lsn_web.evidence <site package dir | index.json> [...] --card <validation_card.json> [--notice TEXT] --out <file.html>
 ```
 
-The page loads nothing from the network: the charts are embedded as data URIs and the styles are inline. The same file is therefore the offline copy, and it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
+The page loads nothing from the network and its styles are inline. Built with the command above, it embeds every chart as a data URI, so that one file is a complete offline copy. In the site build (`lsn_web.site`) it shows the chart files of `charts/` next to it instead (per site `horizon_panorama__<site_id>.svg` and `window_strip__<site_id>.svg`, the same bytes the command would embed), so that it does not carry all charts of all sites a second time: with the 20 published sites the page is about 2 MB instead of 25.6 MB. The site folder is then the offline copy. Either way it opens without a login in a private window and on a phone. Charts and wide tables scroll sideways inside their own boxes on narrow screens, so the page itself never does. It follows the system light or dark setting.
 
 ## Accuracy and limits page (`lsn_web/accuracy.py`)
 
@@ -130,7 +131,7 @@ Two sites side by side on one shared timeline (Task 7, first milestone):
   - the next events.
 - **Shared time:** a sample of the time grid of the left site. Each pane shows the sample of its own package nearest to that instant, labelled with its own UTC. If the grids ever differ, the pane says so.
 - **Pane view:** one shared switch shows the horizon chart, the sky panorama, the ground view or the calendar in both panes. The panorama is the same `js/sky.js` module, one instance per pane. The "Paths for" span is shared, and clicking a path in either pane moves the shared timeline.
-- **Uncertainty band:** shown only when a package has the windows `<body>_visible_uncertain` (contract 0.4 and later, SPEC 5.7). Path samples inside the band are dashed, and the package's assumption sentence is shown with it. The published packages (contract 0.1) have no band, and the pane says so.
+- **Uncertainty band:** shown only when a package has the windows `<body>_visible_uncertain` (contract 0.4 and later, SPEC 5.7). Path samples inside the band are dashed, and the package's assumption sentence is shown with it. Of the published packages (contract 0.12), the seven south-polar sites have the band; the 13 sites on SLDEM2015 have none, because no height error has been measured for that product, and the pane says so.
 - **Layout:** the panes stack on narrow screens.
 - **Shareable links:** `?a=<site_id>&b=<site_id>&ha=<height index>&hb=<height index>&i=<sample>` opens a selection.
 
@@ -155,7 +156,7 @@ cd web
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page, showing the chart files), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file: per site the panorama and the window strip, and the windows of all sites on one axis), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 
