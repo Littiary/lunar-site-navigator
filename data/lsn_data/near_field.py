@@ -225,7 +225,7 @@ def run(root=None) -> dict:
     rep = {"generated_utc": mf.utc_now(), "criterion": "data/checkpoints/thresholds_near_field.json",
            "checkpoint_1": checkpoint_1(root), "sites": {},
            "what_this_can_and_cannot_show": WHAT_IT_SHOWS}
-    dems = site_dems(root)
+    dems = site_dems(root, include_unapproved=True)  # the check evaluates every layer, approved or not
     t = Terrain([d20, d60] + dems)
     for d5 in dems:
         site = d5.product_id.split("_", 1)[1].capitalize()

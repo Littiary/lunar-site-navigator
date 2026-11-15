@@ -160,6 +160,11 @@ def _check_site(manifest: dict, errors: list[str]) -> None:
         errors.append("horizon/observer_heights_m must be strictly increasing")
     if hz["default_height_index"] >= len(heights):
         errors.append("horizon/default_height_index is out of range")
+    elif "default_height_m" in manifest["request"]:
+        wanted = manifest["request"]["default_height_m"]
+        nearest = min(range(len(heights)), key=lambda k: abs(heights[k] - wanted))
+        if abs(heights[hz["default_height_index"]] - wanted) > abs(heights[nearest] - wanted) + 1e-9:
+            errors.append("horizon/default_height_index is not the observer height nearest to request/default_height_m")
     shape = [len(heights), az["count"]]
     for name in (
         "elevation_deg", "distance_m", "obstacle_height_m", "obstacle_lat_deg",

@@ -456,12 +456,13 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
         )
         t1 = _time.perf_counter()
         timeline = None
+        notes: list[str] = []
         if table_dir is not None:
             default_height = scenario.get("default_height_m", DEFAULT_HEIGHT_M)
             hd = int(np.argmin(np.abs(np.asarray(horizon.observer_heights_m) - default_height)))
             timeline = synthetic_timeline(site, horizon, table_dir, window, scenario["bodies"], thresholds, scenario.get("uncertainty"), hd)
             landing = site.get("landing_utc")
-            add_calendar_to_timeline(
+            notes = add_calendar_to_timeline(
                 timeline, read_package(table_dir), len(horizon.observer_heights_m), scenario.get("requirements"),
                 clock.utc_to_et(landing) if landing else None, clock.et_to_utc,
             )
@@ -484,6 +485,7 @@ def run_synthetic_scenario(scenario: dict, out_root: Path | str) -> list[Path]:
                 default_height_m=scenario.get("default_height_m", DEFAULT_HEIGHT_M),
                 scenario_id=scenario_id,
                 timings_s={"horizon": t1 - t0, "timeline": t2 - t1},
+                warnings=notes,
             )
         )
     pairs = build_pairs_package(out_root, written, synthetic_methods(), scenario_id=scenario_id)  # it picks the site packages

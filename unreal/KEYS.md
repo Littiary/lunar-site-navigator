@@ -86,6 +86,6 @@ A first-time user will not find these without this list:
 
 `LunarSiteNavigator.exe -windowed -ResX=1920 -ResY=1080` runs in a window.
 `-LsnLowQuality` starts with the lower drawing quality.
-`-LsnSite=<site_id>` or `-LsnCompare=<site_id>,<site_id>` chooses the sites shown at the start.
+`-LsnPackage=<package_id>` chooses the package shown at the start (SPEC 7: the input is identified by its package id). `-LsnSite=<site_id>` or `-LsnCompare=<site_id>,<site_id>` chooses by site id; where a site id appears in more than one package the first is shown and the view warns (log and Evidence). `-LsnPackage=<directory>` still opens one package directory without a site list.
 `-LsnControls` starts with the drawer open. `-LsnView=hero`, `-LsnView=lit` or `-LsnView=wide` starts with
 that camera position.

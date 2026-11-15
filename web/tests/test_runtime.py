@@ -66,6 +66,50 @@ function loadSite(dir) {
 
 
 @unittest.skipUnless(NODE, "node is not installed")
+class BandTextTests(unittest.TestCase):
+    """The band of an event shows its dates when its ends fall on different days, and its width."""
+
+    def band(self, event: dict) -> str:
+        return json.loads(run_node(f"""
+          import {{ bandText }} from "{module('panel.js')}";
+          console.log(JSON.stringify(bandText({json.dumps(event)})));"""))
+
+    def test_a_band_over_two_days_shows_both_dates_and_its_width(self):
+        text = self.band({"earliest_utc": "2027-01-10T10:48:00.000Z", "latest_utc": "2027-01-12T04:00:27.000Z"})
+        self.assertIn("41.2 h", text)
+        self.assertIn("2027-01-10 10:48:00", text)
+        self.assertIn("2027-01-12 04:00:27", text)
+
+    def test_a_band_within_one_day_shows_the_day_once(self):
+        text = self.band({"earliest_utc": "2027-11-28T15:19:00Z", "latest_utc": "2027-11-28T17:07:00Z"})
+        self.assertEqual(text, "band 1.8 h, 15:19:00 to 17:07:00 UTC on 2027-11-28")
+
+    def test_ends_cut_by_the_computed_range_are_marked(self):
+        text = self.band({"earliest_utc": "2026-11-14T00:00:00Z", "latest_utc": "2026-11-15T06:00:00Z",
+                          "earliest_clipped": True, "latest_clipped": False})
+        self.assertIn("before 2026-11-14 00:00:00", text)
+        self.assertNotIn("after", text)
+
+    def test_every_published_band_reads_forward_in_time(self):
+        index = json.loads(INDEX.read_text(encoding="utf-8"))
+        events = []
+        for entry in index["packages"]:
+            if entry["kind"] != "site":
+                continue
+            manifest = json.loads((INDEX.parent / entry["path"] / "manifest.json").read_text(encoding="utf-8"))
+            for e in ((manifest.get("timeline") or {}).get("events") or []):
+                if e.get("earliest_utc") and e.get("latest_utc") and e["earliest_utc"][:10] != e["latest_utc"][:10]:
+                    events.append({"earliest_utc": e["earliest_utc"], "latest_utc": e["latest_utc"]})
+        self.assertTrue(events, "the published set has bands over more than one day")
+        texts = json.loads(run_node(f"""
+          import {{ bandText }} from "{module('panel.js')}";
+          console.log(JSON.stringify({json.dumps(events[:200])}.map(bandText)));"""))
+        for e, text in zip(events, texts):
+            self.assertIn(e["earliest_utc"][:10], text)
+            self.assertIn(e["latest_utc"][:10], text)
+
+
+@unittest.skipUnless(NODE, "node is not installed")
 class SiteFileUrlTests(unittest.TestCase):
     def test_site_files_resolve_two_levels_above_the_script(self):
         out = run_node(f"""

@@ -257,8 +257,23 @@ export function terrainQualityText(e) {
   const parts = [q.limiting_pixel ? `pixel ${esc(q.limiting_pixel)}` : "", q.product_id ? esc(q.product_id) : "",
     q.height_error_m !== undefined && q.height_error_m !== null ? `height error ${esc(q.height_error_m)} m` : "",
     q.band_source ? `band from ${esc(q.band_source)}` : "",
-    e.earliest_utc && e.latest_utc ? `band ${esc(e.earliest_utc.slice(11, 19))} to ${esc(e.latest_utc.slice(11, 19))} UTC` : ""];
+    bandText(e)];
   return parts.filter(Boolean).join("; ");
+}
+
+// The earliest and latest time of an event's band, with its width. The dates are shown whenever
+// the two ends fall on different days, so that a band of 41 h never reads as a few hours. An end
+// cut by the computed range (earliest_clipped / latest_clipped) is shown as "before" / "after".
+export function bandText(e) {
+  if (!e.earliest_utc || !e.latest_utc) return "";
+  const a = String(e.earliest_utc), b = String(e.latest_utc);
+  const sameDay = a.slice(0, 10) === b.slice(0, 10);
+  const end = (u) => (sameDay ? u.slice(11, 19) : `${u.slice(0, 10)} ${u.slice(11, 19)}`);
+  const ms = Date.parse(b) - Date.parse(a);
+  const width = Number.isFinite(ms) ? `${fixed(ms / 3.6e6, 1)} h, ` : "";
+  const from = `${e.earliest_clipped ? "before " : ""}${esc(end(a))}`;
+  const to = `${e.latest_clipped ? "after " : ""}${esc(end(b))}`;
+  return `band ${width}${from} to ${to} UTC${sameDay ? ` on ${esc(a.slice(0, 10))}` : ""}`;
 }
 
 export function footerHtml(site) {

@@ -93,6 +93,8 @@ struct FLsnOpportunity
 	FString LatestLandingUtc;
 	bool bClippedStart = false;
 	bool bClippedEnd = false;
+	/** False where the package gives feasible_fraction as null. */
+	bool bHasFeasibleFraction = false;
 	double FeasibleFraction = 0.0;
 	int32 WindowCount = 0;
 	double LongestWindowS = 0.0;

@@ -26,6 +26,9 @@ namespace LsnHudText
 	/** "2 d 03 h 12 min", "3 h 05 min", "4 min 10 s". */
 	LUNARSITENAVIGATOR_API FString FormatDuration(double Seconds);
 
+	/** The share of the range in which a landing meets the requirement, or that it cannot be judged (SPEC 5.6). */
+	LUNARSITENAVIGATOR_API FString FeasibleShareText(const struct FLsnOpportunity& Opportunity, double RangeStartEtS);
+
 	/** UTC label of a position on the time axis; empty when the contract does not allow labelling (leap second in range). */
 	LUNARSITENAVIGATOR_API FString UtcLabelOfPosition(const FLsnSitePackage& Package, double SamplePosition);
 

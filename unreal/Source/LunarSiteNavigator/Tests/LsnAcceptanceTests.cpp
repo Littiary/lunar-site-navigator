@@ -33,6 +33,7 @@
 // so criterion B is the numeric form of "the silhouette matches the panorama".
 
 #include "Tests/LsnTestSupport.h"
+#include "Package/LsnSha256.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -165,8 +166,20 @@ bool FLsnAcceptanceSunFollowsTest::RunTest(const FString& Parameters)
 	Elevation.Init(5.0f, Original.Time.Count);
 	const TArrayView<const uint8> AzBytes(reinterpret_cast<const uint8*>(Azimuth.GetData()), Azimuth.Num() * sizeof(float));
 	const TArrayView<const uint8> ElBytes(reinterpret_cast<const uint8*>(Elevation.GetData()), Elevation.Num() * sizeof(float));
-	TestTrue(TEXT("test set-up: azimuth series written"), FFileHelper::SaveArrayToFile(AzBytes, *FPaths::Combine(Dir, TEXT("series_sun_azimuth_deg.f4"))));
-	TestTrue(TEXT("test set-up: elevation series written"), FFileHelper::SaveArrayToFile(ElBytes, *FPaths::Combine(Dir, TEXT("series_sun_elevation_deg.f4"))));
+	// Since 15 November 2026 the reader checks every array against its SHA-256 (SPEC 3.1): the copy
+	// states the digests of its new arrays, as a package written that way would.
+	FString DigestManifest;
+	FFileHelper::LoadFileToString(DigestManifest, *FPaths::Combine(Dir, TEXT("manifest.json")));
+	auto Rewrite = [&](const TCHAR* File, const TArrayView<const uint8>& Bytes)
+	{
+		TArray<uint8> Old;
+		FFileHelper::LoadFileToArray(Old, *FPaths::Combine(Dir, File));
+		DigestManifest.ReplaceInline(*LsnSha256::HexOf(Old.GetData(), Old.Num()), *LsnSha256::HexOf(Bytes.GetData(), Bytes.Num()));
+		return FFileHelper::SaveArrayToFile(Bytes, *FPaths::Combine(Dir, File));
+	};
+	TestTrue(TEXT("test set-up: azimuth series written"), Rewrite(TEXT("series_sun_azimuth_deg.f4"), AzBytes));
+	TestTrue(TEXT("test set-up: elevation series written"), Rewrite(TEXT("series_sun_elevation_deg.f4"), ElBytes));
+	FFileHelper::SaveStringToFile(DigestManifest, *FPaths::Combine(Dir, TEXT("manifest.json")), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 
 	FSceneFixture Fixture;
 	if (!TestTrue(FString::Printf(TEXT("the scene loads the altered package (%s)"), *Error), Fixture.Scene->LoadPackageDirectory(Dir, Error)))

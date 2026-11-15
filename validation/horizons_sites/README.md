@@ -1,6 +1,6 @@
 # JPL Horizons reference data for the three south-polar site records
 
-Raw JPL Horizons observer tables for the Sun and the Earth seen from the three site records of the data stream (`data/sites/sites.json`, data branch commit `f48b9c4`): Shackleton rim crest, de Gerlache rim crest and Mons Malapert summit. They are reference data for comparing the core's Sun and Earth directions at the real sites. This folder holds the data only; the comparison logic and its thresholds belong to the ephemeris stream (`validation/horizons/compare.py`, `validation/horizons/thresholds.json`).
+Raw JPL Horizons observer tables for the Sun and the Earth seen from the three site records of the data stream (`data/sites/sites.json`, data branch commit `f48b9c4`): Shackleton rim crest, de Gerlache rim crest and Mons Malapert summit. They are reference data for comparing the core's Sun and Earth directions at the real sites. The comparison is `compare.py` in this folder (`python -m validation.horizons_sites.compare`): it runs the code of `validation/horizons/compare.py` with the thresholds of `validation/horizons/thresholds.json` on these responses and writes `results/validation_table.md`. It is an additional check, not a row of the validation card; `validation/tests/test_horizons_sites.py` repeats it.
 
 ## Cases
 

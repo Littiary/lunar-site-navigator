@@ -16,7 +16,7 @@ At the lunar south pole the Sun stays within a few degrees of the horizon, so a 
 - **Plan** dates: a 24-month calendar of sunlight and Earth visibility per site, the landing windows that meet a stated requirement, and how many days a planned landing can slip.
 - **State the uncertainty**: at the polar sites, and for a new coordinate by default, each rise and set time has a band that follows from a stated two-sigma height error of the terrain model. The 13 sites on the 118 m model have none, because no height error has been measured for that model.
 - **Show what to change**: the effect of raising a mast and, at the three project sites, of landing elsewhere inside a 100 m landing circle.
-- **Any coordinate**: twenty sites are published, from Apollo 11 to a point in an Artemis III candidate region. A new coordinate is computed in about ten seconds for a 30-day window on a laptop:
+- **Any coordinate**: twenty sites are published, from Apollo 11 to a point in an Artemis III candidate region. A new coordinate is computed in 10 to 20 seconds for a 30-day window on a laptop:
 
 ```
 python -m lsncore custom --lat -85.3 --lon 31.2 --start 2026-11-15T00:00:00Z --out my-site
@@ -32,22 +32,22 @@ One science core in Python (`core/`) computes everything and writes versioned re
 
 - The horizon is traced on the sphere out to 300 km in every direction.
 - The Sun is a disc, so a partial sunrise counts as sunlight.
-- Terrain: LOLA 5 m site models at the three project sites, the LOLA 20 m and 60 m polar products near the poles, and SLDEM2015 at 118 m per pixel elsewhere (LOLA merged with Kaguya Terrain Camera data).
+- Terrain: LOLA 5 m site models at two of the three project sites (Shackleton rim and de Gerlache rim; at Malapert the 5 m model failed its seam check against the 20 m product, so the 20 m product is used), the LOLA 20 m and 60 m polar products near the poles, and SLDEM2015 at 118 m per pixel elsewhere (LOLA merged with Kaguya Terrain Camera data).
 - Directions of the Sun and the Earth: SPICE with the DE440 ephemeris, light time and stellar aberration included.
 
 Method notes: [docs/method/](docs/method/).
 
 ## Why the numbers can be trusted
 
-For every comparison with an outside source, the pass criterion was committed before the comparison was run; the git history shows the order. The validation card ([validation/card/validation_card.md](validation/card/validation_card.md)) has 32 checks: 31 pass and 1 fails, and the failed one stays on the card.
+For every comparison with an outside source, the pass criterion was committed before the comparison was run; the git history shows the order. Two of the rows below, the eclipse and the Apollo angles, were not blind: earlier research had already compared some of the published values with Horizons, and the card says so. The validation card ([validation/card/validation_card.md](validation/card/validation_card.md)) has 32 checks: 31 pass and 1 fails, and the failed one stays on the card.
 
 | What is computed | Checked against | Largest difference |
 |---|---|---|
 | Directions of the Sun and the Earth | JPL Horizons, 95,676 rows | 0.005 arcseconds computed directly; 0.1 arcseconds through the direction table the packages use |
-| Sunrise and sunset on a smooth sphere | JPL Horizons rise and set tables | 57 seconds |
+| Sunrise and sunset on a smooth sphere | JPL Horizons rise and set tables | within the one-minute steps of the reference (largest 57 s) |
 | Eclipse of March 2025 at the Blue Ghost site | contact times predicted by Firefly | 0.83 minutes |
-| Sun and Earth angles at six Apollo landings | 48 published angles | 0.05° |
-| Sunlit and shadowed ground in an LRO image | LROC camera image strip | 89.3 % agreement against a required 90 %: **fails** |
+| Sun and Earth angles at six Apollo landings | 48 published angles | 0.047° |
+| Sunlit and shadowed ground in an LRO image | LROC camera image strip | 89.6 % agreement against a required 90 %: **fails** |
 
 The terrain model has its own acceptance checks ([data/checkpoints/](data/checkpoints/)):
 

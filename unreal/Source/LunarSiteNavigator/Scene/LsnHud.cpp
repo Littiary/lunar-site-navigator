@@ -38,6 +38,17 @@ FString LsnHudText::FormatDuration(double Seconds)
 	return FString::Printf(TEXT("%lld min %02lld s"), Minutes, Secs);
 }
 
+FString LsnHudText::FeasibleShareText(const FLsnOpportunity& Opportunity, double RangeStartEtS)
+{
+	// No share where the package gives none, or where no landing in the range can be judged at all
+	// (the latest landing that can be judged lies before the start of the range).
+	if (!Opportunity.bHasFeasibleFraction || Opportunity.LatestLandingEtS < RangeStartEtS)
+	{
+		return TEXT("share of the range in which a landing meets it: cannot be judged");
+	}
+	return FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged"), 100.0 * Opportunity.FeasibleFraction);
+}
+
 FString LsnHudText::UtcLabelOfPosition(const FLsnSitePackage& Package, double SamplePosition)
 {
 	// SPEC 3.5: start_utc + i * step_s is a valid label only without a leap second in the range.
@@ -925,6 +936,7 @@ void ALsnHud::DrawHUD()
 	}
 	// What this view draws goes to the interface's list of the frame; a widget over the game view paints it.
 	FLsnUi::Get().BeginView(GFrameCounter);
+	FLsnUi::Get().EndClip();
 	FLsnUi::Get().EnsureWidget(GetWorld());
 	UiOrigin = FVector2D::ZeroVector;
 	UiHeight = Canvas->SizeY;
@@ -1020,11 +1032,6 @@ void ALsnHud::DrawHUD()
 	const double EtS = P.bHasTimeline ? P.EtOfPosition(Position) : 0.0;
 	const int32 Sample = Scene->GetTimeIndex();
 
-	// Side by side: a thin divider between the halves.
-	if (bComparing && View == 0)
-	{
-		DrawRect(FLsnUi::Hairline(), SizeX - U(0.5f), 0.0f, FMath::Max(U(1.0f), 1.0f), SizeY);
-	}
 
 	// --- top left: site name, time, one line of coordinates and observer height -------------
 	float NameY = Margin - U(8.0f);
@@ -1247,6 +1254,10 @@ void ALsnHud::DrawHUD()
 			{
 				Lines.Add({ FString::Printf(TEXT("site %d of %d in the package root"), SiteIndex + 1, SiteCount), Dim, 1.0f });
 			}
+			if (GameMode && !GameMode->GetSelectionWarning().IsEmpty())
+			{
+				Lines.Add({ GameMode->GetSelectionWarning(), Alert, 1.0f });
+			}
 			if (Pawn)
 			{
 				Lines.Add({ FString::Printf(TEXT("looking az %.2f  el %.2f   field of view %.1f deg%s"), Pawn->GetAzimuthDeg(), Pawn->GetElevationDeg(), Pawn->GetFovDeg(),
@@ -1303,7 +1314,7 @@ void ALsnHud::DrawHUD()
 			}
 			if (Opportunity)
 			{
-				FString Summary = FString::Printf(TEXT("landing possible in %.1f %% of the range that can be judged (%d windows, longest %s)"), 100.0 * Opportunity->FeasibleFraction,
+				FString Summary = LsnHudText::FeasibleShareText(*Opportunity, P.Time.StartEtS) + FString::Printf(TEXT(" (%d windows, longest %s)"),
 					Opportunity->WindowCount, *LsnHudText::FormatDuration(Opportunity->LongestWindowS));
 				if (Opportunity->Planned.bPresent)
 				{
@@ -1385,6 +1396,37 @@ void ALsnHud::DrawHUD()
 		DrawButton(FLsnToolbar::LookAtSunBox(WindowX, SizeY, bComparing), TEXT("The Sun is outside the picture: look at it"), TEXT("sun"), false, true, false, TEXT("look_at_sun"));
 	}
 
+	// Side by side, what stands on a body or a ridge of one half is drawn inside that half only.
+	if (bComparing)
+	{
+		FLsnUi::Get().BeginClip(FBox2D(FVector2D(ViewX0 + (View == 1 ? U(5.0f) : 0.0f), 0.0f), FVector2D(ViewX0 + SizeX - (View == 0 ? U(5.0f) : 0.0f), SizeY)));
+		// A body outside the picture of its half: an arrow and its direction at the edge of that half.
+		for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
+		{
+			FLsnBodyAtTime At;
+			if (bOverview || !Pawn || !Scene->SampleBody(Body, Position, At))
+			{
+				continue;
+			}
+			const FVector Screen = Project(Scene->GetEyeUnreal() + FLsnSiteFrame::AzElToUnrealDir(At.AzimuthDeg, At.ElevationDeg) * 1.0e6, false);
+			if (Screen.Z > 0.0 && Screen.X >= 0.0 && Screen.X <= SizeX && Screen.Y >= 0.0 && Screen.Y <= SizeY)
+			{
+				continue;
+			}
+			const bool bSun = FCString::Stricmp(Body, TEXT("SUN")) == 0;
+			const double Turn = FMath::Fmod(At.AzimuthDeg - Pawn->GetAzimuthDeg() + 540.0, 360.0) - 180.0;
+			const bool bRight = Turn >= 0.0;
+			const FString Text = FString::Printf(TEXT("%s %.0f deg to the %s"), bSun ? TEXT("Sun") : TEXT("Earth"), FMath::Abs(Turn), bRight ? TEXT("right") : TEXT("left"));
+			const float TextWidth = TypeWidth(Text, FLsnUi::Body), ArrowX = bRight ? SizeX - Margin : Margin;
+			const float ArrowY = 0.5f * SizeY + (bSun ? 0.0f : U(40.0f));
+			const FLinearColor Color = bSun ? SunColor : EarthColor;
+			const float Dir = bRight ? 1.0f : -1.0f;
+			DrawLine(ArrowX - Dir * U(14.0f), ArrowY - U(10.0f), ArrowX, ArrowY, Color, U(2.0f));
+			DrawLine(ArrowX - Dir * U(14.0f), ArrowY + U(10.0f), ArrowX, ArrowY, Color, U(2.0f));
+			DrawType(Text, Color, bRight ? ArrowX - U(24.0f) - TextWidth : ArrowX + U(24.0f), ArrowY - U(12.0f), FLsnUi::Body);
+		}
+	}
+
 	// A label card at the peak of each highlighted obstacle, and an outline where the hidden body stands.
 	for (const TCHAR* Body : { TEXT("SUN"), TEXT("EARTH") })
 	{
@@ -1452,6 +1494,15 @@ void ALsnHud::DrawHUD()
 			LineY += U(50.0f);
 		}
 		DrawType(Detail, White, CardX + U(16.0f), LineY, FLsnUi::Body);
+	}
+
+	FLsnUi::Get().EndClip();
+	// Side by side: a divider between the halves, above everything of both, down to the shared strip.
+	if (bComparing && View == 1)
+	{
+		const float DividerBottom = Layout.Panel.Min.Y - U(52.0f);
+		DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.85f), -U(5.0f), 0.0f, U(10.0f), DividerBottom);
+		DrawRect(FLinearColor(0.78f, 0.80f, 0.83f, 0.9f), -U(1.25f), 0.0f, FMath::Max(U(2.5f), 2.0f), DividerBottom);
 	}
 
 	// --- bottom: the time strip in its panel ---------------------------------------------------

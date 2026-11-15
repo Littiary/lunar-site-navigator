@@ -1,0 +1,565 @@
+{
+  "generated_utc": "2026-11-15T06:20:51Z",
+  "thresholds": {
+    "direction_arcsec_max": 1.0,
+    "angular_diameter_arcsec_max": 0.1,
+    "range_km_max": 1.0,
+    "tdb_minus_ut_seconds_max": 0.002
+  },
+  "thresholds_from": "validation/horizons/thresholds.json",
+  "core": {
+    "frame": "MOON_ME_DE440_ME421",
+    "aberration_correction": "LT+S",
+    "reference_radius_km": 1737.4,
+    "kernel_set_id": "bfe870fccfa5"
+  },
+  "summary": {
+    "cases": 12,
+    "passed": 12,
+    "rows": 3840,
+    "direction_exact_arcsec_max": 0.0039021337731820864,
+    "direction_table_arcsec_max": 0.09723332679857453
+  },
+  "cases": [
+    {
+      "case_id": "shackleton_rim_crest__sun__weekend",
+      "site": "shackleton_rim_crest",
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:16Z",
+      "raw_sha256": "b3531513afb86913c374f8fb626e6b766a92379cde713415530c9ba169d9b794",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0024853897335573565,
+        "direction_arcsec_rms": 0.0014922232871903015,
+        "elevation_arcsec_max_abs": 0.0017984219417677139,
+        "elevation_arcsec_mean": -4.7810045074482705e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017934567709299869,
+        "angular_diameter_arcsec_max_abs": 0.0004993640461634641,
+        "range_km_max_abs": 0.0021422505378723145,
+        "worst_row_utc": "2026-11-15T10:50:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002478985266134498,
+        "direction_arcsec_rms": 0.0014921631805271788,
+        "elevation_arcsec_max_abs": 0.0018006211050192178,
+        "elevation_arcsec_mean": -4.4943977320422493e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0017876463609303355,
+        "angular_diameter_arcsec_max_abs": 0.0004993468660359213,
+        "range_km_max_abs": 0.0008753836154937744,
+        "worst_row_utc": "2026-11-15T10:50:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        1.509663,
+        1.593239
+      ]
+    },
+    {
+      "case_id": "shackleton_rim_crest__earth__weekend",
+      "site": "shackleton_rim_crest",
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:25Z",
+      "raw_sha256": "327ba0afbf0fb7e5430268220bbf96a7d879cbbdfe245b9686fa13367602e160",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0038684055758841053,
+        "direction_arcsec_rms": 0.0021707705224725533,
+        "elevation_arcsec_max_abs": 0.0019480951380046463,
+        "elevation_arcsec_mean": -0.00018084503253528535,
+        "azimuth_on_sky_arcsec_max_abs": 0.0033979804696496227,
+        "angular_diameter_arcsec_max_abs": 0.0005509327002073405,
+        "range_km_max_abs": 0.0036259134067222476,
+        "worst_row_utc": "2026-11-14T18:10:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.08657800431388228,
+        "direction_arcsec_rms": 0.07830431363876354,
+        "elevation_arcsec_max_abs": 0.08657796719067079,
+        "elevation_arcsec_mean": -0.07812596637312678,
+        "azimuth_on_sky_arcsec_max_abs": 0.0031879786335339846,
+        "angular_diameter_arcsec_max_abs": 0.0005236643146417919,
+        "range_km_max_abs": 0.0019364694599062204,
+        "worst_row_utc": "2026-11-15T23:50:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -4.821915,
+        -2.48049
+      ]
+    },
+    {
+      "case_id": "de_gerlache_rim_crest__sun__weekend",
+      "site": "de_gerlache_rim_crest",
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:28Z",
+      "raw_sha256": "4ccecc73c11b411377b47aedbd453fc73fc005f97118d1c178b3bb3a269f33ad",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.0024488212874800384,
+        "direction_arcsec_rms": 0.001482128174391647,
+        "elevation_arcsec_max_abs": 0.0017904961368553352,
+        "elevation_arcsec_mean": -1.5461253056048975e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018183388539753929,
+        "angular_diameter_arcsec_max_abs": 0.000499133186394829,
+        "range_km_max_abs": 0.002142578363418579,
+        "worst_row_utc": "2026-11-15T10:50:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002484542389038631,
+        "direction_arcsec_rms": 0.0014844259463110607,
+        "elevation_arcsec_max_abs": 0.001789709840527287,
+        "elevation_arcsec_mean": -1.2248280151016743e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.00189032022834645,
+        "angular_diameter_arcsec_max_abs": 0.000499142021226362,
+        "range_km_max_abs": 0.002104252576828003,
+        "worst_row_utc": "2026-11-15T16:20:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        0.220246,
+        0.266372
+      ]
+    },
+    {
+      "case_id": "de_gerlache_rim_crest__earth__weekend",
+      "site": "de_gerlache_rim_crest",
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:31Z",
+      "raw_sha256": "ac2835fce3be8d0093da7e4e9a32a77823727213e7d59381ae5e44aee4cf40c8",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.003648559981920587,
+        "direction_arcsec_rms": 0.0021019059650345365,
+        "elevation_arcsec_max_abs": 0.001923777414170047,
+        "elevation_arcsec_mean": -0.00021787684247768352,
+        "azimuth_on_sky_arcsec_max_abs": 0.003429456960859012,
+        "angular_diameter_arcsec_max_abs": 0.0005551990989260958,
+        "range_km_max_abs": 0.0036262651556171477,
+        "worst_row_utc": "2026-11-14T16:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.08704857794029215,
+        "direction_arcsec_rms": 0.07841464358481744,
+        "elevation_arcsec_max_abs": 0.08701354552007601,
+        "elevation_arcsec_mean": -0.07823806610814663,
+        "azimuth_on_sky_arcsec_max_abs": 0.0032705304915178826,
+        "angular_diameter_arcsec_max_abs": 0.0005438667240014183,
+        "range_km_max_abs": 0.0032223568996414542,
+        "worst_row_utc": "2026-11-15T22:50:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -4.129668,
+        -1.73463
+      ]
+    },
+    {
+      "case_id": "malapert_massif_summit__sun__weekend",
+      "site": "malapert_massif_summit",
+      "body": "SUN",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:33Z",
+      "raw_sha256": "96655c81ed72261b5c44ffdc3db31861e5c5652daf950f0f6d5f442cea6c5213",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.002462467074655803,
+        "direction_arcsec_rms": 0.0014845060506160717,
+        "elevation_arcsec_max_abs": 0.0017957143961799815,
+        "elevation_arcsec_mean": -6.798760229281898e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018126884657802406,
+        "angular_diameter_arcsec_max_abs": 0.00049831248998089,
+        "range_km_max_abs": 0.0021428167819976807,
+        "worst_row_utc": "2026-11-14T23:20:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0025354440570066815,
+        "direction_arcsec_rms": 0.0014931616148398518,
+        "elevation_arcsec_max_abs": 0.0017983738134663696,
+        "elevation_arcsec_mean": -6.45093593364931e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019132688320909984,
+        "angular_diameter_arcsec_max_abs": 0.0004984447473361797,
+        "range_km_max_abs": 0.013401716947555542,
+        "worst_row_utc": "2026-11-14T15:30:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -0.720624,
+        0.84203
+      ]
+    },
+    {
+      "case_id": "malapert_massif_summit__earth__weekend",
+      "site": "malapert_massif_summit",
+      "body": "EARTH",
+      "span": "weekend",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2026-11-16T00:00:00",
+      "retrieved_utc": "2026-11-14T11:23:36Z",
+      "raw_sha256": "c43cd6d92f78dc7830c64be7336f4ffe8f1dbdcbf0fcea2310a08f23b9f646f2",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 289,
+      "exact": {
+        "direction_arcsec_max": 0.00370249943599807,
+        "direction_arcsec_rms": 0.0021855607193170907,
+        "elevation_arcsec_max_abs": 0.00196965822691908,
+        "elevation_arcsec_mean": -0.00021278421287395023,
+        "azimuth_on_sky_arcsec_max_abs": 0.0034044192132806554,
+        "angular_diameter_arcsec_max_abs": 0.0005420023489932646,
+        "range_km_max_abs": 0.003625320619903505,
+        "worst_row_utc": "2026-11-14T07:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.08706481070401371,
+        "direction_arcsec_rms": 0.07869358189910555,
+        "elevation_arcsec_max_abs": 0.08702638440762911,
+        "elevation_arcsec_mean": -0.07851488587788696,
+        "azimuth_on_sky_arcsec_max_abs": 0.0036342065906421533,
+        "angular_diameter_arcsec_max_abs": 0.0007123272462195018,
+        "range_km_max_abs": 0.014477601915132254,
+        "worst_row_utc": "2026-11-15T21:20:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -0.644307,
+        1.677748
+      ]
+    },
+    {
+      "case_id": "shackleton_rim_crest__sun__year",
+      "site": "shackleton_rim_crest",
+      "body": "SUN",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:38Z",
+      "raw_sha256": "8db7ff31f567f9d8dce1ba0ef69ac5e1d668085499255931297ce840c0e9bdf8",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.0024307600373671386,
+        "direction_arcsec_rms": 0.0014754411547150484,
+        "elevation_arcsec_max_abs": 0.0017983769625473656,
+        "elevation_arcsec_mean": 1.624051674789375e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019450000557674908,
+        "angular_diameter_arcsec_max_abs": 0.0004997069847831881,
+        "range_km_max_abs": 0.0024892091751098633,
+        "worst_row_utc": "2027-01-10T07:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.002441197244730728,
+        "direction_arcsec_rms": 0.0014754604983238822,
+        "elevation_arcsec_max_abs": 0.0018050539151381884,
+        "elevation_arcsec_mean": 1.6378263917422758e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019357987281723413,
+        "angular_diameter_arcsec_max_abs": 0.000499713864428486,
+        "range_km_max_abs": 0.006808340549468994,
+        "worst_row_utc": "2027-01-10T07:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -1.721151,
+        1.711982
+      ]
+    },
+    {
+      "case_id": "shackleton_rim_crest__earth__year",
+      "site": "shackleton_rim_crest",
+      "body": "EARTH",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:41Z",
+      "raw_sha256": "c99b0145cb9aa8530f2f47bb442896046bd6a1f7785d79e73367ed1423965e36",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.003817987702400557,
+        "direction_arcsec_rms": 0.001954709183414354,
+        "elevation_arcsec_max_abs": 0.0019209733052250044,
+        "elevation_arcsec_mean": -6.110898189653761e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0036801959161362214,
+        "angular_diameter_arcsec_max_abs": 0.0005518758016478387,
+        "range_km_max_abs": 0.004086758999619633,
+        "worst_row_utc": "2027-05-11T03:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09711379775466503,
+        "direction_arcsec_rms": 0.06552947779639587,
+        "elevation_arcsec_max_abs": 0.09711056662449202,
+        "elevation_arcsec_mean": -0.0018662972872313468,
+        "azimuth_on_sky_arcsec_max_abs": 0.003895884359818553,
+        "angular_diameter_arcsec_max_abs": 0.0006012836738591432,
+        "range_km_max_abs": 0.009888043336104602,
+        "worst_row_utc": "2027-10-22T17:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -7.278088,
+        6.407289
+      ]
+    },
+    {
+      "case_id": "de_gerlache_rim_crest__sun__year",
+      "site": "de_gerlache_rim_crest",
+      "body": "SUN",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:44Z",
+      "raw_sha256": "9fce722420da3d9825a665adf59bb0cd2858bb22c676685ae8c0edac5f76ac6a",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.002505861527757842,
+        "direction_arcsec_rms": 0.0015096664213890836,
+        "elevation_arcsec_max_abs": 0.001796245416108011,
+        "elevation_arcsec_mean": -4.985554808811514e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018606374976810553,
+        "angular_diameter_arcsec_max_abs": 0.0004993036827727337,
+        "range_km_max_abs": 0.002489447593688965,
+        "worst_row_utc": "2027-07-11T14:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0025635215013476865,
+        "direction_arcsec_rms": 0.0015135171646039722,
+        "elevation_arcsec_max_abs": 0.00180211360834015,
+        "elevation_arcsec_mean": -4.9683071730399905e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0019114122469653244,
+        "angular_diameter_arcsec_max_abs": 0.0004993123070562433,
+        "range_km_max_abs": 0.010772526264190674,
+        "worst_row_utc": "2027-07-11T14:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -2.839712,
+        2.841371
+      ]
+    },
+    {
+      "case_id": "de_gerlache_rim_crest__earth__year",
+      "site": "de_gerlache_rim_crest",
+      "body": "EARTH",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:47Z",
+      "raw_sha256": "a81b82403919dfae278a2e314f9c6839941b77d541547743a59c58db1ac47125",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.0037541595784867394,
+        "direction_arcsec_rms": 0.0020293365862526377,
+        "elevation_arcsec_max_abs": 0.001938434475334816,
+        "elevation_arcsec_mean": -6.292232251604323e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.003641993458893974,
+        "angular_diameter_arcsec_max_abs": 0.0005514438089448959,
+        "range_km_max_abs": 0.004083320091012865,
+        "worst_row_utc": "2026-11-29T15:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09723332679857453,
+        "direction_arcsec_rms": 0.06560000273832445,
+        "elevation_arcsec_max_abs": 0.0971870509477668,
+        "elevation_arcsec_mean": -0.0018672796635080756,
+        "azimuth_on_sky_arcsec_max_abs": 0.004011261217334856,
+        "angular_diameter_arcsec_max_abs": 0.0006948503196326783,
+        "range_km_max_abs": 0.010805901896674186,
+        "worst_row_utc": "2027-03-15T21:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -6.770209,
+        7.218741
+      ]
+    },
+    {
+      "case_id": "malapert_massif_summit__sun__year",
+      "site": "malapert_massif_summit",
+      "body": "SUN",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:50Z",
+      "raw_sha256": "4002a9fee341582dd142b735f856390a20a6bd1c0d8293e6b0d1107d7c3993b1",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.002526582686606708,
+        "direction_arcsec_rms": 0.0014415849650588981,
+        "elevation_arcsec_max_abs": 0.0017981713254400233,
+        "elevation_arcsec_mean": 9.045027999529593e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.0018136792219992212,
+        "angular_diameter_arcsec_max_abs": 0.0004979121415544796,
+        "range_km_max_abs": 0.0024895668029785156,
+        "worst_row_utc": "2027-04-27T14:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.0025565271375774653,
+        "direction_arcsec_rms": 0.0014559385628162816,
+        "elevation_arcsec_max_abs": 0.00179758393130669,
+        "elevation_arcsec_mean": 9.07909050361473e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.002020155425001754,
+        "angular_diameter_arcsec_max_abs": 0.0004977873834377533,
+        "range_km_max_abs": 0.019208282232284546,
+        "worst_row_utc": "2027-04-27T14:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -5.536453,
+        5.531074
+      ]
+    },
+    {
+      "case_id": "malapert_massif_summit__earth__year",
+      "site": "malapert_massif_summit",
+      "body": "EARTH",
+      "span": "year",
+      "first_utc": "2026-11-14T00:00:00",
+      "last_utc": "2027-11-13T14:00:00",
+      "retrieved_utc": "2026-11-14T11:23:52Z",
+      "raw_sha256": "31c2d56f87bd043b4944547c70815be1b4e4d87aacae0a0292a21d2a89a6156e",
+      "status": "PASS",
+      "checks": {
+        "direction_exact": true,
+        "direction_table": true,
+        "angular_diameter": true,
+        "range": true,
+        "tdb_minus_ut": true
+      },
+      "rows": 351,
+      "exact": {
+        "direction_arcsec_max": 0.0039021337731820864,
+        "direction_arcsec_rms": 0.0020029474309503706,
+        "elevation_arcsec_max_abs": 0.001913784362983506,
+        "elevation_arcsec_mean": -1.217920156363747e-05,
+        "azimuth_on_sky_arcsec_max_abs": 0.00362278162984508,
+        "angular_diameter_arcsec_max_abs": 0.0005575483555730898,
+        "range_km_max_abs": 0.004082877887412906,
+        "worst_row_utc": "2027-05-11T03:00:00"
+      },
+      "table": {
+        "direction_arcsec_max": 0.09705718321694778,
+        "direction_arcsec_rms": 0.06574713928814489,
+        "elevation_arcsec_max_abs": 0.09703832924081723,
+        "elevation_arcsec_mean": -0.001817465759799614,
+        "azimuth_on_sky_arcsec_max_abs": 0.004056304317750193,
+        "angular_diameter_arcsec_max_abs": 0.0008336311047969502,
+        "range_km_max_abs": 0.020015037094708532,
+        "worst_row_utc": "2027-10-22T17:00:00"
+      },
+      "tdb_minus_ut_seconds_max_abs": 2.2160324093078998e-05,
+      "leap_second_kernel_tdb_minus_ut_seconds_max_abs": 2.2132994203616363e-05,
+      "elevation_range_deg": [
+        -3.102299,
+        10.52796
+      ]
+    }
+  ]
+}

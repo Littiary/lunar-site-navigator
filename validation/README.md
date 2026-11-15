@@ -6,7 +6,7 @@ Setup from a fresh clone, where the downloaded inputs go (never into the reposit
 
 ## `card/` — the validation card
 
-`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list every check of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree.
+`card/validation_card.md` (for readers) and `card/validation_card.json` (for the web page and the Unreal scene) list the 32 registered checks of the ephemeris, time and event layer: what was compared, against which source, the threshold and where it was fixed, the measured difference, pass or fail, the main limit of the check in one sentence (`limit` in the JSON file), and what is **not** validated. `python -m validation.card.build` recomputes every number from the stored reference data and the code (the terrain and image rows are read from their stored result tables); `tests/test_card.py` fails if the committed card and a fresh build disagree. Two further comparisons are not rows of the card: the orientation of the Earth (`earth_view/`) and the Sun and Earth directions at the three site records (`horizons_sites/`); both are described under "Additional checks outside the card" below.
 
 The card has 32 checks; 31 pass and one fails: the comparison with an LROC image strip (`lro_images/`, below). The failed check stays on the card as `FAIL` with its cause; a viewer that shows the card must show it too.
 
@@ -32,14 +32,16 @@ The published packages are regenerated, never edited by hand, and are republishe
 
 | Quantity | Threshold | Sun | Earth |
 |---|---|---|---|
-| Correlation over the 100 points | at least 0.90 | 0.9973 | 0.9993 |
-| Median absolute difference | at most 0.05 | 0.0006 | 0.0004 |
+| Correlation over the 100 points | at least 0.90 | 0.9965 | 0.9992 |
+| Median absolute difference | at most 0.05 | 0.0006 | 0.0003 |
 | Median signed difference | within 0.02 | +0.0000 | +0.0000 |
-| 10th to 90th percentile of the difference | reported | -0.004 to +0.007 | -0.002 to +0.001 |
-| Largest absolute difference | reported | 0.079 | 0.044 |
-| Points beyond 0.05 / 0.10 / 0.20 | reported | 2 / 0 / 0 | 0 / 0 / 0 |
+| 10th to 90th percentile of the difference | reported | -0.005 to +0.006 | -0.002 to +0.001 |
+| Largest absolute difference | reported | 0.076 | 0.049 |
+| Points beyond 0.05 / 0.10 / 0.20 | reported | 3 / 0 / 0 | 0 / 0 / 0 |
 
-Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %; all 14 points published as permanently shadowed are never lit in our period, and no other point is.
+Permanent shadow: 98 points compared (2 on a boundary left out), agreement 99.0 % (97 of 98): all 14 points published as permanently shadowed are never lit in our period; one further point, `plain_or_slope_03`, is never lit in ours, while the published map gives it a share of 0.0036.
+
+**Method of this result, and the one it replaced.** The shares were computed on 15 November 2026 with the code of commit `f6cdde3` and the horizon the packages use (contract 0.12): the ground between the point and the first pixel is in the horizon of an observer at 0 m, and the first sample is at most 20 m away. That this default is the one judged, and not the convention of pixel-based maps (`ground_from_first_point`), was decided before this result was seen; no threshold was changed. `results/our_shares.json` records the commit, the terrain layers and the horizon settings, and `tests/test_pgda.py` recomputes four of the points with the current code. The first result (14 November, commit `8693221`) searched from one pixel outward: Sun correlation 0.9973, median absolute differences 0.0006 and 0.0004, permanent-shadow agreement 100 %. The whole difference is on the 60 m product of run A, where ground next to the point now counts: `plain_or_slope_03` has its highest horizon at 7.7° instead of 6.8° and is no longer lit.
 
 **How comparable the two are.**
 
@@ -53,9 +55,9 @@ Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %
 | Elevation model | LDEM_85S_060M of 2016, 60 m | LDEM_60S_60M V2.0, 60 m | not separable from the method; part of the 0.08 largest difference |
 | Location | value of a 60 m pixel | horizon computed at the pixel centre | none at this resolution |
 
-**Where the differences are.** Six of the 100 points differ by more than 0.02 in the Sun share (largest 0.079). Their cause was not traced: terrain closer than 1 km sets a somewhat larger part of their horizon (median 50 % of the azimuths against 34 % for the other points), which fits a difference between the two 60 m elevation models, but the model of 2016 that the reference used is not available to test this.
+**Where the differences are.** Seven of the 100 points differ by more than 0.02 in the Sun share (largest 0.076). Their cause was not traced: terrain closer than 1 km sets a somewhat larger part of their horizon (median 50 % of the azimuths against 34 % for the other points), which fits a difference between the two 60 m elevation models, but the model of 2016 that the reference used is not available to test this.
 
-**Resolution effect (run B, reported, not judged).** With the terrain the tool actually uses (20 m near the pole) the median difference stays at -0.000 (Sun) and +0.000 (Earth), but the mean drops to -0.012 and -0.011, 4 Sun points and 3 Earth points differ by more than 0.10, and the largest differences are 0.18 and 0.32. At the three site records, which sit on crests, the 20 m terrain gives a Sun share lower by 0.075 in the median. Finer terrain resolves small obstacles that a 60 m grid smooths away, so crests come out less lit; this is a property of the data, not a disagreement between the methods.
+**Resolution effect (run B, reported, not judged).** With the terrain the tool actually uses (20 m near the pole) the median difference stays at -0.0005 (Sun) and +0.0000 (Earth), but the mean drops to -0.013 and -0.011, 4 Sun points and 3 Earth points differ by more than 0.10, and the largest differences are 0.18 and 0.32. At the three site records, which sit on crests, the 20 m terrain gives a Sun share that differs from the 60 m run by -0.112 in the median. Finer terrain resolves small obstacles that a 60 m grid smooths away, so crests come out less lit; this is a property of the data, not a disagreement between the methods.
 
 **Limits.**
 
@@ -71,8 +73,9 @@ Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %
 **Result** (`lro_images/results/validation_table.md`): 3 of 4 registered checks pass, 1 fail, 0 not decided.
 
 * **South pole, 18 May 2022, 14:40:49 UTC (NAC M1407524099).** The camera team marks the pole, just inside the rim of Shackleton crater, as "now in shadows". Our state: shadow (visible fraction of the Sun 0.000; upper limb -8.794°, centre -9.057° against a horizon set by terrain 0.12 km away): **PASS**.
-* **Nadir strip across the pole, 13 December 2010, 02:34:25 UTC (NAC M146846913L).** State read from the calibrated browse image by a fixed rule (averaged to 20 m, Otsu threshold, every pixel within 300 m must agree) at points every 500 m along three rows: 298 of 366 points could be read (68 lie within 300 m of a shadow edge or outside the image); our state agrees with the image at 266 of them (89.3 %; criterion 90 %): **FAIL**. Image sunlit and ours sunlit 6, image shadow and ours shadow 260, image sunlit but ours shadow 0, image shadow but ours sunlit 32.
-  Cause, looked for after the result: all 32 disagreements are points the image rule reads as shadow and we call sunlit. There the image is dim, not black (brightness 6 to 37 of 255, median 23, against 3 in agreed shadow), and our Sun is only +0.02° to +0.46° above the terrain horizon: ground lit at a grazing angle. One brightness threshold for the whole image (69.5) cannot tell that from shadow. Threshold-free, a point we call sunlit is brighter in the image than a point we call shadow with probability 0.996. That number was computed after the fact and does not turn the failed check into a pass.
+* **Nadir strip across the pole, 13 December 2010, 02:34:25 UTC (NAC M146846913L).** State read from the calibrated browse image by a fixed rule (averaged to 20 m, Otsu threshold, every pixel within 300 m must agree) at points every 500 m along three rows: 298 of 366 points could be read (68 lie within 300 m of a shadow edge or outside the image); our state agrees with the image at 267 of them (89.6 %; criterion 90 %): **FAIL**. Image sunlit and ours sunlit 6, image shadow and ours shadow 261, image sunlit but ours shadow 0, image shadow but ours sunlit 31. In the first run, on 14 November with contract 0.11, the agreement was 266 of 298 (89.3 %); see the last paragraph of this item.
+  What the failure shows, looked at after the result: all 31 disagreements are points the image rule reads as shadow and we call sunlit, with the centre of our Sun +0.02° to +0.46° above the terrain horizon. Two causes fit this one-sided pattern, and the data do not decide between them. (1) The image rule: one brightness threshold for the whole image (69.5 of 255) would read ground lit at a grazing angle as shadow. For it: the disputed points are brighter than agreed shadow in the median (23 against 3); with one threshold between 5.5 and 36.5 on the brightness of a point the agreement would be 90 % or more (99.0 % at best; no threshold makes every point agree); and threshold-free, a point we call sunlit is brighter in the image than a point we call shadow with probability 0.998. (2) Our horizon: a terrain horizon that is 0.02° to 0.46° too low at these points gives the same pattern. For it: the brightness of the disputed points (12 to 37) overlaps that of the 84 points which both sides call shadow with our Sun less than 1° below the horizon (3 to 21), and among the disputed points the brightness follows the height of our Sun only weakly (rank correlation 0.34). These numbers were computed after the fact and do not turn the failed check into a pass.
+  **For one point the comparison is no longer blind.** In the first run the horizon search of the core began one pixel from the site (at most 20 m). At `row+700_along11500`, 396 m from the pole, the interpolated ground rises by 0.11 m inside those 20 m towards the Sun, 0.70° seen from the surface and above the Sun's upper limb (0.62°); the core did not have that ground in its horizon and called the point sunlit, while the image reads shadow. That point was examined after the check had failed. The core was then changed (contract 0.12): the ground between the site and the first pixel is in the horizon of an observer at 0 m. This run uses the new horizon. It is the one strip point of the 366 whose state changed (sunlit to shadow; horizon there now +0.71°, set 2 cm from the point), and the agreement went from 266 to 267 of 298. The reading rule and the criterion were not changed, and the check still fails. `tests/test_lro_images.py` samples the ground in front of the first pixel independently at every strip point and finds no state that the new horizon misses.
 * **Sub-solar point at both image times** against the values printed on the LROC data pages (0.01° printed): largest difference 0.004° (criterion 0.02°).
 
 **Limits.**
@@ -102,7 +105,7 @@ Permanent shadow: 98 points compared (2 on a boundary left out), agreement 100 %
 * No operator published a sunrise or sunset clock time for its site. Operational records only bound the computed events from one side: they can show the core wrong, they cannot confirm an event time.
 * Only the Chandrayaan-3 case uses terrain (60 m grid). Its sunrise is set by terrain 0.5 km from the lander, where the grid limits the accuracy.
 * The reference frame of the LROC coordinates is not stated on the two LROC pages (unverified; assumed mean-Earth/polar-axis).
-* UTC before 1972 is handled by the leap-second kernel with a constant offset; the error is about one second, far below the thresholds.
+* UTC before 1972 is handled by the leap-second kernel with a constant TAI − UTC of 9 s. The real offset was 7.6 to 7.9 s at the two landings of 1969 (error 1.1 to 1.4 s) and 9.0 to 9.5 s at the two landings of 1971 (error up to 0.5 s); from 1972 on the kernel is exact. In 1.4 s the Sun moves 0.0002° in the lunar sky, far below the thresholds.
 
 ## `eclipse/` — eclipse of the Sun by the Earth, 14 March 2025
 
@@ -126,6 +129,13 @@ Threshold 2 min per contact and 3.5 min for the duration. The site contacts lie 
 * The operator labels its predicted times "CST". They are read as local Texas time on that date (UTC−5); read as UTC−6 the eclipse would end after the Moon has left the Earth's penumbra, which the NASA chart excludes.
 * One eclipse, one site.
 * The package carries the power line as the series `lit_fraction` of the Sun, sampled at the step of the series (one hour in the published packages), next to the eclipse windows and metrics. Between the Sun and the Earth the lit fraction is computed in the plane tangent to the sky at the Sun; an earlier version took differences of azimuth and elevation instead, which was wrong by up to 0.011 of the disc with the Sun 60° high and by less than 0.001 at the polar sites.
+
+## Additional checks outside the card
+
+The card has 32 rows. Two comparisons with JPL Horizons are not among them; both pass thresholds that were fixed before their data was fetched.
+
+* **`earth_view/` — orientation of the Earth as seen from the Moon.** 4 queries, 550 rows (one week at one hour, two years at one week): sub-lunar latitude within 0.0024°, sub-lunar longitude within 0.0069° (thresholds 0.05°), position angle of the north pole within 0.0002° (threshold 0.1°). Result `earth_view/results/validation_table.md`, test `tests/test_earth_view.py`.
+* **`horizons_sites/` — Sun and Earth directions at the three site records.** 12 queries, 3840 rows (the hackathon weekend at 10 minutes, one year at 25 hours), with the code and the thresholds of `horizons/`: largest difference 0.0039 arcsec with the observer at the site and 0.097 arcsec through the direction table that the packages use (threshold 1 arcsec). `python -m validation.horizons_sites.compare` writes `horizons_sites/results/validation_table.md`; test `tests/test_horizons_sites.py`. As in `horizons/`, both sides use JPL ephemerides of the same family and neither has terrain.
 
 ## `stations/` — ground-station geometry versus JPL Horizons
 
@@ -151,6 +161,7 @@ The remaining 0.2″ to 0.4″ are larger than for the Sun and the Earth's centr
 * No link budget, antenna pattern or frequency; near the lunar horizon a real link suffers from multipath, and the lunar-end mask is 0° here.
 * Three Deep Space Network complexes only.
 * Dates after 8 February 2027 use the long-term Earth orientation kernel, whose rotation angle is a prediction; the effect on a station rise or set is of the order of a second.
+* The station differences (0.42 arcsec at the Earth end, 0.19 arcsec at the Moon end) are about a hundred times those of the Sun and Earth directions. The cause was not looked for. A difference of this size is what a different instant for the Earth's rotation within the 1.3 s of light time would give (a station moves up to 0.6 km in that time, 0.3 arcsec seen from the Moon); this is an estimate, not a finding. Both differences are inside the 1 arcsec threshold, and a station rises or sets on the lunar horizon over minutes.
 
 ## `horizons/` — Sun and Earth directions versus JPL Horizons
 

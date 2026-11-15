@@ -28,10 +28,11 @@ param(
     [string]$HiddenUtc = "2027-07-29T06:00:00Z",
     [string]$BandUtc = "2027-07-28T17:00:00Z",
     [string]$WideUtc = "2027-09-19T13:00:00Z",
-    # The key moment: the Sun goes behind the ridge 673 m from SiteA (see below).
-    [string]$NearStillUtc = "2026-12-07T04:00:00Z",
-    [string]$NearFromUtc = "2026-12-06T18:00:00Z",
-    [string]$NearToUtc = "2026-12-07T03:30:00Z",
+    # The key moment: the Sun goes behind the ridge nearer than 1 km to SiteA that costs it most
+    # Sun. The ridge and its times are taken from the package (see below); these override them.
+    [string]$NearStillUtc = "",
+    [string]$NearFromUtc = "",
+    [string]$NearToUtc = "",
     [string]$PackageRoot = ""
 )
 $ErrorActionPreference = "Stop"
@@ -119,17 +120,32 @@ function Clip([string]$path, [hashtable]$params) {
 # What an earlier run of this script left behind.
 Get-ChildItem -Path $Out -File | Where-Object { $_.Extension -in ".png", ".mp4" } | Remove-Item
 
-# The key moment (item c): the Sun goes behind the nearest costly ridge of SiteA. Obstacle 100 of
-# the Shackleton rim package: 673 m away, azimuth 350.5 deg, 372.8 h of Sun lost in the window
-# of the package (14 November 2026 to 14 November 2028, observer 2 m). Its first interval begins
-# on 7 December 2026 at 02:03 UTC; the Sun's disc starts to be cut at about 20:30 the evening before.
-$nearCaption = "A ridge 670 m away is about to hide the Sun|The Sun is behind a ridge 670 m away: the package names it and what it costs"
+# The key moment (item c): the Sun goes behind the costliest ridge of SiteA nearer than 1 km.
+# It is chosen from the package, not by its number (obstacle ids change when a package is
+# computed again): among the Sun blockers at the default observer height, the one whose peak is
+# nearer than 1 km and that costs the most time. The moment is its first interval: the still two
+# hours after the interval begins, the clip from eight hours before to an hour and a half after.
+$siteEntry = $index.packages | Where-Object { $_.kind -eq "site" -and $_.site_id -eq $SiteA } | Select-Object -First 1
+$siteManifest = Get-Content (Join-Path $packages (Join-Path $siteEntry.path "manifest.json")) -Raw | ConvertFrom-Json
+$defaultHeight = [int]$siteManifest.horizon.default_height_index
+$near = $siteManifest.timeline.blockers | Where-Object { $_.body -eq "SUN" -and [int]$_.height_index -eq $defaultHeight -and [double]$_.peak_distance_m -lt 1000.0 } |
+    Sort-Object -Property @{ Expression = { [double]$_.lost_s }; Descending = $true } | Select-Object -First 1
+if (-not $near) { throw "$($a.Name): no Sun blocker nearer than 1 km in the package" }
+$nearDistance = [string]::Format($inv, "{0:F0} m", [double]$near.peak_distance_m)
+$nearRidge = "the ridge $nearDistance away at azimuth $(([double]$near.peak_azimuth_deg).ToString('0.0', $inv)) deg"
+$nearCost = "$(([double]$near.lost_s / 3600.0).ToString('0.0', $inv)) h of Sun"
+$nearBegins = [datetime]::Parse($near.intervals_utc[0][0], $inv, [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+$nearHour = New-Object DateTime ($nearBegins.Year, $nearBegins.Month, $nearBegins.Day, $nearBegins.Hour, 0, 0, [DateTimeKind]::Utc)
+if ($NearStillUtc -eq "") { $NearStillUtc = $nearHour.AddHours(2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+if ($NearFromUtc -eq "") { $NearFromUtc = $nearHour.AddHours(-8).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+if ($NearToUtc -eq "") { $NearToUtc = $nearHour.AddHours(1.5).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+$nearCaption = "A ridge $nearDistance away is about to hide the Sun|The Sun is behind a ridge $nearDistance away: the package names it and what it costs"
 $nearExtra = "-LsnFollowSun -LsnPresentation -LsnCaption=`"$nearCaption`"$rootArgument"
 
 if ($Only -ne "clip") {
     Still "a_opening_south_pole_wide.png" "Opening. The south-polar terrain around $($a.Name) at $WideUtc, seen from 12 km above and 30 km behind the site (not the observer's view), looking towards azimuth 128 deg, the Sun low over the horizon on the left. LOLA elevation data sampled for drawing; a weak fill light is on as a viewing aid, the shadows are black without it." @{ Site = $SiteA; Utc = $WideUtc; Yaw = 128; Pitch = -8; Fov = 60; Extra = "-LsnCameraUp=12000 -LsnCameraBack=30000 -LsnNoHud -LsnViewingAidFill$rootArgument" }
     Still "b_product_two_sites.png" "Product. $($a.Name) and $($b.Name) side by side at $HiddenUtc, observer 2 m, each view on its own Sun: the default view, drawer closed, the obstacle view switched off (no outline, no card)." @{ Utc = $HiddenUtc; Pitch = 0.5; Fov = 30; Extra = "$compare -LsnDo=obstacle" }
-    Still "c_key_moment_near_ridge.png" "Key moment. $($a.Name) at $NearStillUtc, observer 2 m, looking at the Sun's azimuth: the Sun is behind obstacle 100 of the package, a ridge 673 m away at azimuth 350.5 deg that costs 372.8 h of Sun in the window of the package (14 November 2026 to 14 November 2028). The package flags it as within 1 km: it depends on single pixels of the elevation model (here the 5 m site model)." @{ Site = $SiteA; Utc = $NearStillUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun$rootArgument" }
+    Still "c_key_moment_near_ridge.png" "Key moment. $($a.Name) at $NearStillUtc, observer 2 m, looking at the Sun's azimuth: the Sun is behind $nearRidge, which costs $nearCost in the window of the package (14 November 2026 to 14 November 2028). The package flags it as within 1 km: it depends on single pixels of the elevation model (here the 5 m site model)." @{ Site = $SiteA; Utc = $NearStillUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun$rootArgument" }
     Still "d_calendar_drawer.png" "$($a.Name) at ${BandUtc}: the drawer open on the lunar-day calendar and the landing windows of the example requirement." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnDo=page_calendar$rootArgument" }
     Still "d_uncertainty_drawer.png" "$($a.Name) at ${BandUtc}: the drawer open on the uncertainty page (the survey of the stated landing ellipse; the band of each event stands under its countdown)." @{ Site = $SiteA; Utc = $BandUtc; Pitch = 0.5; Fov = 30; Extra = "-LsnFollowSun -LsnDo=page_uncertainty$rootArgument" }
     Still "e_lander_lit_side.png" "$($a.Name) at ${WideUtc}: a camera on the lander's sunlit side, the Sun 50 deg off the view axis behind it (not the observer's view), with the mast that carries the observer in the background. Lander, mast and boulders are scale objects of the team's own design, not part of the package." @{ Site = $SiteA; Utc = $WideUtc; Extra = "-LsnView=lit -LsnNoHud$rootArgument" }
@@ -137,7 +153,7 @@ if ($Only -ne "clip") {
 if ($Only -ne "stills") {
     $clipFile = Join-Path $Out "c_key_moment_near_ridge.mp4"
     Clip $clipFile @{ Site = $SiteA; FromUtc = $NearFromUtc; ToUtc = $NearToUtc; Seconds = 9; Pitch = 0.5; Fov = 30; Extra = $nearExtra }
-    Add-Note "c_key_moment_near_ridge.mp4" "Key moment, 9 s at 60 frames per second. $($a.Name), observer 2 m, the view on the Sun; time runs from $NearFromUtc to $NearToUtc. The Sun goes behind the ridge 673 m away (obstacle 100): when the package gives the Sun as partly hidden the outline of the ridge lights up and the card with its cost appears; the caption changes when the package gives the Sun as hidden."
+    Add-Note "c_key_moment_near_ridge.mp4" "Key moment, 9 s at 60 frames per second. $($a.Name), observer 2 m, the view on the Sun; time runs from $NearFromUtc to $NearToUtc. The Sun goes behind ${nearRidge}: when the package gives the Sun as partly hidden the outline of the ridge lights up and the card with its cost appears; the caption changes when the package gives the Sun as hidden."
 
     # One video of at most 28 s (item f): five parts, each a real render, joined without any added text.
     $parts = Join-Path $env:TEMP "lsn_pitch_parts"

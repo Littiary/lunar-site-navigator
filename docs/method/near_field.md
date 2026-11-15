@@ -12,6 +12,20 @@ nested rasters and on the three site records with their 5 m rasters. The 5 m ras
 the 20 m product: they are independent of its gridding, not of LOLA. Nothing here has
 been compared with an independent measurement of the Moon.
 
+**Which sites use it (since 15 November 2026).** The data stream opens a 5 m raster only
+if it is on its approval list and passed its checks
+(`data/manifest/approved_near_field.json`). Site04 (Shackleton rim) and Site11 (de
+Gerlache rim) are used. **Site23 (Malapert massif) is not:** a sampling error in the
+check of the seam between the 5 m raster and the 20 m product was corrected, and with
+the corrected samples Site23 fails the criterion (median jump 3.42 m against 3.0 m;
+[data/notes/near_field_seam_correction.md](../../data/notes/near_field_seam_correction.md)).
+The Malapert record is therefore computed on the 20 m product, with or without the
+option, and the package says in its warnings that the raster is present but not
+approved. Every figure below that is given for the Malapert record "with the near
+field" was computed on Site23 before that correction. Those figures are kept as a
+record of what the raster gave and are marked; they are not results of the current
+code, and for that record the 20 m figures apply.
+
 ## 1. What changes when the near field is on
 
 Off by default. With `--near-field` (or `open_lola(near_field=True)`) a site that lies on
@@ -63,7 +77,7 @@ the Shackleton record), with fewer points:
 
 | Site record, near field on | Lattice points walked, before | With rounds | Crease points, before | With rounds | Horizon, best of three, before | With rounds |
 |---|---|---|---|---|---|---|
-| Mons Malapert summit | 2 219 681 | 1 475 279 (-34 %) | 1 595 003 | 1 128 753 (-29 %) | 4.48 s | 2.93 s |
+| Mons Malapert summit (on Site23, no longer used) | 2 219 681 | 1 475 279 (-34 %) | 1 595 003 | 1 128 753 (-29 %) | 4.48 s | 2.93 s |
 | de Gerlache rim crest | 2 048 045 | 1 431 385 (-30 %) | 1 416 302 | 1 061 785 (-25 %) | 3.64 s | 2.85 s |
 | Shackleton rim crest | 2 083 622 | 1 286 858 (-38 %) | 1 285 510 | 888 161 (-31 %) | 3.40 s | 2.77 s |
 
@@ -83,7 +97,7 @@ instead of all three), as section 1 defines it; the tolerance was not touched.
 14 November to 14 December 2026 (720 h), observer at 2 m unless said otherwise. Sun: any
 part of the disc; Earth: centre.
 
-| | Shackleton rim crest | de Gerlache rim crest | Mons Malapert summit |
+| | Shackleton rim crest | de Gerlache rim crest | Mons Malapert summit (second figure: Site23, no longer used) |
 |---|---|---|---|
 | Terrain height at the site, 20 m / 5 m | 1701.07 / 1701.02 m | 1815.19 / 1815.33 m | 5173.50 / 5172.89 m |
 | Horizon, 5 m minus 20 m: median | 0.000 deg | 0.000 deg | +0.148 deg |
@@ -166,7 +180,7 @@ Sun band at 2 m (possible minus certain), and the spread of the Sun's rise and s
 |---|---|---|---|---|
 | Shackleton rim crest | 85.9 h (592.8 to 678.8 h) | 13.9 h (655.3 to 669.2 h) | set 11.8 h, rise 74.1 h | set 1.1 h, rise 1.8 h |
 | de Gerlache rim crest | 18.2 h (701.8 to 720.0 h) | 0 h | none | none |
-| Mons Malapert summit | 217.6 h (502.4 to 720.0 h) | 94.9 h (590.3 to 685.3 h) | 208 h, the events merge | 20.6 and 27.8 h |
+| Mons Malapert summit (near-field figures: Site23, no longer used; the 20 m figures apply) | 217.6 h (502.4 to 720.0 h) | 94.9 h (590.3 to 685.3 h) | 208 h, the events merge | 20.6 and 27.8 h |
 
 Earth band at 2 m: 0.1 h, 0.3 h and 73.0 h on the 20 m product; 0.1 h, 0.3 h and 7.3 h
 with the near field. Where the horizon is set within a kilometre, a 5 m error is degrees
@@ -193,8 +207,10 @@ Malapert summit three of four events on interpolated pixels. Over the whole prof
 3. **The band is still one-sided reasoning.** The same sign at every azimuth, and the
    lowered profile ignores the terrain behind the limiting point
    ([uncertainty.md](uncertainty.md), section 5).
-4. **Three records.** The 5 m rasters exist for these sites only; elsewhere the 5 m and
-   7 m figures apply and the bands are as wide as shown for the 20 m product.
+4. **Two records.** 5 m rasters exist for the three site records only, and one of them
+   (Site23, Malapert) failed its seam check and is not used. Elsewhere, and at the
+   Malapert record, the 5 m and 7 m figures apply and the bands are as wide as shown
+   for the 20 m product: at Malapert 217.6 h of 720.
 5. **Patches.** With the near field on, the terrain patches for drawing are read from
    the 5 m raster of the site where it has a level with the pixel of the patch (the near
    patch everywhere; the mid and far patch at two of the three records). They are still
@@ -203,6 +219,7 @@ Malapert summit three of four events on interpolated pixels. Over the whole prof
    the places, and at the de Gerlache record the ground under the observer is drawn
    0.8 m low. A scenario can state a 5 m patch around the site that removes this
    ([terrain_patch.md](terrain_patch.md), section 4); it is not written by default.
-6. **Offsets between the products.** The data stream measured a horizontal offset of
-   6.6 m between the 5 m and the 20 m product at Malapert; where the search changes zone
-   the surface changes product without blending.
+6. **Offsets between the products.** Where the search changes zone the surface changes
+   product without blending. The data stream measures the jump at that seam: 2.42 m and
+   2.14 m in the median at the two rasters in use, 3.42 m at Site23, which is why that
+   raster is not used.

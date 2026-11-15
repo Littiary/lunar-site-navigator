@@ -220,7 +220,8 @@ void LsnPackageIO::ReadPlanningFields(const TSharedPtr<FJsonObject>& Manifest, F
 			O.LatestLandingUtc = Text(Object, TEXT("latest_landing_utc"));
 			O.bClippedStart = Flag(Object, TEXT("clipped_start"));
 			O.bClippedEnd = Flag(Object, TEXT("clipped_end"));
-			O.FeasibleFraction = NumberOr(Object, TEXT("feasible_fraction"), 0.0);
+			// null where the package cannot judge it (SPEC 5.6).
+			O.bHasFeasibleFraction = Number(Object, TEXT("feasible_fraction"), O.FeasibleFraction);
 			O.WindowCount = static_cast<int32>(NumberOr(Object, TEXT("window_count"), O.StartsEtS.Num()));
 			O.LongestWindowS = NumberOr(Object, TEXT("longest_window_s"), 0.0);
 			Numbers(List(Object, TEXT("feasible_s_per_period")), O.FeasibleSPerPeriod);

@@ -222,12 +222,40 @@ def near_field():
     if not records.exists() or not any(p.grid0.pixel_m < 20.0 for p in reader.products):
         pytest.skip("the 5 m site rasters or the site records are not on this machine")
     sites = {s["site_id"]: s for s in json.loads(records.read_text(encoding="utf-8"))["sites"]}
-    return reader, LolaTerrain(reader), sites
+    adapter = LolaTerrain(reader)
+    adapter.near_field_requested = True  # as open_lola(near_field=True) sets it
+    return reader, adapter, sites
+
+
+def _raster_of(lat, lon):
+    """The 5 m site raster a place lies on, whether the data stream lets it be used or not,
+    and whether it is on the approval list (data/manifest/approved_near_field.json). The
+    expectations below are derived from that list, not written down here."""
+    import lsn_data
+    from lsn_data.georef import lonlat_to_xy
+
+    approved = json.loads((REPO / "data" / "manifest" / "approved_near_field.json").read_text(encoding="utf-8"))["approved"]
+    for raster in lsn_data.site_dems(include_unapproved=True):
+        x, y = lonlat_to_xy(np.array([lon]), np.array([lat]), raster.grid0.radius_m, -1)
+        if raster.grid0.covers_xy(x, y)[0] and np.isfinite(np.asarray(raster.height_xy(x, y, 0, "mean"), dtype=np.float64)[0]):
+            return str(raster.product_id), str(raster.product_id) in approved
+    return None, False
+
+
+def test_the_approval_list_decides_which_site_records_get_the_near_field(near_field):
+    """Every site record lies on a 5 m raster; the list says which of them may be used."""
+    _, _, sites = near_field
+    on = {name: _raster_of(sites[name]["lat_deg"], (sites[name]["lon_deg_east"] + 180.0) % 360.0 - 180.0) for name in SITES}
+    assert all(raster is not None for raster, _ in on.values()), on
+    assert any(ok for _, ok in on.values()), "no approved raster under a site record: the tests below would test nothing"
 
 
 @pytest.mark.parametrize("name", SITES)
 def test_site_records_on_the_5_m_near_field(near_field, name, tmp_path):
-    """Nothing missed against a 1 m scan, the package names the 5 m raster, and the runtime.
+    """Nothing missed against a 1 m scan, the package names the product that served the site,
+    and the runtime. A site on an approved 5 m raster is served by it; a site whose raster
+    is present but not approved (its seam check failed) is served by the 20 m product, and
+    the data reader says that the raster is there and why it is not used.
 
     The runtime limit is for one site on an otherwise idle machine and is compared with the
     best of three runs. The best of three removes a short disturbance, not a loaded
@@ -236,21 +264,40 @@ def test_site_records_on_the_5_m_near_field(near_field, name, tmp_path):
     failure here while other work is running says nothing about the search; it is to be
     reported with the load, and the limit is not to be changed.
     """
+    import lsn_data
+
     reader, adapter, sites = near_field
     lat, lon = sites[name]["lat_deg"], (sites[name]["lon_deg_east"] + 180.0) % 360.0 - 180.0
+    raster, approved = _raster_of(lat, lon)
     terrain = adapter.for_site(lat, lon, 300_000.0)
-    assert type(terrain).__name__ == "NearFieldTerrain" and terrain.switch_m < 25_000.0
-    # the surface of the site: its own 5 m raster inside the 20 m and 60 m products; the 5 m
-    # rasters of the other sites, tens of kilometres away, are not part of it
     own = str(reader.source(lon, lat)[0])
+    if approved:
+        assert type(terrain).__name__ == "NearFieldTerrain" and terrain.switch_m < 25_000.0
+        assert own == raster
+    else:
+        assert type(terrain).__name__ != "NearFieldTerrain" and not own.startswith("LOLA5MPP_")
+        assert raster in lsn_data.unapproved_site_dems()
+        moon = lsn_data.open_terrain(products="moon", near_field=True)
+        assert f"{raster} (present but not approved in data/manifest/approved_near_field.json)" in moon.missing
+    # the surface of the site: its own 5 m raster (if it may be used) inside the 20 m and 60 m
+    # products; the 5 m rasters of the other sites, tens of kilometres away, are not part of it
     surface = type(reader)([p for p in reader.products if p.product_id == own or p.grid0.pixel_m >= 20.0])
     _assert_complete(terrain, surface, lat, lon, 300_000.0, azimuths=np.arange(0.0, 360.0, 45.0), heights=(2.0,))
     elapsed = _best_of_three(lambda: compute_horizon(terrain, lat, lon, [0.0, 1.0, 2.0, 5.0, 10.0, 20.0]))
     assert elapsed <= MAX_RUNTIME_NEAR_FIELD_S, f"{elapsed:.2f} s, best of three (the limit holds on a machine that is doing nothing else)"
     scenario = single_site_scenario(name.replace("_", "-"), sites[name]["name"], lat, lon, dem_set_id="any", synthetic=False)
     (path,) = run_scenario(scenario, tmp_path, terrain)
-    source = validate_package(path)["horizon"]["terrain_source"]
-    assert source["at_site"]["product_id"].startswith("LOLA5MPP_SITE") and source["at_site"]["pixel_m"] == 5.0 and source["resolution_class"] == "fine"
+    manifest = validate_package(path)
+    source = manifest["horizon"]["terrain_source"]
+    assert source["resolution_class"] == "fine"
+    said = [w for w in manifest["warnings"] if "present but not approved" in w]
+    if approved:
+        assert source["at_site"]["product_id"] == raster and source["at_site"]["pixel_m"] == 5.0
+        assert not said
+    else:
+        assert len(said) == 1 and raster in said[0]  # the package itself says why it has no near field
+        assert source["at_site"]["product_id"] == "LDEM_80S_20M" and source["at_site"]["pixel_m"] == 20.0
+        assert not any(str(product["product_id"]).startswith("LOLA5MPP_") for product in source["products"])
 
 
 @pytest.mark.parametrize("name", SITES)
@@ -259,23 +306,32 @@ def test_terrain_patches_are_read_from_the_5_m_raster_of_the_site(near_field, na
     science used: every node of the near patch that the 5 m raster covers is its 20 m
     block average (the level whose pixel equals the spacing of the patch), and the package
     names the raster and the level. A coarser patch uses the raster where the raster has
-    a level with the pixel of that patch; where it has none (the Malapert raster stops at
-    40 m), the patch shows the averaged ground of the 20 m product at its own spacing
-    rather than finer samples of the raster. (The first version of this test expected
-    the raster's 40 m level there; that was the test's mistake about the stated rule of
-    height_at_pixel_m, not a change of the tolerance.)"""
+    a level with the pixel of that patch; where it has none, the patch shows the averaged
+    ground of the 20 m product at its own spacing rather than finer samples of the raster.
+    A site whose raster is not approved gets no node from any 5 m raster. (The first
+    version of this test expected a raster's 40 m level for an 80 m patch; that was the
+    test's mistake about the stated rule of height_at_pixel_m, not a change of the tolerance.)"""
     from lsn_data.georef import lonlat_to_xy
     from test_terrain_patch import patch_grid, to_sphere
 
     reader, adapter, sites = near_field
     lat, lon = sites[name]["lat_deg"], (sites[name]["lon_deg_east"] + 180.0) % 360.0 - 180.0
+    expected_raster, approved = _raster_of(lat, lon)
     terrain = adapter.for_site(lat, lon, 300_000.0)
     scenario = single_site_scenario(name.replace("_", "-"), sites[name]["name"], lat, lon, dem_set_id="any", synthetic=False, heights_m=[2.0], azimuth_step_deg=5.0)
     (path,) = run_scenario(scenario, tmp_path, terrain)
     manifest = validate_package(path)
     pkg = read_package(path)
     own = manifest["horizon"]["terrain_source"]["at_site"]["product_id"]
-    assert own.startswith("LOLA5MPP_")
+    if not approved:
+        assert own == "LDEM_80S_20M"
+        for patch in manifest["terrain"]["patches"]:
+            assert not any(src["product_id"].startswith("LOLA5MPP_") for src in patch["sources"]), patch["id"]
+        near = next(patch for patch in manifest["terrain"]["patches"] if patch["id"] == "near")
+        (source,) = near["sources"]
+        assert (source["product_id"], source["level"], source["pixel_m"]) == ("LDEM_80S_20M", 0, 20.0)
+        return
+    assert own == expected_raster
     raster = next(p for p in reader.products if str(p.product_id) == own)
 
     for patch in manifest["terrain"]["patches"]:
@@ -298,4 +354,3 @@ def test_terrain_patches_are_read_from_the_5_m_raster_of_the_site(near_field, na
         assert source["node_share"] == pytest.approx(on_data.sum() / np.isfinite(up).sum(), abs=1e-9)
         if patch["id"] == "near":
             assert level == 2 and source["pixel_m"] == 20.0 and source["node_share"] > 0.5
-

@@ -87,6 +87,8 @@ struct FLsnMethodCard
 	FString ValidationStatus;
 	/** The numeric entries of the card's "parameters" object. */
 	TMap<FString, double> NumericParameters;
+	/** The text entries of the card's "parameters" object. */
+	TMap<FString, FString> TextParameters;
 };
 
 /** A run of neighbouring azimuths whose horizon is set by the same piece of terrain (SPEC 5.3, since 0.2). */
@@ -315,6 +317,12 @@ struct LUNARSITENAVIGATOR_API FLsnSitePackage
 	 * Terrain nearer than this is not part of horizon.elevation_deg.
 	 */
 	double HorizonSearchStartM() const;
+	/**
+	 * Distance from the site at which a check of drawn ground against the package horizon starts:
+	 * 0 when the horizon method card says that the ground at the site is searched (parameter
+	 * ground_at_the_site, since 0.12), otherwise first_point_m.
+	 */
+	double GroundCheckStartM() const;
 
 	/** Validation status of a method id, or "unknown" if the card is missing. */
 	FString ValidationStatusOf(const FString& MethodId) const;

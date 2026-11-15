@@ -198,11 +198,28 @@ it is within 40 m; it is not a limit of the 20 m pixel as such.
    pixels and the stated height error; the ellipse survey and the terrain-height band
    are the two checks for that, and results that fail them should be reported as
    resolution-limited.
-3. **One sign for the whole profile.** Real errors differ from azimuth to azimuth. One
-   sign everywhere is the unfavourable case for a single event and says little about how
-   errors along the profile combine. The lowered profile also ignores the terrain behind
-   the limiting point: if the limiting point were lower, the next ridge would set the
-   horizon, so `possible` is an outer bound and the band is on the wide side.
+3. **One sign for the whole profile, and only the limiting point moves.** Real errors
+   differ from azimuth to azimuth. One sign everywhere is the unfavourable case for a
+   single event and says little about how errors along the profile combine. The two
+   sides of the band are not alike. The lowered profile ignores the terrain behind the
+   limiting point: if that point were lower, the next ridge would set the horizon, so
+   `possible` is an outer bound. The raised profile ignores the terrain in front of the
+   limiting point: if all terrain were higher by the stated amount, nearer terrain could
+   take over, and the horizon would lie above the raised profile. **`certain` is
+   therefore not a bound:** it can contain times at which the body would be hidden.
+   Measured for 1 m at the 2 m observer (all terrain 1 m higher is, for the horizon, an
+   observer 1 m lower): the horizon of the 1 m observer lies above the raised profile
+   in 13 %, 9 % and 30 % of the azimuths at the Shackleton, de Gerlache and Malapert
+   records, by up to 0.67, 0.42 and 0.70 deg (0.32, 0.05 and 0.17 deg at 95 % of the
+   azimuths). The band states how the result responds to the stated error at the
+   limiting point; a width such as "the Sun's return within three days" is that
+   response, not a guaranteed interval. An earlier version of this note said "the band
+   is on the wide side", which holds for `possible` only; corrected on 15 November 2026
+   after an independent review, which measured the same figures. The method was not
+   changed: with the height errors of the default model (5 m and 7 m on the 20 m
+   product) "all terrain higher by that much" would put near terrain metres above the
+   site it surrounds, which the error of a height relative to its neighbours does not
+   support, so that case is no better a model than this one.
 4. **A survey, not a probability.** With 13 points, a part of the ellipse that covers less
    than a tenth of its area can be missed entirely. No statement like "visible with 90 %
    probability" follows from the share of points.

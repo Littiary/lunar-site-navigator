@@ -1,6 +1,6 @@
 # Validation table: science core versus JPL Horizons
 
-Generated 2026-11-14T10:19:31Z by `validation/horizons/compare.py` from the stored raw responses. Do not edit by hand.
+Generated 2026-11-15T06:20:50Z by `validation/horizons/compare.py` from the stored raw responses. Do not edit by hand.
 
 - Core: SPICE (CSPICE_N0067), frame `MOON_ME_DE440_ME421`, correction `LT+S`, sphere 1737.4 km, kernel set `bfe870fccfa5` (naif0012.tls, pck00011.tpc, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf).
 - Reference: NASA/JPL Horizons On-Line Ephemeris System, https://ssd.jpl.nasa.gov/horizons/; API version 1.2; printed resolution: azimuth and elevation 0.000001 deg (0.0036 arcsec); angular diameter 0.001 arcsec.

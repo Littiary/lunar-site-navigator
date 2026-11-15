@@ -391,7 +391,12 @@ bool ALsnObserverPawn::DoAction(FName Action)
 		if (GameMode)
 		{
 			GameMode->SetComparing(!GameMode->IsComparing());
-			bFollowSun = bFollowSun || GameMode->IsComparing();
+			// Side by side each half turns to the azimuth of its own Sun, below the horizon as well.
+			if (GameMode->IsComparing())
+			{
+				bFollowSun = true;
+				FollowOffsetDeg = 0.0;
+			}
 		}
 	}
 	else if (Action == TEXT("page_calendar") || Action == TEXT("page_uncertainty") || Action == TEXT("page_trade") || Action == TEXT("page_sites"))

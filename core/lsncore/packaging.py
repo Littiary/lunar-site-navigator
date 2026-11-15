@@ -106,8 +106,15 @@ def _used_methods(node, found: set[str]) -> set[str]:
     return found
 
 
-def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | None, terrain_patches: list | None = None) -> dict:
-    """Canonical request of a site package (the part of the input that defines its id)."""
+def site_request(
+    site: dict, horizon: HorizonResult, timeline_request: dict | None, terrain_patches: list | None = None, default_height_m: float | None = None
+) -> dict:
+    """Canonical request of a site package (the part of the input that defines its id).
+
+    The default observer height belongs to it: it decides default_height_index, the height
+    of the band statistics and of the ellipse survey, of the terrain source and of the site
+    pairs, so two runs that differ only in it are different packages.
+    """
     request = {
         "site": canonical_site(site),
         "observer_heights_m": canonical_heights(horizon.observer_heights_m),
@@ -119,6 +126,8 @@ def site_request(site: dict, horizon: HorizonResult, timeline_request: dict | No
     }
     if terrain_patches:
         request["terrain_patches"] = [{"id": p.id, "half_width_m": float(p.half_width_m), "spacing_m": float(p.spacing_m)} for p in terrain_patches]
+    if default_height_m is not None:
+        request["default_height_m"] = round(float(default_height_m), 3)
     return request
 
 
@@ -142,7 +151,7 @@ def build_site_package(
     terrain_patches: list | None = None,
 ) -> Path:
     """Write one site package and return its directory."""
-    request = site_request(site, horizon, timeline_request, terrain_patches)
+    request = site_request(site, horizon, timeline_request, terrain_patches, default_height_m)
     csite = request["site"]
     heights = request["observer_heights_m"]
     if heights != [float(h) for h in horizon.observer_heights_m]:

@@ -63,7 +63,12 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         "azimuth_step_deg": azimuth_step_deg,
         "max_range_m": max_range_m,
         "finest_pixel_m": px,
-        "first_point_m": px * settings.first_sample_px,
+        "first_point_m": min(px * settings.first_sample_px, settings.first_sample_max_m),
+        "ground_at_the_site": (
+            "not offered to the observer at 0 m: its horizon is that of the terrain from first_point_m outward, the convention of pixel-based illumination maps"
+            if settings.ground_from_first_point
+            else "searched for every observer height: for an observer at 0 m the slope of the ground at the site is part of its horizon"
+        ),
         "lattice_step_m": px * settings.fine_step_px,
         "inner_lattice_step_m": px * settings.inner_step_px,
         "inner_zone_m": px * settings.inner_zone_px,
@@ -80,6 +85,7 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         "Single high pixels of the DEM are taken at face value, whether they are terrain or noise.",
         "Terrain beyond the search radius or beyond the data is not seen; error_bounds.far_field_max_deg states how much it could add.",
         "The observer is a point at the given height above the DEM surface on the radial through the site; the lander body, local rocks and regolith relief are not modelled.",
+        "Observer height 0 is the surface point itself, and the slope of the ground at the site is part of its horizon: uphill, the horizon of a 0 m observer is at least that slope. The elevation model does not resolve the ground below its pixel, so this slope is that of the interpolated surface; a 0 m result depends on it far more than a result at 1 m and above, where the ground at the site reached no horizon on LOLA data.",
     ]
     status = "analytic-test-passed"
 
@@ -104,7 +110,7 @@ def horizon_methods(terrain: Terrain, azimuth_step_deg: float, max_range_m: floa
         pk.M_HORIZON: card(
             "Terrain horizon elevation",
             "For each azimuth and observer height: the largest elevation angle, above the plane perpendicular to the radial direction at the site, of the straight line from the observer to any terrain point along the great circle of that azimuth, out to the search radius. Negative when the terrain horizon lies below the horizontal.",
-            "Great-circle rays on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Each ray is covered by a lattice of points half a pixel apart. Near the site every lattice point is evaluated on the finest data. Farther out the lattice is grouped into cells; a cell is skipped only if the block maximum of the terrain over the cell proves that nothing in it can reach the horizon already found, otherwise it is walked point by point on the finest data. Crossings of the ray with the lines through pixel centres (the creases of the bilinear surface) are evaluated as well, and the leading points are refined by nested sampling. All observer heights share the same terrain evaluations.",
+            "Great-circle rays on a sphere. Exact triangle observer - terrain point - centre of the Moon, tan(e) = (r_t cos g - r_o) / (r_t sin g), evaluated in a cancellation-free form; curvature is contained in the formula. Each ray is covered by a lattice of points half a pixel apart; its first point is one pixel from the site and never farther than 20 m (first_point_m). The ground in front of that point is searched as well, down to about 2 cm from the site (parameter ground_at_the_site). Near the site every lattice point is evaluated on the finest data. Farther out the lattice is grouped into cells; a cell is skipped only if the block maximum of the terrain over the cell proves that nothing in it can reach the horizon already found, otherwise it is walked point by point on the finest data. Crossings of the ray with the lines through pixel centres (the creases of the bilinear surface) are evaluated as well, and the leading points are refined by nested sampling. All observer heights share the same terrain evaluations.",
             local,
             params,
         ),
@@ -207,6 +213,7 @@ def uncertainty_methods(dem_set_id: str, direction_table_id: str, stated: dict) 
             evidence,
             [
                 "The same sign is assumed at every azimuth. Real errors differ from azimuth to azimuth; the band is the unfavourable case for one event and says little about how errors along the profile combine.",
+                "For a height error only the limiting terrain point is moved. visible_possible is an outer bound: with lower terrain the horizon is at least the lowered limiting point. visible_certain is not a guarantee: if the terrain in front of the limiting point were higher by the same amount, it could set a horizon above the raised profile (for 1 m at three site records: in 9 to 30 % of the azimuths, by up to 0.4 to 0.7 deg). The band is the response to the stated error at the limiting point.",
                 *(([f"Stated height-error model: {model.get('label', '')}. Source: {model.get('source', 'not stated')}"]) if model else []),
                 "Where a product's own error map feeds the band, that map is the producers' model estimate, not a test against independent data. Every elevation product used here is built from LOLA returns: a finer product is independent of the gridding of a coarser one, not of LOLA, and errors common to all of them are not in the band.",
                 "terrain_quality of an event names the horizon sample at the azimuth of the body at the event; for a limb condition the sample that actually limits the disc can be one sample away.",
@@ -777,9 +784,11 @@ def run_scenario(
                 add_uncertainty_to_timeline(timeline, stated, bands, ellipse, ephem_directions.et_to_utc_z, applied, quality, az_step, hd)
                 methods.update(uncertainty_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id, stated))
             landing = site.get("landing_utc")
-            add_calendar_to_timeline(
-                timeline, read_package(table_dir), len(heights), scenario.get("requirements"),
-                float(ephem_directions.utc_to_et(landing)) if landing else None, ephem_directions.et_to_utc_z,
+            warnings.extend(
+                add_calendar_to_timeline(
+                    timeline, read_package(table_dir), len(heights), scenario.get("requirements"),
+                    float(ephem_directions.utc_to_et(landing)) if landing else None, ephem_directions.et_to_utc_z,
+                )
             )
             methods.update(calendar_methods(terrain.describe()["dem_set_id"], timeline.direction_table_id))
             add_height_trade_to_timeline(timeline, heights)

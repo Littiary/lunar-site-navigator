@@ -133,6 +133,7 @@ public:
 	/** 0: latitude, 1: longitude, 2: the search field of the site list. */
 	void SetCustomFocus(int32 Field) { Custom.Focus = FMath::Clamp(Field, 0, 2); }
 	const FString& GetSiteSearch() const { return SiteSearch; }
+	const FString& GetSelectionWarning() const { return SelectionWarning; }
 	int32 GetPickerFirstRow() const { return PickerFirstRow; }
 	void ScrollPicker(int32 Rows) { PickerFirstRow = FMath::Clamp(PickerFirstRow + Rows, 0, FMath::Max(2 * Sites.Num(), 0)); }
 	/** For each site: whether the text in the search field takes it out of the list (name, programme and category are searched). */
@@ -211,6 +212,8 @@ private:
 	bool LaunchCustom(const FString& Arguments, int32 Step, double StatedS);
 	bool LoadCustomResult(bool bNeedTimeline, FString& OutPackageId, FString& OutError);
 	FString CustomPython, CustomTimelineTemplate, CustomStartDate;
+	/** What the choice of the sites at the start has to say (a site id that appears in more than one package). */
+	FString SelectionWarning;
 	FString SiteSearch;
 	int32 PickerFirstRow = 0;
 	void AddSiteInfo(int32 SiteIndex);

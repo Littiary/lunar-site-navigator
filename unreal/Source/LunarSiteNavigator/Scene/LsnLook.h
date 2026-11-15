@@ -32,4 +32,10 @@ namespace LsnLook
 	extern TAutoConsoleVariable<float> HighSunExposure;
 	/** Light the sunlit ground throws back onto the scale objects, as a multiple of what the form-factor formula gives (1 = the formula). */
 	extern TAutoConsoleVariable<float> BounceScale;
+	/** Opposition surge of the regolith (Hapke): amplitude B0 and angular width h of the brightening when the Sun is behind the camera. */
+	extern TAutoConsoleVariable<float> OppositionStrength, OppositionWidth;
+	/** Earthshine as shown, as a share of the Sun's display intensity (physically a few 1e-4: shown brighter so that it can be read). */
+	extern TAutoConsoleVariable<float> EarthshineShare;
+	/** Strength of the fine grain of the regolith (normal and grey value, below the pixel of the elevation data). */
+	extern TAutoConsoleVariable<float> GrainStrength;
 }

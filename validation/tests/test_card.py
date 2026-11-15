@@ -44,3 +44,27 @@ def test_a_failed_check_is_shown_as_failed():
     assert strip["status"] == ("PASS" if strip["measured"]["value"] >= 0.90 else "FAIL")
     assert text.count("**FAIL**") == stored["summary"]["failed"] == len(KNOWN_FAILED)
     assert f"{stored['summary']['passed']} of {len(stored['checks'])} checks pass; 1 fails" in text
+
+
+def test_the_sub_solar_row_is_computed_from_the_ephemeris_at_every_build(monkeypatch):
+    """Row 15 follows the code: with the UTC to TDB conversion shifted by ten minutes the Sun's sub-point moves by
+    0.085 deg in longitude and the row would fail, where the stored image table would still show 0.004 deg."""
+    from lsncore.ephem import kernels
+
+    kernels.load()
+    stored = json.loads((build.HERE / "validation_card.json").read_text(encoding="utf-8"))
+    row = next(check for check in stored["checks"] if check["id"] == "image_sub_solar_points")
+    now = max(abs(value) for value in build.sub_solar_differences())
+    assert abs(now - row["measured"]["value"]) < 1e-9 and now < row["threshold"]["value"] == 0.02
+    true_conversion = build.d.utc_to_et
+    monkeypatch.setattr(build.d, "utc_to_et", lambda utc: true_conversion(utc) + 600.0)
+    assert max(abs(value) for value in build.sub_solar_differences()) > row["threshold"]["value"]
+
+
+def test_rows_say_what_they_cannot_show():
+    stored = {check["id"]: check for check in json.loads((build.HERE / "validation_card.json").read_text(encoding="utf-8"))["checks"]}
+    assert "core's own conversion" in stored["tdb_minus_utc"]["quantity"]
+    assert any("a shift of 1 s gives 1 s" in limit for limit in stored["tdb_minus_utc"]["limits"])
+    assert "an error common to the 5 s and the 60 s scan would leave this row at zero" in stored["scan_completeness"]["limit"]
+    assert "row 31" in stored["scan_completeness"]["limit"]
+    assert "recomputed at every build" in stored["image_sub_solar_points"]["limit"]

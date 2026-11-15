@@ -102,9 +102,21 @@ ALsnSiteScene::ALsnSiteScene()
 	FillLight->SetCastShadows(false);
 	FillLight->SetAtmosphereSunLight(false);
 	FillLight->SetWorldRotation(FRotator(-90.0, 0.0, 0.0));
+	// Earthshine: from the Earth's direction of the package, faint and a little blue, with shadows.
+	EarthLight = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("EarthLight"));
+	EarthLight->SetupAttachment(Root);
+	EarthLight->SetMobility(EComponentMobility::Movable);
+	EarthLight->SetLightColor(FLinearColor(0.72f, 0.82f, 1.0f));
+	EarthLight->SetCastShadows(!FParse::Param(FCommandLine::Get(), TEXT("LsnNoShadows")));
+	EarthLight->SetAtmosphereSunLight(false);
+	EarthLight->DynamicShadowDistanceMovableLight = 1.0e9f;
+	EarthLight->SetVisibility(false);
+	// No atmosphere: hard shadows; contact shadows pick up what the shadow map misses at the feet of objects.
+	SunLight->ContactShadowLength = 0.02f;
 	// The Sun is the light the engine treats as the main directional light.
 	SunLight->ForwardShadingPriority = 1;
 	FillLight->ForwardShadingPriority = 0;
+	EarthLight->ForwardShadingPriority = 0;
 }
 
 void ALsnSiteScene::SetObstacleViewEnabled(bool bEnabled)
@@ -170,6 +182,22 @@ double ALsnSiteScene::GetSunVisibleFraction() const
 	return FMath::Clamp(static_cast<double>(Sun->VisibleFraction[Flat]), 0.0, 1.0);
 }
 
+double ALsnSiteScene::GetEarthVisibleFraction() const
+{
+	const FLsnBodySeries* Earth = (bHasPackage && Package.bHasTimeline) ? Package.FindSeries(TEXT("EARTH")) : nullptr;
+	const int32 Flat = HeightIndex * Package.Time.Count + TimeIndex;
+	if (!Earth || !Earth->VisibleFraction.IsValidIndex(Flat) || FMath::IsNaN(Earth->VisibleFraction[Flat]))
+	{
+		return 0.0;
+	}
+	return FMath::Clamp(static_cast<double>(Earth->VisibleFraction[Flat]), 0.0, 1.0);
+}
+
+bool ALsnSiteScene::IsEarthshineOn() const
+{
+	return EarthLight && EarthLight->IsVisible();
+}
+
 void ALsnSiteScene::UpdateLook()
 {
 	// How the scene is drawn follows one package value: the share of the Sun's disc that is
@@ -194,7 +222,31 @@ void ALsnSiteScene::UpdateLook()
 	// The fill only while the Sun is wholly hidden: with the Sun up, shadows stay black.
 	bForceFill = FParse::Param(FCommandLine::Get(), TEXT("LsnViewingAidFill"));
 	// Without a timeline there is no Sun to light the terrain: the fill keeps it readable.
-	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0)));
+	// Earthshine while the package gives the Sun as hidden and the Earth as visible: from the Earth's
+	// direction, scaled by the lit share of the Earth's disc seen from the Moon, (1 - s.e) / 2 with s and
+	// e the package's directions of the Sun and the Earth, and by the visible share of the Earth's disc.
+	bool bEarthshine = false;
+	FLsnBodyAtTime SunForEarth, EarthForLight;
+	if (bHasPackage && SunShare <= 0.0 && SampleBody(TEXT("EARTH"), TimePosition, EarthForLight) && SampleBody(TEXT("SUN"), TimePosition, SunForEarth))
+	{
+		const double EarthShare = GetEarthVisibleFraction();
+		const FVector ToEarth = FLsnSiteFrame::AzElToUnrealDir(EarthForLight.AzimuthDeg, EarthForLight.ElevationDeg);
+		const FVector ToSunNow = FLsnSiteFrame::AzElToUnrealDir(SunForEarth.AzimuthDeg, SunForEarth.ElevationDeg);
+		const double LitShare = 0.5 * (1.0 - FVector::DotProduct(ToSunNow, ToEarth));
+		bEarthshine = EarthShare > 0.0 && LitShare > 0.01;
+		EarthLight->SetWorldRotation((-ToEarth).Rotation());
+		EarthLight->SetIntensity(LsnLook::SunLux.GetValueOnGameThread() * LsnLook::EarthshineShare.GetValueOnGameThread() * static_cast<float>(LitShare * EarthShare));
+	}
+	EarthLight->SetVisibility(bEarthshine);
+	// The zenith fill (a viewing aid) only where there is no earthshine either.
+	FillLight->SetVisibility(bHasPackage && (bForceFill || (bFillLightWanted && SunShare <= 0.0 && !bEarthshine)));
+	if (RegolithMaterial)
+	{
+		// The opposition surge belongs to sunlight: none while the Sun is hidden.
+		RegolithMaterial->SetScalarParameterValue(TEXT("OppositionStrength"), SunShare > 0.0 ? LsnLook::OppositionStrength.GetValueOnGameThread() : 0.0f);
+		RegolithMaterial->SetScalarParameterValue(TEXT("OppositionWidth"), LsnLook::OppositionWidth.GetValueOnGameThread());
+		RegolithMaterial->SetScalarParameterValue(TEXT("GrainStrength"), LsnLook::GrainStrength.GetValueOnGameThread());
+	}
 	// Ground close to the site that the drawing puts in its own shadow while the package gives the Sun as visible.
 	NearGroundShadeShare = 0.0;
 	FLsnBodyAtTime SunNow;
@@ -250,6 +302,7 @@ void ALsnSiteScene::SetSceneSlot(int32 Slot)
 	const bool b0 = SceneSlot == 0, b1 = SceneSlot == 1, b2 = SceneSlot == 2;
 	SunLight->SetLightingChannels(b0, b1, b2);
 	FillLight->SetLightingChannels(b0, b1, b2);
+	EarthLight->SetLightingChannels(b0, b1, b2);
 	for (UProceduralMeshComponent* Component : { Terrain.Get(), MoonSphere.Get(), HorizonLine.Get(), SunObstacle.Get(), EarthObstacle.Get(), SunDisc.Get(), EarthDisc.Get(), ScaleObjects.Get(), Mast.Get() })
 	{
 		Component->SetLightingChannels(b0, b1, b2);
@@ -495,7 +548,7 @@ void ALsnSiteScene::RebuildGeometry()
 		FLsnMeshData Candidate, Beyond;
 		int32 Ignored = 0;
 		LsnMesh::BuildPatchTerrain(TerrainPatches, RegolithAlbedo, Candidate, Ignored);
-		LsnMesh::AppendByDistance(Candidate, Package.HorizonSearchStartM(), 0.0, Beyond);
+		LsnMesh::AppendByDistance(Candidate, Package.GroundCheckStartM(), 0.0, Beyond);
 		FLsnPlacedMesh Placed;
 		Placed.Mesh = &Beyond;
 		Placed.Origin = FVector::ZeroVector;
@@ -827,6 +880,7 @@ bool ALsnSiteScene::SetTimePosition(double NewTimePosition)
 	{
 		// No timeline in the package: no Sun, no Earth, no light direction to show.
 		SunLight->SetVisibility(false);
+		EarthLight->SetVisibility(false);
 		SunDisc->SetVisibility(false);
 		EarthDisc->SetVisibility(false);
 		// Nothing of a package shown before may stay: no highlight, no stars.
