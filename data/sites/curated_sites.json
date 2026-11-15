@@ -1,6 +1,6 @@
 {
  "schema": "lunar-site-navigator site records v0 (curated list)",
- "generated_utc": "2026-11-14T16:49:23Z",
+ "generated_utc": "2026-11-15T01:37:35Z",
  "sites": [
   {
    "site_id": "shackleton_rim_crest",
@@ -192,19 +192,13 @@
      "returns_in_pixel": 1,
      "height_rms_error_m": null
     },
-    "near_field": {
-     "product_id": "LOLA5MPP_SITE23",
-     "pixel_m": 5.0,
-     "resolution_class": "fine",
-     "returns_in_pixel": 0,
-     "height_rms_error_m": 0.7993996143341064
-    },
+    "near_field": null,
     "classes": "fine <= 20 m pixels, medium <= 60 m, coarse above (cylindrical global products: near terrain within a few pixels is not resolved)",
     "served_by": "lsn_data.open_terrain(products='moon') (default) and with near_field=True"
    },
-   "ground_height_m_above_1737.4km_sphere": 5172.89,
-   "ground_radius_m": 1742572.89,
-   "ground_height_from": "LOLA5MPP_SITE23"
+   "ground_height_m_above_1737.4km_sphere": 5173.5,
+   "ground_radius_m": 1742573.5,
+   "ground_height_from": "LDEM_80S_20M"
   },
   {
    "site_id": "apollo_11",
