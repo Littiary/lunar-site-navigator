@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T14:43:16Z",
+ "generated_utc": "2026-11-15T01:25:41Z",
  "criterion": "data/checkpoints/thresholds_near_field.json",
  "checkpoint_1": {
   "files": [
@@ -526,14 +526,13 @@
    "seam": {
     "points": 2000,
     "inside_sources": [
-     "LDEM_80S_20M",
      "LOLA5MPP_SITE04"
     ],
     "outside_sources": [
      "LDEM_80S_20M"
     ],
-    "median_abs_jump_m": 2.0811994380916303,
-    "p95_abs_jump_m": 11.632822644907353,
+    "median_abs_jump_m": 2.423343429065998,
+    "p95_abs_jump_m": 11.515746410430834,
     "passed": true
    }
   },
@@ -1032,14 +1031,13 @@
    "seam": {
     "points": 2000,
     "inside_sources": [
-     "LDEM_80S_20M",
      "LOLA5MPP_SITE11"
     ],
     "outside_sources": [
      "LDEM_80S_20M"
     ],
-    "median_abs_jump_m": 0.29999999997380655,
-    "p95_abs_jump_m": 5.003544579487692,
+    "median_abs_jump_m": 2.137683062048769,
+    "p95_abs_jump_m": 6.55402636440028,
     "passed": true
    }
   },
@@ -1538,18 +1536,17 @@
    "seam": {
     "points": 2000,
     "inside_sources": [
-     "LDEM_80S_20M",
      "LOLA5MPP_SITE23"
     ],
     "outside_sources": [
      "LDEM_80S_20M"
     ],
-    "median_abs_jump_m": 0.30346352865285553,
-    "p95_abs_jump_m": 9.793703745526068,
-    "passed": true
+    "median_abs_jump_m": 3.4198270620381663,
+    "p95_abs_jump_m": 11.471677815818838,
+    "passed": false
    }
   }
  },
  "what_this_can_and_cannot_show": "Both products are made from the same LOLA laser returns. The 5 m product re-adjusts the tracks (orbit errors reduced more than tenfold, page of PGDA product 78) and grids them at 5 m with its own interpolation; the 20 m product uses the original geolocation and GMT gridding at 20 m. CAN show: (1) differences in georeferencing between the two (the translation fit), (2) how much the 20 m gridding and interpolation depart from the better controlled 5 m surface, in particular at 20 m pixels without returns where the 5 m pixel has returns (class 20m_interpolated__5m_constrained: the closest we have to a measurement of the 20 m interpolation error), (3) what the 20 m product cannot resolve below 20 m. CANNOT show: errors common to both (LOLA radial error, residual orbit error after adjustment, returns edited out of both), and in pixels interpolated in both products it compares two interpolations of the same returns, not a surface with the truth. The 5 m RMS error maps are the producers' model estimate (fractal clone ensemble, Barker et al. 2021), not a measurement against independent data.",
- "all_passed": true
+ "all_passed": false
 }

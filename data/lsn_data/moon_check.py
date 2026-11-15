@@ -162,13 +162,18 @@ def sldem_vs_ldem128(sldem: CylMosaic, l128: CylDEM, n=20_000, seed=ind.SEED) ->
 
 
 def _square_edge_points(dem: PolarDEM, n=2000, seed=ind.SEED):
-    """Points on the outer edge of a polar square, with the outward normal (x, y metres)."""
+    """Points on the outer edge of a raster, with the outward normal (x, y metres).
+
+    The position along the left and right edges is drawn from the y range, along the top and bottom from the x range
+    (the 5 m site DEMs are not centred on the pole, so the two ranges differ).
+    """
     g = dem.grid0
     rng = np.random.default_rng(seed)
     side = rng.integers(0, 4, n)
-    t = rng.uniform(g.x_ul_m, g.x_lr_m, n)
-    x = np.where(side == 0, g.x_lr_m, np.where(side == 1, g.x_ul_m, t))
-    y = np.where(side == 2, g.y_ul_m, np.where(side == 3, g.y_lr_m, t))
+    tx = rng.uniform(g.x_ul_m, g.x_lr_m, n)
+    ty = rng.uniform(g.y_lr_m, g.y_ul_m, n)
+    x = np.where(side == 0, g.x_lr_m, np.where(side == 1, g.x_ul_m, tx))
+    y = np.where(side == 2, g.y_ul_m, np.where(side == 3, g.y_lr_m, ty))
     nx = np.where(side == 0, 1.0, np.where(side == 1, -1.0, 0.0))
     ny = np.where(side == 2, 1.0, np.where(side == 3, -1.0, 0.0))
     return x, y, nx, ny

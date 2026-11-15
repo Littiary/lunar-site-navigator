@@ -107,3 +107,21 @@ def test_sample_quality_reports_count_and_error(synth_label, tif, tmp_path):
     assert list(q2["returns_in_pixel"]) == [-1, -1] and list(q2["constrained"]) == [-1, -1]
     # heights are unchanged by attaching quality layers
     assert np.array_equal(t.height_m(lon, lat), Terrain([PolarDEM(synth_label), PolarDEM.from_geotiff(tif, product_id="SYN_SITE")]).height_m(lon, lat))
+
+
+def test_committed_report_seam_judgement_follows_the_criterion():
+    """near_field_report.json: inside points are read from the 5 m raster, each seam verdict follows the unchanged
+    criterion, and all_passed is the conjunction (Site23 fails the seam median: 3.42 m > 3.0 m)."""
+    import json
+
+    from lsn_data.paths import repo_data_dir
+
+    cp = repo_data_dir() / "checkpoints"
+    rep = json.loads((cp / "near_field_report.json").read_text(encoding="utf-8"))
+    crit = json.loads((cp / "thresholds_near_field.json").read_text(encoding="utf-8"))["seam"]["pass_if"]
+    for pid, s in rep["sites"].items():
+        seam = s["seam"]
+        assert seam["inside_sources"] == [pid] and seam["outside_sources"] == ["LDEM_80S_20M"]
+        assert seam["passed"] == (seam["median_abs_jump_m"] <= crit["median_abs_jump_m"] and seam["p95_abs_jump_m"] <= crit["p95_abs_jump_m"])
+    assert rep["all_passed"] == all(s["passed"] and s["seam"]["passed"] for s in rep["sites"].values())
+    assert rep["sites"]["LOLA5MPP_SITE23"]["seam"]["passed"] is False
