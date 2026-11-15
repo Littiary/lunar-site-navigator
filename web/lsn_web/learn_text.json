@@ -1,0 +1,62 @@
+{
+  "en": {
+    "language_name": "English",
+    "title": "Lunar Site Navigator: how to read it",
+    "heading": "Lunar Site Navigator — how to read it",
+    "lead": "Four ideas are enough to read every view of the tool: the horizon, visibility windows, the uncertainty of the terrain, and landing opportunities. Each is explained below in a few sentences, with one real example taken from a published result package.",
+    "example_label": "Example from the package",
+    "example_source": "Example site: {site_name}, package {package_id}, time window {start_utc} to {end_utc} UTC. The numbers are read from that package and only formatted here.",
+    "no_example": "The packages of this build do not hold the fields this example needs, so no example is shown.",
+    "quoted_from_package": "As the package states it (in English):",
+    "other_languages": "This page in another language:",
+    "nav_compare": "Compare two sites",
+    "nav_evidence": "Evidence page",
+    "nav_accuracy": "Accuracy and limits",
+    "footer": "Team Kestro Aerospace, NASA Space Apps Challenge 2026. The landing requirement used in the example is an example chosen by the team, not a mission requirement. The sites are not official landing sites.",
+    "sections": [
+      {
+        "id": "horizon",
+        "heading": "1. The horizon: what the terrain hides",
+        "paragraphs": [
+          "Stand at one point on the Moon and turn around once. In every direction the ground ends somewhere against the sky: a nearby ridge, a crater rim, a far mountain. The line where ground meets sky is the terrain horizon. The tool stores it as one angle for each direction (azimuth): how many degrees above or below the level direction the ground reaches.",
+          "At the Moon's poles the Sun never climbs high. It circles close to the level direction, so the horizon decides everything: where the terrain rises a degree or two, the Sun is hidden behind it. The Earth also stays low and in nearly the same direction, rocking slowly up and down.",
+          "The horizon depends on how high you stand. From a mast you see over nearby ground, so the tool computes the horizon for several observer heights."
+        ],
+        "example": "At {site_name} the terrain is searched out to {max_range_km} km in every direction, for observer heights of {heights} m. At {default_height} m, the terrain that costs the most sunlight is only {blocker_distance_m} m away: it hides the Sun for {blocker_lost_h} hours of the window, {blocker_share_pct} % of all the sunlight this site loses to terrain."
+      },
+      {
+        "id": "windows",
+        "heading": "2. Visibility windows: when the Sun and the Earth can be seen",
+        "paragraphs": [
+          "The Sun and the Earth move across the sky along paths that can be computed very precisely. Each time one of them crosses the terrain horizon, an event happens: a rise or a set. The time between a rise and the next set is a visibility window.",
+          "The Sun is not a point but a disc about half a degree wide. The tool counts the Sun as visible as soon as any part of the disc shows above the terrain, so a partial sunrise already gives some light.",
+          "Sunlight means power and warmth. The Earth in view means a direct radio link. A lander usually needs both, so the tool also lists the windows in which the Sun and the Earth are visible together, and the longest stretches without each."
+        ],
+        "example": "At {site_name}, over the whole window, the Sun is visible {sun_share_low_pct} % of the time for an observer on the ground ({low_height} m) and {sun_share_default_pct} % of the time at {default_height} m. The Earth is visible {earth_share_default_pct} % of the time at {default_height} m. The first Sun event in the window at {default_height} m is a {event_type} at {event_utc} UTC."
+      },
+      {
+        "id": "uncertainty",
+        "heading": "3. Terrain uncertainty: why a time is an estimate",
+        "paragraphs": [
+          "The shape of the Moon's surface is known from laser measurements taken from orbit, stored as a grid of heights. Each height has a small error, and between measured points the grid is filled in. If the ridge that hides the Sun is really a few metres higher or lower than the grid says, the Sun disappears a little earlier or later.",
+          "Because the Sun moves so slowly along the horizon near the poles, a small error in height can shift a sunrise or sunset by many minutes. A ridge close to the observer matters most: the same few metres of height are a larger angle when seen from nearby.",
+          "Where the height error of the terrain has been measured, the tool gives each event an earliest and a latest time instead of pretending to know it exactly. Where it has not been measured, the tool says so and gives no band. No rise or set time on real terrain has been checked against an independent measurement."
+        ],
+        "example": "For the event above ({event_type} at {event_utc} UTC) the package gives the earliest time {event_earliest_utc} and the latest time {event_latest_utc} UTC. The terrain that sets this event is {event_distance} away."
+      },
+      {
+        "id": "opportunities",
+        "heading": "4. Landing opportunities: which dates work",
+        "paragraphs": [
+          "A mission states what it needs, for example: the Earth must be in view at touchdown, and the Sun must stay up without a break for a number of days afterwards. A landing time is feasible if the visibility windows satisfy that requirement. All feasible landing times in a row form a landing window.",
+          "Launches slip. So for a planned landing date the tool also reports how many hours or days the landing can be late and still meet the requirement, and, if the planned date does not work, how long the wait is until the next landing window opens.",
+          "The opportunity calendar shows all of this by lunar day, the roughly 29.5 Earth days from one new Moon to the next, so that good and bad months can be seen at a glance and two sites can be compared on one time axis."
+        ],
+        "example": "With the requirement below, {site_name} at {default_height} m has {window_count} landing windows in the two-year window; landing is feasible {feasible_pct} % of the time, and the longest landing window lasts {longest_window_h} hours. For the planned landing on {planned_utc} UTC the package says: {planned_verdict}."
+      }
+    ],
+    "planned_feasible": "the requirement holds, and the landing can slip by up to {slip_h} hours",
+    "planned_not_feasible": "the requirement does not hold, and the next landing window opens after a wait of {wait_h} hours",
+    "planned_no_window": "the requirement does not hold, and the package gives no later landing window"
+  }
+}

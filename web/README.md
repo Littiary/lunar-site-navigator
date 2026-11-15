@@ -75,6 +75,17 @@ cd web
 python -m lsn_web.accuracy <site package dir | index.json> [...] --card <validation_card.json> [--notice TEXT] --out <file.html>
 ```
 
+## Education page (`lsn_web/learn.py`, `lsn_web/learn_text.json`)
+
+One self-contained HTML file (`learn.html` in the site build, linked as "How to read it"): four short explanations (the horizon, visibility windows, terrain uncertainty, landing opportunities), each with one example from a published package. The example sentences are templates whose placeholders are filled with package values (formatted only: seconds as hours, fractions as percentages); the package's own statements (the assumption of the uncertainty band, the label of the landing requirement) are quoted unchanged. The example site is chosen by comparing stored values: among the project's own sites with obstacles, a band and opportunities, the one whose costliest Sun obstacle costs most. An example whose fields a package lacks is left out, and the page says so.
+
+**Languages.** `learn_text.json` holds one entry per language code with the same keys; the site build writes `learn.html` for `en` and `learn.<code>.html` for every further entry, with links between them. `tests/test_learn.py` holds every entry to the keys and placeholders of the English one. Only English is present: rule 11 of `CONTRIBUTING.md` (all text in the repository is English) and the submission guide (linked materials in English) stand against committing a Turkish entry without a team decision. Numbers, units, UTC times and quoted package statements are not translated in any language.
+
+```
+cd web
+python -m lsn_web.learn <site package dir | index.json> [...] [--lang en] --out <file.html>
+```
+
 ## Interactive viewer (`web/viewer/`)
 
 A static page that reads the packages in the browser (Tasks 7 and 8):
@@ -144,7 +155,7 @@ cd web
 python -m lsn_web.site
 ```
 
-It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `accuracy.html` (the accuracy and limits page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
+It writes `web/dist/site/` (ignored by git): `index.html` and `compare.html` (the split-screen comparison), `evidence.html` (the separate evidence page), `accuracy.html` (the accuracy and limits page), `learn.html` (the education page), `charts/*.svg` (every chart as its own file, linked from the evidence page), `viewer/` (the single-site viewer), `packages/` (index.json and exactly the files it lists, copied byte for byte), `summary/` (the first-screen summaries), `notice.json` (the notice and the validation card's counts, for the pages) and `.nojekyll`. The folders it writes are cleared first, so nothing of an earlier build is published. The defaults are `--packages ../packages/index.json`, `--card ../validation/card/validation_card.json`, `--notice-file site_notice.txt` and `--out dist/site`. The same inputs always give identical bytes.
 
 **Notice.** `web/site_notice.txt` holds the banner shown on the page and on every chart. It currently says that the results are provisional. An empty file removes the banner, so the freeze needs no code change.
 
